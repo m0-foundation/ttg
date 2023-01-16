@@ -3,6 +3,8 @@ pragma solidity 0.8.17;
 
 import {IList} from "./interfaces/IList.sol";
 
+import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
+
 /**
  * @title SPOG
  * @dev Contracts for governing lists and managing communal property through token voting.
@@ -26,6 +28,8 @@ contract SPOG {
     uint256 public currentEpoch;
     uint256 public currentEpochEnd;
 
+    ISPOGVote public vote;
+
     // List of addresses that are part of the masterlist
     mapping(address => bool) public masterlist;
 
@@ -47,6 +51,7 @@ contract SPOG {
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _tax The cost (in `cash`) to call various functions
+    /// @param _vote The token used for voting
     constructor(
         address _cash,
         uint256[2] memory _taxRange,
@@ -58,7 +63,8 @@ contract SPOG {
         uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
-        uint256 _tax
+        uint256 _tax,
+        ISPOGVote _vote
     ) {
         cash = _cash;
         taxRange = _taxRange[0];
@@ -71,11 +77,11 @@ contract SPOG {
         voteQuorum = _voteQuorum;
         valueQuorum = _valueQuorum;
         tax = _tax;
+        vote = _vote;
 
         currentEpoch = 1;
         currentEpochEnd = block.timestamp + voteTime;
     }
-
 
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
@@ -126,10 +132,7 @@ contract SPOG {
         // require that the address is not already on the list
         require(!_list.contains(_address), "Address is already on the list");
 
-
         // TODO: require if vote has been passed in the preceding epoch
-
-
 
         // append the address to the list
         _list.add(_address);
@@ -150,9 +153,7 @@ contract SPOG {
         // require that the address is on the list
         require(_list.contains(_address), "Address is not on the list");
 
-
         // TODO: require if vote has been passed in the preceding epoch
-        
 
         // remove the address from the list
         _list.remove(_address);
@@ -165,7 +166,10 @@ contract SPOG {
     /// @param _list The list from which the address will be removed
     function emergencyRemove(address _address, IList _list) external {
         // require that the caller pays the tax
-        require(msg.value == 12 * tax, "Caller must pay tax to call this function");
+        require(
+            msg.value == 12 * tax,
+            "Caller must pay tax to call this function"
+        );
 
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
@@ -189,14 +193,12 @@ contract SPOG {
     /// @return `true` if the vote quorum has been reached, `false` otherwise
     function voteQuorumReached() public view returns (bool) {
         // get the number of votes cast
-        uint256 votesCast = votes.length;
+        uint256 votesCast = votes.length; // TODO: implement votes count
 
         // get the number of votes required to reach the vote quorum
-        uint256 votesRequired = voteQuorum * totalSupply() / 100;
+        uint256 votesRequired = (voteQuorum * vote.totalSupply()) / 100;
 
         // return whether the vote quorum has been reached
         return votesCast >= votesRequired;
     }
-
-
 }
