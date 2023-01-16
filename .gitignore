@@ -9,3 +9,5 @@ out/
 
 # Dotenv file
 .env
+
+notes.md
