@@ -5,6 +5,9 @@ import {IList} from "./interfaces/IList.sol";
 
 import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 /**
  * @title SPOG
  * @dev Contracts for governing lists and managing communal property through token voting.
@@ -12,8 +15,10 @@ import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
  * @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
  */
 contract SPOG {
+    using SafeERC20 for IERC20;
+
     // contract variables
-    address public cash;
+    IERC20 public cash;
     uint256 public taxRange;
     uint256 public inflator;
     uint256 public reward;
@@ -40,7 +45,7 @@ contract SPOG {
 
     // create constructor to set contract variables with natspec comments
     /// @notice Create a new SPOG
-    /// @param _cash The currency of the SPOG (must be ERC20)
+    /// @param _cash The currency accepted for tax payment in the SPOG (must be ERC20)
     /// @param _taxRange The minimum and maximum value of `tax`
     /// @param _inflator The percentage supply increase in $VOTE for each voting epoch
     /// @param _reward The number of $VALUE to be distributed in each voting epoch
@@ -66,7 +71,7 @@ contract SPOG {
         uint256 _tax,
         ISPOGVote _vote
     ) {
-        cash = _cash;
+        cash = IERC20(_cash);
         taxRange = _taxRange[0];
         inflator = _inflator;
         reward = _reward;
@@ -88,8 +93,7 @@ contract SPOG {
     /// @notice Add a new list to the master list of the SPOG
     /// @param _id The ID as the list address of the list to be added
     function newList(address _id) external {
-        // require that the caller pays the tax
-        require(msg.value == tax, "Caller must pay tax to call this function");
+        _pay(tax);
 
         // require that the list is not already on the master list
         require(!masterlist[_id], "List is already on the master list");
@@ -105,8 +109,7 @@ contract SPOG {
     /// @notice Remove a list from the master list of the SPOG
     /// @param _id The ID as the list address of the list to be removed
     function removeList(address _id) external {
-        // require that the caller pays the tax
-        require(msg.value == tax, "Caller must pay tax to call this function");
+        _pay(tax);
 
         // require that the list is on the master list
         require(masterlist[_id], "List is not on the master list");
@@ -123,8 +126,7 @@ contract SPOG {
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
     function append(address _address, IList _list) external {
-        // require that the caller pays the tax
-        require(msg.value == tax, "Caller must pay tax to call this function");
+        _pay(tax);
 
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
@@ -144,8 +146,7 @@ contract SPOG {
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
     function remove(address _address, IList _list) external {
-        // require that the caller pays the tax
-        require(msg.value == tax, "Caller must pay tax to call this function");
+        _pay(tax);
 
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
@@ -165,11 +166,7 @@ contract SPOG {
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
     function emergencyRemove(address _address, IList _list) external {
-        // require that the caller pays the tax
-        require(
-            msg.value == 12 * tax,
-            "Caller must pay tax to call this function"
-        );
+        _pay(tax * 12);
 
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
@@ -200,5 +197,16 @@ contract SPOG {
 
         // return whether the vote quorum has been reached
         return votesCast >= votesRequired;
+    }
+
+    // ********** PRIVATE FUNCTIONS ********** //
+
+    /// @notice pay tax from the caller to the SPOG
+    /// @param _amount The amount to be transferred
+    function _pay(uint256 _amount) private {
+        // require that the caller pays the tax
+        require(_amount == tax, "Caller must pay tax to call this function");
+        // transfer the amount from the caller to the SPOG
+        cash.safeTransferFrom(msg.sender, address(this), _amount);
     }
 }
