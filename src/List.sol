@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
+import {ERC165CheckerSPOG} from "./ERC165CheckerSPOG.sol";
+
 error NotAdmin();
 
 /// @notice List contract where only an admin (SPOG) can add and remove addresses from a list
-// TODO: add Support Interfaace so the admin is an SPOG
-contract List {
+contract List is ERC165CheckerSPOG {
     // address list
     mapping(address => bool) internal list;
 
@@ -17,6 +18,7 @@ contract List {
 
     // constructor sets the admin address
     constructor() {
+        checkSPOGInterface(msg.sender);
         admin = msg.sender;
     }
 
@@ -48,7 +50,10 @@ contract List {
 
     /// @notice Change the admin address
     /// @param _newAdmin The new admin address
-    function changeAdmin(address _newAdmin) external {
+    function changeAdmin(address _newAdmin)
+        external
+        onlySPOGInterface(_newAdmin)
+    {
         if (msg.sender != admin) revert NotAdmin();
 
         admin = _newAdmin;

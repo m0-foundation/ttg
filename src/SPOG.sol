@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import {IList} from "./interfaces/IList.sol";
 
 import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
+import {ISPOG} from "./interfaces/ISPOG.sol";
 
 import {GovSPOG} from "./GovSPOG.sol";
 
@@ -240,6 +241,19 @@ contract SPOG is GovSPOG {
         // remove the address from the list
         _list.remove(_address);
         emit AddressRemovedFromList(address(_list), _address);
+    }
+
+    /// @dev check SPOG interface support
+    /// @param interfaceId The interface ID to check
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override
+        returns (bool)
+    {
+        return
+            interfaceId == type(ISPOG).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     // ********** PRIVATE FUNCTIONS ********** //
