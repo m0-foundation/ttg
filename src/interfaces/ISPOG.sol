@@ -4,9 +4,9 @@ pragma solidity 0.8.17;
 import {IList} from "./IList.sol";
 
 interface ISPOG {
-    function newList(uint256 _proposalId, address _listId) external;
+    function newList() external;
 
-    function removeList(uint256 _proposalId, address _listId) external;
+    function removeList(uint256 _proposalId, address _listAddress) external;
 
     function append(
         uint256 _proposalId,

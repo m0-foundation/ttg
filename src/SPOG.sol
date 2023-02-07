@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import {IList} from "./interfaces/IList.sol";
+import {List} from "./List.sol";
 
 import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
 import {ISPOG} from "./interfaces/ISPOG.sol";
@@ -68,7 +69,7 @@ contract SPOG is GovSPOG {
     /// @param _taxRange The minimum and maximum value of `tax`
     /// @param _inflator The percentage supply increase in $VOTE for each voting epoch
     /// @param _reward The number of $VALUE to be distributed in each voting epoch
-    /// @param _voteTime The duration of a voting epoch
+    /// @param _voteTime The duration of a voting epoch in blocks
     /// @param _inflatorTime The duration of an auction if $VOTE is inflated (should be less than `VOTE TIME`)
     /// @param _sellTime The duration of an auction if `SELL` is called
     /// @param _forkTime The duration that $VALUE holders have to choose a fork
@@ -90,6 +91,7 @@ contract SPOG is GovSPOG {
         uint256 _tax,
         ISPOGVote _vote
     ) GovSPOG(_vote, _voteQuorum, _voteTime) {
+        // TODO: add require statements for variables
         spogData.cash = IERC20(_cash);
         spogData.taxRange[0] = _taxRange[0];
         spogData.taxRange[1] = _taxRange[1];
@@ -107,43 +109,37 @@ contract SPOG is GovSPOG {
         // vote = _vote;
 
         spogData.currentEpoch = 1;
-        spogData.currentEpochEnd = block.timestamp + voteTime;
+        spogData.currentEpochEnd = block.number + voteTime;
+    }
+
+    /// @dev Getter for taxRange. It returns the minimum and maximum value of `tax`
+    /// @return The minimum and maximum value of `tax`
+    function taxRange() external view returns (uint256, uint256) {
+        return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
-    /// @param _proposalId The ID of the proposal
-    /// @param _listId The ID as the list address of the list to be added
-    function newList(uint256 _proposalId, address _listId)
-        external
-        onlyGovernance
-    {
-        _pay(spogData.tax);
-
-        // require that the list is not already on the master list
-        require(!masterlist[_listId], "List is already on the master list");
-
-        // check quorum reached for proposal
-        _voteSucceeded(_proposalId);
-
+    function newList() external onlyGovernance {
+        address list = address(new List());
         // add the list to the master list
-        masterlist[_listId] = true;
-        emit NewListAdded(_listId);
+        masterlist[list] = true;
+        emit NewListAdded(list);
     }
 
     // create function to remove a list from the master list of the SPOG
     /// @notice Remove a list from the master list of the SPOG
     /// @param _proposalId The ID of the proposal
-    /// @param _listId The ID as the list address of the list to be removed
-    function removeList(uint256 _proposalId, address _listId)
+    /// @param _listAddress  The list address of the list to be removed
+    function removeList(uint256 _proposalId, address _listAddress)
         external
         onlyGovernance
     {
         _pay(spogData.tax);
 
         // require that the list is on the master list
-        require(masterlist[_listId], "List is not on the master list");
+        require(masterlist[_listAddress], "List is not on the master list");
 
         // check quorum reached for proposal
         require(
@@ -152,8 +148,8 @@ contract SPOG is GovSPOG {
         );
 
         // remove the list from the master list
-        masterlist[_listId] = false;
-        emit ListRemoved(_listId);
+        masterlist[_listAddress] = false;
+        emit ListRemoved(_listAddress);
     }
 
     // create function to append an address to a list
@@ -256,6 +252,24 @@ contract SPOG is GovSPOG {
             super.supportsInterface(interfaceId);
     }
 
+    /// @notice Create a new proposal
+    /// @dev Overrides the `propose` function of the `Governor` contract
+    /// @param targets The targets of the proposal
+    /// @param values The values of the proposal
+    /// @param calldatas The calldatas of the proposal
+    /// @param description The description of the proposal
+    /// @return proposalId The ID of the proposal
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public override returns (uint256) {
+        // require that the caller pays the tax to propose
+        _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
+        return super.propose(targets, values, calldatas, description);
+    }
+
     // ********** PRIVATE FUNCTIONS ********** //
 
     /// @notice pay tax from the caller to the SPOG
@@ -263,10 +277,14 @@ contract SPOG is GovSPOG {
     function _pay(uint256 _amount) private {
         // require that the caller pays the tax
         require(
-            _amount == spogData.tax,
+            _amount >= spogData.tax,
             "Caller must pay tax to call this function"
         );
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(this), _amount);
+    }
+
+    fallback() external {
+        revert("SPOG: non-existent function");
     }
 }
