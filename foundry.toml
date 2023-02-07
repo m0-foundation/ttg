@@ -5,4 +5,6 @@ libs = ['lib']
 solc-version = "0.8.17"
 via_ir = true
 
+[rpc_endpoints]
+localhost = "http://127.0.0.1:8545"
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
