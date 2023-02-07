@@ -26,15 +26,16 @@ contract SPOGDeployScript is Script {
     ISPOGVote public vote;
 
     function setUp() public {
+        // for the real deployment, we will use the real cash token
         cash = new ERC20Mock("CashToken", "cash", msg.sender, 10e18); // mint 10 tokens to msg.sender
 
         taxRange = [uint256(0), uint256(5)];
         inflator = 5;
         reward = 5;
-        voteTime = 1 hours;
-        inflatorTime = 1 hours;
-        sellTime = 1 hours;
-        forkTime = 1 hours;
+        voteTime = 10; // in blocks
+        inflatorTime = 10; // in blocks
+        sellTime = 10; // in blocks
+        forkTime = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
         tax = 5;

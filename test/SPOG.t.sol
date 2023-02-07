@@ -115,7 +115,7 @@ contract SPOGTest is Test {
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + 2);
+        vm.roll(block.number + spog.votingDelay() + 1);
 
         // proposal should be active now
         assertTrue(
@@ -127,7 +127,7 @@ contract SPOGTest is Test {
         uint8 yesVote = 1;
         spog.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + 1 hours);
+        vm.roll(block.number + deployScript.voteTime() + 1);
 
         // check proposal is succeeded
         assertTrue(
