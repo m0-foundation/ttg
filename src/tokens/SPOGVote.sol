@@ -19,7 +19,7 @@ contract SPOGVote is ERC20Votes, ISPOGVote, AccessControlEnumerable {
         ERC20Permit(name)
     {
         // TODO: add require for msg.sender to be the SPOG
-        grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender()); // must be internal function _grantRole to set admin role
         grantRole(SPOG_ROLE, _msgSender());
     }
 
