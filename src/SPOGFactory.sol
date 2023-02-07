@@ -37,23 +37,21 @@ contract SPOGFactory {
         uint256 _tax,
         ISPOGVote _vote,
         bytes32 _salt
-    ) public payable returns (address) {
+    ) public returns (SPOG) {
         return
-            address(
-                new SPOG{salt: _salt}(
-                    _cash,
-                    _taxRange,
-                    _inflator,
-                    _reward,
-                    _voteTime,
-                    _inflatorTime,
-                    _sellTime,
-                    _forkTime,
-                    _voteQuorum,
-                    _valueQuorum,
-                    _tax,
-                    _vote
-                )
+            new SPOG{salt: _salt}(
+                _cash,
+                _taxRange,
+                _inflator,
+                _reward,
+                _voteTime,
+                _inflatorTime,
+                _sellTime,
+                _forkTime,
+                _voteQuorum,
+                _valueQuorum,
+                _tax,
+                _vote
             );
     }
 

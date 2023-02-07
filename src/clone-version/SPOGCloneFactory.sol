@@ -77,7 +77,7 @@ contract SPOGCloneFactory is Ownable, Pausable, ERC165CheckerSPOG {
         uint256 _valueQuorum,
         uint256 _tax,
         bytes32 salt
-    ) external payable whenNotPaused returns (address _spog) {
+    ) external whenNotPaused returns (address _spog) {
         _spog = _clone(
             _cash,
             _taxRange,
