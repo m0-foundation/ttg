@@ -8,17 +8,13 @@ import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
 import "../src/SPOG.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
-import {List} from "src/List.sol";
+import {IList} from "src/interfaces/IList.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 
 contract SPOGTest is Test {
     SPOG public spog;
     SPOGVote public spogVote;
     SPOGDeployScript public deployScript;
-    List public list;
-
-    address public deployer = vm.addr(0x12345);
-    address public user1 = vm.addr(0x6789);
 
     function setUp() public {
         deployScript = new SPOGDeployScript();
@@ -28,6 +24,110 @@ contract SPOGTest is Test {
         spog = deployScript.spog();
         spogVote = SPOGVote(address(deployScript.vote()));
     }
+
+    /**********************************/
+    /******** Helper functions ********/
+    /**********************************/
+    function getProposalIdAndHashedDescription(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) private view returns (bytes32 hashedDescription, uint256 proposalId) {
+        hashedDescription = keccak256(abi.encodePacked(description));
+        proposalId = spog.hashProposal(
+            targets,
+            values,
+            calldatas,
+            hashedDescription
+        );
+    }
+
+    function addNewListToSpog() private {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("addNewList()");
+        string memory description = "Add new list";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        // fast forward to an active voting period
+        vm.roll(block.number + spog.votingDelay() + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        spog.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+    }
+
+    function addNewListToSpogAndAppendAnAddressToIt() private {
+        addNewListToSpog();
+
+        address listToAddAddressTo = spog.lists(0);
+        address addressToAdd = address(0x1234);
+
+        // create proposal to remove list
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature(
+            "append(address,address)",
+            addressToAdd,
+            listToAddAddressTo
+        );
+        string memory description = "Append address to a list";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        // fast forward to an active voting period
+        vm.roll(block.number + spog.votingDelay() + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        spog.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+    }
+
+    /**********************************/
+    /********* Start of Tests ********/
+    /********************************/
 
     function testSPOGHasSetInitialValuesCorrectly() public view {
         (
@@ -64,21 +164,6 @@ contract SPOGTest is Test {
         assert(taxRangeMax == deployScript.taxRange(1));
     }
 
-    function getProposalIdAndHashedDescription(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) private view returns (bytes32 hashedDescription, uint256 proposalId) {
-        hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = spog.hashProposal(
-            targets,
-            values,
-            calldatas,
-            hashedDescription
-        );
-    }
-
     function testSPOGProposalToAddList() public {
         // create proposal
         address[] memory targets = new address[](1);
@@ -86,7 +171,7 @@ contract SPOGTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("newList()");
+        calldatas[0] = abi.encodeWithSignature("addNewList()");
         string memory description = "Add new list";
 
         (
@@ -149,5 +234,205 @@ contract SPOGTest is Test {
         );
 
         // assert that list was created
+        console.log("first list", spog.lists(0));
+        address createdList = spog.lists(0);
+
+        assertTrue(spog.masterlist(createdList), "List was not created");
+    }
+
+    function testSPOGProposalToRemoveList() public {
+        addNewListToSpog();
+
+        address listToRemove = spog.lists(0);
+
+        // create proposal to remove list
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature(
+            "removeList(address)",
+            listToRemove
+        );
+        string memory description = "remove list";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        // assert that spog has cash balance
+        assertTrue(
+            deployScript.cash().balanceOf(address(spog)) ==
+                deployScript.tax() * 2,
+            "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
+        );
+
+        // check proposal is pending. Note voting is not active until voteDelay is reached
+        assertTrue(
+            spog.state(proposalId) == IGovernor.ProposalState.Pending,
+            "Proposal is not in an pending state"
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + spog.votingDelay() + 1);
+
+        // proposal should be active now
+        assertTrue(
+            spog.state(proposalId) == IGovernor.ProposalState.Active,
+            "Not in active state"
+        );
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        spog.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // check proposal is succeeded
+        assertTrue(
+            spog.state(proposalId) == IGovernor.ProposalState.Succeeded,
+            "Not in succeeded state"
+        );
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        // check proposal is executed
+        assertTrue(
+            spog.state(proposalId) == IGovernor.ProposalState.Executed,
+            "Proposal not executed"
+        );
+
+        // assert that list was removed
+        assertTrue(!spog.masterlist(listToRemove), "List was not removed");
+    }
+
+    function testSPOGProposalToAppedToAList() public {
+        addNewListToSpog();
+
+        address listToAddAddressTo = spog.lists(0);
+        address addressToAdd = address(0x1234);
+
+        // create proposal to remove list
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature(
+            "append(address,address)",
+            addressToAdd,
+            listToAddAddressTo
+        );
+        string memory description = "Append address to a list";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        // assert that spog has cash balance
+        assertTrue(
+            deployScript.cash().balanceOf(address(spog)) ==
+                deployScript.tax() * 2,
+            "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + spog.votingDelay() + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        spog.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        // assert that address was added to list
+        assertTrue(
+            IList(listToAddAddressTo).contains(addressToAdd),
+            "Address was not added to list"
+        );
+    }
+
+    function testSPOGProposalToRemoveAddressFromAList() public {
+        addNewListToSpogAndAppendAnAddressToIt();
+
+        address listToRemoveAddressFrom = spog.lists(0);
+        address addressToRemove = address(0x1234);
+
+        // create proposal to remove list
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature(
+            "remove(address,address)",
+            addressToRemove,
+            listToRemoveAddressFrom
+        );
+        string memory description = "Remove address from a list";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        // assert that spog has cash balance
+        assertTrue(
+            deployScript.cash().balanceOf(address(spog)) ==
+                deployScript.tax() * 3,
+            "Balance of SPOG should be 3x tax, one from adding the list and one from the current proposal"
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + spog.votingDelay() + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        spog.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        // assert that address was added to list
+        assertTrue(
+            !IList(listToRemoveAddressFrom).contains(addressToRemove),
+            "Address was not removed from list"
+        );
     }
 }

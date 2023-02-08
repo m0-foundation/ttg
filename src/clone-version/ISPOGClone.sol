@@ -19,25 +19,13 @@ interface ISPOGClone {
         address spogAddress
     ) external;
 
-    function newList(uint256 _proposalId, address _listId) external;
+    function addNewList() external;
 
-    function removeList(uint256 _proposalId, address _listId) external;
+    function removeList(address _listAddress) external;
 
-    function append(
-        uint256 _proposalId,
-        address _address,
-        IList _list
-    ) external;
+    function append(address _address, IList _list) external;
 
-    function remove(
-        uint256 _proposalId,
-        address _address,
-        IList _list
-    ) external;
+    function remove(address _address, IList _list) external;
 
-    function emergencyRemove(
-        uint256 _proposalId,
-        address _address,
-        IList _list
-    ) external;
+    function emergencyRemove(address _address, IList _list) external;
 }
