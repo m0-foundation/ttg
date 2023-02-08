@@ -38,21 +38,25 @@ contract SPOGFactory {
         ISPOGVote _vote,
         bytes32 _salt
     ) public returns (SPOG) {
-        return
-            new SPOG{salt: _salt}(
-                _cash,
-                _taxRange,
-                _inflator,
-                _reward,
-                _voteTime,
-                _inflatorTime,
-                _sellTime,
-                _forkTime,
-                _voteQuorum,
-                _valueQuorum,
-                _tax,
-                _vote
-            );
+        SPOG spog = new SPOG{salt: _salt}(
+            _cash,
+            _taxRange,
+            _inflator,
+            _reward,
+            _voteTime,
+            _inflatorTime,
+            _sellTime,
+            _forkTime,
+            _voteQuorum,
+            _valueQuorum,
+            _tax,
+            _vote
+        );
+
+        // below line is only used for prototype - remove in production
+        spogs.push(address(spog));
+
+        return spog;
     }
 
     /// @dev This function is used to get the bytecode of the SPOG contract to be deployed
@@ -112,4 +116,10 @@ contract SPOGFactory {
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));
     }
+
+    /***************************************************/
+    /******** Prototype Helpers - NOT FOR PROD ********/
+    /*************************************************/
+
+    address[] public spogs;
 }

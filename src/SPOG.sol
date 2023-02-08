@@ -121,31 +121,22 @@ contract SPOG is GovSPOG {
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
-    function newList() external onlyGovernance {
+    function addNewList() external onlyGovernance {
         address list = address(new List());
         // add the list to the master list
         masterlist[list] = true;
         emit NewListAdded(list);
+
+        // used for prototype only - remove later
+        lists.push(list);
     }
 
     // create function to remove a list from the master list of the SPOG
     /// @notice Remove a list from the master list of the SPOG
-    /// @param _proposalId The ID of the proposal
     /// @param _listAddress  The list address of the list to be removed
-    function removeList(uint256 _proposalId, address _listAddress)
-        external
-        onlyGovernance
-    {
-        _pay(spogData.tax);
-
+    function removeList(address _listAddress) external onlyGovernance {
         // require that the list is on the master list
         require(masterlist[_listAddress], "List is not on the master list");
-
-        // check quorum reached for proposal
-        require(
-            _voteSucceeded(_proposalId),
-            "Vote quorum has not been reached for this action"
-        );
 
         // remove the list from the master list
         masterlist[_listAddress] = false;
@@ -154,27 +145,14 @@ contract SPOG is GovSPOG {
 
     // create function to append an address to a list
     /// @notice Append an address to a list
-    /// @param _proposalId The ID of the proposal
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(
-        uint256 _proposalId,
-        address _address,
-        IList _list
-    ) external onlyGovernance {
-        _pay(spogData.tax);
-
+    function append(address _address, IList _list) external onlyGovernance {
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
 
         // require that the address is not already on the list
         require(!_list.contains(_address), "Address is already on the list");
-
-        // check quorum reached for proposal
-        require(
-            _voteSucceeded(_proposalId),
-            "Vote quorum has not been reached for this action"
-        );
 
         // append the address to the list
         _list.add(_address);
@@ -183,27 +161,14 @@ contract SPOG is GovSPOG {
 
     // create function to remove an address from a list
     /// @notice Remove an address from a list
-    /// @param _proposalId The ID of the proposal
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(
-        uint256 _proposalId,
-        address _address,
-        IList _list
-    ) external onlyGovernance {
-        _pay(spogData.tax);
-
+    function remove(address _address, IList _list) external onlyGovernance {
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
 
         // require that the address is on the list
         require(_list.contains(_address), "Address is not on the list");
-
-        // check quorum reached for proposal
-        require(
-            _voteSucceeded(_proposalId),
-            "Vote quorum has not been reached for this action"
-        );
 
         // remove the address from the list
         _list.remove(_address);
@@ -212,15 +177,14 @@ contract SPOG is GovSPOG {
 
     // create function to remove an address from a list immediately upon reaching a `VOTE QUORUM`
     /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @param _proposalId The ID of the proposal
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function emergencyRemove(
-        uint256 _proposalId,
-        address _address,
-        IList _list
-    ) external onlyGovernance {
-        _pay(spogData.tax * 12);
+    function emergencyRemove(address _address, IList _list)
+        external
+        onlyGovernance
+    {
+        // TODO: need to come up with a way to pay the tax*12 during emergencyRemove() proposal
+        // _pay(spogData.tax * 12);
 
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
@@ -228,11 +192,11 @@ contract SPOG is GovSPOG {
         // require that the address is on the list
         require(_list.contains(_address), "Address is not on the list");
 
-        // require that the vote quorum has been reached
-        require(
-            _voteSucceeded(_proposalId),
-            "Vote quorum has not been reached for this action"
-        );
+        // // require that the vote quorum has been reached
+        // require(
+        //     _voteSucceeded(_proposalId),
+        //     "Vote quorum has not been reached for this action"
+        // );
 
         // remove the address from the list
         _list.remove(_address);
@@ -287,4 +251,10 @@ contract SPOG is GovSPOG {
     fallback() external {
         revert("SPOG: non-existent function");
     }
+
+    /***************************************************/
+    /******** Prototype Helpers - NOT FOR PROD ********/
+    /*************************************************/
+
+    address[] public lists;
 }
