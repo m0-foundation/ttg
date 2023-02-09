@@ -36,19 +36,7 @@ contract SPOG is GovSPOG {
     }
     SPOGData public spogData;
 
-    // contract variables
-    // IERC20 public cash;
-    // uint256 public taxRange;
-    // uint256 public inflator;
-    // uint256 public reward;
-    // uint256 public inflatorTime;
-    // uint256 public sellTime;
-    // uint256 public forkTime;
-    // uint256 public valueQuorum;
-    // uint256 public tax;
-
-    // uint256 public currentEpoch;
-    // uint256 public currentEpochEnd;
+    // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
     // These are set in GovSPOG
     // uint256 public voteQuorum;
