@@ -164,6 +164,11 @@ contract SPOGTest is Test {
         assert(taxRangeMax == deployScript.taxRange(1));
     }
 
+    function testRevertAddNewListWhenNotCallingFromGovernance() public {
+        vm.expectRevert("Governor: onlyGovernance");
+        spog.addNewList();
+    }
+
     function testSPOGProposalToAddList() public {
         // create proposal
         address[] memory targets = new address[](1);
@@ -238,6 +243,14 @@ contract SPOGTest is Test {
         address createdList = spog.lists(0);
 
         assertTrue(spog.masterlist(createdList), "List was not created");
+    }
+
+    function testRevertRemoveListWhenNotCallingFromGovernance() public {
+        addNewListToSpog();
+        address listToRemove = spog.lists(0);
+
+        vm.expectRevert("Governor: onlyGovernance");
+        spog.removeList(listToRemove);
     }
 
     function testSPOGProposalToRemoveList() public {
@@ -318,6 +331,15 @@ contract SPOGTest is Test {
         assertTrue(!spog.masterlist(listToRemove), "List was not removed");
     }
 
+    function testRevertAppendToListWhenNotCallingFromGovernance() public {
+        addNewListToSpog();
+        address listToAddAddressTo = spog.lists(0);
+        address addressToAdd = address(0x1234);
+
+        vm.expectRevert("Governor: onlyGovernance");
+        spog.append(addressToAdd, IList(listToAddAddressTo));
+    }
+
     function testSPOGProposalToAppedToAList() public {
         addNewListToSpog();
 
@@ -375,6 +397,18 @@ contract SPOGTest is Test {
             IList(listToAddAddressTo).contains(addressToAdd),
             "Address was not added to list"
         );
+    }
+
+    function testRevertRemoveAddressFromListWhenNotCallingFromGovernance()
+        public
+    {
+        addNewListToSpogAndAppendAnAddressToIt();
+
+        address listToRemoveAddressFrom = spog.lists(0);
+        address addressToRemove = address(0x1234);
+
+        vm.expectRevert("Governor: onlyGovernance");
+        spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
     }
 
     function testSPOGProposalToRemoveAddressFromAList() public {
