@@ -245,4 +245,8 @@ contract SPOG is GovSPOG {
     /*************************************************/
 
     address[] public lists;
+
+    function mint(address _account, uint256 _amount) external {
+        spogVote.mint(_account, _amount);
+    }
 }

@@ -46,6 +46,9 @@ contract SPOGDeployScript is Script {
 
     function run() public {
         vm.startBroadcast();
+
+        setUp();
+
         bytes32 salt = keccak256(
             abi.encodePacked(
                 "Simple Participatory Onchain Gorvenance",
@@ -70,6 +73,9 @@ contract SPOGDeployScript is Script {
         );
 
         console.log("SPOG address: ", address(spog));
+        console.log("SPOGFactory address: ", address(factory));
+        console.log("SPOGVote address: ", address(vote));
+        console.log("Cash address: ", address(cash));
         vm.stopBroadcast();
     }
 }

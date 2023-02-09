@@ -18,7 +18,6 @@ contract SPOGTest is Test {
 
     function setUp() public {
         deployScript = new SPOGDeployScript();
-        deployScript.setUp();
         deployScript.run();
 
         spog = deployScript.spog();
