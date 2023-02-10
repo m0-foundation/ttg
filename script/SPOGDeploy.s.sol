@@ -53,29 +53,29 @@ contract SPOGDeployScript is Script {
         valueQuorum = 4;
         tax = 5;
 
-        factory = new SPOGFactory();
-
         vote = new SPOGVote("SPOGVote", "vote");
         govSPOG = new GovSPOG(vote, 0, 0);
 
-        // bytes memory bytecode = factory.getBytecode(
-        //     address(cash),
-        //     taxRange,
-        //     inflator,
-        //     reward,
-        //     voteTime,
-        //     inflatorTime,
-        //     sellTime,
-        //     forkTime,
-        //     voteQuorum,
-        //     valueQuorum,
-        //     tax,
-        //     IGovSPOG(address(govSPOG))
-        // );
+        factory = new SPOGFactory();
 
-        // address spogAddress = factory.predictSPOGAddress(bytecode, salt);
+        // predict spog address
+        bytes memory bytecode = factory.getBytecode(
+            address(cash),
+            taxRange,
+            inflator,
+            reward,
+            voteTime,
+            inflatorTime,
+            sellTime,
+            forkTime,
+            voteQuorum,
+            valueQuorum,
+            tax,
+            IGovSPOG(address(govSPOG))
+        );
 
-        // console.log("predicted SPOG address: ", spogAddress);
+        address spogAddress = factory.predictSPOGAddress(bytecode, salt);
+        console.log("predicted SPOG address: ", spogAddress);
     }
 
     function run() public {

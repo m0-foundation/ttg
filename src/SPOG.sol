@@ -102,6 +102,8 @@ contract SPOG is ISPOG, ERC165 {
         govSPOG.updateQuorumNumerator(_voteQuorum);
         govSPOG.updateVotingTime(_voteTime);
 
+        ISPOGVote(address(govSPOG.spogVote())).initSPOGAddress(address(this));
+
         spogData.currentEpoch = 1;
         spogData.currentEpochEnd = block.number + _voteTime;
     }
@@ -256,4 +258,14 @@ contract SPOG is ISPOG, ERC165 {
     /*************************************************/
 
     address[] public lists;
+
+    // helper function to mint VOTE tokens for testing - Not to be used in production
+    function mintSpogVotes(
+        address spogVoteAddress,    
+        address _to,
+        uint256 _amount
+    ) external {
+        require(_amount <= 100e18, "Cannot mint more than 100 VOTE tokens");
+        ISPOGVote(spogVoteAddress).mint(_to, _amount);
+    }
 }
