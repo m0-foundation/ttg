@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {SPOG} from "./SPOG.sol";
-import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
+import {IGovSPOG} from "./interfaces/IGovSPOG.sol";
 
 /// @title SPOGFactory
 /// @notice This contract is used to deploy SPOG contracts
@@ -21,7 +21,7 @@ contract SPOGFactory {
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _tax The cost (in `cash`) to call various functions
-    /// @param _vote The token used for voting
+    /// @param _govSPOG The address of the SPOG governance contract
     /// @return the address of the newly deployed contract
     function deploy(
         address _cash,
@@ -35,10 +35,10 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        ISPOGVote _vote,
-        bytes32 _salt
+        IGovSPOG _govSPOG,
+        uint256 _salt
     ) public returns (SPOG) {
-        SPOG spog = new SPOG{salt: _salt}(
+        SPOG spog = new SPOG{salt: bytes32(_salt)}(
             _cash,
             _taxRange,
             _inflator,
@@ -50,7 +50,7 @@ contract SPOGFactory {
             _voteQuorum,
             _valueQuorum,
             _tax,
-            _vote
+            _govSPOG
         );
 
         // below line is only used for prototype - remove in production
@@ -72,7 +72,7 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        ISPOGVote _vote
+        IGovSPOG _govSPOG
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SPOG).creationCode;
 
@@ -91,7 +91,7 @@ contract SPOGFactory {
                     _voteQuorum,
                     _valueQuorum,
                     _tax,
-                    _vote
+                    _govSPOG
                 )
             );
     }

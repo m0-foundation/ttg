@@ -8,6 +8,8 @@ import {SPOGFactory} from "src/SPOGFactory.sol";
 import {ERC20Mock} from "lib/openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
 import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
+import {GovSPOG} from "src/GovSPOG.sol";
+import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
 contract SPOGDeployScript is Script {
     SPOGFactory public factory;
@@ -23,9 +25,20 @@ contract SPOGDeployScript is Script {
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     uint256 public tax;
+    GovSPOG public govSPOG;
     ISPOGVote public vote;
 
-    function setUp() public {
+    uint256 salt =
+        uint256(
+            keccak256(
+                abi.encodePacked(
+                    "Simple Participatory Onchain Gorvenance",
+                    address(this)
+                )
+            )
+        );
+
+    function triggerSetUp() public {
         // for the real deployment, we will use the real cash token
         cash = new ERC20Mock("CashToken", "cash", msg.sender, 10e18); // mint 10 tokens to msg.sender
 
@@ -39,22 +52,36 @@ contract SPOGDeployScript is Script {
         voteQuorum = 4;
         valueQuorum = 4;
         tax = 5;
-        vote = new SPOGVote("SPOGVote", "vote");
 
         factory = new SPOGFactory();
+
+        vote = new SPOGVote("SPOGVote", "vote");
+        govSPOG = new GovSPOG(vote, 0, 0);
+
+        // bytes memory bytecode = factory.getBytecode(
+        //     address(cash),
+        //     taxRange,
+        //     inflator,
+        //     reward,
+        //     voteTime,
+        //     inflatorTime,
+        //     sellTime,
+        //     forkTime,
+        //     voteQuorum,
+        //     valueQuorum,
+        //     tax,
+        //     IGovSPOG(address(govSPOG))
+        // );
+
+        // address spogAddress = factory.predictSPOGAddress(bytecode, salt);
+
+        // console.log("predicted SPOG address: ", spogAddress);
     }
 
     function run() public {
         vm.startBroadcast();
 
-        setUp();
-
-        bytes32 salt = keccak256(
-            abi.encodePacked(
-                "Simple Participatory Onchain Gorvenance",
-                address(this)
-            )
-        );
+        triggerSetUp();
 
         spog = factory.deploy(
             address(cash),
@@ -68,13 +95,14 @@ contract SPOGDeployScript is Script {
             voteQuorum,
             valueQuorum,
             tax,
-            vote,
+            IGovSPOG(address(govSPOG)),
             salt
         );
 
         console.log("SPOG address: ", address(spog));
         console.log("SPOGFactory address: ", address(factory));
         console.log("SPOGVote address: ", address(vote));
+        console.log("GovSPOG address : ", address(govSPOG));
         console.log("Cash address: ", address(cash));
         vm.stopBroadcast();
     }

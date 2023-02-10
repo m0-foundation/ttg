@@ -7,10 +7,11 @@ import {List} from "./List.sol";
 import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
 import {ISPOG} from "./interfaces/ISPOG.sol";
 
-import {GovSPOG} from "./GovSPOG.sol";
+import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 /**
  * @title SPOG
@@ -18,7 +19,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  * @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
  * @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
  */
-contract SPOG is GovSPOG {
+contract SPOG is ISPOG, ERC165 {
     using SafeERC20 for IERC20;
 
     struct SPOGData {
@@ -35,6 +36,8 @@ contract SPOG is GovSPOG {
         IERC20 cash;
     }
     SPOGData public spogData;
+
+    IGovSPOG public govSPOG;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
@@ -64,7 +67,7 @@ contract SPOG is GovSPOG {
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _tax The cost (in `cash`) to call various functions
-    /// @param _vote The token used for voting
+    /// @param _govSPOG The address of the `GovSPOG` contract
     constructor(
         address _cash,
         uint256[2] memory _taxRange,
@@ -77,8 +80,8 @@ contract SPOG is GovSPOG {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        ISPOGVote _vote
-    ) GovSPOG(_vote, _voteQuorum, _voteTime) {
+        IGovSPOG _govSPOG
+    ) {
         // TODO: add require statements for variables
         spogData.cash = IERC20(_cash);
         spogData.taxRange[0] = _taxRange[0];
@@ -91,13 +94,21 @@ contract SPOG is GovSPOG {
         spogData.valueQuorum = _valueQuorum;
         spogData.tax = _tax;
 
-        // These are set in GovSPOG
-        // voteTime = _voteTime;
-        // voteQuorum = _voteQuorum;
-        // vote = _vote;
+        // govSPOG settings
+        govSPOG = _govSPOG;
+
+        // Set in GovSPOG
+        govSPOG.initSPOGAddress(address(this));
+        govSPOG.updateQuorumNumerator(_voteQuorum);
+        govSPOG.updateVotingTime(_voteTime);
 
         spogData.currentEpoch = 1;
-        spogData.currentEpochEnd = block.number + voteTime;
+        spogData.currentEpochEnd = block.number + _voteTime;
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == address(govSPOG), "SPOG: Only GovSPOG");
+        _;
     }
 
     /// @dev Getter for taxRange. It returns the minimum and maximum value of `tax`
@@ -205,7 +216,7 @@ contract SPOG is GovSPOG {
     }
 
     /// @notice Create a new proposal
-    /// @dev Overrides the `propose` function of the `Governor` contract
+    /// @dev `propose` function of the `Governor` contract
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
     /// @param calldatas The calldatas of the proposal
@@ -216,10 +227,10 @@ contract SPOG is GovSPOG {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override returns (uint256) {
+    ) public returns (uint256) {
         // require that the caller pays the tax to propose
         _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
-        return super.propose(targets, values, calldatas, description);
+        return govSPOG.propose(targets, values, calldatas, description);
     }
 
     // ********** PRIVATE FUNCTIONS ********** //
@@ -245,8 +256,4 @@ contract SPOG is GovSPOG {
     /*************************************************/
 
     address[] public lists;
-
-    function mint(address _account, uint256 _amount) external {
-        spogVote.mint(_account, _amount);
-    }
 }

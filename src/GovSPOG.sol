@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 
 contract GovSPOG is GovernorVotesQuorumFraction {
     ISPOGVote public immutable spogVote;
+    address public spogAddress;
 
     uint256 public voteTime;
 
@@ -29,16 +30,24 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     mapping(uint256 => ProposalVote) private _proposalVotes;
 
     constructor(
-        ISPOGVote spogVoteAddress,
+        ISPOGVote spogVoteContract,
         uint256 quorumNumeratorValue,
         uint256 _voteTime
     )
         GovernorVotesQuorumFraction(quorumNumeratorValue)
-        GovernorVotes(spogVoteAddress)
+        GovernorVotes(spogVoteContract)
         Governor("GovSPOG")
     {
-        spogVote = spogVoteAddress;
+        // spogAddress = _spogAddress;
+        spogVote = spogVoteContract;
         voteTime = _voteTime;
+    }
+
+    /// @dev sets the spog address. Can only be called once.
+    /// @param _spogAddress the address of the spog
+    function initSPOGAddress(address _spogAddress) external {
+        require(spogAddress == address(0), "GovSPOG: spogAddress already set");
+        spogAddress = _spogAddress;
     }
 
     /**
@@ -102,22 +111,6 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         }
     }
 
-    // The following functions are overrides required by Solidity.
-
-    /**
-     * @dev See {IGovernor-COUNTING_MODE}.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function COUNTING_MODE()
-        public
-        pure
-        virtual
-        override
-        returns (string memory)
-    {
-        return "support=bravo&quorum=bravo";
-    }
-
     function votingDelay() public pure override returns (uint256) {
         return 1; // 1 block
     }
@@ -144,6 +137,50 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         bytes memory
     ) internal virtual override {
         _countVote(proposalId, account, support);
+    }
+
+    /**
+     * @dev See {IGovernor-COUNTING_MODE}.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function COUNTING_MODE()
+        public
+        pure
+        virtual
+        override
+        returns (string memory)
+    {
+        return "support=bravo&quorum=bravo";
+    }
+
+    /// @dev Update quorum numerator only by SPOG
+    /// @param newQuorumNumerator New quorum numerator
+    function updateQuorumNumerator(uint256 newQuorumNumerator)
+        external
+        override
+    {
+        require(
+            msg.sender == spogAddress,
+            "GovSPOG: only SPOG can update quorum numerator"
+        );
+        _updateQuorumNumerator(newQuorumNumerator);
+    }
+
+    /// @dev Update voting time only by SPOG
+    /// @param newVotingTime New voting time
+    function updateVotingTime(uint256 newVotingTime) external {
+        require(
+            msg.sender == spogAddress,
+            "GovSPOG: only SPOG can update voting time"
+        );
+        voteTime = newVotingTime;
+    }
+
+    /***************************************************/
+    /******** Prototype Helpers - NOT FOR PROD ********/
+    /*************************************************/
+    function mint(address _account, uint256 _amount) external {
+        spogVote.mint(_account, _amount);
     }
 
     // TODO: check if these are needed

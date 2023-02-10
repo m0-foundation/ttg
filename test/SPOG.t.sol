@@ -14,6 +14,7 @@ import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 contract SPOGTest is Test {
     SPOG public spog;
     SPOGVote public spogVote;
+    GovSPOG public govSPOG;
     SPOGDeployScript public deployScript;
 
     function setUp() public {
@@ -22,6 +23,7 @@ contract SPOGTest is Test {
 
         spog = deployScript.spog();
         spogVote = SPOGVote(address(deployScript.vote()));
+        govSPOG = deployScript.govSPOG();
     }
 
     /**********************************/
@@ -34,7 +36,7 @@ contract SPOGTest is Test {
         string memory description
     ) private view returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = spog.hashProposal(
+        proposalId = govSPOG.hashProposal(
             targets,
             values,
             calldatas,
@@ -66,16 +68,16 @@ contract SPOGTest is Test {
         spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + spog.votingDelay() + 1);
+        vm.roll(block.number + govSPOG.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        spog.castVote(proposalId, yesVote);
+        govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        govSPOG.execute(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpogAndAppendAnAddressToIt() private {
@@ -112,16 +114,16 @@ contract SPOGTest is Test {
         spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + spog.votingDelay() + 1);
+        vm.roll(block.number + govSPOG.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        spog.castVote(proposalId, yesVote);
+        govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        govSPOG.execute(targets, values, calldatas, hashedDescription);
     }
 
     /**********************************/
@@ -145,17 +147,15 @@ contract SPOGTest is Test {
         assert(address(cash) == address(deployScript.cash()));
         assert(inflator == deployScript.inflator());
         assert(reward == deployScript.reward());
-        assert(GovSPOG(spog).voteTime() == deployScript.voteTime());
+        assert(govSPOG.voteTime() == deployScript.voteTime());
         assert(inflatorTime == deployScript.inflatorTime());
         assert(sellTime == deployScript.sellTime());
         assert(forkTime == deployScript.forkTime());
-        assert(GovSPOG(spog).quorumNumerator() == deployScript.voteQuorum());
+        assert(govSPOG.quorumNumerator() == deployScript.voteQuorum());
         assert(valueQuorum == deployScript.valueQuorum());
         assert(tax == deployScript.tax());
         assert(currentEpoch == 1); // starts with epoch 1
-        assert(
-            address(GovSPOG(spog).spogVote()) == address(deployScript.vote())
-        );
+        assert(address(govSPOG.spogVote()) == address(deployScript.vote()));
         assert(currentEpochEnd == block.number + deployScript.voteTime());
         // test tax range is set correctly
         (uint256 taxRangeMin, uint256 taxRangeMax) = spog.taxRange();
@@ -164,7 +164,7 @@ contract SPOGTest is Test {
     }
 
     function testRevertAddNewListWhenNotCallingFromGovernance() public {
-        vm.expectRevert("Governor: onlyGovernance");
+        vm.expectRevert("SPOG: Only GovSPOG");
         spog.addNewList();
     }
 
@@ -199,28 +199,28 @@ contract SPOGTest is Test {
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Pending,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Pending,
             "Proposal is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + spog.votingDelay() + 1);
+        vm.roll(block.number + govSPOG.votingDelay() + 1);
 
         // proposal should be active now
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Active,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Active,
             "Not in active state"
         );
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        spog.castVote(proposalId, yesVote);
+        govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // check proposal is succeeded
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Succeeded,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Succeeded,
             "Not in succeeded state"
         );
 
@@ -229,11 +229,11 @@ contract SPOGTest is Test {
         // spog.queue(proposalId);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        govSPOG.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is executed
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Executed,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Executed,
             "Proposal not executed"
         );
 
@@ -248,7 +248,7 @@ contract SPOGTest is Test {
         addNewListToSpog();
         address listToRemove = spog.lists(0);
 
-        vm.expectRevert("Governor: onlyGovernance");
+        vm.expectRevert("SPOG: Only GovSPOG");
         spog.removeList(listToRemove);
     }
 
@@ -292,37 +292,37 @@ contract SPOGTest is Test {
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Pending,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Pending,
             "Proposal is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + spog.votingDelay() + 1);
+        vm.roll(block.number + govSPOG.votingDelay() + 1);
 
         // proposal should be active now
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Active,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Active,
             "Not in active state"
         );
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        spog.castVote(proposalId, yesVote);
+        govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // check proposal is succeeded
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Succeeded,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Succeeded,
             "Not in succeeded state"
         );
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        govSPOG.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is executed
         assertTrue(
-            spog.state(proposalId) == IGovernor.ProposalState.Executed,
+            govSPOG.state(proposalId) == IGovernor.ProposalState.Executed,
             "Proposal not executed"
         );
 
@@ -335,7 +335,7 @@ contract SPOGTest is Test {
         address listToAddAddressTo = spog.lists(0);
         address addressToAdd = address(0x1234);
 
-        vm.expectRevert("Governor: onlyGovernance");
+        vm.expectRevert("SPOG: Only GovSPOG");
         spog.append(addressToAdd, IList(listToAddAddressTo));
     }
 
@@ -380,16 +380,16 @@ contract SPOGTest is Test {
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + spog.votingDelay() + 1);
+        vm.roll(block.number + govSPOG.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        spog.castVote(proposalId, yesVote);
+        govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        govSPOG.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(
@@ -406,7 +406,7 @@ contract SPOGTest is Test {
         address listToRemoveAddressFrom = spog.lists(0);
         address addressToRemove = address(0x1234);
 
-        vm.expectRevert("Governor: onlyGovernance");
+        vm.expectRevert("SPOG: Only GovSPOG");
         spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
     }
 
@@ -451,16 +451,16 @@ contract SPOGTest is Test {
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + spog.votingDelay() + 1);
+        vm.roll(block.number + govSPOG.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        spog.castVote(proposalId, yesVote);
+        govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        govSPOG.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(
