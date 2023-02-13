@@ -53,6 +53,7 @@ contract SPOG is ISPOG, ERC165 {
     event ListRemoved(address _list);
     event AddressAppendedToList(address _list, address _address);
     event AddressRemovedFromList(address _list, address _address);
+    event NewProposal(uint256 indexed proposalId);
 
     // create constructor to set contract variables with natspec comments
     /// @notice Create a new SPOG
@@ -232,6 +233,21 @@ contract SPOG is ISPOG, ERC165 {
     ) public returns (uint256) {
         // require that the caller pays the tax to propose
         _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
+
+        uint256 proposalId = govSPOG.hashProposal(
+            targets,
+            values,
+            calldatas,
+            keccak256(bytes(description))
+        );
+        emit NewProposal(proposalId);
+
+        // for prototype only - remove later
+        proposals.push(proposalId);
+        proposalDescriptions.push(description);
+        proposalCallDatas.push(calldatas[0]);
+        //
+
         return govSPOG.propose(targets, values, calldatas, description);
     }
 
@@ -265,6 +281,39 @@ contract SPOG is ISPOG, ERC165 {
 
     function getListLength() external view returns (uint256) {
         return lists.length;
+    }
+
+    // proposals array
+    uint256[] private proposals;
+
+    function getProposals() external view returns (uint256[] memory) {
+        return proposals;
+    }
+
+    function getProposalsLength() external view returns (uint256) {
+        return proposals.length;
+    }
+
+    // proposal description array
+    string[] private proposalDescriptions;
+
+    function getProposalDescriptions() external view returns (string[] memory) {
+        return proposalDescriptions;
+    }
+
+    function getProposalDescriptionsLength() external view returns (uint256) {
+        return proposalDescriptions.length;
+    }
+
+    // proposal call data array
+    bytes[] private proposalCallDatas;
+
+    function getProposalCallDatas() external view returns (bytes[] memory) {
+        return proposalCallDatas;
+    }
+
+    function getProposalCallDatasLength() external view returns (uint256) {
+        return proposalCallDatas.length;
     }
 
     // helper function to mint VOTE tokens for testing - Not to be used in production
