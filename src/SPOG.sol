@@ -257,11 +257,19 @@ contract SPOG is ISPOG, ERC165 {
     /******** Prototype Helpers - NOT FOR PROD ********/
     /*************************************************/
 
-    address[] public lists;
+    address[] private lists;
+
+    function getLists() external view returns (address[] memory) {
+        return lists;
+    }
+
+    function getListLength() external view returns (uint256) {
+        return lists.length;
+    }
 
     // helper function to mint VOTE tokens for testing - Not to be used in production
     function mintSpogVotes(
-        address spogVoteAddress,    
+        address spogVoteAddress,
         address _to,
         uint256 _amount
     ) external {

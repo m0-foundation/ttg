@@ -83,7 +83,7 @@ contract SPOGTest is Test {
     function addNewListToSpogAndAppendAnAddressToIt() private {
         addNewListToSpog();
 
-        address listToAddAddressTo = spog.lists(0);
+        address listToAddAddressTo = spog.getLists()[0];
         address addressToAdd = address(0x1234);
 
         // create proposal to remove list
@@ -238,15 +238,14 @@ contract SPOGTest is Test {
         );
 
         // assert that list was created
-        console.log("first list", spog.lists(0));
-        address createdList = spog.lists(0);
+        address createdList = spog.getLists()[0];
 
         assertTrue(spog.masterlist(createdList), "List was not created");
     }
 
     function testRevertRemoveListWhenNotCallingFromGovernance() public {
         addNewListToSpog();
-        address listToRemove = spog.lists(0);
+        address listToRemove = spog.getLists()[0];
 
         vm.expectRevert("SPOG: Only GovSPOG");
         spog.removeList(listToRemove);
@@ -255,7 +254,7 @@ contract SPOGTest is Test {
     function testSPOGProposalToRemoveList() public {
         addNewListToSpog();
 
-        address listToRemove = spog.lists(0);
+        address listToRemove = spog.getLists()[0];
 
         // create proposal to remove list
         address[] memory targets = new address[](1);
@@ -332,7 +331,7 @@ contract SPOGTest is Test {
 
     function testRevertAppendToListWhenNotCallingFromGovernance() public {
         addNewListToSpog();
-        address listToAddAddressTo = spog.lists(0);
+        address listToAddAddressTo = spog.getLists()[0];
         address addressToAdd = address(0x1234);
 
         vm.expectRevert("SPOG: Only GovSPOG");
@@ -342,7 +341,7 @@ contract SPOGTest is Test {
     function testSPOGProposalToAppedToAList() public {
         addNewListToSpog();
 
-        address listToAddAddressTo = spog.lists(0);
+        address listToAddAddressTo = spog.getLists()[0];
         address addressToAdd = address(0x1234);
 
         // create proposal to remove list
@@ -403,7 +402,7 @@ contract SPOGTest is Test {
     {
         addNewListToSpogAndAppendAnAddressToIt();
 
-        address listToRemoveAddressFrom = spog.lists(0);
+        address listToRemoveAddressFrom = spog.getLists()[0];
         address addressToRemove = address(0x1234);
 
         vm.expectRevert("SPOG: Only GovSPOG");
@@ -413,7 +412,7 @@ contract SPOGTest is Test {
     function testSPOGProposalToRemoveAddressFromAList() public {
         addNewListToSpogAndAppendAnAddressToIt();
 
-        address listToRemoveAddressFrom = spog.lists(0);
+        address listToRemoveAddressFrom = spog.getLists()[0];
         address addressToRemove = address(0x1234);
 
         // create proposal to remove list

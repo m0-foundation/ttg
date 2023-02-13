@@ -121,5 +121,15 @@ contract SPOGFactory {
     /******** Prototype Helpers - NOT FOR PROD ********/
     /*************************************************/
 
-    address[] public spogs;
+    address[] private spogs;
+
+    // function to get spogs array elements
+    function getSpogs() external view returns (address[] memory) {
+        return spogs;
+    }
+
+    // function to get spogs array length
+    function getSpogsLength() external view returns (uint256) {
+        return spogs.length;
+    }
 }
