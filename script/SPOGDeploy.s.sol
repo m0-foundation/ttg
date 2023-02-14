@@ -54,7 +54,7 @@ contract SPOGDeployScript is Script {
         tax = 5;
 
         vote = new SPOGVote("SPOGVote", "vote");
-        govSPOG = new GovSPOG(vote, 0, 0);
+        govSPOG = new GovSPOG(vote, voteQuorum, voteTime);
 
         factory = new SPOGFactory();
 

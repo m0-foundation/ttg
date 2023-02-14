@@ -17,6 +17,11 @@ contract SPOGTest is Test {
     GovSPOG public govSPOG;
     SPOGDeployScript public deployScript;
 
+    enum VoteType {
+        No,
+        Yes
+    }
+
     function setUp() public {
         deployScript = new SPOGDeployScript();
         deployScript.run();
@@ -24,6 +29,10 @@ contract SPOGTest is Test {
         spog = deployScript.spog();
         spogVote = SPOGVote(address(deployScript.vote()));
         govSPOG = deployScript.govSPOG();
+
+        // mint spogVote to address(this) and self-delegate
+        spog.mintSpogVotes(address(spogVote), address(this), 100e18);
+        spogVote.delegate(address(this));
     }
 
     /**********************************/
@@ -213,7 +222,7 @@ contract SPOGTest is Test {
         );
 
         // cast vote on proposal
-        uint8 yesVote = 1;
+        uint8 yesVote = uint8(VoteType.Yes);
         govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
@@ -305,7 +314,7 @@ contract SPOGTest is Test {
         );
 
         // cast vote on proposal
-        uint8 yesVote = 1;
+        uint8 yesVote = uint8(VoteType.Yes);
         govSPOG.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
