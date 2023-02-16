@@ -123,14 +123,15 @@ contract SPOG is ISPOG, ERC165 {
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
-    function addNewList() external onlyGovernance {
-        address list = address(new List());
+    function addNewList(string memory listName) external onlyGovernance {
+        address list = address(new List(listName));
         // add the list to the master list
         masterlist[list] = true;
         emit NewListAdded(list);
 
         // used for prototype only - remove later
         lists.push(list);
+        listNames.push(listName);
     }
 
     // create function to remove a list from the master list of the SPOG
@@ -193,12 +194,6 @@ contract SPOG is ISPOG, ERC165 {
 
         // require that the address is on the list
         require(_list.contains(_address), "Address is not on the list");
-
-        // // require that the vote quorum has been reached
-        // require(
-        //     _voteSucceeded(_proposalId),
-        //     "Vote quorum has not been reached for this action"
-        // );
 
         // remove the address from the list
         _list.remove(_address);
@@ -281,6 +276,16 @@ contract SPOG is ISPOG, ERC165 {
 
     function getListLength() external view returns (uint256) {
         return lists.length;
+    }
+
+    string[] private listNames;
+
+    function getListNames() external view returns (string[] memory) {
+        return listNames;
+    }
+
+    function getListNamesLength() external view returns (uint256) {
+        return listNames.length;
     }
 
     // proposals array

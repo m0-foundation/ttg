@@ -32,8 +32,10 @@ contract SPOGDeployScript is Script {
         uint256(
             keccak256(
                 abi.encodePacked(
-                    "Simple Participatory Onchain Gorvenance",
-                    address(this)
+                    "Simple Participatory Onchain Governance",
+                    address(this),
+                    block.timestamp,
+                    block.number
                 )
             )
         );
@@ -54,7 +56,7 @@ contract SPOGDeployScript is Script {
         tax = 5;
 
         vote = new SPOGVote("SPOGVote", "vote");
-        govSPOG = new GovSPOG(vote, voteQuorum, voteTime);
+        govSPOG = new GovSPOG(vote, voteQuorum, voteTime, "GovSPOG");
 
         factory = new SPOGFactory();
 

@@ -32,11 +32,12 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     constructor(
         ISPOGVote spogVoteContract,
         uint256 quorumNumeratorValue,
-        uint256 _voteTime
+        uint256 _voteTime,
+        string memory name_
     )
         GovernorVotesQuorumFraction(quorumNumeratorValue)
         GovernorVotes(spogVoteContract)
-        Governor("GovSPOG")
+        Governor(name_)
     {
         // spogAddress = _spogAddress;
         spogVote = spogVoteContract;
@@ -182,56 +183,4 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     function mint(address _account, uint256 _amount) external {
         spogVote.mint(_account, _amount);
     }
-
-    // TODO: check if these are needed
-
-    // function quorum(uint256 blockNumber)
-    //     public
-    //     view
-    //     override(GovernorVotesQuorumFraction)
-    //     returns (uint256)
-    // {
-    //     return super.quorum(blockNumber);
-    // }
-
-    // function state(uint256 proposalId)
-    //     public
-    //     view
-    //     override
-    //     returns (ProposalState)
-    // {
-    //     return super.state(proposalId);
-    // }
-
-    // function propose(
-    //     address[] memory targets,
-    //     uint256[] memory values,
-    //     bytes[] memory calldatas,
-    //     string memory description
-    // ) public override returns (uint256) {
-    //     return super.propose(targets, values, calldatas, description);
-    // }
-
-    // function _execute(
-    //     uint256 proposalId,
-    //     address[] memory targets,
-    //     uint256[] memory values,
-    //     bytes[] memory calldatas,
-    //     bytes32 descriptionHash
-    // ) internal override {
-    //     super._execute(proposalId, targets, values, calldatas, descriptionHash);
-    // }
-
-    // function _cancel(
-    //     address[] memory targets,
-    //     uint256[] memory values,
-    //     bytes[] memory calldatas,
-    //     bytes32 descriptionHash
-    // ) internal override returns (uint256) {
-    //     return super._cancel(targets, values, calldatas, descriptionHash);
-    // }
-
-    // function _executor() internal view override returns (address) {
-    //     return super._executor();
-    // }
 }

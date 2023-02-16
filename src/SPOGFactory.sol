@@ -56,6 +56,9 @@ contract SPOGFactory {
         // below line is only used for prototype - remove in production
         spogs.push(address(spog));
 
+        string memory govSPOGName = _govSPOG.name();
+        govSPOGNames.push(govSPOGName);
+
         return spog;
     }
 
@@ -131,5 +134,18 @@ contract SPOGFactory {
     // function to get spogs array length
     function getSpogsLength() external view returns (uint256) {
         return spogs.length;
+    }
+
+    // array to store govSPOG names
+    string[] private govSPOGNames;
+
+    // function to get govSPOG names array elements
+    function getGovSPOGNames() external view returns (string[] memory) {
+        return govSPOGNames;
+    }
+
+    // function to get govSPOG names array length
+    function getGovSPOGNamesLength() external view returns (uint256) {
+        return govSPOGNames.length;
     }
 }

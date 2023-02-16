@@ -59,7 +59,10 @@ contract SPOGTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList()");
+        calldatas[0] = abi.encodeWithSignature(
+            "addNewList(string)",
+            "My Awesome List"
+        );
         string memory description = "Add new list";
 
         (
@@ -174,7 +177,7 @@ contract SPOGTest is Test {
 
     function testRevertAddNewListWhenNotCallingFromGovernance() public {
         vm.expectRevert("SPOG: Only GovSPOG");
-        spog.addNewList();
+        spog.addNewList("My Awesome List");
     }
 
     function testSPOGProposalToAddList() public {
@@ -184,7 +187,10 @@ contract SPOGTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList()");
+        calldatas[0] = abi.encodeWithSignature(
+            "addNewList(string)",
+            "My Awesome List"
+        );
         string memory description = "Add new list";
 
         (

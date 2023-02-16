@@ -13,13 +13,21 @@ contract List is ERC165CheckerSPOG {
     // create an admin address
     address public admin;
 
+    string private _name;
+
     event AddressAdded(address _address);
     event AddressRemoved(address _address);
 
     // constructor sets the admin address
-    constructor() {
+    constructor(string memory name_) {
+        _name = name_;
         checkSPOGInterface(msg.sender);
         admin = msg.sender;
+    }
+
+    /// @notice Returns the name of the list
+    function name() public view returns (string memory) {
+        return _name;
     }
 
     /// @notice Add an address to the list
