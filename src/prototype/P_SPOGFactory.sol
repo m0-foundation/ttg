@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {SPOG} from "src/SPOG.sol";
+import {P_SPOG} from "src/prototype/P_SPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+
+/***************************************************/
+/******** Prototype - NOT FOR PROD ****************/
+/*************************************************/
 
 /// @title SPOGFactory
 /// @notice This contract is used to deploy SPOG contracts
@@ -37,8 +41,8 @@ contract SPOGFactory {
         uint256 _tax,
         IGovSPOG _govSPOG,
         uint256 _salt
-    ) public returns (SPOG) {
-        SPOG spog = new SPOG{salt: bytes32(_salt)}(
+    ) public returns (P_SPOG) {
+        P_SPOG spog = new P_SPOG{salt: bytes32(_salt)}(
             _cash,
             _taxRange,
             _inflator,
@@ -52,6 +56,12 @@ contract SPOGFactory {
             _tax,
             _govSPOG
         );
+
+        // below line is only used for prototype - remove in production
+        spogs.push(address(spog));
+
+        string memory govSPOGName = _govSPOG.name();
+        govSPOGNames.push(govSPOGName);
 
         return spog;
     }
@@ -71,7 +81,7 @@ contract SPOGFactory {
         uint256 _tax,
         IGovSPOG _govSPOG
     ) public pure returns (bytes memory) {
-        bytes memory bytecode = type(SPOG).creationCode;
+        bytes memory bytecode = type(P_SPOG).creationCode;
 
         return
             abi.encodePacked(
@@ -112,5 +122,32 @@ contract SPOGFactory {
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));
+    }
+
+    // helper functions
+
+    address[] private spogs;
+
+    // function to get spogs array elements
+    function getSpogs() external view returns (address[] memory) {
+        return spogs;
+    }
+
+    // function to get spogs array length
+    function getSpogsLength() external view returns (uint256) {
+        return spogs.length;
+    }
+
+    // array to store govSPOG names
+    string[] private govSPOGNames;
+
+    // function to get govSPOG names array elements
+    function getGovSPOGNames() external view returns (string[] memory) {
+        return govSPOGNames;
+    }
+
+    // function to get govSPOG names array length
+    function getGovSPOGNamesLength() external view returns (uint256) {
+        return govSPOGNames.length;
     }
 }

@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {IList} from "src/interfaces/IList.sol";
-import {List} from "src/List.sol";
+import {P_IList} from "src/prototype/P_IList.sol";
+import {P_List} from "src/prototype/P_List.sol";
+import {P_ISPOG} from "src/prototype/P_ISPOG.sol";
 
 import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
+/***************************************************/
+/******** Prototype - NOT FOR PROD ****************/
+/*************************************************/
 
 /**
  * @title SPOG
@@ -18,7 +22,7 @@ import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
  * @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
  * @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
  */
-contract SPOG is ISPOG, ERC165 {
+contract P_SPOG is P_ISPOG, ERC165 {
     using SafeERC20 for IERC20;
 
     struct SPOGData {
@@ -45,15 +49,13 @@ contract SPOG is ISPOG, ERC165 {
     // ISPOGVote public vote;
     // uint256 public voteTime;
 
-    address[] public lists; // List of all lists
-
     // List of addresses that are part of the masterlist
     mapping(address => bool) public masterlist;
 
     event NewListAdded(address _list);
     event ListRemoved(address _list);
-    event AddressAppendedToList(address _list, address _address);
-    event AddressRemovedFromList(address _list, address _address);
+    event TextAppendedToList(address _list, string _text);
+    event TextRemovedFromList(address _list, string _text);
     event NewProposal(uint256 indexed proposalId);
 
     // create constructor to set contract variables with natspec comments
@@ -125,11 +127,14 @@ contract SPOG is ISPOG, ERC165 {
 
     /// @notice Add a new list to the master list of the SPOG
     function addNewList(string memory listName) external onlyGovernance {
-        address list = address(new List(listName));
+        address list = address(new P_List(listName));
         // add the list to the master list
         masterlist[list] = true;
-        lists.push(list);
         emit NewListAdded(list);
+
+        // used for prototype only - remove later
+        lists.push(list);
+        listNames.push(listName);
     }
 
     // create function to remove a list from the master list of the SPOG
@@ -144,58 +149,39 @@ contract SPOG is ISPOG, ERC165 {
         emit ListRemoved(_listAddress);
     }
 
-    // create function to append an address to a list
-    /// @notice Append an address to a list
-    /// @param _address The address to be appended to the list
-    /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external onlyGovernance {
+    // create function to append an text to a list
+    /// @notice Append an text to a list
+    /// @param _text The text to be appended to the list
+    /// @param _list The list to which the text will be appended
+    function append(string memory _text, P_IList _list)
+        external
+        onlyGovernance
+    {
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
 
         // require that the address is not already on the list
-        require(!_list.contains(_address), "Address is already on the list");
+        require(!_list.contains(_text), "Text is already on the list");
 
         // append the address to the list
-        _list.add(_address);
-        emit AddressAppendedToList(address(_list), _address);
+        _list.add(_text);
+        emit TextAppendedToList(address(_list), _text);
     }
 
-    // create function to remove an address from a list
-    /// @notice Remove an address from a list
-    /// @param _address The address to be removed from the list
-    /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external onlyGovernance {
-        // require that the list is on the master list
-        require(masterlist[address(_list)], "List is not on the master list");
-
-        // require that the address is on the list
-        require(_list.contains(_address), "Address is not on the list");
-
-        // remove the address from the list
-        _list.remove(_address);
-        emit AddressRemovedFromList(address(_list), _address);
-    }
-
-    // create function to remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @param _address The address to be removed from the list
-    /// @param _list The list from which the address will be removed
-    function emergencyRemove(address _address, IList _list)
+    // create function to remove an text from a list
+    /// @notice Remove an text from a list
+    /// @param _text The text to be removed from the list
+    /// @param _list The list from which the text will be removed
+    function remove(string memory _text, P_IList _list)
         external
         onlyGovernance
     {
-        // TODO: need to come up with a way to pay the tax*12 during emergencyRemove() proposal
-        // _pay(spogData.tax * 12);
-
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
 
-        // require that the address is on the list
-        require(_list.contains(_address), "Address is not on the list");
-
         // remove the address from the list
-        _list.remove(_address);
-        emit AddressRemovedFromList(address(_list), _address);
+        _list.remove(_text);
+        emit TextRemovedFromList(address(_list), _text);
     }
 
     /// @dev check SPOG interface support
@@ -207,7 +193,7 @@ contract SPOG is ISPOG, ERC165 {
         returns (bool)
     {
         return
-            interfaceId == type(ISPOG).interfaceId ||
+            interfaceId == type(P_ISPOG).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -235,6 +221,12 @@ contract SPOG is ISPOG, ERC165 {
         );
         emit NewProposal(proposalId);
 
+        // for prototype only - remove later
+        proposals.push(proposalId);
+        proposalDescriptions.push(description);
+        proposalCallDatas.push(calldatas[0]);
+        //
+
         return govSPOG.propose(targets, values, calldatas, description);
     }
 
@@ -254,5 +246,70 @@ contract SPOG is ISPOG, ERC165 {
 
     fallback() external {
         revert("SPOG: non-existent function");
+    }
+
+    // helper functions
+
+    address[] private lists;
+
+    function getLists() external view returns (address[] memory) {
+        return lists;
+    }
+
+    function getListLength() external view returns (uint256) {
+        return lists.length;
+    }
+
+    string[] private listNames;
+
+    function getListNames() external view returns (string[] memory) {
+        return listNames;
+    }
+
+    function getListNamesLength() external view returns (uint256) {
+        return listNames.length;
+    }
+
+    // proposals array
+    uint256[] private proposals;
+
+    function getProposals() external view returns (uint256[] memory) {
+        return proposals;
+    }
+
+    function getProposalsLength() external view returns (uint256) {
+        return proposals.length;
+    }
+
+    // proposal description array
+    string[] private proposalDescriptions;
+
+    function getProposalDescriptions() external view returns (string[] memory) {
+        return proposalDescriptions;
+    }
+
+    function getProposalDescriptionsLength() external view returns (uint256) {
+        return proposalDescriptions.length;
+    }
+
+    // proposal call data array
+    bytes[] private proposalCallDatas;
+
+    function getProposalCallDatas() external view returns (bytes[] memory) {
+        return proposalCallDatas;
+    }
+
+    function getProposalCallDatasLength() external view returns (uint256) {
+        return proposalCallDatas.length;
+    }
+
+    // helper function to mint VOTE tokens for testing - Not to be used in production
+    function mintSpogVotes(
+        address spogVoteAddress,
+        address _to,
+        uint256 _amount
+    ) external {
+        require(_amount <= 100e18, "Cannot mint more than 100 VOTE tokens");
+        ISPOGVote(spogVoteAddress).mint(_to, _amount);
     }
 }
