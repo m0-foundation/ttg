@@ -2,6 +2,8 @@
 pragma solidity 0.8.17;
 
 interface IList {
+    function admin() external view returns (address);
+
     function name() external view returns (string memory);
 
     function add(address _address) external;

@@ -19,9 +19,9 @@ interface ISPOGClone {
         address spogAddress
     ) external;
 
-    function addNewList(string memory listName) external;
+    function addNewList(IList list) external;
 
-    function removeList(address _listAddress) external;
+    function removeList(IList list) external;
 
     function append(address _address, IList _list) external;
 

@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import {IList} from "src/interfaces/IList.sol";
-import {List} from "src/List.sol";
 
 import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -11,6 +10,7 @@ import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 /**
  * @title SPOG
@@ -20,6 +20,7 @@ import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
  */
 contract SPOG is ISPOG, ERC165 {
     using SafeERC20 for IERC20;
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     struct SPOGData {
         uint256 tax;
@@ -45,10 +46,11 @@ contract SPOG is ISPOG, ERC165 {
     // ISPOGVote public vote;
     // uint256 public voteTime;
 
-    address[] public lists; // List of all lists
+    uint256 private constant inMasterList = 1;
 
     // List of addresses that are part of the masterlist
-    mapping(address => bool) public masterlist;
+    // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
+    EnumerableMap.AddressToUintMap private masterlist;
 
     event NewListAdded(address _list);
     event ListRemoved(address _list);
@@ -121,27 +123,36 @@ contract SPOG is ISPOG, ERC165 {
         return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
+    /// @dev Getter for finding whether a list is in a masterlist
+    /// @return Whether the list is in the masterlist
+    function isListInMasterList(address list) external view returns (bool) {
+        return masterlist.contains(list);
+    }
+
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
-    function addNewList(string memory listName) external onlyGovernance {
-        address list = address(new List(listName));
+    /// @param list The list address of the list to be added
+    function addNewList(IList list) external onlyGovernance {
+        require(list.admin() == address(this), "List admin is not SPOG");
         // add the list to the master list
-        masterlist[list] = true;
-        lists.push(list);
-        emit NewListAdded(list);
+        masterlist.set(address(list), inMasterList);
+        emit NewListAdded(address(list));
     }
 
     // create function to remove a list from the master list of the SPOG
     /// @notice Remove a list from the master list of the SPOG
-    /// @param _listAddress  The list address of the list to be removed
-    function removeList(address _listAddress) external onlyGovernance {
+    /// @param list  The list address of the list to be removed
+    function removeList(IList list) external onlyGovernance {
         // require that the list is on the master list
-        require(masterlist[_listAddress], "List is not on the master list");
+        require(
+            masterlist.contains(address(list)),
+            "List is not on the master list"
+        );
 
         // remove the list from the master list
-        masterlist[_listAddress] = false;
-        emit ListRemoved(_listAddress);
+        masterlist.remove(address(list));
+        emit ListRemoved(address(list));
     }
 
     // create function to append an address to a list
@@ -150,7 +161,10 @@ contract SPOG is ISPOG, ERC165 {
     /// @param _list The list to which the address will be appended
     function append(address _address, IList _list) external onlyGovernance {
         // require that the list is on the master list
-        require(masterlist[address(_list)], "List is not on the master list");
+        require(
+            masterlist.contains(address(_list)),
+            "List is not on the master list"
+        );
 
         // require that the address is not already on the list
         require(!_list.contains(_address), "Address is already on the list");
@@ -166,7 +180,10 @@ contract SPOG is ISPOG, ERC165 {
     /// @param _list The list from which the address will be removed
     function remove(address _address, IList _list) external onlyGovernance {
         // require that the list is on the master list
-        require(masterlist[address(_list)], "List is not on the master list");
+        require(
+            masterlist.contains(address(_list)),
+            "List is not on the master list"
+        );
 
         // require that the address is on the list
         require(_list.contains(_address), "Address is not on the list");
@@ -184,18 +201,30 @@ contract SPOG is ISPOG, ERC165 {
         external
         onlyGovernance
     {
-        // TODO: need to come up with a way to pay the tax*12 during emergencyRemove() proposal
-        // _pay(spogData.tax * 12);
+        _pay(spogData.tax * 12);
 
-        // require that the list is on the master list
-        require(masterlist[address(_list)], "List is not on the master list");
+        address[] memory targets = new address[](1);
+        uint256[] memory values = new uint256[](1);
+        bytes[] memory calldatas = new bytes[](1);
 
-        // require that the address is on the list
-        require(_list.contains(_address), "Address is not on the list");
+        targets[0] = address(this);
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSignature(
+            "remove(address,IList)",
+            _address,
+            _list
+        );
 
-        // remove the address from the list
-        _list.remove(_address);
-        emit AddressRemovedFromList(address(_list), _address);
+        string memory description = "Emergency Remove address from list";
+
+        uint256 proposalId = govSPOG.propose(
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        emit NewProposal(proposalId);
     }
 
     /// @dev check SPOG interface support
@@ -227,15 +256,15 @@ contract SPOG is ISPOG, ERC165 {
         // require that the caller pays the tax to propose
         _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
 
-        uint256 proposalId = govSPOG.hashProposal(
+        uint256 proposalId = govSPOG.propose(
             targets,
             values,
             calldatas,
-            keccak256(bytes(description))
+            description
         );
         emit NewProposal(proposalId);
 
-        return govSPOG.propose(targets, values, calldatas, description);
+        return proposalId;
     }
 
     // ********** PRIVATE FUNCTIONS ********** //

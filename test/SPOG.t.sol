@@ -9,6 +9,7 @@ import "../src/SPOG.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
 import {IList} from "src/interfaces/IList.sol";
+import {List} from "src/List.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 
 contract SPOGTest is Test {
@@ -16,6 +17,7 @@ contract SPOGTest is Test {
     SPOGVote public spogVote;
     GovSPOG public govSPOG;
     SPOGDeployScript public deployScript;
+    List public list;
 
     enum VoteType {
         No,
@@ -33,6 +35,10 @@ contract SPOGTest is Test {
         // mint spogVote to address(this) and self-delegate
         deal({token: address(spogVote), to: address(this), give: 100e18});
         spogVote.delegate(address(this));
+
+        // deploy list and change admin to spog
+        list = new List("My List");
+        list.changeAdmin(address(spog));
     }
 
     /**********************************/
@@ -59,10 +65,7 @@ contract SPOGTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "addNewList(string)",
-            "My Awesome List"
-        );
+        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
         string memory description = "Add new list";
 
         (
@@ -95,7 +98,7 @@ contract SPOGTest is Test {
     function addNewListToSpogAndAppendAnAddressToIt() private {
         addNewListToSpog();
 
-        address listToAddAddressTo = spog.lists(0);
+        address listToAddAddressTo = address(list);
         address addressToAdd = address(0x1234);
 
         // create proposal to remove list
@@ -177,7 +180,7 @@ contract SPOGTest is Test {
 
     function test_RevertWhen_AddingNewList_NotCallingFromGovernance() external {
         vm.expectRevert("SPOG: Only GovSPOG");
-        spog.addNewList("My Awesome List");
+        spog.addNewList(IList(address(list)));
     }
 
     function test_SPOGProposalToAddList() public {
@@ -187,10 +190,7 @@ contract SPOGTest is Test {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "addNewList(string)",
-            "My Awesome List"
-        );
+        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
         string memory description = "Add new list";
 
         (
@@ -253,23 +253,26 @@ contract SPOGTest is Test {
         );
 
         // assert that list was created
-        address createdList = spog.lists(0);
+        address createdList = address(list);
 
-        assertTrue(spog.masterlist(createdList), "List was not created");
+        assertTrue(
+            spog.isListInMasterList(createdList),
+            "List was not created"
+        );
     }
 
     function testRevertRemoveListWhenNotCallingFromGovernance() public {
         addNewListToSpog();
-        address listToRemove = spog.lists(0);
+        address listToRemove = address(list);
 
         vm.expectRevert("SPOG: Only GovSPOG");
-        spog.removeList(listToRemove);
+        spog.removeList(IList(listToRemove));
     }
 
     function testSPOGProposalToRemoveList() public {
         addNewListToSpog();
 
-        address listToRemove = spog.lists(0);
+        address listToRemove = address(list);
 
         // create proposal to remove list
         address[] memory targets = new address[](1);
@@ -341,12 +344,15 @@ contract SPOGTest is Test {
         );
 
         // assert that list was removed
-        assertTrue(!spog.masterlist(listToRemove), "List was not removed");
+        assertTrue(
+            !spog.isListInMasterList(listToRemove),
+            "List was not removed"
+        );
     }
 
     function testRevertAppendToListWhenNotCallingFromGovernance() public {
         addNewListToSpog();
-        address listToAddAddressTo = spog.lists(0);
+        address listToAddAddressTo = address(list);
         address addressToAdd = address(0x1234);
 
         vm.expectRevert("SPOG: Only GovSPOG");
@@ -356,7 +362,7 @@ contract SPOGTest is Test {
     function testSPOGProposalToAppedToAList() public {
         addNewListToSpog();
 
-        address listToAddAddressTo = spog.lists(0);
+        address listToAddAddressTo = address(list);
         address addressToAdd = address(0x1234);
 
         // create proposal to remove list
@@ -417,7 +423,7 @@ contract SPOGTest is Test {
     {
         addNewListToSpogAndAppendAnAddressToIt();
 
-        address listToRemoveAddressFrom = spog.lists(0);
+        address listToRemoveAddressFrom = address(list);
         address addressToRemove = address(0x1234);
 
         vm.expectRevert("SPOG: Only GovSPOG");
@@ -427,7 +433,7 @@ contract SPOGTest is Test {
     function testSPOGProposalToRemoveAddressFromAList() public {
         addNewListToSpogAndAppendAnAddressToIt();
 
-        address listToRemoveAddressFrom = spog.lists(0);
+        address listToRemoveAddressFrom = address(list);
         address addressToRemove = address(0x1234);
 
         // create proposal to remove list

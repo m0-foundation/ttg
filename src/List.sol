@@ -10,8 +10,7 @@ contract List is ERC165CheckerSPOG {
     // address list
     mapping(address => bool) internal list;
 
-    // create an admin address
-    address public admin;
+    address private _admin;
 
     string private _name;
 
@@ -21,8 +20,13 @@ contract List is ERC165CheckerSPOG {
     // constructor sets the admin address
     constructor(string memory name_) {
         _name = name_;
-        checkSPOGInterface(msg.sender);
-        admin = msg.sender;
+
+        _admin = msg.sender;
+    }
+
+    /// @notice Returns the admin address
+    function admin() public view returns (address) {
+        return _admin;
     }
 
     /// @notice Returns the name of the list
@@ -33,7 +37,7 @@ contract List is ERC165CheckerSPOG {
     /// @notice Add an address to the list
     /// @param _address The address to add
     function add(address _address) external {
-        if (msg.sender != admin) revert NotAdmin();
+        if (msg.sender != _admin) revert NotAdmin();
 
         // add the address to the list
         list[_address] = true;
@@ -43,7 +47,7 @@ contract List is ERC165CheckerSPOG {
     /// @notice Remove an address from the list
     /// @param _address The address to remove
     function remove(address _address) external {
-        if (msg.sender != admin) revert NotAdmin();
+        if (msg.sender != _admin) revert NotAdmin();
 
         // remove the address from the list
         list[_address] = false;
@@ -62,8 +66,8 @@ contract List is ERC165CheckerSPOG {
         external
         onlySPOGInterface(_newAdmin)
     {
-        if (msg.sender != admin) revert NotAdmin();
+        if (msg.sender != _admin) revert NotAdmin();
 
-        admin = _newAdmin;
+        _admin = _newAdmin;
     }
 }
