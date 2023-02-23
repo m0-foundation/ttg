@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
-import {IList} from "../interfaces/IList.sol";
+import {IList} from "src/interfaces/IList.sol";
 
 interface ISPOGClone {
     function __SPOG_init(

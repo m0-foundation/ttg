@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import {ISPOGVote} from "../interfaces/ISPOGVote.sol";
+import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
 
 /// @title SPOGVote: token used to vote on a SPOG
 contract SPOGVote is ERC20Votes, ISPOGVote {

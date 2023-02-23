@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
-import {IList} from "./IList.sol";
+import {IList} from "src/interfaces/IList.sol";
 
 interface ISPOG {
     function addNewList(string memory listName) external;

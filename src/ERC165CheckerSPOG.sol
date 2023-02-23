@@ -3,7 +3,7 @@
 pragma solidity 0.8.17;
 
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {ISPOG} from "./interfaces/ISPOG.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 /**
  * @title ERC165CheckerSPOG

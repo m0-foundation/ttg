@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
-//create a interface for GovSPOG.sol
-
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
 interface IGovSPOG {

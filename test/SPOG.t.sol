@@ -142,7 +142,7 @@ contract SPOGTest is Test {
     /********* Start of Tests ********/
     /********************************/
 
-    function testSPOGHasSetInitialValuesCorrectly() public view {
+    function test_SPOGHasSetInitialValuesCorrectly() public view {
         (
             uint256 tax,
             uint256 currentEpoch,
@@ -175,12 +175,12 @@ contract SPOGTest is Test {
         assert(taxRangeMax == deployScript.taxRange(1));
     }
 
-    function testRevertAddNewListWhenNotCallingFromGovernance() public {
+    function test_RevertWhen_AddingNewList_NotCallingFromGovernance() external {
         vm.expectRevert("SPOG: Only GovSPOG");
         spog.addNewList("My Awesome List");
     }
 
-    function testSPOGProposalToAddList() public {
+    function test_SPOGProposalToAddList() public {
         // create proposal
         address[] memory targets = new address[](1);
         targets[0] = address(spog);

@@ -176,11 +176,4 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         );
         voteTime = newVotingTime;
     }
-
-    /***************************************************/
-    /******** Prototype Helpers - NOT FOR PROD ********/
-    /*************************************************/
-    function mint(address _account, uint256 _amount) external {
-        spogVote.mint(_account, _amount);
-    }
 }

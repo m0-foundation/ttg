@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
-import {ERC165CheckerSPOG} from "./ERC165CheckerSPOG.sol";
+import {ERC165CheckerSPOG} from "src/ERC165CheckerSPOG.sol";
 
 error NotAdmin();
 

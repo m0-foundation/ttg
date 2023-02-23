@@ -4,8 +4,8 @@ pragma solidity 0.8.17;
 import {P_IList} from "src/prototype/P_IList.sol";
 import {P_List} from "src/prototype/P_List.sol";
 import {P_ISPOG} from "src/prototype/P_ISPOG.sol";
+import {P_ISPOGVote} from "src/prototype/P_ISPOGVote.sol";
 
-import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -46,7 +46,7 @@ contract P_SPOG is P_ISPOG, ERC165 {
 
     // These are set in GovSPOG
     // uint256 public voteQuorum;
-    // ISPOGVote public vote;
+    // P_ISPOGVote public vote;
     // uint256 public voteTime;
 
     // List of addresses that are part of the masterlist
@@ -106,7 +106,7 @@ contract P_SPOG is P_ISPOG, ERC165 {
         govSPOG.updateQuorumNumerator(_voteQuorum);
         govSPOG.updateVotingTime(_voteTime);
 
-        ISPOGVote(address(govSPOG.spogVote())).initSPOGAddress(address(this));
+        P_ISPOGVote(address(govSPOG.spogVote())).initSPOGAddress(address(this));
 
         spogData.currentEpoch = 1;
         spogData.currentEpochEnd = block.number + _voteTime;
@@ -310,6 +310,6 @@ contract P_SPOG is P_ISPOG, ERC165 {
         uint256 _amount
     ) external {
         require(_amount <= 100e18, "Cannot mint more than 100 VOTE tokens");
-        ISPOGVote(spogVoteAddress).mint(_to, _amount);
+        P_ISPOGVote(spogVoteAddress).mint(_to, _amount);
     }
 }
