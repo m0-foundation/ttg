@@ -7,7 +7,7 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 import {ERC165CheckerSPOG} from "src/ERC165CheckerSPOG.sol";
-import {ISPOGClone} from "./ISPOGClone.sol";
+import {ISPOGClone} from "src/clone-version/ISPOGClone.sol";
 
 /**
  * @title SPOGCloneFactory

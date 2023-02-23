@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
-import {ERC165CheckerSPOG} from "./ERC165CheckerSPOG.sol";
+import {ERC165CheckerSPOG} from "src/ERC165CheckerSPOG.sol";
 
 error NotAdmin();
 
@@ -10,22 +10,34 @@ contract List is ERC165CheckerSPOG {
     // address list
     mapping(address => bool) internal list;
 
-    // create an admin address
-    address public admin;
+    address private _admin;
+
+    string private _name;
 
     event AddressAdded(address _address);
     event AddressRemoved(address _address);
 
     // constructor sets the admin address
-    constructor() {
-        checkSPOGInterface(msg.sender);
-        admin = msg.sender;
+    constructor(string memory name_) {
+        _name = name_;
+
+        _admin = msg.sender;
+    }
+
+    /// @notice Returns the admin address
+    function admin() public view returns (address) {
+        return _admin;
+    }
+
+    /// @notice Returns the name of the list
+    function name() public view returns (string memory) {
+        return _name;
     }
 
     /// @notice Add an address to the list
     /// @param _address The address to add
     function add(address _address) external {
-        if (msg.sender != admin) revert NotAdmin();
+        if (msg.sender != _admin) revert NotAdmin();
 
         // add the address to the list
         list[_address] = true;
@@ -35,7 +47,7 @@ contract List is ERC165CheckerSPOG {
     /// @notice Remove an address from the list
     /// @param _address The address to remove
     function remove(address _address) external {
-        if (msg.sender != admin) revert NotAdmin();
+        if (msg.sender != _admin) revert NotAdmin();
 
         // remove the address from the list
         list[_address] = false;
@@ -54,8 +66,8 @@ contract List is ERC165CheckerSPOG {
         external
         onlySPOGInterface(_newAdmin)
     {
-        if (msg.sender != admin) revert NotAdmin();
+        if (msg.sender != _admin) revert NotAdmin();
 
-        admin = _newAdmin;
+        _admin = _newAdmin;
     }
 }

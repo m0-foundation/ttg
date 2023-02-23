@@ -3,13 +3,12 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-import {ISPOGVote} from "../interfaces/ISPOGVote.sol";
+import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
 
 /// @title SPOGVote: token used to vote on a SPOG
-contract SPOGVote is ERC20Votes, ISPOGVote, AccessControlEnumerable {
-    bytes32 public constant SPOG_ROLE = keccak256("SPOG_ROLE");
+contract SPOGVote is ERC20Votes, ISPOGVote {
+    address public spogAddress;
 
     /// @dev Initializes the contract by creating the token as well as the default admin role and the SPOG role
     /// @param name The name of the token
@@ -17,16 +16,20 @@ contract SPOGVote is ERC20Votes, ISPOGVote, AccessControlEnumerable {
     constructor(string memory name, string memory symbol)
         ERC20(name, symbol)
         ERC20Permit(name)
-    {
-        // TODO: add require for msg.sender to be the SPOG
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender()); // must be internal function _grantRole to set admin role
-        grantRole(SPOG_ROLE, _msgSender());
+    {}
+
+    /// @dev sets the spog address. Can only be called once.
+    /// @param _spogAddress the address of the spog
+    function initSPOGAddress(address _spogAddress) external {
+        require(spogAddress == address(0), "SPOGVote: spogAddress already set");
+        spogAddress = _spogAddress;
     }
 
     /// @dev Restricts minting to the SPOG. Cannot mint more than the max cap
     /// @param to The address to mint to
     /// @param amount The amount to mint
-    function mint(address to, uint256 amount) public onlyRole(SPOG_ROLE) {
+    function mint(address to, uint256 amount) public {
+        require(msg.sender == spogAddress, "SPOGVote: only SPOG can mint");
         _mint(to, amount);
     }
 
