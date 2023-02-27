@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.17;
 
-import "forge-std/Script.sol";
-
+import {console} from "forge-std/Script.sol";
+import {BaseScript} from "script/shared/Base.s.sol";
 import {SPOG} from "src/SPOGFactory.sol";
 import {SPOGFactory} from "src/SPOGFactory.sol";
 import {ERC20Mock} from "lib/openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
@@ -11,7 +11,7 @@ import {SPOGVote} from "src/tokens/SPOGVote.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
-contract SPOGDeployScript is Script {
+contract SPOGDeployScript is BaseScript {
     SPOGFactory public factory;
     SPOG public spog;
     ERC20Mock public cash;
@@ -80,9 +80,7 @@ contract SPOGDeployScript is Script {
         console.log("predicted SPOG address: ", spogAddress);
     }
 
-    function run() public {
-        vm.startBroadcast();
-
+    function run() public broadcaster {
         triggerSetUp();
 
         spog = factory.deploy(
@@ -106,6 +104,5 @@ contract SPOGDeployScript is Script {
         console.log("SPOGVote address: ", address(vote));
         console.log("GovSPOG address : ", address(govSPOG));
         console.log("Cash address: ", address(cash));
-        vm.stopBroadcast();
     }
 }
