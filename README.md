@@ -12,6 +12,14 @@ A SPOG, "Simple Participation Optimized Governance," is a governance mechanism t
 
 Clone the repo and install dependencies
 
+### Prerequisites
+
+To setup the app, you need to install the toolset of prerequisites foundry.
+
+Follow the instructions: https://book.getfoundry.sh/getting-started/installation
+
+After that you can download dependencies, compile the app and run the tests.
+
 ```bash
  forge install
 ```
