@@ -162,7 +162,7 @@ contract SPOGTest is Test {
         assert(address(cash) == address(deployScript.cash()));
         assert(inflator == deployScript.inflator());
         assert(reward == deployScript.reward());
-        assert(govSPOG.voteTime() == deployScript.voteTime());
+        assert(govSPOG.votingPeriod() == deployScript.voteTime());
         assert(inflatorTime == deployScript.inflatorTime());
         assert(sellTime == deployScript.sellTime());
         assert(forkTime == deployScript.forkTime());

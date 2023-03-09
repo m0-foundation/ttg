@@ -58,7 +58,6 @@ contract SPOG is ISPOG, ERC165 {
     event AddressRemovedFromList(address _list, address _address);
     event NewProposal(uint256 indexed proposalId);
 
-    // create constructor to set contract variables with natspec comments
     /// @notice Create a new SPOG
     /// @param _cash The currency accepted for tax payment in the SPOG (must be ERC20)
     /// @param _taxRange The minimum and maximum value of `tax`
@@ -129,6 +128,7 @@ contract SPOG is ISPOG, ERC165 {
         return masterlist.contains(list);
     }
 
+    // ********** CRUD Masterlist FUNCTIONS ********** //
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
@@ -140,7 +140,6 @@ contract SPOG is ISPOG, ERC165 {
         emit NewListAdded(address(list));
     }
 
-    // create function to remove a list from the master list of the SPOG
     /// @notice Remove a list from the master list of the SPOG
     /// @param list  The list address of the list to be removed
     function removeList(IList list) external onlyGovernance {
@@ -155,7 +154,6 @@ contract SPOG is ISPOG, ERC165 {
         emit ListRemoved(address(list));
     }
 
-    // create function to append an address to a list
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended

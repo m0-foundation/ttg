@@ -6,14 +6,13 @@ import {ISPOGVote} from "./interfaces/ISPOGVote.sol";
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 
-// May be handy?
-// import {GovernorSettings} from "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-
+/// @title SPOG Governance Contract
+/// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract GovSPOG is GovernorVotesQuorumFraction {
     ISPOGVote public immutable spogVote;
     address public spogAddress;
-
-    uint256 public voteTime;
+    uint256 private _votingPeriod;
+    uint256 public startOfNextVotingPeriod;
 
     /// @dev Supported vote types.
     enum VoteType {
@@ -29,19 +28,22 @@ contract GovSPOG is GovernorVotesQuorumFraction {
 
     mapping(uint256 => ProposalVote) private _proposalVotes;
 
+    event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
+
     constructor(
         ISPOGVote spogVoteContract,
         uint256 quorumNumeratorValue,
-        uint256 _voteTime,
+        uint256 votingPeriod_,
         string memory name_
     )
         GovernorVotesQuorumFraction(quorumNumeratorValue)
         GovernorVotes(spogVoteContract)
         Governor(name_)
     {
-        // spogAddress = _spogAddress;
         spogVote = spogVoteContract;
-        voteTime = _voteTime;
+        _votingPeriod = votingPeriod_;
+
+        startOfNextVotingPeriod = block.number + _votingPeriod;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -51,115 +53,28 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
-    /**
-     * @dev See {IGovernor-hasVoted}.
-     */
-    function hasVoted(uint256 proposalId, address account)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
-        return _proposalVotes[proposalId].hasVoted[account];
-    }
-
-    /**
-     * @dev Accessor to the internal vote counts.
-     */
-    function proposalVotes(uint256 proposalId)
-        public
-        view
-        virtual
-        returns (uint256 noVotes, uint256 yesVotes)
-    {
+    /// @dev Accessor to the internal vote counts.
+    function proposalVotes(
+        uint256 proposalId
+    ) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.noVotes, proposalVote.yesVotes);
     }
 
-    /**
-     * @dev See {Governor-_quorumReached}.
-     */
-    function _quorumReached(uint256 proposalId)
-        internal
-        view
-        virtual
-        override
-        returns (bool)
-    {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-
-        return quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
-    }
-
-    /// @dev See {Governor-_countVote}.
-    function _countVote(
-        uint256 proposalId,
-        address account,
-        uint8 support
-    ) internal virtual {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-
-        require(!proposalVote.hasVoted[account], "GovSPOG: vote already cast");
-        proposalVote.hasVoted[account] = true;
-
-        uint256 votes = _getVotes(account, proposalSnapshot(proposalId), "");
-
-        if (support == uint8(VoteType.No)) {
-            proposalVote.noVotes += votes;
-        } else {
-            proposalVote.yesVotes += votes;
+    /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
+    function updateStartOfNextVotingPeriod() public {
+        if (block.number >= startOfNextVotingPeriod) {
+            startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
         }
     }
 
-    function votingDelay() public pure override returns (uint256) {
-        return 1; // 1 block
-    }
-
-    function votingPeriod() public view override returns (uint256) {
-        return voteTime;
-    }
-
-    function _voteSucceeded(uint256 proposalId)
-        internal
-        view
-        virtual
-        override
-        returns (bool)
-    {
-        return _quorumReached(proposalId);
-    }
-
-    function _countVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        uint256,
-        bytes memory
-    ) internal virtual override {
-        _countVote(proposalId, account, support);
-    }
-
-    /**
-     * @dev See {IGovernor-COUNTING_MODE}.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function COUNTING_MODE()
-        public
-        pure
-        virtual
-        override
-        returns (string memory)
-    {
-        return "support=bravo&quorum=bravo";
-    }
+    // ********** Setters ********** //
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
-    function updateQuorumNumerator(uint256 newQuorumNumerator)
-        external
-        override
-    {
+    function updateQuorumNumerator(
+        uint256 newQuorumNumerator
+    ) external override {
         require(
             msg.sender == spogAddress,
             "GovSPOG: only SPOG can update quorum numerator"
@@ -174,6 +89,122 @@ contract GovSPOG is GovernorVotesQuorumFraction {
             msg.sender == spogAddress,
             "GovSPOG: only SPOG can update voting time"
         );
-        voteTime = newVotingTime;
+
+        _votingPeriod = newVotingTime;
+        emit VotingPeriodSet(_votingPeriod, newVotingTime);
+    }
+
+    // ********** Override functions ********** //
+
+    /// @notice override to use updateStartOfNextVotingPeriod
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public virtual override returns (uint256) {
+        updateStartOfNextVotingPeriod();
+        return super.propose(targets, values, calldatas, description);
+    }
+
+    /// @notice override to use updateStartOfNextVotingPeriod
+    /**
+     * @dev Hook after execution is triggered.
+     */
+    function _afterExecute(
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) internal virtual override {
+        updateStartOfNextVotingPeriod();
+        super._afterExecute(
+            proposalId,
+            targets,
+            values,
+            calldatas,
+            descriptionHash
+        );
+    }
+
+    /// @notice override to use updateStartOfNextVotingPeriod
+    function _castVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        string memory reason,
+        bytes memory params
+    ) internal virtual override returns (uint256) {
+        updateStartOfNextVotingPeriod();
+        return super._castVote(proposalId, account, support, reason, params);
+    }
+
+    /// @dev See {IGovernor-hasVoted}.
+    function hasVoted(
+        uint256 proposalId,
+        address account
+    ) public view virtual override returns (bool) {
+        return _proposalVotes[proposalId].hasVoted[account];
+    }
+
+    /// @dev See {Governor-_quorumReached}.
+    function _quorumReached(
+        uint256 proposalId
+    ) internal view virtual override returns (bool) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+
+        return quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
+    }
+
+    /// @dev See {Governor-_countVote}.
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256,
+        bytes memory
+    ) internal virtual override {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+
+        require(!proposalVote.hasVoted[account], "GovSPOG: vote already cast");
+        proposalVote.hasVoted[account] = true;
+
+        uint256 votes = _getVotes(account, proposalSnapshot(proposalId), "");
+
+        if (support == uint8(VoteType.No)) {
+            proposalVote.noVotes += votes;
+        } else {
+            proposalVote.yesVotes += votes;
+        }
+    }
+
+    function votingDelay() public view override returns (uint256) {
+        uint256 offsetTimeToNextVotingPerid = startOfNextVotingPeriod -
+            block.number;
+        return offsetTimeToNextVotingPerid;
+    }
+
+    function votingPeriod() public view override returns (uint256) {
+        return _votingPeriod;
+    }
+
+    /// @dev See {Governor-_voteSucceeded}.
+    function _voteSucceeded(
+        uint256 proposalId
+    ) internal view virtual override returns (bool) {
+        return _quorumReached(proposalId);
+    }
+
+    /// @dev See {IGovernor-COUNTING_MODE}.
+    // solhint-disable-next-line func-name-mixedcase
+    function COUNTING_MODE()
+        public
+        pure
+        virtual
+        override
+        returns (string memory)
+    {
+        return "support=bravo&quorum=bravo";
     }
 }
