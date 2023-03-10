@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "forge-std/Test.sol";
-
+import {BaseTest} from "test/Base.t.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-
-import "../src/SPOG.sol";
+import "src/SPOG.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
 import {IList} from "src/interfaces/IList.sol";
 import {List} from "src/List.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 
-contract SPOGTest is Test {
+contract SPOGTest is BaseTest {
     SPOG public spog;
     SPOGVote public spogVote;
     GovSPOG public govSPOG;
@@ -162,7 +160,7 @@ contract SPOGTest is Test {
         assert(address(cash) == address(deployScript.cash()));
         assert(inflator == deployScript.inflator());
         assert(reward == deployScript.reward());
-        assert(govSPOG.voteTime() == deployScript.voteTime());
+        assert(govSPOG.votingPeriod() == deployScript.voteTime());
         assert(inflatorTime == deployScript.inflatorTime());
         assert(sellTime == deployScript.sellTime());
         assert(forkTime == deployScript.forkTime());
