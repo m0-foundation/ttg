@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import {IList} from "src/interfaces/IList.sol";
 
-import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
+import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
@@ -37,13 +37,14 @@ contract SPOG is ISPOG, ERC165 {
     }
     SPOGData public spogData;
 
-    IGovSPOG public govSPOG;
+    IGovSPOG public govSPOGVote;
+    IGovSPOG public govSPOGValue;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
     // These are set in GovSPOG
     // uint256 public voteQuorum;
-    // ISPOGVote public vote;
+    // IVotesForSPOG public vote;
     // uint256 public voteTime;
 
     uint256 private constant inMasterList = 1;
@@ -70,7 +71,8 @@ contract SPOG is ISPOG, ERC165 {
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _tax The cost (in `cash`) to call various functions
-    /// @param _govSPOG The address of the `GovSPOG` contract
+    /// @param _govSPOGVote The address of the `GovSPOG` which $VOTE token is used for voting
+    /// @param _govSPOGValue The address of the `GovSPOG` which $VALUE token is used for voting
     constructor(
         address _cash,
         uint256[2] memory _taxRange,
@@ -83,7 +85,8 @@ contract SPOG is ISPOG, ERC165 {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        IGovSPOG _govSPOG
+        IGovSPOG _govSPOGVote,
+        IGovSPOG _govSPOGValue
     ) {
         // TODO: add require statements for variables
         spogData.cash = IERC20(_cash);
@@ -98,21 +101,34 @@ contract SPOG is ISPOG, ERC165 {
         spogData.tax = _tax;
 
         // govSPOG settings
-        govSPOG = _govSPOG;
+        govSPOGVote = _govSPOGVote;
+        govSPOGValue = _govSPOGValue;
 
         // Set in GovSPOG
-        govSPOG.initSPOGAddress(address(this));
-        govSPOG.updateQuorumNumerator(_voteQuorum);
-        govSPOG.updateVotingTime(_voteTime);
+        govSPOGVote.initSPOGAddress(address(this));
+        IVotesForSPOG(address(govSPOGVote.spogVote())).initSPOGAddress(
+            address(this)
+        );
 
-        ISPOGVote(address(govSPOG.spogVote())).initSPOGAddress(address(this));
+        govSPOGVote.updateQuorumNumerator(_voteQuorum);
+        govSPOGVote.updateVotingTime(_voteTime);
+
+        govSPOGValue.initSPOGAddress(address(this));
+        IVotesForSPOG(address(govSPOGValue.spogVote())).initSPOGAddress(
+            address(this)
+        );
 
         spogData.currentEpoch = 1;
         spogData.currentEpochEnd = block.number + _voteTime;
     }
 
     modifier onlyGovernance() {
-        require(msg.sender == address(govSPOG), "SPOG: Only GovSPOG");
+        require(
+            msg.sender == address(govSPOGVote) ||
+                msg.sender == address(govSPOGValue),
+            "SPOG: Only GovSPOG"
+        );
+
         _;
     }
 
@@ -195,10 +211,10 @@ contract SPOG is ISPOG, ERC165 {
     /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function emergencyRemove(address _address, IList _list)
-        external
-        onlyGovernance
-    {
+    function emergencyRemove(
+        address _address,
+        IList _list
+    ) external onlyGovernance {
         _pay(spogData.tax * 12);
 
         address[] memory targets = new address[](1);
@@ -215,7 +231,7 @@ contract SPOG is ISPOG, ERC165 {
 
         string memory description = "Emergency Remove address from list";
 
-        uint256 proposalId = govSPOG.propose(
+        uint256 proposalId = govSPOGVote.propose(
             targets,
             values,
             calldatas,
@@ -227,12 +243,9 @@ contract SPOG is ISPOG, ERC165 {
 
     /// @dev check SPOG interface support
     /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override returns (bool) {
         return
             interfaceId == type(ISPOG).interfaceId ||
             super.supportsInterface(interfaceId);
@@ -254,7 +267,7 @@ contract SPOG is ISPOG, ERC165 {
         // require that the caller pays the tax to propose
         _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
 
-        uint256 proposalId = govSPOG.propose(
+        uint256 proposalId = govSPOGVote.propose(
             targets,
             values,
             calldatas,

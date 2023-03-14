@@ -15,7 +15,7 @@ import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 contract GovSPOGTest is BaseTest {
     SPOG public spog;
     SPOGVote public spogVote;
-    GovSPOG public govSPOG;
+    GovSPOG public govSPOGVote;
     SPOGDeployScript public deployScript;
     List public list;
 
@@ -25,7 +25,7 @@ contract GovSPOGTest is BaseTest {
 
         spog = deployScript.spog();
         spogVote = SPOGVote(address(deployScript.vote()));
-        govSPOG = deployScript.govSPOG();
+        govSPOGVote = deployScript.govSPOGVote();
 
         // mint spogVote to address(this) and self-delegate
         deal({token: address(spogVote), to: address(this), give: 100e18});
@@ -48,7 +48,7 @@ contract GovSPOGTest is BaseTest {
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = govSPOG.hashProposal(
+        uint256 proposalId = govSPOGVote.hashProposal(
             targets,
             values,
             calldatas,
@@ -63,8 +63,8 @@ contract GovSPOGTest is BaseTest {
     }
 
     function testStartOfNextVotingPeriod() public {
-        uint256 votingPeriod = govSPOG.votingPeriod();
-        uint256 startOfNextVotingPeriod = govSPOG.startOfNextVotingPeriod();
+        uint256 votingPeriod = govSPOGVote.votingPeriod();
+        uint256 startOfNextVotingPeriod = govSPOGVote.startOfNextVotingPeriod();
 
         assertTrue(startOfNextVotingPeriod > block.number);
         assertTrue(startOfNextVotingPeriod == block.number + votingPeriod);
@@ -78,22 +78,24 @@ contract GovSPOGTest is BaseTest {
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
-        govSPOG.castVote(proposalId, yesVote);
+        govSPOGVote.castVote(proposalId, yesVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
-            govSPOG.state(proposalId) == IGovernor.ProposalState.Pending,
+            govSPOGVote.state(proposalId) == IGovernor.ProposalState.Pending,
             "Proposal is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOG.votingDelay() + 1);
+        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOG.castVote(proposalId, yesVote);
+        govSPOGVote.castVote(proposalId, yesVote);
 
         // check that proposal has 1 vote
-        (uint256 noVotes, uint256 yesVotes) = govSPOG.proposalVotes(proposalId);
+        (uint256 noVotes, uint256 yesVotes) = govSPOGVote.proposalVotes(
+            proposalId
+        );
 
         console.log("noVotes: ", noVotes);
         console.log("yesVotes: ", yesVotes);
@@ -121,32 +123,34 @@ contract GovSPOGTest is BaseTest {
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
-        govSPOG.castVote(proposalId, yesVote);
+        govSPOGVote.castVote(proposalId, yesVote);
 
         vm.expectRevert("Governor: vote not currently active");
-        govSPOG.castVote(proposalId2, noVote);
+        govSPOGVote.castVote(proposalId2, noVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
-            govSPOG.state(proposalId) == IGovernor.ProposalState.Pending,
+            govSPOGVote.state(proposalId) == IGovernor.ProposalState.Pending,
             "Proposal is not in an pending state"
         );
 
         assertTrue(
-            govSPOG.state(proposalId2) == IGovernor.ProposalState.Pending,
+            govSPOGVote.state(proposalId2) == IGovernor.ProposalState.Pending,
             "Proposal2 is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOG.votingDelay() + 1);
+        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOG.castVote(proposalId, yesVote);
-        govSPOG.castVote(proposalId2, noVote);
+        govSPOGVote.castVote(proposalId, yesVote);
+        govSPOGVote.castVote(proposalId2, noVote);
 
         // check that proposal has 1 vote
-        (uint256 noVotes, uint256 yesVotes) = govSPOG.proposalVotes(proposalId);
-        (uint256 noVotes2, uint256 yesVotes2) = govSPOG.proposalVotes(
+        (uint256 noVotes, uint256 yesVotes) = govSPOGVote.proposalVotes(
+            proposalId
+        );
+        (uint256 noVotes2, uint256 yesVotes2) = govSPOGVote.proposalVotes(
             proposalId2
         );
 
@@ -172,20 +176,20 @@ contract GovSPOGTest is BaseTest {
         );
 
         vm.expectRevert("Governor: vote not currently active");
-        govSPOG.castVote(proposalId3, noVote);
+        govSPOGVote.castVote(proposalId3, noVote);
 
         assertTrue(
-            govSPOG.state(proposalId3) == IGovernor.ProposalState.Pending,
+            govSPOGVote.state(proposalId3) == IGovernor.ProposalState.Pending,
             "Proposal3 is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOG.votingDelay() + 1);
+        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOG.castVote(proposalId3, noVote);
+        govSPOGVote.castVote(proposalId3, noVote);
 
-        (uint256 noVotes3, uint256 yesVotes3) = govSPOG.proposalVotes(
+        (uint256 noVotes3, uint256 yesVotes3) = govSPOGVote.proposalVotes(
             proposalId3
         );
 

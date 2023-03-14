@@ -6,8 +6,9 @@ import {BaseScript} from "script/shared/Base.s.sol";
 import {SPOG} from "src/SPOGFactory.sol";
 import {SPOGFactory} from "src/SPOGFactory.sol";
 import {ERC20Mock} from "lib/openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
-import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
+import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
+import {SPOGValue} from "src/tokens/SPOGValue.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
@@ -25,8 +26,10 @@ contract SPOGDeployScript is BaseScript {
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     uint256 public tax;
-    GovSPOG public govSPOG;
-    ISPOGVote public vote;
+    GovSPOG public govSPOGVote;
+    GovSPOG public govSPOGValue;
+    IVotesForSPOG public vote;
+    IVotesForSPOG public value;
 
     uint256 salt =
         uint256(
@@ -56,7 +59,10 @@ contract SPOGDeployScript is BaseScript {
         tax = 5;
 
         vote = new SPOGVote("SPOGVote", "vote");
-        govSPOG = new GovSPOG(vote, voteQuorum, voteTime, "GovSPOG");
+        value = new SPOGValue("SPOGValue", "value");
+
+        govSPOGVote = new GovSPOG(vote, voteQuorum, voteTime, "GovSPOGVote");
+        govSPOGValue = new GovSPOG(value, valueQuorum, voteTime, "GovSPOGValue");
 
         factory = new SPOGFactory();
 
@@ -73,7 +79,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             tax,
-            IGovSPOG(address(govSPOG))
+            IGovSPOG(address(govSPOGVote)),
+            IGovSPOG(address(govSPOGValue))
         );
 
         address spogAddress = factory.predictSPOGAddress(bytecode, salt);
@@ -95,14 +102,17 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             tax,
-            IGovSPOG(address(govSPOG)),
+            IGovSPOG(address(govSPOGVote)),
+            IGovSPOG(address(govSPOGValue)),
             salt
         );
 
         console.log("SPOG address: ", address(spog));
         console.log("SPOGFactory address: ", address(factory));
         console.log("SPOGVote address: ", address(vote));
-        console.log("GovSPOG address : ", address(govSPOG));
+        console.log("SPOGValue address: ", address(value));
+        console.log("GovSPOG for $VOTE address : ", address(govSPOGVote));
+        console.log("GovSPOG for $VALUE address : ", address(govSPOGValue));
         console.log("Cash address: ", address(cash));
     }
 }
