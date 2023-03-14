@@ -168,7 +168,9 @@ contract SPOGTest is BaseTest {
         assert(valueQuorum == deployScript.valueQuorum());
         assert(tax == deployScript.tax());
         assert(currentEpoch == 1); // starts with epoch 1
-        assert(address(govSPOGVote.spogVote()) == address(deployScript.vote()));
+        assert(
+            address(govSPOGVote.votingToken()) == address(deployScript.vote())
+        );
         assert(currentEpochEnd == block.number + deployScript.voteTime());
         // test tax range is set correctly
         (uint256 taxRangeMin, uint256 taxRangeMax) = spog.taxRange();

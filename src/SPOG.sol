@@ -12,12 +12,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-/**
- * @title SPOG
- * @dev Contracts for governing lists and managing communal property through token voting.
- * @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
- * @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
- */
+/// @title SPOG
+/// @dev Contracts for governing lists and managing communal property through token voting.
+/// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
+/// @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
 contract SPOG is ISPOG, ERC165 {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
@@ -106,7 +104,7 @@ contract SPOG is ISPOG, ERC165 {
 
         // Set in GovSPOG
         govSPOGVote.initSPOGAddress(address(this));
-        IVotesForSPOG(address(govSPOGVote.spogVote())).initSPOGAddress(
+        IVotesForSPOG(address(govSPOGVote.votingToken())).initSPOGAddress(
             address(this)
         );
 
@@ -114,7 +112,7 @@ contract SPOG is ISPOG, ERC165 {
         govSPOGVote.updateVotingTime(_voteTime);
 
         govSPOGValue.initSPOGAddress(address(this));
-        IVotesForSPOG(address(govSPOGValue.spogVote())).initSPOGAddress(
+        IVotesForSPOG(address(govSPOGValue.votingToken())).initSPOGAddress(
             address(this)
         );
 

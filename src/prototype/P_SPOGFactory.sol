@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {P_SPOG} from "src/prototype/P_SPOG.sol";
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {P_IGovSPOG} from "src/prototype/P_IGovSPOG.sol";
 
 /***************************************************/
 /******** Prototype - NOT FOR PROD ****************/
@@ -39,7 +39,7 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        IGovSPOG _govSPOG,
+        P_IGovSPOG _govSPOG,
         uint256 _salt
     ) public returns (P_SPOG) {
         P_SPOG spog = new P_SPOG{salt: bytes32(_salt)}(
@@ -79,7 +79,7 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        IGovSPOG _govSPOG
+        P_IGovSPOG _govSPOG
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(P_SPOG).creationCode;
 
@@ -106,11 +106,10 @@ contract SPOGFactory {
     /// @dev Compute the address of the SPOG contract to be deployed
     /// @param bytecode The bytecode of the contract to be deployed
     /// @param _salt is a random number used to create an address
-    function predictSPOGAddress(bytes memory bytecode, uint256 _salt)
-        public
-        view
-        returns (address)
-    {
+    function predictSPOGAddress(
+        bytes memory bytecode,
+        uint256 _salt
+    ) public view returns (address) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 bytes1(0xff),

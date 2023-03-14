@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 /// @title SPOG Governance Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract GovSPOG is GovernorVotesQuorumFraction {
-    IVotesForSPOG public immutable spogVote;
+    IVotesForSPOG public immutable votingToken;
     address public spogAddress;
     uint256 private _votingPeriod;
     uint256 public startOfNextVotingPeriod;
@@ -31,16 +31,16 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
 
     constructor(
-        IVotesForSPOG spogVoteContract,
+        IVotesForSPOG votingTokenContract,
         uint256 quorumNumeratorValue,
         uint256 votingPeriod_,
         string memory name_
     )
         GovernorVotesQuorumFraction(quorumNumeratorValue)
-        GovernorVotes(spogVoteContract)
+        GovernorVotes(votingTokenContract)
         Governor(name_)
     {
-        spogVote = spogVoteContract;
+        votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
 
         startOfNextVotingPeriod = block.number + _votingPeriod;
