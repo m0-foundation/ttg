@@ -180,9 +180,11 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        uint256 offsetTimeToNextVotingPerid = startOfNextVotingPeriod -
-            block.number;
-        return offsetTimeToNextVotingPerid;
+        if (startOfNextVotingPeriod > block.number) {
+            return startOfNextVotingPeriod - block.number;
+        } else {
+            revert("GovSPOG: StartOfNextVotingPeriod must be updated");
+        }
     }
 
     function votingPeriod() public view override returns (uint256) {
