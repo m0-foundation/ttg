@@ -4,13 +4,13 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import {ISPOGVote} from "src/interfaces/ISPOGVote.sol";
+import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
 
 /// @title SPOGVote: token used to vote on a SPOG
-contract SPOGVote is ERC20Votes, ISPOGVote {
+contract SPOGVote is ERC20Votes, IVotesForSPOG {
     address public spogAddress;
 
-    /// @dev Initializes the contract by creating the token as well as the default admin role and the SPOG role
+    /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
     constructor(string memory name, string memory symbol)

@@ -6,7 +6,7 @@ import {P_List} from "src/prototype/P_List.sol";
 import {P_ISPOG} from "src/prototype/P_ISPOG.sol";
 import {P_ISPOGVote} from "src/prototype/P_ISPOGVote.sol";
 
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {P_IGovSPOG} from "src/prototype/P_IGovSPOG.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -40,7 +40,7 @@ contract P_SPOG is P_ISPOG, ERC165 {
     }
     SPOGData public spogData;
 
-    IGovSPOG public govSPOG;
+    P_IGovSPOG public govSPOG;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
@@ -84,7 +84,7 @@ contract P_SPOG is P_ISPOG, ERC165 {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        IGovSPOG _govSPOG
+        P_IGovSPOG _govSPOG
     ) {
         // TODO: add require statements for variables
         spogData.cash = IERC20(_cash);
@@ -153,10 +153,10 @@ contract P_SPOG is P_ISPOG, ERC165 {
     /// @notice Append an text to a list
     /// @param _text The text to be appended to the list
     /// @param _list The list to which the text will be appended
-    function append(string memory _text, P_IList _list)
-        external
-        onlyGovernance
-    {
+    function append(
+        string memory _text,
+        P_IList _list
+    ) external onlyGovernance {
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
 
@@ -172,10 +172,10 @@ contract P_SPOG is P_ISPOG, ERC165 {
     /// @notice Remove an text from a list
     /// @param _text The text to be removed from the list
     /// @param _list The list from which the text will be removed
-    function remove(string memory _text, P_IList _list)
-        external
-        onlyGovernance
-    {
+    function remove(
+        string memory _text,
+        P_IList _list
+    ) external onlyGovernance {
         // require that the list is on the master list
         require(masterlist[address(_list)], "List is not on the master list");
 
@@ -186,12 +186,9 @@ contract P_SPOG is P_ISPOG, ERC165 {
 
     /// @dev check SPOG interface support
     /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override returns (bool) {
         return
             interfaceId == type(P_ISPOG).interfaceId ||
             super.supportsInterface(interfaceId);

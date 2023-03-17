@@ -21,7 +21,9 @@ contract SPOGFactory {
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _tax The cost (in `cash`) to call various functions
-    /// @param _govSPOG The address of the SPOG governance contract
+    /// @param _govSPOGVote The address of the SPOG governance contract for $VOTE token
+    /// @param _govSPOGValue The address of the SPOG governance contract for $VALUE token
+    /// @param _salt The salt used to deploy the SPOG contract
     /// @return the address of the newly deployed contract
     function deploy(
         address _cash,
@@ -35,7 +37,8 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        IGovSPOG _govSPOG,
+        IGovSPOG _govSPOGVote,
+        IGovSPOG _govSPOGValue,
         uint256 _salt
     ) public returns (SPOG) {
         SPOG spog = new SPOG{salt: bytes32(_salt)}(
@@ -50,7 +53,8 @@ contract SPOGFactory {
             _voteQuorum,
             _valueQuorum,
             _tax,
-            _govSPOG
+            _govSPOGVote,
+            _govSPOGValue
         );
 
         return spog;
@@ -69,7 +73,8 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _tax,
-        IGovSPOG _govSPOG
+        IGovSPOG _govSPOGVote,
+        IGovSPOG _govSPOGValue
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SPOG).creationCode;
 
@@ -88,7 +93,8 @@ contract SPOGFactory {
                     _voteQuorum,
                     _valueQuorum,
                     _tax,
-                    _govSPOG
+                    _govSPOGVote,
+                    _govSPOGValue
                 )
             );
     }
@@ -96,11 +102,10 @@ contract SPOGFactory {
     /// @dev Compute the address of the SPOG contract to be deployed
     /// @param bytecode The bytecode of the contract to be deployed
     /// @param _salt is a random number used to create an address
-    function predictSPOGAddress(bytes memory bytecode, uint256 _salt)
-        public
-        view
-        returns (address)
-    {
+    function predictSPOGAddress(
+        bytes memory bytecode,
+        uint256 _salt
+    ) public view returns (address) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 bytes1(0xff),
