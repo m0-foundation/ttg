@@ -62,7 +62,12 @@ contract SPOGDeployScript is BaseScript {
         value = new SPOGValue("SPOGValue", "value");
 
         govSPOGVote = new GovSPOG(vote, voteQuorum, voteTime, "GovSPOGVote");
-        govSPOGValue = new GovSPOG(value, valueQuorum, voteTime, "GovSPOGValue");
+        govSPOGValue = new GovSPOG(
+            value,
+            valueQuorum,
+            forkTime,
+            "GovSPOGValue"
+        );
 
         factory = new SPOGFactory();
 

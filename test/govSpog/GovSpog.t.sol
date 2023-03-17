@@ -57,7 +57,13 @@ contract GovSPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         return proposalId;
     }

@@ -24,10 +24,8 @@ contract SPOG is ISPOG, ERC165 {
         uint256 tax;
         uint256 currentEpoch;
         uint256 currentEpochEnd;
-        uint256 valueQuorum;
         uint256 inflatorTime;
         uint256 sellTime;
-        uint256 forkTime;
         uint256 inflator;
         uint256 reward;
         uint256[2] taxRange;
@@ -35,8 +33,8 @@ contract SPOG is ISPOG, ERC165 {
     }
     SPOGData public spogData;
 
-    IGovSPOG public govSPOGVote;
-    IGovSPOG public govSPOGValue;
+    IGovSPOG public immutable govSPOGVote;
+    IGovSPOG public immutable govSPOGValue;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
@@ -51,11 +49,18 @@ contract SPOG is ISPOG, ERC165 {
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
 
+    mapping(bytes32 => bool) public doubleQuorumChecker;
+
     event NewListAdded(address _list);
     event ListRemoved(address _list);
     event AddressAppendedToList(address _list, address _address);
     event AddressRemovedFromList(address _list, address _address);
     event NewProposal(uint256 indexed proposalId);
+
+    event DoubleQuorumInitiated(bytes32 indexed identifier);
+    event DoubleQuorumFinalized(bytes32 indexed identifier);
+
+    error InvalidParameter(bytes32 what);
 
     /// @notice Create a new SPOG
     /// @param _cash The currency accepted for tax payment in the SPOG (must be ERC20)
@@ -94,27 +99,31 @@ contract SPOG is ISPOG, ERC165 {
         spogData.reward = _reward;
         spogData.inflatorTime = _inflatorTime;
         spogData.sellTime = _sellTime;
-        spogData.forkTime = _forkTime;
-        spogData.valueQuorum = _valueQuorum;
         spogData.tax = _tax;
 
         // govSPOG settings
         govSPOGVote = _govSPOGVote;
         govSPOGValue = _govSPOGValue;
 
-        // Set in GovSPOG
+        // Set in GovSPOGVote
         govSPOGVote.initSPOGAddress(address(this));
         IVotesForSPOG(address(govSPOGVote.votingToken())).initSPOGAddress(
             address(this)
         );
 
+        // set quorum and voting period for govSPOGVote
         govSPOGVote.updateQuorumNumerator(_voteQuorum);
         govSPOGVote.updateVotingTime(_voteTime);
 
+        // Set in GovSPOGValue
         govSPOGValue.initSPOGAddress(address(this));
         IVotesForSPOG(address(govSPOGValue.votingToken())).initSPOGAddress(
             address(this)
         );
+
+        // set quorum and voting period for govSPOGValue
+        govSPOGValue.updateQuorumNumerator(_valueQuorum);
+        govSPOGValue.updateVotingTime(_forkTime);
 
         spogData.currentEpoch = 1;
         spogData.currentEpochEnd = block.number + _voteTime;
@@ -239,6 +248,31 @@ contract SPOG is ISPOG, ERC165 {
         emit NewProposal(proposalId);
     }
 
+    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, inflatorTime, sellTime, forkTime, voteQuorum, and valueQuorum.
+    /// @param what The value to be changed
+    /// @param value The new value
+    function fileVarInSpogDataWithDoubleQuorum(
+        bytes32 what,
+        bytes calldata value
+    ) external onlyGovernance {
+        bytes32 identifier = keccak256(abi.encodePacked(what, value));
+        if (msg.sender == address(govSPOGVote)) {
+            doubleQuorumChecker[identifier] = true;
+            emit DoubleQuorumInitiated(identifier);
+        } else {
+            require(
+                doubleQuorumChecker[identifier],
+                "SPOG: Double quorum not met"
+            );
+
+            _fileVarInSpogData(what, value);
+
+            doubleQuorumChecker[identifier] = false;
+
+            emit DoubleQuorumFinalized(identifier);
+        }
+    }
+
     /// @dev check SPOG interface support
     /// @param interfaceId The interface ID to check
     function supportsInterface(
@@ -251,12 +285,14 @@ contract SPOG is ISPOG, ERC165 {
 
     /// @notice Create a new proposal
     /// @dev `propose` function of the `Governor` contract
+    /// @param govSPOG The SPOG governance contract. Either `govSPOGVote` or `govSPOGValue`
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
     /// @param calldatas The calldatas of the proposal
     /// @param description The description of the proposal
     /// @return proposalId The ID of the proposal
     function propose(
+        IGovSPOG govSPOG,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -265,7 +301,7 @@ contract SPOG is ISPOG, ERC165 {
         // require that the caller pays the tax to propose
         _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
 
-        uint256 proposalId = govSPOGVote.propose(
+        uint256 proposalId = govSPOG.propose(
             targets,
             values,
             calldatas,
@@ -288,6 +324,33 @@ contract SPOG is ISPOG, ERC165 {
         );
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(this), _amount);
+    }
+
+    function _fileVarInSpogData(bytes32 what, bytes calldata value) private {
+        if (what == "cash") spogData.cash = abi.decode(value, (IERC20));
+        else if (what == "taxRange") {
+            spogData.taxRange = abi.decode(value, (uint256[2]));
+        } else if (what == "inflator") {
+            spogData.inflator = abi.decode(value, (uint256));
+        } else if (what == "reward") {
+            spogData.reward = abi.decode(value, (uint256));
+        } else if (what == "voteTime") {
+            uint256 decodedVoteTime = abi.decode(value, (uint256));
+            govSPOGVote.updateVotingTime(decodedVoteTime);
+        } else if (what == "inflatorTime") {
+            spogData.inflatorTime = abi.decode(value, (uint256));
+        } else if (what == "sellTime") {
+            spogData.sellTime = abi.decode(value, (uint256));
+        } else if (what == "forkTime") {
+            uint256 decodedForkTime = abi.decode(value, (uint256));
+            govSPOGValue.updateVotingTime(decodedForkTime);
+        } else if (what == "voteQuorum") {
+            uint256 decodedvoteQuorum = abi.decode(value, (uint256));
+            govSPOGVote.updateQuorumNumerator(decodedvoteQuorum);
+        } else if (what == "valueQuorum") {
+            uint256 valueQuorum = abi.decode(value, (uint256));
+            govSPOGValue.updateQuorumNumerator(valueQuorum);
+        } else revert InvalidParameter(what);
     }
 
     fallback() external {

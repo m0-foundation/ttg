@@ -71,4 +71,8 @@ contract SPOGValue is ERC20Votes, IVotesForSPOG, AccessControlEnumerable {
         _spendAllowance(account, _msgSender(), amount);
         _burn(account, amount);
     }
+
+    function getChainId() external view returns (uint256) {
+        return block.chainid;
+    }
 }
