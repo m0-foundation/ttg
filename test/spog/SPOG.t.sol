@@ -175,8 +175,6 @@ contract SPOGTest is BaseTest {
     function test_SPOGHasSetInitialValuesCorrectly() public view {
         (
             uint256 tax,
-            uint256 currentEpoch,
-            uint256 currentEpochEnd,
             uint256 inflatorTime,
             uint256 sellTime,
             uint256 inflator,
@@ -194,14 +192,12 @@ contract SPOGTest is BaseTest {
         assert(govSPOGVote.quorumNumerator() == deployScript.voteQuorum());
         assert(govSPOGValue.quorumNumerator() == deployScript.valueQuorum());
         assert(tax == deployScript.tax());
-        assert(currentEpoch == 1); // starts with epoch 1
         assert(
             address(govSPOGVote.votingToken()) == address(deployScript.vote())
         );
         assert(
             address(govSPOGValue.votingToken()) == address(deployScript.value())
         );
-        assert(currentEpochEnd == block.number + deployScript.voteTime());
         // test tax range is set correctly
         (uint256 taxRangeMin, uint256 taxRangeMax) = spog.taxRange();
         assert(taxRangeMin == deployScript.taxRange(0));
@@ -613,7 +609,7 @@ contract SPOGTest is BaseTest {
             hashedDescriptionForValueHolders
         );
 
-        (, , , , , , uint256 rewardSecondCheck, ) = spog.spogData();
+        (, , , , uint256 rewardSecondCheck, ) = spog.spogData();
         // assert that reward was not modified
         assertTrue(
             rewardSecondCheck == deployScript.reward(),
@@ -679,7 +675,7 @@ contract SPOGTest is BaseTest {
         // execute proposal
         govSPOGVote.execute(targets, values, calldatas, hashedDescription);
 
-        (, , , , , , uint256 rewardFirstCheck, ) = spog.spogData();
+        (, , , , uint256 rewardFirstCheck, ) = spog.spogData();
         console.log("rewardFirstCheck", rewardFirstCheck);
 
         // assert that reward has not been changed yet as it needs to be voted on again by value holders
@@ -728,7 +724,7 @@ contract SPOGTest is BaseTest {
             hashedDescriptionForValueHolders
         );
 
-        (, , , , , , uint256 rewardSecondCheck, ) = spog.spogData();
+        (, , , , uint256 rewardSecondCheck, ) = spog.spogData();
         // assert that reward was modified by double quorum
         assertTrue(rewardSecondCheck == 11, "Reward was not changed");
     }

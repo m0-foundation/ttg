@@ -22,8 +22,6 @@ contract SPOG is ISPOG, ERC165 {
 
     struct SPOGData {
         uint256 tax;
-        uint256 currentEpoch;
-        uint256 currentEpochEnd;
         uint256 inflatorTime;
         uint256 sellTime;
         uint256 inflator;
@@ -124,9 +122,6 @@ contract SPOG is ISPOG, ERC165 {
         // set quorum and voting period for govSPOGValue
         govSPOGValue.updateQuorumNumerator(_valueQuorum);
         govSPOGValue.updateVotingTime(_forkTime);
-
-        spogData.currentEpoch = 1;
-        spogData.currentEpochEnd = block.number + _voteTime;
     }
 
     modifier onlyGovernance() {
