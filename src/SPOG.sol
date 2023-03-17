@@ -36,11 +36,6 @@ contract SPOG is ISPOG, ERC165 {
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
-    // These are set in GovSPOG
-    // uint256 public voteQuorum;
-    // IVotesForSPOG public vote;
-    // uint256 public voteTime;
-
     uint256 private constant inMasterList = 1;
 
     // List of addresses that are part of the masterlist
