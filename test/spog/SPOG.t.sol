@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
+import "forge-std/console.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
 import "src/SPOG.sol";
+import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
+import {SPOGValue} from "src/tokens/SPOGValue.sol";
 import {IList} from "src/interfaces/IList.sol";
 import {List} from "src/List.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
@@ -14,6 +17,8 @@ contract SPOGTest is BaseTest {
     SPOG public spog;
     SPOGVote public spogVote;
     GovSPOG public govSPOGVote;
+    SPOGValue public spogValue;
+    GovSPOG public govSPOGValue;
     SPOGDeployScript public deployScript;
     List public list;
 
@@ -22,6 +27,9 @@ contract SPOGTest is BaseTest {
         Yes
     }
 
+    event DoubleQuorumInitiated(bytes32 indexed identifier);
+    event DoubleQuorumFinalized(bytes32 indexed identifier);
+
     function setUp() public {
         deployScript = new SPOGDeployScript();
         deployScript.run();
@@ -29,10 +37,16 @@ contract SPOGTest is BaseTest {
         spog = deployScript.spog();
         spogVote = SPOGVote(address(deployScript.vote()));
         govSPOGVote = deployScript.govSPOGVote();
+        spogValue = SPOGValue(address(deployScript.value()));
+        govSPOGValue = deployScript.govSPOGValue();
 
         // mint spogVote to address(this) and self-delegate
         deal({token: address(spogVote), to: address(this), give: 100e18});
         spogVote.delegate(address(this));
+
+        // mint spogValue to address(this) and self-delegate
+        deal({token: address(spogValue), to: address(this), give: 100e18});
+        spogValue.delegate(address(this));
 
         // deploy list and change admin to spog
         list = new List("My List");
@@ -43,13 +57,14 @@ contract SPOGTest is BaseTest {
     /******** Helper functions ********/
     /**********************************/
     function getProposalIdAndHashedDescription(
+        GovSPOG govSPOG,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) private view returns (bytes32 hashedDescription, uint256 proposalId) {
+    ) private pure returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = govSPOGVote.hashProposal(
+        proposalId = govSPOG.hashProposal(
             targets,
             values,
             calldatas,
@@ -70,6 +85,7 @@ contract SPOGTest is BaseTest {
             bytes32 hashedDescription,
             uint256 proposalId
         ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
                 targets,
                 values,
                 calldatas,
@@ -78,7 +94,13 @@ contract SPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGVote.votingDelay() + 1);
@@ -116,6 +138,7 @@ contract SPOGTest is BaseTest {
             bytes32 hashedDescription,
             uint256 proposalId
         ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
                 targets,
                 values,
                 calldatas,
@@ -124,7 +147,13 @@ contract SPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGVote.votingDelay() + 1);
@@ -148,10 +177,8 @@ contract SPOGTest is BaseTest {
             uint256 tax,
             uint256 currentEpoch,
             uint256 currentEpochEnd,
-            uint256 valueQuorum,
             uint256 inflatorTime,
             uint256 sellTime,
-            uint256 forkTime,
             uint256 inflator,
             uint256 reward,
             IERC20 cash
@@ -161,15 +188,18 @@ contract SPOGTest is BaseTest {
         assert(inflator == deployScript.inflator());
         assert(reward == deployScript.reward());
         assert(govSPOGVote.votingPeriod() == deployScript.voteTime());
+        assert(govSPOGValue.votingPeriod() == deployScript.forkTime());
         assert(inflatorTime == deployScript.inflatorTime());
         assert(sellTime == deployScript.sellTime());
-        assert(forkTime == deployScript.forkTime());
         assert(govSPOGVote.quorumNumerator() == deployScript.voteQuorum());
-        assert(valueQuorum == deployScript.valueQuorum());
+        assert(govSPOGValue.quorumNumerator() == deployScript.valueQuorum());
         assert(tax == deployScript.tax());
         assert(currentEpoch == 1); // starts with epoch 1
         assert(
             address(govSPOGVote.votingToken()) == address(deployScript.vote())
+        );
+        assert(
+            address(govSPOGValue.votingToken()) == address(deployScript.value())
         );
         assert(currentEpochEnd == block.number + deployScript.voteTime());
         // test tax range is set correctly
@@ -197,6 +227,7 @@ contract SPOGTest is BaseTest {
             bytes32 hashedDescription,
             uint256 proposalId
         ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
                 targets,
                 values,
                 calldatas,
@@ -205,7 +236,13 @@ contract SPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // assert that spog has cash balance
         assert(
@@ -290,6 +327,7 @@ contract SPOGTest is BaseTest {
             bytes32 hashedDescription,
             uint256 proposalId
         ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
                 targets,
                 values,
                 calldatas,
@@ -298,7 +336,13 @@ contract SPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // assert that spog has cash balance
         assertTrue(
@@ -382,6 +426,7 @@ contract SPOGTest is BaseTest {
             bytes32 hashedDescription,
             uint256 proposalId
         ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
                 targets,
                 values,
                 calldatas,
@@ -390,7 +435,13 @@ contract SPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // assert that spog has cash balance
         assertTrue(
@@ -453,6 +504,7 @@ contract SPOGTest is BaseTest {
             bytes32 hashedDescription,
             uint256 proposalId
         ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
                 targets,
                 values,
                 calldatas,
@@ -461,7 +513,13 @@ contract SPOGTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // assert that spog has cash balance
         assertTrue(
@@ -487,5 +545,191 @@ contract SPOGTest is BaseTest {
             !IList(listToRemoveAddressFrom).contains(addressToRemove),
             "Address was not removed from list"
         );
+    }
+
+    function test_Revert_FileVarInSpogDataWhenNotCallingFromGovernance()
+        public
+    {
+        bytes32 varName = "reward";
+        bytes memory varValue = abi.encode(11);
+        vm.expectRevert("SPOG: Only GovSPOG");
+        spog.fileVarInSpogDataWithDoubleQuorum(varName, varValue);
+    }
+
+    function test_Revert_FileVarInSpogDataMustBeProposedByVoterHoldersFirst()
+        public
+    {
+        bytes memory elevenAsCalldataValue = abi.encode(11);
+
+        uint8 yesVote = 1;
+
+        // value holders vote on proposal
+        address[] memory targetsForValueHolders = new address[](1);
+        targetsForValueHolders[0] = address(spog);
+        uint256[] memory valuesForValueHolders = new uint256[](1);
+        valuesForValueHolders[0] = 0;
+        bytes[] memory calldatasForValueHolders = new bytes[](1);
+
+        calldatasForValueHolders[0] = abi.encodeWithSignature(
+            "fileVarInSpogDataWithDoubleQuorum(bytes32,bytes)",
+            "reward",
+            elevenAsCalldataValue
+        );
+        string
+            memory descriptionForValueHolders = "GovSPOGValue change reward variable in spog";
+
+        (
+            bytes32 hashedDescriptionForValueHolders,
+            uint256 proposalIdForValueHolders
+        ) = getProposalIdAndHashedDescription(
+                govSPOGValue,
+                targetsForValueHolders,
+                valuesForValueHolders,
+                calldatasForValueHolders,
+                descriptionForValueHolders
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGValue)),
+            targetsForValueHolders,
+            valuesForValueHolders,
+            calldatasForValueHolders,
+            descriptionForValueHolders
+        );
+
+        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+
+        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
+        // fast forward to end of govSPOGValue voting period
+        vm.roll(block.number + deployScript.forkTime() + 1);
+
+        vm.expectRevert("SPOG: Double quorum not met");
+        govSPOGValue.execute(
+            targetsForValueHolders,
+            valuesForValueHolders,
+            calldatasForValueHolders,
+            hashedDescriptionForValueHolders
+        );
+
+        (, , , , , , uint256 rewardSecondCheck, ) = spog.spogData();
+        // assert that reward was not modified
+        assertTrue(
+            rewardSecondCheck == deployScript.reward(),
+            "Reward must not be changed"
+        );
+    }
+
+    function test_FileVarInSpogData_SPOGProposalToChangeVariableInSpog()
+        public
+    {
+        bytes memory elevenAsCalldataValue = abi.encode(11);
+        uint8 yesVote = 1;
+
+        // create proposal to change variable in spog
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature(
+            "fileVarInSpogDataWithDoubleQuorum(bytes32,bytes)",
+            "reward",
+            elevenAsCalldataValue
+        );
+        string memory description = "Change reward variable in spog";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+
+        // cast vote on proposal
+        govSPOGVote.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // bytes32 reward = bytes32("reward");
+        // bytes32 identifier = keccak256(
+        //     abi.encodePacked(reward, elevenAsCalldataValue)
+        // );
+        // check that DoubleQuorumInitiated event was triggered
+        // expectEmit();
+        // emit DoubleQuorumInitiated(identifier);
+        // execute proposal
+        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+
+        (, , , , , , uint256 rewardFirstCheck, ) = spog.spogData();
+        console.log("rewardFirstCheck", rewardFirstCheck);
+
+        // assert that reward has not been changed yet as it needs to be voted on again by value holders
+        assertFalse(
+            rewardFirstCheck == 11,
+            "Reward should not have been changed"
+        );
+
+        /**********  value holders vote on proposal **********/
+        vm.warp(1 hours);
+
+        (
+            bytes32 hashedDescriptionForValueHolders,
+            uint256 proposalIdForValueHolders
+        ) = getProposalIdAndHashedDescription(
+                govSPOGValue,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGValue)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+
+        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
+        // fast forward to end of govSPOGValue voting period
+        vm.roll(block.number + deployScript.forkTime() + 1);
+
+        // // check that DoubleQuorumFinalized event was triggered
+        // expectEmit();
+        // emit DoubleQuorumFinalized("reward", elevenAsCalldataValue);
+        govSPOGValue.execute(
+            targets,
+            values,
+            calldatas,
+            hashedDescriptionForValueHolders
+        );
+
+        (, , , , , , uint256 rewardSecondCheck, ) = spog.spogData();
+        // assert that reward was modified by double quorum
+        assertTrue(rewardSecondCheck == 11, "Reward was not changed");
     }
 }
