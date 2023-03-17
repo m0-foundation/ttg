@@ -102,19 +102,25 @@ contract SPOG is ISPOG, ERC165 {
         govSPOGVote = _govSPOGVote;
         govSPOGValue = _govSPOGValue;
 
-        // Set in GovSPOG
+        // Set in GovSPOGVote
         govSPOGVote.initSPOGAddress(address(this));
         IVotesForSPOG(address(govSPOGVote.votingToken())).initSPOGAddress(
             address(this)
         );
 
+        // set quorum and voting period for govSPOGVote
         govSPOGVote.updateQuorumNumerator(_voteQuorum);
         govSPOGVote.updateVotingTime(_voteTime);
 
+        // Set in GovSPOGValue
         govSPOGValue.initSPOGAddress(address(this));
         IVotesForSPOG(address(govSPOGValue.votingToken())).initSPOGAddress(
             address(this)
         );
+
+        // set quorum and voting period for govSPOGValue
+        govSPOGValue.updateQuorumNumerator(_valueQuorum);
+        govSPOGValue.updateVotingTime(_forkTime);
 
         spogData.currentEpoch = 1;
         spogData.currentEpochEnd = block.number + _voteTime;
