@@ -35,8 +35,8 @@ contract SPOG is ISPOG, ERC165 {
     }
     SPOGData public spogData;
 
-    IGovSPOG public govSPOGVote;
-    IGovSPOG public govSPOGValue;
+    IGovSPOG public immutable govSPOGVote;
+    IGovSPOG public immutable govSPOGValue;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
