@@ -241,7 +241,7 @@ contract SPOG is ISPOG, ERC165 {
     /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, inflatorTime, sellTime, forkTime, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
-    function fileVarInSpogDataWithDoubleQuorum(
+    function fileWithDoubleQuorum(
         bytes32 what,
         bytes calldata value
     ) external onlyGovernance {
@@ -255,7 +255,7 @@ contract SPOG is ISPOG, ERC165 {
                 "SPOG: Double quorum not met"
             );
 
-            _fileVarInSpogData(what, value);
+            _file(what, value);
 
             doubleQuorumChecker[identifier] = false;
 
@@ -316,7 +316,7 @@ contract SPOG is ISPOG, ERC165 {
         spogData.cash.safeTransferFrom(msg.sender, address(this), _amount);
     }
 
-    function _fileVarInSpogData(bytes32 what, bytes calldata value) private {
+    function _file(bytes32 what, bytes calldata value) private {
         if (what == "cash") spogData.cash = abi.decode(value, (IERC20));
         else if (what == "taxRange") {
             spogData.taxRange = abi.decode(value, (uint256[2]));
