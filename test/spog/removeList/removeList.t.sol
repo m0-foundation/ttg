@@ -9,8 +9,68 @@ contract SPOG_RemoveList is SPOG_Base {
         addNewListToSpog();
         address listToRemove = address(list);
 
-        vm.expectRevert("SPOG: Only GovSPOG");
+        vm.expectRevert("SPOG: Only GovSPOGVote");
         spog.removeList(IList(listToRemove));
+    }
+
+    function test_Revert_WhenRemoveList_ByGovSPOGValueHolders() external {
+        addNewListToSpog();
+
+        address listToRemove = address(list);
+
+        // create proposal to remove list
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature(
+            "removeList(address)",
+            listToRemove
+        );
+        string memory description = "remove list";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                govSPOGValue,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // update start of next voting period
+        govSPOGValue.updateStartOfNextVotingPeriod();
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGValue)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = uint8(VoteType.Yes);
+        govSPOGValue.castVote(proposalId, yesVote);
+
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // proposal execution is not allowed by govSPOGValue holders
+        vm.expectRevert("SPOG: Only GovSPOGVote");
+        govSPOGValue.execute(targets, values, calldatas, hashedDescription);
+
+        assertTrue(
+            spog.isListInMasterList(listToRemove),
+            "List must still be in SPOG"
+        );
     }
 
     function test_SPOGProposalToRemoveList() public {

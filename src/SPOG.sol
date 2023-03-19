@@ -119,6 +119,15 @@ contract SPOG is ISPOG, ERC165 {
         govSPOGValue.updateVotingTime(_forkTime);
     }
 
+    modifier onlyGovSPOGVote() {
+        require(
+            msg.sender == address(govSPOGVote),
+            "SPOG: Only GovSPOGVote"
+        );
+
+        _;
+    }
+
     modifier onlyGovernance() {
         require(
             msg.sender == address(govSPOGVote) ||
@@ -146,7 +155,7 @@ contract SPOG is ISPOG, ERC165 {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(IList list) external onlyGovernance {
+    function addNewList(IList list) external onlyGovSPOGVote {
         require(list.admin() == address(this), "List admin is not SPOG");
         // add the list to the master list
         masterlist.set(address(list), inMasterList);
@@ -155,7 +164,7 @@ contract SPOG is ISPOG, ERC165 {
 
     /// @notice Remove a list from the master list of the SPOG
     /// @param list  The list address of the list to be removed
-    function removeList(IList list) external onlyGovernance {
+    function removeList(IList list) external onlyGovSPOGVote {
         // require that the list is on the master list
         require(
             masterlist.contains(address(list)),
@@ -170,7 +179,7 @@ contract SPOG is ISPOG, ERC165 {
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external onlyGovernance {
+    function append(address _address, IList _list) external onlyGovSPOGVote {
         // require that the list is on the master list
         require(
             masterlist.contains(address(_list)),
@@ -189,7 +198,7 @@ contract SPOG is ISPOG, ERC165 {
     /// @notice Remove an address from a list
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external onlyGovernance {
+    function remove(address _address, IList _list) external onlyGovSPOGVote {
         // require that the list is on the master list
         require(
             masterlist.contains(address(_list)),
@@ -211,7 +220,7 @@ contract SPOG is ISPOG, ERC165 {
     function emergencyRemove(
         address _address,
         IList _list
-    ) external onlyGovernance {
+    ) external onlyGovSPOGVote {
         _pay(spogData.tax * 12);
 
         address[] memory targets = new address[](1);
