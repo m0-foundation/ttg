@@ -18,16 +18,12 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         super.setUp();
     }
 
-    function test_Revert_FileWhenNotCallingFromGovernance()
-        public
-    {
+    function test_Revert_FileWhenNotCallingFromGovernance() public {
         vm.expectRevert("SPOG: Only GovSPOG");
         spog.fileWithDoubleQuorum(reward, elevenAsCalldataValue);
     }
 
-    function test_Revert_FileMustBeProposedByVoteHoldersFirst()
-        public
-    {
+    function test_Revert_FileMustBeProposedByVoteHoldersFirst() public {
         // value holders vote on proposal
         address[] memory targetsForValueHolders = new address[](1);
         targetsForValueHolders[0] = address(spog);
@@ -86,9 +82,124 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         );
     }
 
-    function test_File_SPOGProposalToChangeVariableInSpog()
+    function test_Revert_WhenValueQuorumIsReachedAfterDoubleQuorumDeadline()
         public
     {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+
+        calldatas[0] = abi.encodeWithSignature(
+            "fileWithDoubleQuorum(bytes32,bytes)",
+            reward,
+            elevenAsCalldataValue
+        );
+        string memory description = "Change reward variable in spog";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+
+        // cast vote on proposal
+        govSPOGVote.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        bytes32 identifier = keccak256(
+            abi.encodePacked(reward, elevenAsCalldataValue)
+        );
+        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+
+        (, , , , uint256 rewardFirstCheck, ) = spog.spogData();
+
+        // assert that reward has not been changed yet as it needs to be voted on again by value holders
+        assertFalse(
+            rewardFirstCheck == 11,
+            "Reward should not have been changed"
+        );
+
+        /**********  value holders vote on proposal **********/
+        (
+            bytes32 hashedDescriptionForValueHolders,
+            uint256 proposalIdForValueHolders
+        ) = getProposalIdAndHashedDescription(
+                govSPOGValue,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // must update start of next voting period so as to not revert on votingDelay() check
+        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
+            govSPOGValue.updateStartOfNextVotingPeriod();
+        }
+
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGValue)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+
+        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
+
+        // fast forward to a time longer that double quorum deadline
+        vm.roll(block.number + deployScript.forkTime() * 3); // time longer than double quorum deadline
+
+        // must revert as double quorum deadline has passed
+        vm.expectRevert("SPOG: Double quorum deadline passed");
+        govSPOGValue.execute(
+            targets,
+            values,
+            calldatas,
+            hashedDescriptionForValueHolders
+        );
+
+        (uint256 voteValueQuorumDeadline, bool passedVoteQuorum) = spog
+            .doubleQuorumChecker(identifier);
+
+        assertTrue(passedVoteQuorum, "Vote quorum must have been passed");
+        assertTrue(
+            voteValueQuorumDeadline < block.number,
+            "Vote value quorum deadline must have passed"
+        );
+
+        // assert that reward was not modified via govSPOGValue holder vote
+        (, , , , uint256 rewardSecondCheck, ) = spog.spogData();
+        assertFalse(
+            rewardSecondCheck == 11,
+            "Reward should not have been changed"
+        );
+    }
+
+    function test_File_SPOGProposalToChangeVariableInSpog() public {
         // create proposal to change variable in spog
         address[] memory targets = new address[](1);
         targets[0] = address(spog);

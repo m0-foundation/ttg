@@ -42,7 +42,12 @@ contract SPOG is ISPOG, ERC165 {
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
 
-    mapping(bytes32 => bool) public doubleQuorumChecker;
+    struct DoubleQuorum {
+        uint256 voteValueQuorumDeadline;
+        bool passedVoteQuorum;
+    }
+
+    mapping(bytes32 => DoubleQuorum) public doubleQuorumChecker;
 
     event NewListAdded(address _list);
     event ListRemoved(address _list);
@@ -120,10 +125,7 @@ contract SPOG is ISPOG, ERC165 {
     }
 
     modifier onlyGovSPOGVote() {
-        require(
-            msg.sender == address(govSPOGVote),
-            "SPOG: Only GovSPOGVote"
-        );
+        require(msg.sender == address(govSPOGVote), "SPOG: Only GovSPOGVote");
 
         _;
     }
@@ -256,17 +258,36 @@ contract SPOG is ISPOG, ERC165 {
     ) external onlyGovernance {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
         if (msg.sender == address(govSPOGVote)) {
-            doubleQuorumChecker[identifier] = true;
+            require(
+                !doubleQuorumChecker[identifier].passedVoteQuorum,
+                "SPOG: Double quorum already initiated"
+            );
+
+            doubleQuorumChecker[identifier].passedVoteQuorum = true;
+
+            // set the deadline for the value quorum to be reached
+            // 2x govSPOGValue voting period (votingDelay + votingPeriod).
+            uint256 voteValueQuorumDeadline = block.number +
+                (govSPOGValue.votingPeriod() * 2);
+            doubleQuorumChecker[identifier]
+                .voteValueQuorumDeadline = voteValueQuorumDeadline;
+
             emit DoubleQuorumInitiated(identifier);
         } else {
             require(
-                doubleQuorumChecker[identifier],
+                doubleQuorumChecker[identifier].passedVoteQuorum,
                 "SPOG: Double quorum not met"
+            );
+
+            require(
+                doubleQuorumChecker[identifier].voteValueQuorumDeadline >=
+                    block.number,
+                "SPOG: Double quorum deadline passed"
             );
 
             _file(what, value);
 
-            doubleQuorumChecker[identifier] = false;
+            doubleQuorumChecker[identifier].passedVoteQuorum = false;
 
             emit DoubleQuorumFinalized(identifier);
         }
