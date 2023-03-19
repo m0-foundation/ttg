@@ -5,7 +5,7 @@ import "test/shared/SPOG_Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract SPOG_fileWithDoubleQuorum is SPOG_Base {
+contract SPOG_change is SPOG_Base {
     bytes32 internal reward;
     bytes internal elevenAsCalldataValue;
     uint8 internal yesVote;
@@ -18,12 +18,12 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         super.setUp();
     }
 
-    function test_Revert_FileWhenNotCallingFromGovernance() public {
+    function test_Revert_ChangeWhenNotCallingFromGovernance() public {
         vm.expectRevert("SPOG: Only GovSPOG");
-        spog.fileWithDoubleQuorum(reward, elevenAsCalldataValue);
+        spog.change(reward, elevenAsCalldataValue);
     }
 
-    function test_Revert_FileMustBeProposedByVoteHoldersFirst() public {
+    function test_Revert_ChangeMustBeProposedByVoteHoldersFirst() public {
         // value holders vote on proposal
         address[] memory targetsForValueHolders = new address[](1);
         targetsForValueHolders[0] = address(spog);
@@ -32,7 +32,7 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         bytes[] memory calldatasForValueHolders = new bytes[](1);
 
         calldatasForValueHolders[0] = abi.encodeWithSignature(
-            "fileWithDoubleQuorum(bytes32,bytes)",
+            "change(bytes32,bytes)",
             reward,
             elevenAsCalldataValue
         );
@@ -92,7 +92,7 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
-            "fileWithDoubleQuorum(bytes32,bytes)",
+            "change(bytes32,bytes)",
             reward,
             elevenAsCalldataValue
         );
@@ -199,7 +199,7 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         );
     }
 
-    function test_File_SPOGProposalToChangeVariableInSpog() public {
+    function test_Change_SPOGProposalToChangeVariableInSpog() public {
         // create proposal to change variable in spog
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -208,7 +208,7 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
-            "fileWithDoubleQuorum(bytes32,bytes)",
+            "change(bytes32,bytes)",
             reward,
             elevenAsCalldataValue
         );
@@ -308,7 +308,7 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         assertTrue(rewardSecondCheck == 11, "Reward was not changed");
     }
 
-    function test_File_ChangeCashToken_SPOGProposalToChangeVariableInSpog()
+    function test_Change_ChangeCashToken_SPOGProposalToChangeVariableInSpog()
         public
     {
         ERC20GodMode newCashInstance = new ERC20GodMode(
@@ -327,7 +327,7 @@ contract SPOG_fileWithDoubleQuorum is SPOG_Base {
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
-            "fileWithDoubleQuorum(bytes32,bytes)",
+            "change(bytes32,bytes)",
             cash,
             newCash
         );
