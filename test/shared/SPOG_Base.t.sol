@@ -25,9 +25,6 @@ contract SPOG_Base is BaseTest {
         Yes
     }
 
-    event DoubleQuorumInitiated(bytes32 indexed identifier);
-    event DoubleQuorumFinalized(bytes32 indexed identifier);
-
     function setUp() public virtual {
         deployScript = new SPOGDeployScript();
         deployScript.run();

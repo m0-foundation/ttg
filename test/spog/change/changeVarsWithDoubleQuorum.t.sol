@@ -10,6 +10,9 @@ contract SPOG_change is SPOG_Base {
     bytes internal elevenAsCalldataValue;
     uint8 internal yesVote;
 
+    event DoubleQuorumInitiated(bytes32 indexed identifier);
+    event DoubleQuorumFinalized(bytes32 indexed identifier);
+
     function setUp() public override {
         reward = "reward";
         elevenAsCalldataValue = abi.encode(11);
@@ -18,7 +21,7 @@ contract SPOG_change is SPOG_Base {
         super.setUp();
     }
 
-    function test_Revert_ChangeWhenNotCallingFromGovernance() public {
+    function test_Revert_ChangeWhenNotCalledFromGovernance() public {
         vm.expectRevert("SPOG: Only GovSPOG");
         spog.change(reward, elevenAsCalldataValue);
     }

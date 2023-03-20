@@ -54,6 +54,7 @@ contract SPOG is ISPOG, ERC165 {
     event AddressAppendedToList(address _list, address _address);
     event AddressRemovedFromList(address _list, address _address);
     event NewProposal(uint256 indexed proposalId);
+    event TaxChanged(uint256 indexed tax);
 
     event DoubleQuorumInitiated(bytes32 indexed identifier);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
@@ -247,6 +248,17 @@ contract SPOG is ISPOG, ERC165 {
         );
 
         emit NewProposal(proposalId);
+    }
+
+    function changeTax(uint256 _tax) external onlyGovSPOGVote {
+        require(
+            _tax >= spogData.taxRange[0] && _tax <= spogData.taxRange[1],
+            "SPOG: Tax out of range"
+        );
+
+        spogData.tax = _tax;
+
+        emit TaxChanged(_tax);
     }
 
     /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, inflatorTime, sellTime, forkTime, voteQuorum, and valueQuorum.
