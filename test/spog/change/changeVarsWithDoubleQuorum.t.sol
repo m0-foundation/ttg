@@ -199,6 +199,111 @@ contract SPOG_change is SPOG_Base {
         );
     }
 
+    function test_Revert_WhenPassingAnIncorrectParamsToChange() public {
+        bytes32 incorrectParams = "tax";
+
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+
+        calldatas[0] = abi.encodeWithSignature(
+            "change(bytes32,bytes)",
+            incorrectParams,
+            elevenAsCalldataValue
+        );
+        string
+            memory description = "Change tax which should not be possible to change with double quorum";
+
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(
+                govSPOGVote,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGVote)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+
+        // cast vote on proposal
+        govSPOGVote.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+
+        /**********  value holders vote on proposal **********/
+        (
+            bytes32 hashedDescriptionForValueHolders,
+            uint256 proposalIdForValueHolders
+        ) = getProposalIdAndHashedDescription(
+                govSPOGValue,
+                targets,
+                values,
+                calldatas,
+                description
+            );
+
+        // must update start of next voting period so as to not revert on votingDelay() check
+        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
+            govSPOGValue.updateStartOfNextVotingPeriod();
+        }
+
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(
+            IGovSPOG(address(govSPOGValue)),
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+
+        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
+
+        vm.roll(block.number + deployScript.forkTime());
+
+        // must revert because of incorrect params
+
+        // test revert for custom error:
+        // bytes4 selector = bytes4(keccak256("InvalidParameter(bytes32)"));
+        // vm.expectRevert(abi.encodeWithSelector(selector, incorrectParams));
+
+        // another way to get custom error selector:
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SPOG.InvalidParameter.selector,
+                incorrectParams
+            )
+        );
+        govSPOGValue.execute(
+            targets,
+            values,
+            calldatas,
+            hashedDescriptionForValueHolders
+        );
+
+        // assert that tax was not modified
+        (uint256 tax, , , , , ) = spog.spogData();
+        assertFalse(tax == 11, "Tax should not have been changed");
+    }
+
     function test_Change_SPOGProposalToChangeVariableInSpog() public {
         // create proposal to change variable in spog
         address[] memory targets = new address[](1);
