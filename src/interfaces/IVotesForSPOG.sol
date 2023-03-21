@@ -5,4 +5,6 @@ import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 
 interface IVotesForSPOG is IVotes {
     function initSPOGAddress(address _spogAddress) external;
+
+    function mint(address account, uint256 amount) external;
 }

@@ -344,6 +344,18 @@ contract SPOG is ISPOG, ERC165 {
         return proposalId;
     }
 
+    function tokenInflationCalculation() public view returns (uint256) {
+        if (msg.sender == address(govSPOGVote)) {
+            uint256 votingTokenTotalSupply = IERC20(govSPOGVote.votingToken())
+                .totalSupply();
+            uint256 inflator = spogData.inflator;
+
+            return (votingTokenTotalSupply * inflator) / 100;
+        }
+
+        return 0;
+    }
+
     // ********** PRIVATE FUNCTIONS ********** //
 
     /// @notice pay tax from the caller to the SPOG

@@ -13,4 +13,6 @@ interface ISPOG {
     function remove(address _address, IList _list) external;
 
     function emergencyRemove(address _address, IList _list) external;
+
+    function tokenInflationCalculation() external view returns (uint256);
 }

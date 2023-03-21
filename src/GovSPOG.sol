@@ -3,6 +3,7 @@
 pragma solidity 0.8.17;
 
 import {IVotesForSPOG} from "./interfaces/IVotesForSPOG.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 
@@ -65,6 +66,9 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
+            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
+
+            votingToken.mint(address(this), amountToIncreaseSupplyBy); // TODO: change address to a Vault contract
         }
     }
 
