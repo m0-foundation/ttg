@@ -6,17 +6,24 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
 
+import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
+// TODO: make this VotesForSPOGToken contract instead of SPOGVote and SPOGValue
+
 /// @title SPOGVote: token used to vote on a SPOG
-contract SPOGVote is ERC20Votes, IVotesForSPOG {
+contract SPOGVote is ERC20Votes, IVotesForSPOG, AccessControlEnumerable {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;
 
     /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
-    constructor(string memory name, string memory symbol)
-        ERC20(name, symbol)
-        ERC20Permit(name)
-    {}
+    constructor(
+        string memory name,
+        string memory symbol
+    ) ERC20(name, symbol) ERC20Permit(name) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
 
     /// @dev sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
@@ -25,11 +32,10 @@ contract SPOGVote is ERC20Votes, IVotesForSPOG {
         spogAddress = _spogAddress;
     }
 
-    /// @dev Restricts minting to the SPOG. Cannot mint more than the max cap
+    /// @dev Restricts minting to address with MINTER_ROLE
     /// @param to The address to mint to
     /// @param amount The amount to mint
-    function mint(address to, uint256 amount) public {
-        require(msg.sender == spogAddress, "SPOGVote: only SPOG can mint");
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
 
