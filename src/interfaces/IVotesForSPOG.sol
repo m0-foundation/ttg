@@ -7,4 +7,6 @@ interface IVotesForSPOG is IVotes {
     function initSPOGAddress(address _spogAddress) external;
 
     function mint(address account, uint256 amount) external;
+
+    function MINTER_ROLE() external view returns (bytes32);
 }

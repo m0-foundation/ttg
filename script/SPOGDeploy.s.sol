@@ -5,12 +5,13 @@ import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
 import {SPOG} from "src/SPOGFactory.sol";
 import {SPOGFactory} from "src/SPOGFactory.sol";
-import {ERC20Mock} from "lib/openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
 import {SPOGVote} from "src/tokens/SPOGVote.sol";
 import {SPOGValue} from "src/tokens/SPOGValue.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract SPOGDeployScript is BaseScript {
     SPOGFactory public factory;
@@ -67,6 +68,16 @@ contract SPOGDeployScript is BaseScript {
             valueQuorum,
             forkTime,
             "GovSPOGValue"
+        );
+
+        // grant minter role to govSPOG
+        IAccessControl(address(vote)).grantRole(
+            vote.MINTER_ROLE(),
+            address(govSPOGVote)
+        );
+        IAccessControl(address(value)).grantRole(
+            value.MINTER_ROLE(),
+            address(govSPOGValue)
         );
 
         factory = new SPOGFactory();
