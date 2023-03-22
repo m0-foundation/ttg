@@ -214,4 +214,8 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     {
         return "support=bravo&quorum=bravo";
     }
+
+    fallback() external {
+        revert("GovSPOG: non-existent function");
+    }
 }
