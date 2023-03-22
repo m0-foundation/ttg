@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 
-interface IVotesForSPOG is IVotes {
+interface ISPOGVotes is IVotes {
     function initSPOGAddress(address _spogAddress) external;
 
     function mint(address account, uint256 amount) external;

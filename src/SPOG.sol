@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import {IList} from "src/interfaces/IList.sol";
 
-import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
+import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
@@ -106,7 +106,7 @@ contract SPOG is ISPOG, ERC165 {
 
         // Set in GovSPOGVote
         govSPOGVote.initSPOGAddress(address(this));
-        IVotesForSPOG(address(govSPOGVote.votingToken())).initSPOGAddress(
+        ISPOGVotes(address(govSPOGVote.votingToken())).initSPOGAddress(
             address(this)
         );
 
@@ -116,7 +116,7 @@ contract SPOG is ISPOG, ERC165 {
 
         // Set in GovSPOGValue
         govSPOGValue.initSPOGAddress(address(this));
-        IVotesForSPOG(address(govSPOGValue.votingToken())).initSPOGAddress(
+        ISPOGVotes(address(govSPOGValue.votingToken())).initSPOGAddress(
             address(this)
         );
 

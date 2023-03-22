@@ -4,14 +4,12 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
+import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-// TODO: make this VotesForSPOGToken contract instead of SPOGVote and SPOGValue
-
-/// @title SPOGVote: token used to vote on a SPOG
-contract SPOGVote is ERC20Votes, IVotesForSPOG, AccessControlEnumerable {
+/// @title SPOGVotes: voting token for the govSPOG
+contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;
 

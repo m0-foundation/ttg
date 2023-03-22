@@ -7,15 +7,14 @@ import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
 import "src/SPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
-import {SPOGVote} from "src/tokens/SPOGVote.sol";
-import {SPOGValue} from "src/tokens/SPOGValue.sol";
+import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {List} from "src/List.sol";
 
 contract SPOG_Base is BaseTest {
     SPOG public spog;
-    SPOGVote public spogVote;
+    SPOGVotes public spogVote;
     GovSPOG public govSPOGVote;
-    SPOGValue public spogValue;
+    SPOGVotes public spogValue;
     GovSPOG public govSPOGValue;
     SPOGDeployScript public deployScript;
     List public list;
@@ -30,9 +29,9 @@ contract SPOG_Base is BaseTest {
         deployScript.run();
 
         spog = deployScript.spog();
-        spogVote = SPOGVote(address(deployScript.vote()));
+        spogVote = SPOGVotes(address(deployScript.vote()));
         govSPOGVote = deployScript.govSPOGVote();
-        spogValue = SPOGValue(address(deployScript.value()));
+        spogValue = SPOGVotes(address(deployScript.value()));
         govSPOGValue = deployScript.govSPOGValue();
 
         // mint spogVote to address(this) and self-delegate

@@ -7,14 +7,14 @@ import {BaseTest} from "test/Base.t.sol";
 import "src/SPOG.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
-import {SPOGVote} from "src/tokens/SPOGVote.sol";
+import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {IList} from "src/interfaces/IList.sol";
 import {List} from "src/List.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 
 contract GovSPOGTest is BaseTest {
     SPOG public spog;
-    SPOGVote public spogVote;
+    SPOGVotes public spogVote;
     GovSPOG public govSPOGVote;
     SPOGDeployScript public deployScript;
     List public list;
@@ -24,7 +24,7 @@ contract GovSPOGTest is BaseTest {
         deployScript.run();
 
         spog = deployScript.spog();
-        spogVote = SPOGVote(address(deployScript.vote()));
+        spogVote = SPOGVotes(address(deployScript.vote()));
         govSPOGVote = deployScript.govSPOGVote();
 
         // mint spogVote to address(this) and self-delegate

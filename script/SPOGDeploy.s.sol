@@ -6,9 +6,8 @@ import {BaseScript} from "script/shared/Base.s.sol";
 import {SPOG} from "src/SPOGFactory.sol";
 import {SPOGFactory} from "src/SPOGFactory.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
-import {IVotesForSPOG} from "src/interfaces/IVotesForSPOG.sol";
-import {SPOGVote} from "src/tokens/SPOGVote.sol";
-import {SPOGValue} from "src/tokens/SPOGValue.sol";
+import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {GovSPOG} from "src/GovSPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
@@ -29,8 +28,8 @@ contract SPOGDeployScript is BaseScript {
     uint256 public tax;
     GovSPOG public govSPOGVote;
     GovSPOG public govSPOGValue;
-    IVotesForSPOG public vote;
-    IVotesForSPOG public value;
+    ISPOGVotes public vote;
+    ISPOGVotes public value;
 
     uint256 salt =
         uint256(
@@ -59,8 +58,8 @@ contract SPOGDeployScript is BaseScript {
         valueQuorum = 4;
         tax = 5;
 
-        vote = new SPOGVote("SPOGVote", "vote");
-        value = new SPOGValue("SPOGValue", "value");
+        vote = new SPOGVotes("SPOGVote", "vote");
+        value = new SPOGVotes("SPOGValue", "value");
 
         govSPOGVote = new GovSPOG(vote, voteQuorum, voteTime, "GovSPOGVote");
         govSPOGValue = new GovSPOG(
