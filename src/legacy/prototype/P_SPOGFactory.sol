@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {P_SPOG} from "src/prototype/P_SPOG.sol";
-import {P_IGovSPOG} from "src/prototype/P_IGovSPOG.sol";
+import {P_SPOG} from "src/legacy/prototype/P_SPOG.sol";
+import {P_IGovSPOG} from "src/legacy/prototype/P_IGovSPOG.sol";
 
 /***************************************************/
 /******** Prototype - NOT FOR PROD ****************/

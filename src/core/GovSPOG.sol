@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.17;
 
-import {ISPOGVotes} from "./interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";

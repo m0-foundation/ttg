@@ -4,11 +4,11 @@ pragma solidity 0.8.17;
 import "forge-std/console.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-import "src/SPOG.sol";
+import "src/core/SPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
-import {GovSPOG} from "src/GovSPOG.sol";
+import {GovSPOG} from "src/core/GovSPOG.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {List} from "src/List.sol";
+import {List} from "src/periphery/List.sol";
 
 contract SPOG_Base is BaseTest {
     SPOG public spog;

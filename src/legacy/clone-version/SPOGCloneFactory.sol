@@ -6,8 +6,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
-import {ERC165CheckerSPOG} from "src/ERC165CheckerSPOG.sol";
-import {ISPOGClone} from "src/clone-version/ISPOGClone.sol";
+import {ERC165CheckerSPOG} from "src/periphery/ERC165CheckerSPOG.sol";
+import {ISPOGClone} from "src/legacy/clone-version/ISPOGClone.sol";
 
 /**
  * @title SPOGCloneFactory
@@ -141,11 +141,10 @@ contract SPOGCloneFactory is Ownable, Pausable, ERC165CheckerSPOG {
      * @param spog_ Address of the deployed SPOG. It is the implementation to be cloned
      * @param spogToken_ Address of the spogToken implementation
      */
-    function setImplementations(address spog_, address spogToken_)
-        public
-        onlyOwner
-        onlySPOGInterface(spog_)
-    {
+    function setImplementations(
+        address spog_,
+        address spogToken_
+    ) public onlyOwner onlySPOGInterface(spog_) {
         require(
             spog_ != address(0) && spogToken_ != address(0),
             "SPOGCloneFactory: implementations cannot be address(0)"

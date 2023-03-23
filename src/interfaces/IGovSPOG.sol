@@ -12,10 +12,9 @@ interface IGovSPOG {
 
     function votingToken() external view returns (address);
 
-    function proposalVotes(uint256 proposalId)
-        external
-        view
-        returns (uint256 noVotes, uint256 yesVotes);
+    function proposalVotes(
+        uint256 proposalId
+    ) external view returns (uint256 noVotes, uint256 yesVotes);
 
     function updateQuorumNumerator(uint256 newQuorumNumerator) external;
 
@@ -145,20 +144,18 @@ interface IGovSPOG {
      * ERC20Votes, the snapshot is performed at the end of this block. Hence, voting for this proposal starts at the
      * beginning of the following block.
      */
-    function proposalSnapshot(uint256 proposalId)
-        external
-        view
-        returns (uint256);
+    function proposalSnapshot(
+        uint256 proposalId
+    ) external view returns (uint256);
 
     /**
      * @notice module:core
      * @dev Block number at which votes close. Votes close at the end of this block, so it is possible to cast a vote
      * during this block.
      */
-    function proposalDeadline(uint256 proposalId)
-        external
-        view
-        returns (uint256);
+    function proposalDeadline(
+        uint256 proposalId
+    ) external view returns (uint256);
 
     /**
      * @notice module:user-config
@@ -192,10 +189,10 @@ interface IGovSPOG {
      * Note: this can be implemented in a number of ways, for example by reading the delegated balance from one (or
      * multiple), {ERC20Votes} tokens.
      */
-    function getVotes(address account, uint256 blockNumber)
-        external
-        view
-        returns (uint256);
+    function getVotes(
+        address account,
+        uint256 blockNumber
+    ) external view returns (uint256);
 
     /**
      * @notice module:reputation
@@ -211,10 +208,10 @@ interface IGovSPOG {
      * @notice module:voting
      * @dev Returns whether `account` has cast a vote on `proposalId`.
      */
-    function hasVoted(uint256 proposalId, address account)
-        external
-        view
-        returns (bool);
+    function hasVoted(
+        uint256 proposalId,
+        address account
+    ) external view returns (bool);
 
     /**
      * @dev Create a new proposal. Vote start {IGovernor-votingDelay} blocks after the proposal is created and ends
@@ -249,9 +246,10 @@ interface IGovSPOG {
      *
      * Emits a {VoteCast} event.
      */
-    function castVote(uint256 proposalId, uint8 support)
-        external
-        returns (uint256 balance);
+    function castVote(
+        uint256 proposalId,
+        uint8 support
+    ) external returns (uint256 balance);
 
     /**
      * @dev Cast a vote with a reason

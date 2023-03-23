@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {P_IList} from "src/prototype/P_IList.sol";
-import {P_List} from "src/prototype/P_List.sol";
-import {P_ISPOG} from "src/prototype/P_ISPOG.sol";
-import {P_ISPOGVote} from "src/prototype/P_ISPOGVote.sol";
+import {P_IList} from "src/legacy/prototype/P_IList.sol";
+import {P_List} from "src/legacy/prototype/P_List.sol";
+import {P_ISPOG} from "src/legacy/prototype/P_ISPOG.sol";
+import {P_ISPOGVote} from "src/legacy/prototype/P_ISPOGVote.sol";
 
-import {P_IGovSPOG} from "src/prototype/P_IGovSPOG.sol";
+import {P_IGovSPOG} from "src/legacy/prototype/P_IGovSPOG.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";

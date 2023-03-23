@@ -5,7 +5,7 @@ pragma solidity 0.8.17;
 /******** Prototype - NOT FOR PROD ****************/
 /*************************************************/
 
-import {P_IList} from "src/prototype/P_IList.sol";
+import {P_IList} from "src/legacy/prototype/P_IList.sol";
 
 interface P_ISPOG {
     function addNewList(string memory listName) external;

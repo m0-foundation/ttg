@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {SPOG} from "src/SPOG.sol";
+import {SPOG} from "src/core/SPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 
 /// @title SPOGFactory
@@ -117,5 +117,9 @@ contract SPOGFactory {
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));
+    }
+
+    fallback() external {
+        revert("SPOGFactory: non-existent function");
     }
 }

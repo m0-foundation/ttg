@@ -8,7 +8,7 @@ import {SPOGFactory} from "src/SPOGFactory.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {GovSPOG} from "src/GovSPOG.sol";
+import {GovSPOG} from "src/core/GovSPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 

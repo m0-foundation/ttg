@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.17;
 
-import {ERC165CheckerSPOG} from "src/ERC165CheckerSPOG.sol";
+import {ERC165CheckerSPOG} from "src/periphery/ERC165CheckerSPOG.sol";
 
 /***************************************************/
 /******** Prototype - NOT FOR PROD ****************/
@@ -62,10 +62,9 @@ contract P_List is ERC165CheckerSPOG {
 
     /// @notice Change the admin address
     /// @param _newAdmin The new admin address
-    function changeAdmin(address _newAdmin)
-        external
-        onlySPOGInterface(_newAdmin)
-    {
+    function changeAdmin(
+        address _newAdmin
+    ) external onlySPOGInterface(_newAdmin) {
         if (msg.sender != admin) revert NotAdmin();
 
         admin = _newAdmin;
