@@ -19,13 +19,12 @@ contract Vault {
         govSpogAddress = govSpogAddress_;
     }
 
-    /**
-     * Function to withdraw the vault's entire balance.
-     *
-     * @param token address Address of token to withdraw
-     * @param account address Address to withdraw to
-     */
-    function withdraw(address token, address account) public {
+    /// @dev Release vault's asset entire balance for the auction.
+    /// @param token Address of token to withdraw
+    /// @param account Address to withdraw to. Must support auction contract.
+    function releaseAssetBalance(address token, address account) public {
+        // TODO: add require that account must implement auction contract interface
+
         uint256 total = IERC20(token).balanceOf(address(this));
         require(
             msg.sender == IGovSPOG(govSpogAddress).spogAddress(),
@@ -36,12 +35,9 @@ contract Vault {
         emit Withdraw(account, token, total);
     }
 
-    /**
-     * Function to withdraw the a specific amount to msg.sender.
-     *
-     * @param token address Address of token to withdraw
-     * @param amount uint256 Amount of token to withdraw
-     */
+    /// @dev Withdraw a specific amount to msg.sender. Must be allowed to withdraw.
+    /// @param token address Address of token to withdraw
+    /// @param amount uint256 Amount of token to withdraw
     function withdraw(address token, uint256 amount) public {
         // require(
         //     IGovSPOG(govSpogAddress).isAllowedToWithdraw(msg.sender),
