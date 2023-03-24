@@ -9,21 +9,23 @@ import {BaseTest} from "test/Base.t.sol";
 
 contract MockGovSPOG is StdCheats {
     address public immutable spogAddress;
+    Vault public immutable vault;
 
     constructor() {
         spogAddress = makeAddr("spog");
+        vault = new Vault();
     }
 }
 
 contract VaultTest is BaseTest {
     Vault public vault;
 
-    // Events to test
+    // Event to test
     event Withdraw(address indexed account, address token, uint256 amount);
 
     function setUp() public {
         address govSpogAddress = address(new MockGovSPOG());
-        vault = new Vault(govSpogAddress);
+        vault = Vault(IGovSPOG(govSpogAddress).vault());
 
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18});

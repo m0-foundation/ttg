@@ -6,6 +6,8 @@ import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 interface IGovSPOG {
     function spogAddress() external view returns (address);
 
+    function vault() external view returns (address);
+
     function initSPOGAddress(address) external;
 
     function voteTime() external view returns (uint256);

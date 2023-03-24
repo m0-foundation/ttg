@@ -15,8 +15,8 @@ contract Vault {
 
     event Withdraw(address indexed account, address token, uint256 amount);
 
-    constructor(address govSpogAddress_) {
-        govSpogAddress = govSpogAddress_;
+    constructor() {
+        govSpogAddress = msg.sender;
     }
 
     /// @dev Release vault's asset entire balance for the auction.
