@@ -42,7 +42,6 @@ contract P_SPOG is P_ISPOG, ERC165 {
 
     P_IGovSPOG public govSPOG;
 
-    // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
     // These are set in GovSPOG
     // uint256 public voteQuorum;
@@ -86,7 +85,6 @@ contract P_SPOG is P_ISPOG, ERC165 {
         uint256 _tax,
         P_IGovSPOG _govSPOG
     ) {
-        // TODO: add require statements for variables
         spogData.cash = IERC20(_cash);
         spogData.taxRange[0] = _taxRange[0];
         spogData.taxRange[1] = _taxRange[1];
@@ -208,7 +206,7 @@ contract P_SPOG is P_ISPOG, ERC165 {
         string memory description
     ) public returns (uint256) {
         // require that the caller pays the tax to propose
-        _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
+        _pay(spogData.tax);
 
         uint256 proposalId = govSPOG.hashProposal(
             targets,
