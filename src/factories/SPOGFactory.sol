@@ -60,6 +60,8 @@ contract SPOGFactory {
             _govSPOGValue
         );
 
+        emit SPOGDeployed(address(spog), _salt);
+
         return spog;
     }
 

@@ -7,6 +7,8 @@ import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 /// @title GovSPOGFactory
 /// @notice Factory contract for GovSPOG
 contract GovSPOGFactory {
+    event GovSPOGDeployed(address indexed addr, uint256 salt);
+
     /// @dev Deploy a new GovSPOG contract
     /// @param votingTokenContract address of the voting token contract
     /// @param quorumNumeratorValue numerator value for quorum
@@ -28,6 +30,7 @@ contract GovSPOGFactory {
             name_
         );
 
+        emit GovSPOGDeployed(address(govSpog), _salt);
         return govSpog;
     }
 
