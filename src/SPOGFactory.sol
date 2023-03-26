@@ -10,6 +10,7 @@ contract SPOGFactory {
     event SPOGDeployed(address indexed addr, uint256 salt);
 
     /// @notice Create a new SPOG
+    /// @param _vault The address of the `Vault` contract
     /// @param _cash The currency accepted for tax payment in the SPOG (must be ERC20)
     /// @param _taxRange The minimum and maximum value of `tax`
     /// @param _inflator The percentage supply increase in $VOTE for each voting epoch
@@ -26,6 +27,7 @@ contract SPOGFactory {
     /// @param _salt The salt used to deploy the SPOG contract
     /// @return the address of the newly deployed contract
     function deploy(
+        address _vault,
         address _cash,
         uint256[2] memory _taxRange,
         uint256 _inflator,
@@ -42,6 +44,7 @@ contract SPOGFactory {
         uint256 _salt
     ) public returns (SPOG) {
         SPOG spog = new SPOG{salt: bytes32(_salt)}(
+            _vault,
             _cash,
             _taxRange,
             _inflator,
@@ -62,6 +65,7 @@ contract SPOGFactory {
 
     /// @dev This function is used to get the bytecode of the SPOG contract to be deployed
     function getBytecode(
+        address _vault,
         address _cash,
         uint256[2] memory _taxRange,
         uint256 _inflator,
@@ -82,6 +86,7 @@ contract SPOGFactory {
             abi.encodePacked(
                 bytecode,
                 abi.encode(
+                    _vault,
                     _cash,
                     _taxRange,
                     _inflator,

@@ -9,11 +9,9 @@ import {BaseTest} from "test/Base.t.sol";
 
 contract MockGovSPOG is StdCheats {
     address public immutable spogAddress;
-    Vault public immutable vault;
 
     constructor() {
         spogAddress = makeAddr("spog");
-        vault = new Vault();
     }
 }
 
@@ -24,8 +22,9 @@ contract VaultTest is BaseTest {
     event Withdraw(address indexed account, address token, uint256 amount);
 
     function setUp() public {
-        address govSpogAddress = address(new MockGovSPOG());
-        vault = Vault(IGovSPOG(govSpogAddress).vault());
+        address govSpogVoteAddress = address(new MockGovSPOG());
+        address govSpogValueAddress = address(new MockGovSPOG());
+        vault = new Vault(govSpogVoteAddress, govSpogValueAddress);
 
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18});
@@ -39,7 +38,7 @@ contract VaultTest is BaseTest {
     }
 
     function test_Withdraw() public {
-        address spogAddress = IGovSPOG(vault.govSpogAddress()).spogAddress();
+        address spogAddress = IGovSPOG(vault.govSpogVoteAddress()).spogAddress();
         vm.prank(spogAddress);
 
         expectEmit();

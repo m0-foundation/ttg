@@ -4,6 +4,8 @@ pragma solidity 0.8.17;
 import {IList} from "src/interfaces/IList.sol";
 
 interface ISPOG {
+    function vault() external view returns (address);
+
     function addNewList(IList list) external;
 
     function removeList(IList list) external;

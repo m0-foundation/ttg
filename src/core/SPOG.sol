@@ -6,7 +6,6 @@ import {IList} from "src/interfaces/IList.sol";
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -36,6 +35,7 @@ contract SPOG is ISPOG, ERC165 {
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
+    address public immutable vault;
     uint256 private constant inMasterList = 1;
 
     // List of addresses that are part of the masterlist
@@ -62,6 +62,7 @@ contract SPOG is ISPOG, ERC165 {
     error InvalidParameter(bytes32 what);
 
     /// @notice Create a new SPOG
+    /// @param _vault The address of the `Vault` contract
     /// @param _cash The currency accepted for tax payment in the SPOG (must be ERC20)
     /// @param _taxRange The minimum and maximum value of `tax`
     /// @param _inflator The percentage supply increase in $VOTE for each voting epoch
@@ -76,6 +77,7 @@ contract SPOG is ISPOG, ERC165 {
     /// @param _govSPOGVote The address of the `GovSPOG` which $VOTE token is used for voting
     /// @param _govSPOGValue The address of the `GovSPOG` which $VALUE token is used for voting
     constructor(
+        address _vault,
         address _cash,
         uint256[2] memory _taxRange,
         uint256 _inflator,
@@ -91,6 +93,7 @@ contract SPOG is ISPOG, ERC165 {
         IGovSPOG _govSPOGValue
     ) {
         // TODO: add require statements for variables
+        vault = _vault;
         spogData.cash = IERC20(_cash);
         spogData.taxRange[0] = _taxRange[0];
         spogData.taxRange[1] = _taxRange[1];

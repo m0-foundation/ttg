@@ -11,12 +11,14 @@ import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
 contract Vault {
     using SafeERC20 for IERC20;
 
-    address public govSpogAddress;
+    address public immutable govSpogVoteAddress;
+    address public immutable govSpogValueAddress;
 
     event Withdraw(address indexed account, address token, uint256 amount);
 
-    constructor() {
-        govSpogAddress = msg.sender;
+    constructor(address _govSpogVoteAddress, address _govSpogValueAddress) {
+        govSpogVoteAddress = _govSpogVoteAddress;
+        govSpogValueAddress = _govSpogValueAddress;
     }
 
     /// @dev Release vault's asset entire balance for the auction.
@@ -27,7 +29,7 @@ contract Vault {
 
         uint256 total = IERC20(token).balanceOf(address(this));
         require(
-            msg.sender == IGovSPOG(govSpogAddress).spogAddress(),
+            msg.sender == IGovSPOG(govSpogValueAddress).spogAddress(),
             "Vault: withdraw not allowed"
         );
         IERC20(token).safeTransfer(account, total);
@@ -39,8 +41,9 @@ contract Vault {
     /// @param token address Address of token to withdraw
     /// @param amount uint256 Amount of token to withdraw
     function withdraw(address token, uint256 amount) public {
+        // TODO: create isAllowedToWithdraw function in govSpogVote
         // require(
-        //     IGovSPOG(govSpogAddress).isAllowedToWithdraw(msg.sender),
+        //     IGovSPOG(govSpogVoteAddress).isAllowedToWithdraw(msg.sender),
         //     "Vault: withdraw not allowed"
         // );
 

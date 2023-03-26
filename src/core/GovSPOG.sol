@@ -2,17 +2,14 @@
 
 pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {Vault} from "src/periphery/Vault.sol";
-
-import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 
 /// @title SPOG Governance Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract GovSPOG is GovernorVotesQuorumFraction {
     ISPOGVotes public immutable votingToken;
-    Vault public immutable vault;
     address public spogAddress;
     uint256 private _votingPeriod;
     uint256 public startOfNextVotingPeriod;
@@ -44,7 +41,6 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         Governor(name_)
     {
         votingToken = votingTokenContract;
-        vault = new Vault(); // TODO: add vault address to constructor
         _votingPeriod = votingPeriod_;
 
         startOfNextVotingPeriod = block.number + _votingPeriod;
@@ -71,10 +67,11 @@ contract GovSPOG is GovernorVotesQuorumFraction {
             // update startOfNextVotingPeriod
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
 
-            // trigger token inflation
+            // trigger token inflation and send it to the vault
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress)
                 .tokenInflationCalculation();
-            votingToken.mint(address(vault), amountToIncreaseSupplyBy);
+            address vault = ISPOG(spogAddress).vault();
+            votingToken.mint(vault, amountToIncreaseSupplyBy);
         }
     }
 
