@@ -24,7 +24,7 @@ After that you can download dependencies, compile the app and run the tests.
  forge install
 ```
 
-To build the project
+To compile the contracts
 
 ```bash
  forge build
@@ -32,6 +32,20 @@ To build the project
 
 ## Test
 
+To run all tests
+
 ```bash
  forge test
+```
+
+Run test that matches a test contract
+
+```bash
+ forge test --mc <test-contract-name>
+```
+
+Test a specific test case
+
+```bash
+ forge test --mt <test-case-name>
 ```
