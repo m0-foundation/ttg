@@ -94,13 +94,30 @@ contract ListTest is BaseTest {
         assertEq(list.admin(), users.admin);
     }
 
-    // function test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() public {
-    //     // Make the admin the default caller in all subsequent tests.
-    //     changePrank({who: users.alice});
+    function test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() public {
+        // Make the admin the default caller.
+        address newSPOG = address(new MockSPOG());
+        changePrank({who: users.alice});
 
-    //     vm.expectRevert(abi.encodeWithSelector(NotAdmin.selector));
-    //     list.changeAdmin(address(new MockSPOG()));
+        vm.expectRevert(NotAdmin.selector);
+        list.changeAdmin(newSPOG);
 
-    //     // assertEq(list.admin(), users.admin);
-    // }
+        assertEq(list.admin(), users.admin);
+    }
+
+    function test_Revert_Add_WhenCallerIsNotAdmin() public {
+        // Make Alice the default caller.
+        changePrank({who: users.alice});
+
+        vm.expectRevert(NotAdmin.selector);
+        list.add(users.alice);
+    }
+
+    function test_Revert_Remove_WhenCallerIsNotAdmin() public {
+        // Make Alice the default caller.
+        changePrank({who: users.alice});
+
+        vm.expectRevert(NotAdmin.selector);
+        list.remove(users.alice);
+    }
 }
