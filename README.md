@@ -6,7 +6,7 @@ A SPOG, "Simple Participation Optimized Governance," is a governance mechanism t
 
 ## SPOG Smart Contract Architecture
 
-![](assets/spog-arch-first-version.png)
+![](assets/spog-arch-2nd-version.png)
 
 ## Setup
 
