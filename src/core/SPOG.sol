@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import {IList} from "src/interfaces/IList.sol";
-
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
