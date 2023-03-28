@@ -113,6 +113,12 @@ contract ListTest is BaseTest {
         assertEq(list.admin(), newSPOG);
     }
 
+    function test_Revert_Constructor_WhenAdminIsNotSPOG() public {
+        changePrank({who: users.admin});
+        vm.expectRevert("ERC165CheckerSPOG: spogAddress address does not implement proper interface");
+        new List("Revert in constructor expected");
+    }
+
     function test_Revert_ChangeAdmin_WhenNewAdminIsNotSPOG() public {
         // revert when trying to set new admin to non-SPOG address
         vm.expectRevert("ERC165CheckerSPOG: spogAddress address does not implement proper interface");
