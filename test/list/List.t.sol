@@ -8,12 +8,8 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 contract MockSPOG is ERC165 {
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override returns (bool) {
-        return
-            interfaceId == type(ISPOG).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 }
 
@@ -88,9 +84,7 @@ contract ListTest is BaseTest {
 
     function test_Revert_ChangeAdmin_WhenNewAdminIsNotSPOG() public {
         // revert when trying to set new admin to non-SPOG address
-        vm.expectRevert(
-            "ERC165CheckerSPOG: spogAddress address does not implement proper interface"
-        );
+        vm.expectRevert("ERC165CheckerSPOG: spogAddress address does not implement proper interface");
         list.changeAdmin(users.alice);
 
         assertEq(list.admin(), users.admin);
