@@ -291,7 +291,7 @@ contract SPOG_change is SPOG_Base {
         // another way to get custom error selector:
         vm.expectRevert(
             abi.encodeWithSelector(
-                SPOG.InvalidParameter.selector,
+                ISPOG.InvalidParameter.selector,
                 incorrectParams
             )
         );
