@@ -35,50 +35,51 @@ contract ListTest is BaseTest {
     }
 
     function test_AddUsers() public {
-        // Add Alice and check that event `AddressAdded` is emitted
+        // add Alice and check that event `AddressAdded` is emitted
         expectEmit();
         emit AddressAdded(users.alice);
         list.add(users.alice);
 
-        // List contains only Alice
-        assertEq(list.contains(users.alice), true);
-        assertEq(list.contains(users.bob), false);
+        // list contains only Alice
+        assertTrue(list.contains(users.alice), "Alice is not in the list");
+        assertFalse(list.contains(users.bob), "Bob is in the list");
 
-        // Add Bob and check that event `AddressAdded` is emitted
+        // add Bob and check that event `AddressAdded` is emitted
         expectEmit();
         emit AddressAdded(users.bob);
         list.add(users.bob);
 
-        // List contains Alice and Bob now
-        assertEq(list.contains(users.alice), true);
-        assertEq(list.contains(users.bob), true);
+        // list contains both Alice and Bob now
+        assertTrue(list.contains(users.alice), "Alice is not in the list");
+        assertTrue(list.contains(users.bob), "Bob is not in the list");
     }
 
     function test_RemoveUsers() public {
-        // Add Alice and Bob
+        // add Alice and Bob
         list.add(users.alice);
         list.add(users.bob);
 
-        // Remove Alice and check that event `AddressRemoved` is emitted
+        // remove Alice and check that event `AddressRemoved` is emitted
         expectEmit();
         emit AddressRemoved(address(users.alice));
         list.remove(users.alice);
 
-        // List contains only Bob
-        assertEq(list.contains(users.alice), false);
-        assertEq(list.contains(users.bob), true);
+        // list contains only Bob
+        assertFalse(list.contains(users.alice), "Alice is still in the list");
+        assertTrue(list.contains(users.bob), "Bob is not in the list");
 
-        // Remove Bob and check that event `AddressRemoved` is emitted
+        // remove Bob and check that event `AddressRemoved` is emitted
         expectEmit();
         emit AddressRemoved(address(users.bob));
         list.remove(users.bob);
 
-        // List contains no users now
-        assertEq(list.contains(users.alice), false);
-        assertEq(list.contains(users.bob), false);
+        // list doesn't have users now
+        assertFalse(list.contains(users.alice), "Alice is still in the list");
+        assertFalse(list.contains(users.bob), "Bob is still in the list");
     }
 
     function test_changeAdmin() public {
+        // successfully set new admin to SPOG-like contract
         address newSPOG = address(new MockSPOG());
         list.changeAdmin(newSPOG);
 
@@ -86,6 +87,7 @@ contract ListTest is BaseTest {
     }
 
     function test_Revert_ChangeAdmin_WhenNewAdminIsNotSPOG() public {
+        // revert when trying to set new admin to non-SPOG address
         vm.expectRevert(
             "ERC165CheckerSPOG: spogAddress address does not implement proper interface"
         );
@@ -95,10 +97,11 @@ contract ListTest is BaseTest {
     }
 
     function test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() public {
-        // Make the admin the default caller.
-        address newSPOG = address(new MockSPOG());
+        // Make Alice the default caller instead of admin
         changePrank({who: users.alice});
+        address newSPOG = address(new MockSPOG());
 
+        // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
         list.changeAdmin(newSPOG);
 
@@ -106,17 +109,19 @@ contract ListTest is BaseTest {
     }
 
     function test_Revert_Add_WhenCallerIsNotAdmin() public {
-        // Make Alice the default caller.
+        // Make Alice the default caller instead of admin
         changePrank({who: users.alice});
 
+        // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
         list.add(users.alice);
     }
 
     function test_Revert_Remove_WhenCallerIsNotAdmin() public {
-        // Make Alice the default caller.
+        // Make Alice the default caller instead of admin
         changePrank({who: users.alice});
 
+        // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
         list.remove(users.alice);
     }
