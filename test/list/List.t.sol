@@ -25,7 +25,7 @@ contract ListTest is BaseTest {
         list = new List("SPOG Collateral Managers List");
     }
 
-    function test_constructor() public {
+    function test_Constructor() public {
         assertEq(list.admin(), users.admin);
         assertEq(list.name(), "SPOG Collateral Managers List");
     }
@@ -72,6 +72,28 @@ contract ListTest is BaseTest {
         // list doesn't have users now
         assertFalse(list.contains(users.alice), "Alice is still in the list");
         assertFalse(list.contains(users.bob), "Bob is still in the list");
+    }
+
+    function test_RemoveUsers_WhenListIsEmpty_OrUserIsNotInTheList() public {
+        // list is empty
+        assertFalse(list.contains(users.charlie), "Charlie is in the list");
+
+        // remove Charlie and check that event `AddressRemoved` is emitted
+        expectEmit();
+        emit AddressRemoved(address(users.charlie));
+        list.remove(users.charlie);
+
+        // add Alice
+        list.add(users.alice);
+
+        // list contains only Alice
+        assertTrue(list.contains(users.alice), "Alice is not in the list");
+        assertFalse(list.contains(users.charlie), "Charlie is in the list");
+
+        // remove Charlie and check that event `AddressRemoved` is emitted
+        expectEmit();
+        emit AddressRemoved(address(users.charlie));
+        list.remove(users.charlie);
     }
 
     function test_ChangeAdmin() public {
