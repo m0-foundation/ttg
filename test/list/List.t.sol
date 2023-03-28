@@ -74,7 +74,7 @@ contract ListTest is BaseTest {
         assertFalse(list.contains(users.bob), "Bob is still in the list");
     }
 
-    function test_changeAdmin() public {
+    function test_ChangeAdmin() public {
         // successfully set new admin to SPOG-like contract
         address newSPOG = address(new MockSPOG());
         list.changeAdmin(newSPOG);
