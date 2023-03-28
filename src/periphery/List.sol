@@ -14,12 +14,16 @@ contract List is ERC165CheckerSPOG {
 
     string private _name;
 
-    event AddressAdded(address _address);
-    event AddressRemoved(address _address);
+    event AddressAdded(address indexed _address);
+    event AddressRemoved(address indexed _address);
+    event AdminChanged(address indexed _newAdmin);
 
     // constructor sets the admin address
     constructor(string memory name_) {
         _name = name_;
+
+        // make sure admin is SPOG governance contract
+        _checkSPOGInterface(msg.sender);
 
         _admin = msg.sender;
     }
@@ -62,11 +66,10 @@ contract List is ERC165CheckerSPOG {
 
     /// @notice Change the admin address
     /// @param _newAdmin The new admin address
-    function changeAdmin(
-        address _newAdmin
-    ) external onlySPOGInterface(_newAdmin) {
+    function changeAdmin(address _newAdmin) external onlySPOGInterface(_newAdmin) {
         if (msg.sender != _admin) revert NotAdmin();
 
         _admin = _newAdmin;
+        emit AdminChanged(_newAdmin);
     }
 }

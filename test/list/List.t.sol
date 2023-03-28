@@ -15,18 +15,24 @@ contract MockSPOG is ERC165 {
 
 contract ListTest is BaseTest {
     List public list;
+    address public adminSPOG;
 
     // Events to test
-    event AddressAdded(address _address);
-    event AddressRemoved(address _address);
+    event AddressAdded(address indexed _address);
+    event AddressRemoved(address indexed _address);
+    event AdminChanged(address indexed _newAdmin);
 
     function setUp() public {
         createUsers();
+
+        adminSPOG = address(new MockSPOG());
+        changePrank({who: adminSPOG});
+
         list = new List("SPOG Collateral Managers List");
     }
 
     function test_Constructor() public {
-        assertEq(list.admin(), users.admin);
+        assertEq(list.admin(), adminSPOG);
         assertEq(list.name(), "SPOG Collateral Managers List");
     }
 
@@ -99,6 +105,9 @@ contract ListTest is BaseTest {
     function test_ChangeAdmin() public {
         // successfully set new admin to SPOG-like contract
         address newSPOG = address(new MockSPOG());
+
+        expectEmit();
+        emit AdminChanged(newSPOG);
         list.changeAdmin(newSPOG);
 
         assertEq(list.admin(), newSPOG);
@@ -109,7 +118,7 @@ contract ListTest is BaseTest {
         vm.expectRevert("ERC165CheckerSPOG: spogAddress address does not implement proper interface");
         list.changeAdmin(users.alice);
 
-        assertEq(list.admin(), users.admin);
+        assertEq(list.admin(), adminSPOG);
     }
 
     function test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() public {
@@ -121,7 +130,7 @@ contract ListTest is BaseTest {
         vm.expectRevert(NotAdmin.selector);
         list.changeAdmin(newSPOG);
 
-        assertEq(list.admin(), users.admin);
+        assertEq(list.admin(), adminSPOG);
     }
 
     function test_Revert_Add_WhenCallerIsNotAdmin() public {
