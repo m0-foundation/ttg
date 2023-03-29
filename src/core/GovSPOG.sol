@@ -95,6 +95,8 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         string memory description
     ) public virtual override returns (uint256) {
+        require(msg.sender == spogAddress, "GovSPOG: only SPOG can propose");
+
         updateStartOfNextVotingPeriod();
         return super.propose(targets, values, calldatas, description);
     }
