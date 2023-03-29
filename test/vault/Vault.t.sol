@@ -27,12 +27,7 @@ contract VaultTest is BaseTest {
         vault = new Vault(govSpogVoteAddress, govSpogValueAddress);
 
         // mint tokens to vault
-        deal({
-            token: address(dai),
-            to: address(vault),
-            give: 1000e18,
-            adjust: true
-        });
+        deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
     }
 
     function test_RevertWithdraw() public {
@@ -43,8 +38,7 @@ contract VaultTest is BaseTest {
     }
 
     function test_Withdraw() public {
-        address spogAddress = IGovSPOG(vault.govSpogVoteAddress())
-            .spogAddress();
+        address spogAddress = IGovSPOG(vault.govSpogVoteAddress()).spogAddress();
         vm.prank(spogAddress);
 
         expectEmit();

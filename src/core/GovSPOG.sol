@@ -35,11 +35,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         uint256 quorumNumeratorValue,
         uint256 votingPeriod_,
         string memory name_
-    )
-        GovernorVotesQuorumFraction(quorumNumeratorValue)
-        GovernorVotes(votingTokenContract)
-        Governor(name_)
-    {
+    ) GovernorVotesQuorumFraction(quorumNumeratorValue) GovernorVotes(votingTokenContract) Governor(name_) {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
 
@@ -54,9 +50,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     }
 
     /// @dev Accessor to the internal vote counts.
-    function proposalVotes(
-        uint256 proposalId
-    ) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
+    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.noVotes, proposalVote.yesVotes);
     }
@@ -68,8 +62,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
 
             // trigger token inflation and send it to the vault
-            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress)
-                .tokenInflationCalculation();
+            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
             address vault = ISPOG(spogAddress).vault();
             votingToken.mint(vault, amountToIncreaseSupplyBy);
         }
@@ -79,23 +72,15 @@ contract GovSPOG is GovernorVotesQuorumFraction {
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
-    function updateQuorumNumerator(
-        uint256 newQuorumNumerator
-    ) external override {
-        require(
-            msg.sender == spogAddress,
-            "GovSPOG: only SPOG can update quorum numerator"
-        );
+    function updateQuorumNumerator(uint256 newQuorumNumerator) external override {
+        require(msg.sender == spogAddress, "GovSPOG: only SPOG can update quorum numerator");
         _updateQuorumNumerator(newQuorumNumerator);
     }
 
     /// @dev Update voting time only by SPOG
     /// @param newVotingTime New voting time
     function updateVotingTime(uint256 newVotingTime) external {
-        require(
-            msg.sender == spogAddress,
-            "GovSPOG: only SPOG can update voting time"
-        );
+        require(msg.sender == spogAddress, "GovSPOG: only SPOG can update voting time");
 
         _votingPeriod = newVotingTime;
         emit VotingPeriodSet(_votingPeriod, newVotingTime);
@@ -126,52 +111,38 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         bytes32 descriptionHash
     ) internal virtual override {
         updateStartOfNextVotingPeriod();
-        super._afterExecute(
-            proposalId,
-            targets,
-            values,
-            calldatas,
-            descriptionHash
-        );
+        super._afterExecute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     /// @notice override to use updateStartOfNextVotingPeriod
-    function _castVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        string memory reason,
-        bytes memory params
-    ) internal virtual override returns (uint256) {
+    function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         updateStartOfNextVotingPeriod();
         return super._castVote(proposalId, account, support, reason, params);
     }
 
     /// @dev See {IGovernor-hasVoted}.
-    function hasVoted(
-        uint256 proposalId,
-        address account
-    ) public view virtual override returns (bool) {
+    function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
     }
 
     /// @dev See {Governor-_quorumReached}.
-    function _quorumReached(
-        uint256 proposalId
-    ) internal view virtual override returns (bool) {
+    function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         return quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
     }
 
     /// @dev See {Governor-_countVote}.
-    function _countVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        uint256,
-        bytes memory
-    ) internal virtual override {
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256, bytes memory)
+        internal
+        virtual
+        override
+    {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         require(!proposalVote.hasVoted[account], "GovSPOG: vote already cast");
@@ -199,21 +170,13 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     }
 
     /// @dev See {Governor-_voteSucceeded}.
-    function _voteSucceeded(
-        uint256 proposalId
-    ) internal view virtual override returns (bool) {
+    function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
         return _quorumReached(proposalId);
     }
 
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase
-    function COUNTING_MODE()
-        public
-        pure
-        virtual
-        override
-        returns (string memory)
-    {
+    function COUNTING_MODE() public pure virtual override returns (string memory) {
         return "support=bravo&quorum=bravo";
     }
 

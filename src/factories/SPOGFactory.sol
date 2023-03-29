@@ -60,37 +60,19 @@ contract SPOGFactory {
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SPOG).creationCode;
 
-        return
-            abi.encodePacked(
-                bytecode,
-                abi.encode(
-                    _initSPOGData,
-                    _vault,
-                    _voteTime,
-                    _forkTime,
-                    _voteQuorum,
-                    _valueQuorum,
-                    _govSPOGVote,
-                    _govSPOGValue
-                )
-            );
+        return abi.encodePacked(
+            bytecode,
+            abi.encode(
+                _initSPOGData, _vault, _voteTime, _forkTime, _voteQuorum, _valueQuorum, _govSPOGVote, _govSPOGValue
+            )
+        );
     }
 
     /// @dev Compute the address of the SPOG contract to be deployed
     /// @param bytecode The bytecode of the contract to be deployed
     /// @param _salt is a random number used to create an address
-    function predictSPOGAddress(
-        bytes memory bytecode,
-        uint256 _salt
-    ) public view returns (address) {
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                _salt,
-                keccak256(bytecode)
-            )
-        );
+    function predictSPOGAddress(bytes memory bytecode, uint256 _salt) public view returns (address) {
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));

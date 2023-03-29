@@ -16,10 +16,7 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
-    constructor(
-        string memory name,
-        string memory symbol
-    ) ERC20(name, symbol) ERC20Permit(name) {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 

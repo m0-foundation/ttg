@@ -13,6 +13,7 @@ interface ISPOG {
     event TaxChanged(uint256 indexed tax);
     event DoubleQuorumInitiated(bytes32 indexed identifier);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
+
     error InvalidParameter(bytes32 what);
 
     // functions

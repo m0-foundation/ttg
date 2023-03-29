@@ -28,23 +28,17 @@ contract SPOG_changeTax is SPOG_Base {
         valuesForValueHolders[0] = 0;
         bytes[] memory calldatasForValueHolders = new bytes[](1);
 
-        calldatasForValueHolders[0] = abi.encodeWithSignature(
-            "changeTax(uint256)",
-            newTaxValue
-        );
-        string
-            memory descriptionForValueHolders = "GovSPOGValue change tax variable in spog";
+        calldatasForValueHolders[0] = abi.encodeWithSignature("changeTax(uint256)", newTaxValue);
+        string memory descriptionForValueHolders = "GovSPOGValue change tax variable in spog";
 
-        (
-            bytes32 hashedDescriptionForValueHolders,
-            uint256 proposalIdForValueHolders
-        ) = getProposalIdAndHashedDescription(
-                govSPOGValue,
-                targetsForValueHolders,
-                valuesForValueHolders,
-                calldatasForValueHolders,
-                descriptionForValueHolders
-            );
+        (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
+        getProposalIdAndHashedDescription(
+            govSPOGValue,
+            targetsForValueHolders,
+            valuesForValueHolders,
+            calldatasForValueHolders,
+            descriptionForValueHolders
+        );
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
@@ -64,18 +58,12 @@ contract SPOG_changeTax is SPOG_Base {
 
         vm.expectRevert("SPOG: Only GovSPOGVote");
         govSPOGValue.execute(
-            targetsForValueHolders,
-            valuesForValueHolders,
-            calldatasForValueHolders,
-            hashedDescriptionForValueHolders
+            targetsForValueHolders, valuesForValueHolders, calldatasForValueHolders, hashedDescriptionForValueHolders
         );
 
-        (uint256 taxValueCheck, , , , , ) = spog.spogData();
+        (uint256 taxValueCheck,,,,,) = spog.spogData();
         // assert that tax was not modified
-        assertTrue(
-            taxValueCheck == deployScript.tax(),
-            "Tax must not have changed"
-        );
+        assertTrue(taxValueCheck == deployScript.tax(), "Tax must not have changed");
     }
 
     function test_Revert_WhenTaxValueIsOutOfTaxRangeBounds() public {
@@ -87,32 +75,15 @@ contract SPOG_changeTax is SPOG_Base {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
-        calldatas[0] = abi.encodeWithSignature(
-            "changeTax(uint256)",
-            outOfBoundsTaxValue
-        );
+        calldatas[0] = abi.encodeWithSignature("changeTax(uint256)", outOfBoundsTaxValue);
         string memory description = "Change tax variable in spog";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGVote,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGVote)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGVote.votingDelay() + 1);
@@ -125,13 +96,10 @@ contract SPOG_changeTax is SPOG_Base {
         vm.expectRevert("SPOG: Tax out of range");
         govSPOGVote.execute(targets, values, calldatas, hashedDescription);
 
-        (uint256 taxFirstCheck, , , , , ) = spog.spogData();
+        (uint256 taxFirstCheck,,,,,) = spog.spogData();
 
         // assert that tax has not been modified
-        assertFalse(
-            taxFirstCheck == outOfBoundsTaxValue,
-            "Tax should not have been changed"
-        );
+        assertFalse(taxFirstCheck == outOfBoundsTaxValue, "Tax should not have been changed");
     }
 
     function test_ChangeTaxViaProposalByGovSPOGVote() public {
@@ -142,32 +110,15 @@ contract SPOG_changeTax is SPOG_Base {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
-        calldatas[0] = abi.encodeWithSignature(
-            "changeTax(uint256)",
-            newTaxValue
-        );
+        calldatas[0] = abi.encodeWithSignature("changeTax(uint256)", newTaxValue);
         string memory description = "Change tax variable in spog";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGVote,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGVote)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGVote.votingDelay() + 1);
@@ -179,7 +130,7 @@ contract SPOG_changeTax is SPOG_Base {
 
         govSPOGVote.execute(targets, values, calldatas, hashedDescription);
 
-        (uint256 taxFirstCheck, , , , , ) = spog.spogData();
+        (uint256 taxFirstCheck,,,,,) = spog.spogData();
 
         // assert that tax was modified
         assertTrue(taxFirstCheck == newTaxValue, "Tax wasn't changed");

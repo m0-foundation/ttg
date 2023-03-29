@@ -46,34 +46,17 @@ contract GovSPOGFactory {
         uint256 votingPeriod_,
         string memory name_
     ) public pure returns (bytes memory) {
-        return
-            abi.encodePacked(
-                type(GovSPOG).creationCode,
-                abi.encode(
-                    votingTokenContract,
-                    quorumNumeratorValue,
-                    votingPeriod_,
-                    name_
-                )
-            );
+        return abi.encodePacked(
+            type(GovSPOG).creationCode, abi.encode(votingTokenContract, quorumNumeratorValue, votingPeriod_, name_)
+        );
     }
 
     /// @dev Compute the address of the GovSPOG contract to be deployed
     /// @param bytecode bytecode of the GovSPOG contract
     /// @param _salt salt for the contract address
     /// @return address of the GovSPOG contract
-    function predictGovSPOGAddress(
-        bytes memory bytecode,
-        uint256 _salt
-    ) public view returns (address) {
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                _salt,
-                keccak256(bytecode)
-            )
-        );
+    function predictGovSPOGAddress(bytes memory bytecode, uint256 _salt) public view returns (address) {
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));

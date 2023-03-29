@@ -62,9 +62,7 @@ contract List is ERC165CheckerSPOG {
 
     /// @notice Change the admin address
     /// @param _newAdmin The new admin address
-    function changeAdmin(
-        address _newAdmin
-    ) external onlySPOGInterface(_newAdmin) {
+    function changeAdmin(address _newAdmin) external onlySPOGInterface(_newAdmin) {
         if (msg.sender != _admin) revert NotAdmin();
 
         _admin = _newAdmin;
