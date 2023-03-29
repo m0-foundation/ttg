@@ -5,17 +5,17 @@ import "forge-std/console.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
 import "src/core/SPOG.sol";
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
-import {GovSPOG} from "src/core/GovSPOG.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {List} from "src/periphery/List.sol";
 
 contract SPOG_Base is BaseTest {
     SPOG public spog;
     SPOGVotes public spogVote;
-    GovSPOG public govSPOGVote;
+    SPOGGovernor public voteGovernor;
     SPOGVotes public spogValue;
-    GovSPOG public govSPOGValue;
+    SPOGGovernor public valueGovernor;
     SPOGDeployScript public deployScript;
     List public list;
 
@@ -30,9 +30,9 @@ contract SPOG_Base is BaseTest {
 
         spog = deployScript.spog();
         spogVote = SPOGVotes(address(deployScript.vote()));
-        govSPOGVote = deployScript.govSPOGVote();
+        voteGovernor = deployScript.voteGovernor();
         spogValue = SPOGVotes(address(deployScript.value()));
-        govSPOGValue = deployScript.govSPOGValue();
+        valueGovernor = deployScript.valueGovernor();
 
         // mint spogVote to address(this) and self-delegate
         deal({token: address(spogVote), to: address(this), give: 100e18, adjust: true});
@@ -57,14 +57,14 @@ contract SPOG_Base is BaseTest {
      *
      */
     function getProposalIdAndHashedDescription(
-        GovSPOG govSPOG,
+        SPOGGovernor governor,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
     ) internal pure returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = govSPOG.hashProposal(targets, values, calldatas, hashedDescription);
+        proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpog() internal {
@@ -77,23 +77,23 @@ contract SPOG_Base is BaseTest {
         string memory description = "Add new list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpogAndAppendAnAddressToIt() internal {
@@ -112,22 +112,22 @@ contract SPOG_Base is BaseTest {
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 }

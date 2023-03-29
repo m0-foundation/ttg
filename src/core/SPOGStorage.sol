@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -19,8 +19,8 @@ abstract contract SPOGStorage is ISPOG {
 
     SPOGData public spogData;
 
-    IGovSPOG public immutable govSPOGVote;
-    IGovSPOG public immutable govSPOGValue;
+    ISPOGGovernor public immutable voteGovernor;
+    ISPOGGovernor public immutable valueGovernor;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
 
@@ -32,39 +32,42 @@ abstract contract SPOGStorage is ISPOG {
     mapping(bytes32 => DoubleQuorum) public doubleQuorumChecker;
 
     constructor(
-        IGovSPOG _govSPOGVote,
-        IGovSPOG _govSPOGValue,
+        ISPOGGovernor _voteGovernor,
+        ISPOGGovernor _valueGovernor,
         uint256 _voteTime,
         uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum
     ) {
-        govSPOGVote = _govSPOGVote;
-        govSPOGValue = _govSPOGValue;
+        voteGovernor = _voteGovernor;
+        valueGovernor = _valueGovernor;
 
-        // Set in GovSPOGVote
-        govSPOGVote.initSPOGAddress(address(this));
+        // Set SPOG address in vote governor
+        voteGovernor.initSPOGAddress(address(this));
 
-        // set quorum and voting period for govSPOGVote
-        govSPOGVote.updateQuorumNumerator(_voteQuorum);
-        govSPOGVote.updateVotingTime(_voteTime);
+        // set quorum and voting period for vote governor
+        voteGovernor.updateQuorumNumerator(_voteQuorum);
+        voteGovernor.updateVotingTime(_voteTime);
 
-        // Set in GovSPOGValue
-        govSPOGValue.initSPOGAddress(address(this));
+        // Set SPOG address in value governor
+        valueGovernor.initSPOGAddress(address(this));
 
-        // set quorum and voting period for govSPOGValue
-        govSPOGValue.updateQuorumNumerator(_valueQuorum);
-        govSPOGValue.updateVotingTime(_forkTime);
+        // set quorum and voting period for value governor
+        valueGovernor.updateQuorumNumerator(_valueQuorum);
+        valueGovernor.updateVotingTime(_forkTime);
     }
 
-    modifier onlyGovSPOGVote() {
-        require(msg.sender == address(govSPOGVote), "SPOG: Only GovSPOGVote");
+    modifier onlyVoteGovernor() {
+        require(msg.sender == address(voteGovernor), "SPOG: Only vote governor");
 
         _;
     }
 
-    modifier onlyGovernance() {
-        require(msg.sender == address(govSPOGVote) || msg.sender == address(govSPOGValue), "SPOG: Only GovSPOG");
+    modifier onlyDoubleGovernance() {
+        require(
+            msg.sender == address(voteGovernor) || msg.sender == address(valueGovernor),
+            "SPOG: Only vote or value governor"
+        );
 
         _;
     }
@@ -75,7 +78,7 @@ abstract contract SPOGStorage is ISPOG {
         return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
-    function changeTax(uint256 _tax) external onlyGovSPOGVote {
+    function changeTax(uint256 _tax) external onlyVoteGovernor {
         require(_tax >= spogData.taxRange[0] && _tax <= spogData.taxRange[1], "SPOG: Tax out of range");
 
         spogData.tax = _tax;
@@ -86,16 +89,16 @@ abstract contract SPOGStorage is ISPOG {
     /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, inflatorTime, sellTime, forkTime, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
-    function change(bytes32 what, bytes calldata value) external onlyGovernance {
+    function change(bytes32 what, bytes calldata value) external onlyDoubleGovernance {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
-        if (msg.sender == address(govSPOGVote)) {
+        if (msg.sender == address(voteGovernor)) {
             require(!doubleQuorumChecker[identifier].passedVoteQuorum, "SPOG: Double quorum already initiated");
 
             doubleQuorumChecker[identifier].passedVoteQuorum = true;
 
             // set the deadline for the value quorum to be reached
-            // 2x govSPOGValue voting period (votingDelay + votingPeriod).
-            uint256 voteValueQuorumDeadline = block.number + (govSPOGValue.votingPeriod() * 2);
+            // 2x value governor voting period (votingDelay + votingPeriod).
+            uint256 voteValueQuorumDeadline = block.number + (valueGovernor.votingPeriod() * 2);
             doubleQuorumChecker[identifier].voteValueQuorumDeadline = voteValueQuorumDeadline;
 
             emit DoubleQuorumInitiated(identifier);
@@ -130,20 +133,20 @@ abstract contract SPOGStorage is ISPOG {
             spogData.reward = abi.decode(value, (uint256));
         } else if (what == "voteTime") {
             uint256 decodedVoteTime = abi.decode(value, (uint256));
-            govSPOGVote.updateVotingTime(decodedVoteTime);
+            voteGovernor.updateVotingTime(decodedVoteTime);
         } else if (what == "inflatorTime") {
             spogData.inflatorTime = abi.decode(value, (uint256));
         } else if (what == "sellTime") {
             spogData.sellTime = abi.decode(value, (uint256));
         } else if (what == "forkTime") {
             uint256 decodedForkTime = abi.decode(value, (uint256));
-            govSPOGValue.updateVotingTime(decodedForkTime);
+            valueGovernor.updateVotingTime(decodedForkTime);
         } else if (what == "voteQuorum") {
             uint256 decodedvoteQuorum = abi.decode(value, (uint256));
-            govSPOGVote.updateQuorumNumerator(decodedvoteQuorum);
+            voteGovernor.updateQuorumNumerator(decodedvoteQuorum);
         } else if (what == "valueQuorum") {
             uint256 valueQuorum = abi.decode(value, (uint256));
-            govSPOGValue.updateQuorumNumerator(valueQuorum);
+            valueGovernor.updateQuorumNumerator(valueQuorum);
         } else {
             revert InvalidParameter(what);
         }

@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
-/// @title SPOG Governance Contract
+/// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
-contract GovSPOG is GovernorVotesQuorumFraction {
+contract SPOGGovernor is GovernorVotesQuorumFraction {
     ISPOGVotes public immutable votingToken;
     address public spogAddress;
     uint256 private _votingPeriod;
@@ -45,7 +45,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     /// @dev sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
-        require(spogAddress == address(0), "GovSPOG: spogAddress already set");
+        require(spogAddress == address(0), "SPOGGovernor: spogAddress already set");
 
         votingToken.initSPOGAddress(_spogAddress);
         spogAddress = _spogAddress;
@@ -75,14 +75,14 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
     function updateQuorumNumerator(uint256 newQuorumNumerator) external override {
-        require(msg.sender == spogAddress, "GovSPOG: only SPOG can update quorum numerator");
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can update quorum numerator");
         _updateQuorumNumerator(newQuorumNumerator);
     }
 
     /// @dev Update voting time only by SPOG
     /// @param newVotingTime New voting time
     function updateVotingTime(uint256 newVotingTime) external {
-        require(msg.sender == spogAddress, "GovSPOG: only SPOG can update voting time");
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can update voting time");
 
         _votingPeriod = newVotingTime;
         emit VotingPeriodSet(_votingPeriod, newVotingTime);
@@ -97,7 +97,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         string memory description
     ) public virtual override returns (uint256) {
-        require(msg.sender == spogAddress, "GovSPOG: only SPOG can propose");
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can propose");
 
         updateStartOfNextVotingPeriod();
         return super.propose(targets, values, calldatas, description);
@@ -149,7 +149,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        require(!proposalVote.hasVoted[account], "GovSPOG: vote already cast");
+        require(!proposalVote.hasVoted[account], "SPOGGovernor: vote already cast");
         proposalVote.hasVoted[account] = true;
 
         uint256 votes = _getVotes(account, proposalSnapshot(proposalId), "");
@@ -165,7 +165,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         if (startOfNextVotingPeriod > block.number) {
             return startOfNextVotingPeriod - block.number;
         } else {
-            revert("GovSPOG: StartOfNextVotingPeriod must be updated");
+            revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
         }
     }
 
@@ -185,6 +185,6 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     }
 
     fallback() external {
-        revert("GovSPOG: non-existent function");
+        revert("SPOGGovernor: non-existent function");
     }
 }

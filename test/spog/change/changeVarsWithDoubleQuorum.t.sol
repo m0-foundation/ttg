@@ -22,7 +22,7 @@ contract SPOG_change is SPOG_Base {
     }
 
     function test_Revert_ChangeWhenNotCalledFromGovernance() public {
-        vm.expectRevert("SPOG: Only GovSPOG");
+        vm.expectRevert("SPOG: Only vote or value governor");
         spog.change(reward, elevenAsCalldataValue);
     }
 
@@ -35,11 +35,11 @@ contract SPOG_change is SPOG_Base {
         bytes[] memory calldatasForValueHolders = new bytes[](1);
 
         calldatasForValueHolders[0] = abi.encodeWithSignature("change(bytes32,bytes)", reward, elevenAsCalldataValue);
-        string memory descriptionForValueHolders = "GovSPOGValue change reward variable in spog";
+        string memory descriptionForValueHolders = "SPOGGovernorValue change reward variable in spog";
 
         (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
         getProposalIdAndHashedDescription(
-            govSPOGValue,
+            valueGovernor,
             targetsForValueHolders,
             valuesForValueHolders,
             calldatasForValueHolders,
@@ -49,21 +49,21 @@ contract SPOG_change is SPOG_Base {
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(
-            IGovSPOG(address(govSPOGValue)),
+            ISPOGGovernor(address(valueGovernor)),
             targetsForValueHolders,
             valuesForValueHolders,
             calldatasForValueHolders,
             descriptionForValueHolders
         );
 
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of govSPOGValue voting period
+        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
+        // fast forward to end of valueGovernor voting period
         vm.roll(block.number + deployScript.forkTime() + 1);
 
         vm.expectRevert("SPOG: Double quorum not met");
-        govSPOGValue.execute(
+        valueGovernor.execute(
             targetsForValueHolders, valuesForValueHolders, calldatasForValueHolders, hashedDescriptionForValueHolders
         );
 
@@ -83,22 +83,22 @@ contract SPOG_change is SPOG_Base {
         string memory description = "Change reward variable in spog";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(reward, elevenAsCalldataValue));
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         (,,,, uint256 rewardFirstCheck,) = spog.spogData();
 
@@ -109,33 +109,33 @@ contract SPOG_change is SPOG_Base {
          *  value holders vote on proposal *********
          */
         (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
 
         // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
-            govSPOGValue.updateStartOfNextVotingPeriod();
+        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
+            valueGovernor.updateStartOfNextVotingPeriod();
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
+        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
 
         // fast forward to a time longer that double quorum deadline
         vm.roll(block.number + deployScript.forkTime() * 3); // time longer than double quorum deadline
 
         // must revert as double quorum deadline has passed
         vm.expectRevert("SPOG: Double quorum deadline passed");
-        govSPOGValue.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
 
         (uint256 voteValueQuorumDeadline, bool passedVoteQuorum) = spog.doubleQuorumChecker(identifier);
 
         assertTrue(passedVoteQuorum, "Vote quorum must have been passed");
         assertTrue(voteValueQuorumDeadline < block.number, "Vote value quorum deadline must have passed");
 
-        // assert that reward was not modified via govSPOGValue holder vote
+        // assert that reward was not modified via valueGovernor holder vote
         (,,,, uint256 rewardSecondCheck,) = spog.spogData();
         assertFalse(rewardSecondCheck == 11, "Reward should not have been changed");
     }
@@ -153,39 +153,39 @@ contract SPOG_change is SPOG_Base {
         string memory description = "Change tax which should not be possible to change with double quorum";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         /**
          *  value holders vote on proposal *********
          */
         (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
 
         // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
-            govSPOGValue.updateStartOfNextVotingPeriod();
+        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
+            valueGovernor.updateStartOfNextVotingPeriod();
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
+        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
 
         vm.roll(block.number + deployScript.forkTime());
 
@@ -197,7 +197,7 @@ contract SPOG_change is SPOG_Base {
 
         // another way to get custom error selector:
         vm.expectRevert(abi.encodeWithSelector(ISPOG.InvalidParameter.selector, incorrectParams));
-        govSPOGValue.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
 
         // assert that tax was not modified
         (uint256 tax,,,,,) = spog.spogData();
@@ -216,17 +216,17 @@ contract SPOG_change is SPOG_Base {
         string memory description = "Change reward variable in spog";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
@@ -234,7 +234,7 @@ contract SPOG_change is SPOG_Base {
         // check that DoubleQuorumInitiated event was triggered
         expectEmit();
         emit DoubleQuorumInitiated(identifier);
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         (,,,, uint256 rewardFirstCheck,) = spog.spogData();
 
@@ -247,26 +247,26 @@ contract SPOG_change is SPOG_Base {
         vm.warp(1 hours);
 
         (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
 
         // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
-            govSPOGValue.updateStartOfNextVotingPeriod();
+        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
+            valueGovernor.updateStartOfNextVotingPeriod();
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of govSPOGValue voting period
+        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
+        // fast forward to end of valueGovernor voting period
         vm.roll(block.number + deployScript.forkTime() + 1);
 
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
-        govSPOGValue.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
 
         (,,,, uint256 rewardSecondCheck,) = spog.spogData();
         // assert that reward was modified by double quorum
@@ -293,17 +293,17 @@ contract SPOG_change is SPOG_Base {
         string memory description = "Change cash variable in spog";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
@@ -311,7 +311,7 @@ contract SPOG_change is SPOG_Base {
         // check that DoubleQuorumInitiated event was triggered
         expectEmit();
         emit DoubleQuorumInitiated(identifier);
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         (,,,,, IERC20 cashFirstCheck) = spog.spogData();
 
@@ -325,26 +325,26 @@ contract SPOG_change is SPOG_Base {
         vm.warp(1 hours);
 
         (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
 
         // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
-            govSPOGValue.updateStartOfNextVotingPeriod();
+        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
+            valueGovernor.updateStartOfNextVotingPeriod();
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of govSPOGValue voting period
+        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
+        // fast forward to end of valueGovernor voting period
         vm.roll(block.number + deployScript.forkTime() + 1);
 
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
-        govSPOGValue.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
 
         (,,,,, IERC20 cashSecondCheck) = spog.spogData();
         // assert that cash was modified by double quorum

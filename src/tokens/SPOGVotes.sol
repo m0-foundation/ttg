@@ -8,7 +8,7 @@ import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-/// @title SPOGVotes: voting token for the govSPOG
+/// @title SPOGVotes: voting token for the SPOG governor
 contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;

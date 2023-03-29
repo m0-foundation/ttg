@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
-interface IGovSPOG {
+interface ISPOGGovernor {
     function spogAddress() external view returns (address);
 
     function initSPOGAddress(address) external;

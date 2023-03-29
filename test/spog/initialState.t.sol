@@ -11,15 +11,15 @@ contract SPOG_InitialState is SPOG_Base {
         assertEq(address(cash), address(deployScript.cash()), "cash not set correctly");
         assertEq(inflator, deployScript.inflator(), "inflator not set correctly");
         assertEq(reward, deployScript.reward(), "reward not set correctly");
-        assertEq(govSPOGVote.votingPeriod(), deployScript.voteTime(), "voteTime not set correctly");
-        assertEq(govSPOGValue.votingPeriod(), deployScript.forkTime(), "forkTime not set correctly");
+        assertEq(voteGovernor.votingPeriod(), deployScript.voteTime(), "voteTime not set correctly");
+        assertEq(valueGovernor.votingPeriod(), deployScript.forkTime(), "forkTime not set correctly");
         assertEq(inflatorTime, deployScript.inflatorTime(), "inflatorTime not set correctly");
         assertEq(sellTime, deployScript.sellTime(), "sellTime not set correctly");
-        assertEq(govSPOGVote.quorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
-        assertEq(govSPOGValue.quorumNumerator(), deployScript.valueQuorum(), "valueQuorum not set correctly");
+        assertEq(voteGovernor.quorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
+        assertEq(valueGovernor.quorumNumerator(), deployScript.valueQuorum(), "valueQuorum not set correctly");
         assertEq(tax, deployScript.tax(), "tax not set correctly");
-        assertEq(address(govSPOGVote.votingToken()), address(deployScript.vote()), "vote token not set correctly");
-        assertEq(address(govSPOGValue.votingToken()), address(deployScript.value()), "value token not set correctly");
+        assertEq(address(voteGovernor.votingToken()), address(deployScript.vote()), "vote token not set correctly");
+        assertEq(address(valueGovernor.votingToken()), address(deployScript.value()), "value token not set correctly");
         // test tax range is set correctly
         (uint256 taxRangeMin, uint256 taxRangeMax) = spog.taxRange();
         assertEq(taxRangeMin, deployScript.taxRange(0), "taxRangeMin not set correctly");

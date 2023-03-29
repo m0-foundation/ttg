@@ -16,11 +16,11 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
     }
 
     function test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance() public {
-        vm.expectRevert("SPOG: Only GovSPOGVote");
+        vm.expectRevert("SPOG: Only vote governor");
         spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
     }
 
-    function test_Revert_WhenRemoveAddressFromList_ByGovSPOGValueHolders() external {
+    function test_Revert_WhenRemoveAddressFromList_BySPOGGovernorValueHolders() external {
         // create proposal to remove address from list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -31,29 +31,29 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         string memory description = "Remove address from a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
 
         // update start of next voting period
-        while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
-            govSPOGValue.updateStartOfNextVotingPeriod();
+        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
+            valueGovernor.updateStartOfNextVotingPeriod();
         }
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = uint8(VoteType.Yes);
-        govSPOGValue.castVote(proposalId, yesVote);
+        valueGovernor.castVote(proposalId, yesVote);
 
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        // proposal execution is not allowed by govSPOGValue holders
-        vm.expectRevert("SPOG: Only GovSPOGVote");
-        govSPOGValue.execute(targets, values, calldatas, hashedDescription);
+        // proposal execution is not allowed by valueGovernor holders
+        vm.expectRevert("SPOG: Only vote governor");
+        valueGovernor.execute(targets, values, calldatas, hashedDescription);
 
         assertTrue(IList(listToRemoveAddressFrom).contains(addressToRemove), "Address must still contain in list");
     }
@@ -69,11 +69,11 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         string memory description = "Remove address from a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // assert that spog has cash balance
         assertTrue(
@@ -82,16 +82,16 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");
