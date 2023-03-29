@@ -46,6 +46,8 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
         require(spogAddress == address(0), "GovSPOG: spogAddress already set");
+
+        votingToken.initSPOGAddress(_spogAddress);
         spogAddress = _spogAddress;
     }
 

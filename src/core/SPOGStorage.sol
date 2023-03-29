@@ -44,7 +44,6 @@ abstract contract SPOGStorage is ISPOG {
 
         // Set in GovSPOGVote
         govSPOGVote.initSPOGAddress(address(this));
-        ISPOGVotes(address(govSPOGVote.votingToken())).initSPOGAddress(address(this));
 
         // set quorum and voting period for govSPOGVote
         govSPOGVote.updateQuorumNumerator(_voteQuorum);
@@ -52,7 +51,6 @@ abstract contract SPOGStorage is ISPOG {
 
         // Set in GovSPOGValue
         govSPOGValue.initSPOGAddress(address(this));
-        ISPOGVotes(address(govSPOGValue.votingToken())).initSPOGAddress(address(this));
 
         // set quorum and voting period for govSPOGValue
         govSPOGValue.updateQuorumNumerator(_valueQuorum);
