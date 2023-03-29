@@ -89,10 +89,7 @@ abstract contract BaseTest is Test {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @dev Helper function that multiplies the `amount` by `10^decimals` and returns a `uint256.`
-    function bn(
-        uint256 amount,
-        uint256 decimals
-    ) internal pure returns (uint256 result) {
+    function bn(uint256 amount, uint256 decimals) internal pure returns (uint256 result) {
         result = amount * 10 ** decimals;
     }
 
@@ -111,11 +108,7 @@ abstract contract BaseTest is Test {
     }
 
     /// @dev Helper function to compare two `IERC20` arrays.
-    function assertEq(
-        IERC20[] memory a,
-        IERC20[] memory b,
-        string memory err
-    ) internal {
+    function assertEq(IERC20[] memory a, IERC20[] memory b, string memory err) internal {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit LogNamedString("Error", err);
             assertEq(a, b);
@@ -124,9 +117,7 @@ abstract contract BaseTest is Test {
 
     /// @dev Generates an address by hashing the name, labels the address and funds it with 100 ETH, 1 million DAI,
     /// and 1 million non-compliant tokens.
-    function createUser(
-        string memory name
-    ) internal returns (address payable addr) {
+    function createUser(string memory name) internal returns (address payable addr) {
         addr = payable(makeAddr(name));
         vm.deal({account: addr, newBalance: 1000 ether});
         dai.mint({account: addr, amount: ONE_MILLION_DAI});
@@ -136,11 +127,6 @@ abstract contract BaseTest is Test {
     /// @dev Expects an event to be emitted by checking all three topics and the data. As mentioned in the Foundry
     /// Book, the extra `true` arguments don't hurt.
     function expectEmit() internal {
-        vm.expectEmit({
-            checkTopic1: true,
-            checkTopic2: true,
-            checkTopic3: true,
-            checkData: true
-        });
+        vm.expectEmit({checkTopic1: true, checkTopic2: true, checkTopic3: true, checkData: true});
     }
 }

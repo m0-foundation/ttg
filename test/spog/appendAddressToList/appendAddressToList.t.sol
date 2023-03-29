@@ -20,45 +20,25 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         spog.append(addressToAdd, IList(listToAddAddressTo));
     }
 
-    function test_Revert_WhenAppendAddressToList_ByGovSPOGValueHolders()
-        external
-    {
+    function test_Revert_WhenAppendAddressToList_ByGovSPOGValueHolders() external {
         // create proposal to append address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "append(address,address)",
-            addressToAdd,
-            listToAddAddressTo
-        );
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToAdd, listToAddAddressTo);
         string memory description = "Append address to a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGValue,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
 
         // update start of next voting period
         govSPOGValue.updateStartOfNextVotingPeriod();
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGValue)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGValue.votingDelay() + 1);
@@ -73,10 +53,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         vm.expectRevert("SPOG: Only GovSPOGVote");
         govSPOGValue.execute(targets, values, calldatas, hashedDescription);
 
-        assertFalse(
-            IList(listToAddAddressTo).contains(addressToAdd),
-            "Address must not be in list"
-        );
+        assertFalse(IList(listToAddAddressTo).contains(addressToAdd), "Address must not be in list");
     }
 
     function test_SPOGProposalToAppedToAList() public {
@@ -86,38 +63,19 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "append(address,address)",
-            addressToAdd,
-            listToAddAddressTo
-        );
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToAdd, listToAddAddressTo);
         string memory description = "Append address to a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGVote,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGVote)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
 
         // assert that spog has cash balance
         assertTrue(
-            deployScript.cash().balanceOf(address(spog)) ==
-                deployScript.tax() * 2,
+            deployScript.cash().balanceOf(address(spog)) == deployScript.tax() * 2,
             "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
         );
 
@@ -134,9 +92,6 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         govSPOGVote.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
-        assertTrue(
-            IList(listToAddAddressTo).contains(addressToAdd),
-            "Address was not added to list"
-        );
+        assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");
     }
 }

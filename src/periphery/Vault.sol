@@ -28,10 +28,7 @@ contract Vault {
         // TODO: add require that account must implement auction contract interface
 
         uint256 total = IERC20(token).balanceOf(address(this));
-        require(
-            msg.sender == IGovSPOG(govSpogValueAddress).spogAddress(),
-            "Vault: withdraw not allowed"
-        );
+        require(msg.sender == IGovSPOG(govSpogValueAddress).spogAddress(), "Vault: withdraw not allowed");
         IERC20(token).safeTransfer(account, total);
 
         emit Withdraw(account, token, total);

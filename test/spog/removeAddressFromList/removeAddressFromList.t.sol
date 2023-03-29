@@ -15,39 +15,23 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         addressToRemove = address(0x1234);
     }
 
-    function test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance()
-        public
-    {
+    function test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance() public {
         vm.expectRevert("SPOG: Only GovSPOGVote");
         spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
     }
 
-    function test_Revert_WhenRemoveAddressFromList_ByGovSPOGValueHolders()
-        external
-    {
+    function test_Revert_WhenRemoveAddressFromList_ByGovSPOGValueHolders() external {
         // create proposal to remove address from list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "remove(address,address)",
-            addressToRemove,
-            listToRemoveAddressFrom
-        );
+        calldatas[0] = abi.encodeWithSignature("remove(address,address)", addressToRemove, listToRemoveAddressFrom);
         string memory description = "Remove address from a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGValue,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
 
         // update start of next voting period
         while (block.number >= govSPOGValue.startOfNextVotingPeriod()) {
@@ -56,13 +40,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGValue)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGValue.votingDelay() + 1);
@@ -77,10 +55,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         vm.expectRevert("SPOG: Only GovSPOGVote");
         govSPOGValue.execute(targets, values, calldatas, hashedDescription);
 
-        assertTrue(
-            IList(listToRemoveAddressFrom).contains(addressToRemove),
-            "Address must still contain in list"
-        );
+        assertTrue(IList(listToRemoveAddressFrom).contains(addressToRemove), "Address must still contain in list");
     }
 
     function test_SPOGProposalToRemoveAddressFromAList() public {
@@ -90,38 +65,19 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "remove(address,address)",
-            addressToRemove,
-            listToRemoveAddressFrom
-        );
+        calldatas[0] = abi.encodeWithSignature("remove(address,address)", addressToRemove, listToRemoveAddressFrom);
         string memory description = "Remove address from a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGVote,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGVote)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
 
         // assert that spog has cash balance
         assertTrue(
-            deployScript.cash().balanceOf(address(spog)) ==
-                deployScript.tax() * 3,
+            deployScript.cash().balanceOf(address(spog)) == deployScript.tax() * 3,
             "Balance of SPOG should be 3x tax, one from adding the list to the SPOG, one from append an address to the list,  and one from the current proposal"
         );
 
@@ -138,9 +94,6 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         govSPOGVote.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
-        assertTrue(
-            !IList(listToRemoveAddressFrom).contains(addressToRemove),
-            "Address was not removed from list"
-        );
+        assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");
     }
 }

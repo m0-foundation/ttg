@@ -35,21 +35,11 @@ contract SPOG_Base is BaseTest {
         govSPOGValue = deployScript.govSPOGValue();
 
         // mint spogVote to address(this) and self-delegate
-        deal({
-            token: address(spogVote),
-            to: address(this),
-            give: 100e18,
-            adjust: true
-        });
+        deal({token: address(spogVote), to: address(this), give: 100e18, adjust: true});
         spogVote.delegate(address(this));
 
         // mint spogValue to address(this) and self-delegate
-        deal({
-            token: address(spogValue),
-            to: address(this),
-            give: 100e18,
-            adjust: true
-        });
+        deal({token: address(spogValue), to: address(this), give: 100e18, adjust: true});
         spogValue.delegate(address(this));
 
         // deploy list and change admin to spog
@@ -57,9 +47,15 @@ contract SPOG_Base is BaseTest {
         list.changeAdmin(address(spog));
     }
 
-    /**********************************/
-    /******** Helper functions ********/
-    /**********************************/
+    /**
+     *
+     */
+    /**
+     * Helper functions *******
+     */
+    /**
+     *
+     */
     function getProposalIdAndHashedDescription(
         GovSPOG govSPOG,
         address[] memory targets,
@@ -68,12 +64,7 @@ contract SPOG_Base is BaseTest {
         string memory description
     ) internal pure returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = govSPOG.hashProposal(
-            targets,
-            values,
-            calldatas,
-            hashedDescription
-        );
+        proposalId = govSPOG.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpog() internal {
@@ -85,26 +76,12 @@ contract SPOG_Base is BaseTest {
         calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
         string memory description = "Add new list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGVote,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGVote)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGVote.votingDelay() + 1);
@@ -131,33 +108,15 @@ contract SPOG_Base is BaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature(
-            "append(address,address)",
-            addressToAdd,
-            listToAddAddressTo
-        );
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToAdd, listToAddAddressTo);
         string memory description = "Append address to a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(
-                govSPOGVote,
-                targets,
-                values,
-                calldatas,
-                description
-            );
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            IGovSPOG(address(govSPOGVote)),
-            targets,
-            values,
-            calldatas,
-            description
-        );
+        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + govSPOGVote.votingDelay() + 1);
