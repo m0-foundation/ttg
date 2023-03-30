@@ -23,7 +23,6 @@ contract ListTest is BaseTest {
 
     function setUp() public {
         createUsers();
-
         list = new List("SPOG Collateral Managers List");
     }
 
