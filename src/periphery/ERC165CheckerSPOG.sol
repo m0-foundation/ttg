@@ -7,7 +7,7 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 /**
  * @title ERC165CheckerSPOG
-
+ * 
  * Utility to verify whether an address implements ISPOG.
  */
 
@@ -25,10 +25,7 @@ abstract contract ERC165CheckerSPOG {
 
     function _checkSPOGInterface(address spogAddress) internal view {
         require(
-            ERC165Checker.supportsInterface(
-                spogAddress,
-                type(ISPOG).interfaceId
-            ),
+            ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId),
             "ERC165CheckerSPOG: spogAddress address does not implement proper interface"
         );
     }

@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
-/// @title SPOG Governance Contract
+/// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
-contract GovSPOG is GovernorVotesQuorumFraction {
+contract SPOGGovernor is GovernorVotesQuorumFraction {
     ISPOGVotes public immutable votingToken;
     address public spogAddress;
     uint256 private _votingPeriod;
@@ -35,11 +35,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         uint256 quorumNumeratorValue,
         uint256 votingPeriod_,
         string memory name_
-    )
-        GovernorVotesQuorumFraction(quorumNumeratorValue)
-        GovernorVotes(votingTokenContract)
-        Governor(name_)
-    {
+    ) GovernorVotesQuorumFraction(quorumNumeratorValue) GovernorVotes(votingTokenContract) Governor(name_) {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
 
@@ -49,14 +45,14 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     /// @dev sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
-        require(spogAddress == address(0), "GovSPOG: spogAddress already set");
+        require(spogAddress == address(0), "SPOGGovernor: spogAddress already set");
+
+        votingToken.initSPOGAddress(_spogAddress);
         spogAddress = _spogAddress;
     }
 
     /// @dev Accessor to the internal vote counts.
-    function proposalVotes(
-        uint256 proposalId
-    ) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
+    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.noVotes, proposalVote.yesVotes);
     }
@@ -68,8 +64,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
 
             // trigger token inflation and send it to the vault
-            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress)
-                .tokenInflationCalculation();
+            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
             address vault = ISPOG(spogAddress).vault();
             votingToken.mint(vault, amountToIncreaseSupplyBy);
         }
@@ -79,23 +74,15 @@ contract GovSPOG is GovernorVotesQuorumFraction {
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
-    function updateQuorumNumerator(
-        uint256 newQuorumNumerator
-    ) external override {
-        require(
-            msg.sender == spogAddress,
-            "GovSPOG: only SPOG can update quorum numerator"
-        );
+    function updateQuorumNumerator(uint256 newQuorumNumerator) external override {
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can update quorum numerator");
         _updateQuorumNumerator(newQuorumNumerator);
     }
 
     /// @dev Update voting time only by SPOG
     /// @param newVotingTime New voting time
     function updateVotingTime(uint256 newVotingTime) external {
-        require(
-            msg.sender == spogAddress,
-            "GovSPOG: only SPOG can update voting time"
-        );
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can update voting time");
 
         _votingPeriod = newVotingTime;
         emit VotingPeriodSet(_votingPeriod, newVotingTime);
@@ -110,6 +97,8 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         string memory description
     ) public virtual override returns (uint256) {
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can propose");
+
         updateStartOfNextVotingPeriod();
         return super.propose(targets, values, calldatas, description);
     }
@@ -126,55 +115,41 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         bytes32 descriptionHash
     ) internal virtual override {
         updateStartOfNextVotingPeriod();
-        super._afterExecute(
-            proposalId,
-            targets,
-            values,
-            calldatas,
-            descriptionHash
-        );
+        super._afterExecute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     /// @notice override to use updateStartOfNextVotingPeriod
-    function _castVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        string memory reason,
-        bytes memory params
-    ) internal virtual override returns (uint256) {
+    function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         updateStartOfNextVotingPeriod();
         return super._castVote(proposalId, account, support, reason, params);
     }
 
     /// @dev See {IGovernor-hasVoted}.
-    function hasVoted(
-        uint256 proposalId,
-        address account
-    ) public view virtual override returns (bool) {
+    function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
     }
 
     /// @dev See {Governor-_quorumReached}.
-    function _quorumReached(
-        uint256 proposalId
-    ) internal view virtual override returns (bool) {
+    function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         return quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
     }
 
     /// @dev See {Governor-_countVote}.
-    function _countVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        uint256,
-        bytes memory
-    ) internal virtual override {
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256, bytes memory)
+        internal
+        virtual
+        override
+    {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        require(!proposalVote.hasVoted[account], "GovSPOG: vote already cast");
+        require(!proposalVote.hasVoted[account], "SPOGGovernor: vote already cast");
         proposalVote.hasVoted[account] = true;
 
         uint256 votes = _getVotes(account, proposalSnapshot(proposalId), "");
@@ -190,7 +165,7 @@ contract GovSPOG is GovernorVotesQuorumFraction {
         if (startOfNextVotingPeriod > block.number) {
             return startOfNextVotingPeriod - block.number;
         } else {
-            revert("GovSPOG: StartOfNextVotingPeriod must be updated");
+            revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
         }
     }
 
@@ -199,25 +174,17 @@ contract GovSPOG is GovernorVotesQuorumFraction {
     }
 
     /// @dev See {Governor-_voteSucceeded}.
-    function _voteSucceeded(
-        uint256 proposalId
-    ) internal view virtual override returns (bool) {
+    function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
         return _quorumReached(proposalId);
     }
 
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase
-    function COUNTING_MODE()
-        public
-        pure
-        virtual
-        override
-        returns (string memory)
-    {
+    function COUNTING_MODE() public pure virtual override returns (string memory) {
         return "support=bravo&quorum=bravo";
     }
 
     fallback() external {
-        revert("GovSPOG: non-existent function");
+        revert("SPOGGovernor: non-existent function");
     }
 }

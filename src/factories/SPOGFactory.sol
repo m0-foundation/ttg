@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {SPOG} from "src/core/SPOG.sol";
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 
 /// @title SPOGFactory
 /// @notice This contract is used to deploy SPOG contracts
@@ -16,8 +16,8 @@ contract SPOGFactory {
     /// @param _forkTime The duration that $VALUE holders have to choose a fork
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
-    /// @param _govSPOGVote The address of the SPOG governance contract for $VOTE token
-    /// @param _govSPOGValue The address of the SPOG governance contract for $VALUE token
+    /// @param _voteGovernor The address of the SPOG governor contract for $VOTE token
+    /// @param _valueGovernor The address of the SPOG governor contract for $VALUE token
     /// @param _salt The salt used to deploy the SPOG contract
     /// @return the address of the newly deployed contract
     function deploy(
@@ -27,8 +27,8 @@ contract SPOGFactory {
         uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
-        IGovSPOG _govSPOGVote,
-        IGovSPOG _govSPOGValue,
+        ISPOGGovernor _voteGovernor,
+        ISPOGGovernor _valueGovernor,
         uint256 _salt
     ) public returns (SPOG) {
         SPOG spog = new SPOG{salt: bytes32(_salt)}(
@@ -38,8 +38,8 @@ contract SPOGFactory {
             _forkTime,
             _voteQuorum,
             _valueQuorum,
-            _govSPOGVote,
-            _govSPOGValue
+            _voteGovernor,
+            _valueGovernor
         );
 
         emit SPOGDeployed(address(spog), _salt);
@@ -55,42 +55,24 @@ contract SPOGFactory {
         uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
-        IGovSPOG _govSPOGVote,
-        IGovSPOG _govSPOGValue
+        ISPOGGovernor _voteGovernor,
+        ISPOGGovernor _valueGovernor
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SPOG).creationCode;
 
-        return
-            abi.encodePacked(
-                bytecode,
-                abi.encode(
-                    _initSPOGData,
-                    _vault,
-                    _voteTime,
-                    _forkTime,
-                    _voteQuorum,
-                    _valueQuorum,
-                    _govSPOGVote,
-                    _govSPOGValue
-                )
-            );
+        return abi.encodePacked(
+            bytecode,
+            abi.encode(
+                _initSPOGData, _vault, _voteTime, _forkTime, _voteQuorum, _valueQuorum, _voteGovernor, _valueGovernor
+            )
+        );
     }
 
     /// @dev Compute the address of the SPOG contract to be deployed
     /// @param bytecode The bytecode of the contract to be deployed
     /// @param _salt is a random number used to create an address
-    function predictSPOGAddress(
-        bytes memory bytecode,
-        uint256 _salt
-    ) public view returns (address) {
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                _salt,
-                keccak256(bytecode)
-            )
-        );
+    function predictSPOGAddress(bytes memory bytecode, uint256 _salt) public view returns (address) {
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));

@@ -8,7 +8,7 @@ import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
-/// @title SPOGVotes: voting token for the govSPOG
+/// @title SPOGVotes: voting token for the SPOG governor
 contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;
@@ -16,10 +16,7 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
-    constructor(
-        string memory name,
-        string memory symbol
-    ) ERC20(name, symbol) ERC20Permit(name) {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 

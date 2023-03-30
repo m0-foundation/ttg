@@ -4,10 +4,10 @@ pragma solidity 0.8.17;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {Vault} from "src/periphery/Vault.sol";
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {BaseTest} from "test/Base.t.sol";
 
-contract MockGovSPOG is StdCheats {
+contract MockSPOGGovernor is StdCheats {
     address public immutable spogAddress;
 
     constructor() {
@@ -22,17 +22,12 @@ contract VaultTest is BaseTest {
     event Withdraw(address indexed account, address token, uint256 amount);
 
     function setUp() public {
-        address govSpogVoteAddress = address(new MockGovSPOG());
-        address govSpogValueAddress = address(new MockGovSPOG());
+        address govSpogVoteAddress = address(new MockSPOGGovernor());
+        address govSpogValueAddress = address(new MockSPOGGovernor());
         vault = new Vault(govSpogVoteAddress, govSpogValueAddress);
 
         // mint tokens to vault
-        deal({
-            token: address(dai),
-            to: address(vault),
-            give: 1000e18,
-            adjust: true
-        });
+        deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
     }
 
     function test_RevertWithdraw() public {
@@ -43,8 +38,7 @@ contract VaultTest is BaseTest {
     }
 
     function test_Withdraw() public {
-        address spogAddress = IGovSPOG(vault.govSpogVoteAddress())
-            .spogAddress();
+        address spogAddress = ISPOGGovernor(vault.govSpogVoteAddress()).spogAddress();
         vm.prank(spogAddress);
 
         expectEmit();

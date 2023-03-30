@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IGovSPOG} from "src/interfaces/IGovSPOG.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
@@ -28,10 +28,7 @@ contract Vault {
         // TODO: add require that account must implement auction contract interface
 
         uint256 total = IERC20(token).balanceOf(address(this));
-        require(
-            msg.sender == IGovSPOG(govSpogValueAddress).spogAddress(),
-            "Vault: withdraw not allowed"
-        );
+        require(msg.sender == ISPOGGovernor(govSpogValueAddress).spogAddress(), "Vault: withdraw not allowed");
         IERC20(token).safeTransfer(account, total);
 
         emit Withdraw(account, token, total);
@@ -43,7 +40,7 @@ contract Vault {
     function withdraw(address token, uint256 amount) public {
         // TODO: create isAllowedToWithdraw function in govSpogVote
         // require(
-        //     IGovSPOG(govSpogVoteAddress).isAllowedToWithdraw(msg.sender),
+        //     ISPOGGovernor(govSpogVoteAddress).isAllowedToWithdraw(msg.sender),
         //     "Vault: withdraw not allowed"
         // );
 
