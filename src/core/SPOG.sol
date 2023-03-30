@@ -210,7 +210,7 @@ contract SPOG is SPOGStorage, ERC165 {
         // require that the caller pays the tax
         require(_amount >= spogData.tax, "Caller must pay tax to call this function");
         // transfer the amount from the caller to the SPOG
-        spogData.cash.safeTransferFrom(msg.sender, address(this), _amount);
+        spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
     }
 
     fallback() external {

@@ -73,9 +73,9 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
-        // assert that spog has cash balance
+        // assert that vault has cash balance paid for proposals
         assertTrue(
-            deployScript.cash().balanceOf(address(spog)) == deployScript.tax() * 2,
+            deployScript.cash().balanceOf(address(vault)) == deployScript.tax() * 2,
             "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
         );
 
