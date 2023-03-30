@@ -22,9 +22,6 @@ contract List is ERC165CheckerSPOG {
     constructor(string memory name_) {
         _name = name_;
 
-        // make sure admin is SPOG governance contract
-        _checkSPOGInterface(msg.sender);
-
         _admin = msg.sender;
     }
 
