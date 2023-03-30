@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {SPOGStorage, IGovSPOG, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
+import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
 import {IList} from "src/interfaces/IList.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -29,8 +29,8 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _forkTime The duration that $VALUE holders have to choose a fork
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
-    /// @param _govSPOGVote The address of the `GovSPOG` which $VOTE token is used for voting
-    /// @param _govSPOGValue The address of the `GovSPOG` which $VALUE token is used for voting
+    /// @param _voteGovernor The address of the `SPOGGovernor` which $VOTE token is used for voting
+    /// @param _valueGovernor The address of the `SPOGGovernor` which $VALUE token is used for voting
     constructor(
         bytes memory _initSPOGData,
         address _vault,
@@ -38,9 +38,9 @@ contract SPOG is SPOGStorage, ERC165 {
         uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
-        IGovSPOG _govSPOGVote,
-        IGovSPOG _govSPOGValue
-    ) SPOGStorage(_govSPOGVote, _govSPOGValue, _voteTime, _forkTime, _voteQuorum, _valueQuorum) {
+        ISPOGGovernor _voteGovernor,
+        ISPOGGovernor _valueGovernor
+    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _forkTime, _voteQuorum, _valueQuorum) {
         // TODO: add require statements for variables
         vault = _vault;
 
@@ -88,7 +88,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(IList list) external onlyGovSPOGVote {
+    function addNewList(IList list) external onlyVoteGovernor {
         require(list.admin() == address(this), "List admin is not SPOG");
         // add the list to the master list
         masterlist.set(address(list), inMasterList);
@@ -97,7 +97,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     /// @notice Remove a list from the master list of the SPOG
     /// @param list  The list address of the list to be removed
-    function removeList(IList list) external onlyGovSPOGVote {
+    function removeList(IList list) external onlyVoteGovernor {
         // require that the list is on the master list
         require(masterlist.contains(address(list)), "List is not on the master list");
 
@@ -109,7 +109,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external onlyGovSPOGVote {
+    function append(address _address, IList _list) external onlyVoteGovernor {
         // require that the list is on the master list
         require(masterlist.contains(address(_list)), "List is not on the master list");
 
@@ -125,7 +125,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Remove an address from a list
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external onlyGovSPOGVote {
+    function remove(address _address, IList _list) external onlyVoteGovernor {
         // require that the list is on the master list
         require(masterlist.contains(address(_list)), "List is not on the master list");
 
@@ -141,7 +141,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function emergencyRemove(address _address, IList _list) external onlyGovSPOGVote {
+    function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
         _pay(spogData.tax * 12);
 
         address[] memory targets = new address[](1);
@@ -154,7 +154,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
         string memory description = "Emergency Remove address from list";
 
-        uint256 proposalId = govSPOGVote.propose(targets, values, calldatas, description);
+        uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
 
         emit NewProposal(proposalId);
     }
@@ -167,14 +167,14 @@ contract SPOG is SPOGStorage, ERC165 {
 
     /// @notice Create a new proposal
     /// @dev `propose` function of the `Governor` contract
-    /// @param govSPOG The SPOG governance contract. Either `govSPOGVote` or `govSPOGValue`
+    /// @param governor The SPOG governor contract. Either `voteGovernor` or `valueGovernor`
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
     /// @param calldatas The calldatas of the proposal
     /// @param description The description of the proposal
     /// @return proposalId The ID of the proposal
     function propose(
-        IGovSPOG govSPOG,
+        ISPOGGovernor governor,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -182,16 +182,18 @@ contract SPOG is SPOGStorage, ERC165 {
     ) public returns (uint256) {
         // require that the caller pays the tax to propose
         _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
+        // TODO check that governor is one of the two governors
+        // TODO pay tax for each proposal
 
-        uint256 proposalId = govSPOG.propose(targets, values, calldatas, description);
+        uint256 proposalId = governor.propose(targets, values, calldatas, description);
         emit NewProposal(proposalId);
 
         return proposalId;
     }
 
     function tokenInflationCalculation() public view returns (uint256) {
-        if (msg.sender == address(govSPOGVote)) {
-            uint256 votingTokenTotalSupply = IERC20(govSPOGVote.votingToken()).totalSupply();
+        if (msg.sender == address(voteGovernor)) {
+            uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
             uint256 inflator = spogData.inflator;
 
             return (votingTokenTotalSupply * inflator) / 100;

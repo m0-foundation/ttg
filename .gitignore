@@ -11,3 +11,5 @@ out/
 .env
 
 notes.md
+
+.vscode

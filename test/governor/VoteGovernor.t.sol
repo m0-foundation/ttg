@@ -6,17 +6,17 @@ import {BaseTest} from "test/Base.t.sol";
 
 import "src/core/SPOG.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-import {GovSPOG} from "src/core/GovSPOG.sol";
+import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {IList} from "src/interfaces/IList.sol";
 import {List} from "src/periphery/List.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {Vault} from "src/periphery/Vault.sol";
 
-contract GovSPOGTest is BaseTest {
+contract SPOGGovernorTest is BaseTest {
     SPOG public spog;
     SPOGVotes public spogVote;
-    GovSPOG public govSPOGVote;
+    SPOGGovernor public voteGovernor;
     SPOGDeployScript public deployScript;
     List public list;
     Vault public vault;
@@ -27,7 +27,7 @@ contract GovSPOGTest is BaseTest {
 
         spog = deployScript.spog();
         spogVote = SPOGVotes(address(deployScript.vote()));
-        govSPOGVote = deployScript.govSPOGVote();
+        voteGovernor = deployScript.voteGovernor();
 
         // mint spogVote to address(this) and self-delegate
         deal({token: address(spogVote), to: address(this), give: 100e18, adjust: true});
@@ -57,11 +57,11 @@ contract GovSPOGTest is BaseTest {
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = govSPOGVote.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -71,8 +71,8 @@ contract GovSPOGTest is BaseTest {
      */
 
     function test_StartOfNextVotingPeriod() public {
-        uint256 votingPeriod = govSPOGVote.votingPeriod();
-        uint256 startOfNextVotingPeriod = govSPOGVote.startOfNextVotingPeriod();
+        uint256 votingPeriod = voteGovernor.votingPeriod();
+        uint256 startOfNextVotingPeriod = voteGovernor.startOfNextVotingPeriod();
 
         assertTrue(startOfNextVotingPeriod > block.number);
         assertEq(startOfNextVotingPeriod, block.number + votingPeriod);
@@ -85,21 +85,21 @@ contract GovSPOGTest is BaseTest {
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
-            govSPOGVote.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
+            voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
 
         // check that proposal has 1 vote
-        (uint256 noVotes, uint256 yesVotes) = govSPOGVote.proposalVotes(proposalId);
+        (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
 
         console.log("noVotes: ", noVotes);
         console.log("yesVotes: ", yesVotes);
@@ -124,30 +124,30 @@ contract GovSPOGTest is BaseTest {
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
 
         vm.expectRevert("Governor: vote not currently active");
-        govSPOGVote.castVote(proposalId2, noVote);
+        voteGovernor.castVote(proposalId2, noVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
-            govSPOGVote.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
+            voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
         );
 
         assertTrue(
-            govSPOGVote.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
+            voteGovernor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
-        govSPOGVote.castVote(proposalId2, noVote);
+        voteGovernor.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId2, noVote);
 
         // check that proposal has 1 vote
-        (uint256 noVotes, uint256 yesVotes) = govSPOGVote.proposalVotes(proposalId);
-        (uint256 noVotes2, uint256 yesVotes2) = govSPOGVote.proposalVotes(proposalId2);
+        (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
+        (uint256 noVotes2, uint256 yesVotes2) = voteGovernor.proposalVotes(proposalId2);
 
         // spogVote balance of voter
         uint256 spogVoteBalance = spogVote.balanceOf(address(this));
@@ -165,19 +165,19 @@ contract GovSPOGTest is BaseTest {
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         vm.expectRevert("Governor: vote not currently active");
-        govSPOGVote.castVote(proposalId3, noVote);
+        voteGovernor.castVote(proposalId3, noVote);
 
         assertTrue(
-            govSPOGVote.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
+            voteGovernor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId3, noVote);
+        voteGovernor.castVote(proposalId3, noVote);
 
-        (uint256 noVotes3, uint256 yesVotes3) = govSPOGVote.proposalVotes(proposalId3);
+        (uint256 noVotes3, uint256 yesVotes3) = voteGovernor.proposalVotes(proposalId3);
 
         assertTrue(noVotes3 == spogVoteBalance, "Proposal3 does not have expected no vote");
         assertTrue(yesVotes3 == 0, "Proposal3 does not have 0 yes vote");
@@ -198,9 +198,9 @@ contract GovSPOGTest is BaseTest {
         uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
 
         // fast forward to an active voting period. Inflate vote token supply
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
 
         uint256 spogVoteSupplyAfterFirstPeriod = spogVote.totalSupply();
         uint256 amountAddedByInflation = (spogVoteSupplyBefore * deployScript.inflator()) / 100;
@@ -223,7 +223,7 @@ contract GovSPOGTest is BaseTest {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         uint256 spogVoteSupplyAfterSecondPeriod = spogVote.totalSupply();
         uint256 amountAddedByInflation2 = (spogVoteSupplyAfterFirstPeriod * deployScript.inflator()) / 100;

@@ -16,7 +16,7 @@ contract SPOG_changeTax is SPOG_Base {
     }
 
     function test_Revert_ChangeTaxWhenNotCalledFromGovernance() public {
-        vm.expectRevert("SPOG: Only GovSPOGVote");
+        vm.expectRevert("SPOG: Only vote governor");
         spog.changeTax(newTaxValue);
     }
 
@@ -29,11 +29,11 @@ contract SPOG_changeTax is SPOG_Base {
         bytes[] memory calldatasForValueHolders = new bytes[](1);
 
         calldatasForValueHolders[0] = abi.encodeWithSignature("changeTax(uint256)", newTaxValue);
-        string memory descriptionForValueHolders = "GovSPOGValue change tax variable in spog";
+        string memory descriptionForValueHolders = "SPOGGovernorValue change tax variable in spog";
 
         (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
         getProposalIdAndHashedDescription(
-            govSPOGValue,
+            valueGovernor,
             targetsForValueHolders,
             valuesForValueHolders,
             calldatasForValueHolders,
@@ -43,21 +43,21 @@ contract SPOG_changeTax is SPOG_Base {
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(
-            IGovSPOG(address(govSPOGValue)),
+            ISPOGGovernor(address(valueGovernor)),
             targetsForValueHolders,
             valuesForValueHolders,
             calldatasForValueHolders,
             descriptionForValueHolders
         );
 
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-        govSPOGValue.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of govSPOGValue voting period
+        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
+        // fast forward to end of valueGovernor voting period
         vm.roll(block.number + deployScript.forkTime() + 1);
 
-        vm.expectRevert("SPOG: Only GovSPOGVote");
-        govSPOGValue.execute(
+        vm.expectRevert("SPOG: Only vote governor");
+        valueGovernor.execute(
             targetsForValueHolders, valuesForValueHolders, calldatasForValueHolders, hashedDescriptionForValueHolders
         );
 
@@ -79,22 +79,22 @@ contract SPOG_changeTax is SPOG_Base {
         string memory description = "Change tax variable in spog";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         vm.expectRevert("SPOG: Tax out of range");
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         (uint256 taxFirstCheck,,,,,) = spog.spogData();
 
@@ -102,7 +102,7 @@ contract SPOG_changeTax is SPOG_Base {
         assertFalse(taxFirstCheck == outOfBoundsTaxValue, "Tax should not have been changed");
     }
 
-    function test_ChangeTaxViaProposalByGovSPOGVote() public {
+    function test_ChangeTaxViaProposalBySPOGGovernorVote() public {
         // create proposal to change variable in spog
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -114,21 +114,21 @@ contract SPOG_changeTax is SPOG_Base {
         string memory description = "Change tax variable in spog";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         (uint256 taxFirstCheck,,,,,) = spog.spogData();
 

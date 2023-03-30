@@ -16,11 +16,11 @@ contract SPOG_AppendAddressToList is SPOG_Base {
     }
 
     function test_Revert_AppendToListWhenNotCallingFromGovernance() public {
-        vm.expectRevert("SPOG: Only GovSPOGVote");
+        vm.expectRevert("SPOG: Only vote governor");
         spog.append(addressToAdd, IList(listToAddAddressTo));
     }
 
-    function test_Revert_WhenAppendAddressToList_ByGovSPOGValueHolders() external {
+    function test_Revert_WhenAppendAddressToList_BySPOGGovernorValueHolders() external {
         // create proposal to append address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -31,27 +31,27 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGValue, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
 
         // update start of next voting period
-        govSPOGValue.updateStartOfNextVotingPeriod();
+        valueGovernor.updateStartOfNextVotingPeriod();
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGValue)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGValue.votingDelay() + 1);
+        vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = uint8(VoteType.Yes);
-        govSPOGValue.castVote(proposalId, yesVote);
+        valueGovernor.castVote(proposalId, yesVote);
 
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        // proposal execution is not allowed by govSPOGValue holders
-        vm.expectRevert("SPOG: Only GovSPOGVote");
-        govSPOGValue.execute(targets, values, calldatas, hashedDescription);
+        // proposal execution is not allowed by valueGovernor holders
+        vm.expectRevert("SPOG: Only vote governor");
+        valueGovernor.execute(targets, values, calldatas, hashedDescription);
 
         assertFalse(IList(listToAddAddressTo).contains(addressToAdd), "Address must not be in list");
     }
@@ -67,11 +67,11 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(govSPOGVote, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(IGovSPOG(address(govSPOGVote)), targets, values, calldatas, description);
+        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // assert that spog has cash balance
         assertTrue(
@@ -80,16 +80,16 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + govSPOGVote.votingDelay() + 1);
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        govSPOGVote.castVote(proposalId, yesVote);
+        voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        govSPOGVote.execute(targets, values, calldatas, hashedDescription);
+        voteGovernor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");
