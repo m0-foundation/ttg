@@ -30,7 +30,7 @@ contract SPOG_AddNewList is SPOG_Base {
         spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
 
         // assert that spog has cash balance
-        assert(deployScript.cash().balanceOf(address(spog)) == deployScript.tax());
+        assertEq(deployScript.cash().balanceOf(address(vault)), deployScript.tax());
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
@@ -77,7 +77,7 @@ contract SPOG_AddNewList is SPOG_Base {
         spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
         // assert that spog has cash balance
-        assert(deployScript.cash().balanceOf(address(spog)) == deployScript.tax());
+        assertEq(deployScript.cash().balanceOf(address(vault)), deployScript.tax());
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(

@@ -75,9 +75,9 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
 
-        // assert that spog has cash balance
+        // assert that vault has cash balance paid for proposals
         assertTrue(
-            deployScript.cash().balanceOf(address(spog)) == deployScript.tax() * 3,
+            deployScript.cash().balanceOf(address(vault)) == deployScript.tax() * 3,
             "Balance of SPOG should be 3x tax, one from adding the list to the SPOG, one from append an address to the list,  and one from the current proposal"
         );
 

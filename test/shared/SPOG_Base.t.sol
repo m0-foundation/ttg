@@ -9,6 +9,7 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {List} from "src/periphery/List.sol";
+import {Vault} from "src/periphery/Vault.sol";
 
 contract SPOG_Base is BaseTest {
     SPOG public spog;
@@ -18,6 +19,7 @@ contract SPOG_Base is BaseTest {
     SPOGGovernor public valueGovernor;
     SPOGDeployScript public deployScript;
     List public list;
+    Vault public vault;
 
     enum VoteType {
         No,
@@ -45,17 +47,11 @@ contract SPOG_Base is BaseTest {
         // deploy list and change admin to spog
         list = new List("My List");
         list.changeAdmin(address(spog));
+
+        vault = deployScript.vault();
     }
 
-    /**
-     *
-     */
-    /**
-     * Helper functions *******
-     */
-    /**
-     *
-     */
+    /* Helper functions */
     function getProposalIdAndHashedDescription(
         SPOGGovernor governor,
         address[] memory targets,
