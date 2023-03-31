@@ -180,10 +180,10 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
-        // require that the caller pays the tax to propose
-        _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
-        // TODO check that governor is one of the two governors
-        // TODO pay tax for each proposal
+        // TODO: check for tax for emergency remove proposals
+        // TODO: check that governor is one of the two governors?
+        // require that the caller pays the tax for each proposal
+        _pay(targets.length * spogData.tax);
 
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
         emit NewProposal(proposalId);
