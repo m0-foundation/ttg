@@ -18,6 +18,8 @@ contract SPOG is SPOGStorage, ERC165 {
     address public immutable vault;
     uint256 private constant inMasterList = 1;
 
+    uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
+
     // List of addresses that are part of the masterlist
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
@@ -142,7 +144,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
     function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
-        _pay(spogData.tax * 12);
+        _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
 
         address[] memory targets = new address[](1);
         uint256[] memory values = new uint256[](1);
@@ -180,10 +182,10 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
-        // require that the caller pays the tax to propose
-        _pay(spogData.tax); // TODO: check for tax for emergency remove proposals
-        // TODO check that governor is one of the two governors
-        // TODO pay tax for each proposal
+        // TODO: check for tax for emergency remove proposals
+        // TODO: check that governor is one of the two governors?
+        // require that the caller pays the tax for each proposal
+        _pay(targets.length * spogData.tax);
 
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
         emit NewProposal(proposalId);
