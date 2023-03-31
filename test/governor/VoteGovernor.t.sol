@@ -258,7 +258,7 @@ contract SPOGGovernorTest is BaseTest {
         string memory description = "add 2 merchants to spog";
 
         // check vault and sender balances before proposal
-        assertEq(deployScript.cash().balanceOf(address(vault)), 0, "Vault should have no balance before proposal");
+        assertEq(deployScript.cash().balanceOf(address(vault)), 0, "Vault should have zero balance before proposal");
         uint256 senderBalanceBefore = deployScript.cash().balanceOf(address(this));
 
         // vote on proposal
