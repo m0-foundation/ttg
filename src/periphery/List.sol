@@ -14,8 +14,9 @@ contract List is ERC165CheckerSPOG {
 
     string private _name;
 
-    event AddressAdded(address _address);
-    event AddressRemoved(address _address);
+    event AddressAdded(address indexed _address);
+    event AddressRemoved(address indexed _address);
+    event AdminChanged(address indexed _newAdmin);
 
     // constructor sets the admin address
     constructor(string memory name_) {
@@ -66,5 +67,6 @@ contract List is ERC165CheckerSPOG {
         if (msg.sender != _admin) revert NotAdmin();
 
         _admin = _newAdmin;
+        emit AdminChanged(_newAdmin);
     }
 }
