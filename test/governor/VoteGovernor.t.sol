@@ -61,7 +61,7 @@ contract SPOGGovernorTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -240,38 +240,6 @@ contract SPOGGovernorTest is BaseTest {
             vaultVoteTokenBalanceAfterSecondPeriod,
             vaultVoteTokenBalanceAfterFirstPeriod + amountAddedByInflation2,
             "Vault did not receive the accurate vote inflationary supply in the second period"
-        );
-    }
-
-    // TODO: good candidate for fuzzy testing with different numbers of proposals
-    function test_CashTaxIsPaidForEachProposal() public {
-        // set data for 2 proposals at once
-        address[] memory targets = new address[](2);
-        targets[0] = address(spog);
-        targets[1] = address(spog);
-        uint256[] memory values = new uint256[](2);
-        values[0] = 0;
-        values[1] = 0;
-        bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
-        calldatas[1] = abi.encodeWithSignature("append(address,address)", users.bob, list);
-        string memory description = "add 2 merchants to spog";
-
-        // check vault and sender balances before proposal
-        assertEq(deployScript.cash().balanceOf(address(vault)), 0, "Vault should have zero balance before proposal");
-        uint256 senderBalanceBefore = deployScript.cash().balanceOf(address(this));
-
-        // vote on proposal
-        deployScript.cash().approve(address(spog), 2 * deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
-
-        // check vault and sender balances after proposal
-        uint256 senderBalanceAfter = deployScript.cash().balanceOf(address(this));
-        assertEq(senderBalanceBefore - senderBalanceAfter, 2 * deployScript.tax(), "Sender should have paid 2 * tax");
-        assertEq(
-            deployScript.cash().balanceOf(address(vault)),
-            deployScript.tax() * 2,
-            "Balance of vault should be 2x tax, 2 proposals were executed at once"
         );
     }
 }

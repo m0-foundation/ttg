@@ -49,11 +49,7 @@ contract SPOG_change is SPOG_Base {
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(
-            ISPOGGovernor(address(valueGovernor)),
-            targetsForValueHolders,
-            valuesForValueHolders,
-            calldatasForValueHolders,
-            descriptionForValueHolders
+            targetsForValueHolders, valuesForValueHolders, calldatasForValueHolders, descriptionForValueHolders
         );
 
         vm.roll(block.number + valueGovernor.votingDelay() + 1);
@@ -87,7 +83,7 @@ contract SPOG_change is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -117,7 +113,7 @@ contract SPOG_change is SPOG_Base {
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
@@ -157,7 +153,7 @@ contract SPOG_change is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -181,7 +177,7 @@ contract SPOG_change is SPOG_Base {
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
@@ -220,7 +216,7 @@ contract SPOG_change is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -255,7 +251,7 @@ contract SPOG_change is SPOG_Base {
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
@@ -297,7 +293,7 @@ contract SPOG_change is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -333,7 +329,7 @@ contract SPOG_change is SPOG_Base {
         }
 
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         vm.roll(block.number + valueGovernor.votingDelay() + 1);
 

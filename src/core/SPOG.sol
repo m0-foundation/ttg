@@ -168,26 +168,43 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     /// @notice Create a new proposal
-    /// @dev `propose` function of the `Governor` contract
-    /// @param governor The SPOG governor contract. Either `voteGovernor` or `valueGovernor`
+    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
     /// @param calldatas The calldatas of the proposal
     /// @param description The description of the proposal
     /// @return proposalId The ID of the proposal
     function propose(
-        ISPOGGovernor governor,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
-        // TODO: check for tax for emergency remove proposals
-        // TODO: check that governor is one of the two governors?
-        // require that the caller pays the tax for each proposal
-        _pay(targets.length * spogData.tax);
+        // allow only 1 SPOG change per proposal at a time
+        require(targets.length == 1, "Only 1 change per proposal");
+        require(targets[0] == address(this), "Only SPOG can be target");
+        require(values[0] == 0, "No ETH value should be passed");
 
-        uint256 proposalId = governor.propose(targets, values, calldatas, description);
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
+        require(_isSupportedFuncSelector(executableFuncSelector), "Method is not supported");
+
+        _pay(spogData.tax);
+        // // For all the operations pay flat fee, except emergency remove
+        // if (executableFuncSelector == this.emergencyRemove.selector) {
+        //     _pay(spogData.tax);
+        // } else {
+        //     _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
+        // }
+
+        uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
+
+        // If we request to change config parameter, value governance should vote as well
+        if (bytes4(calldatas[0]) == this.change.selector) {
+            // TODO: encode parallel double-vote proposals logic,
+            // TODO: connect proposalId from vote and value governors
+            // uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+        }
+
         emit NewProposal(proposalId);
 
         return proposalId;
@@ -213,6 +230,15 @@ contract SPOG is SPOGStorage, ERC165 {
         require(_amount >= spogData.tax, "Caller must pay tax to call this function");
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
+    }
+
+    function _isSupportedFuncSelector(bytes4 _selector) private pure returns (bool) {
+        // @note To save gas order checks by the probability of being called from highest to lowest,
+        // `append` will be the most common method, and `change` - the least common
+        return _selector == this.append.selector || _selector == this.changeTax.selector
+            || _selector == this.remove.selector || _selector == this.addNewList.selector
+            || _selector == this.removeList.selector || _selector == this.change.selector
+            || _selector == this.emergencyRemove.selector;
     }
 
     fallback() external {
