@@ -49,3 +49,13 @@ Test a specific test case
 ```bash
  forge test --mt <test-case-name>
 ```
+
+To view test coverage
+
+Note: On Linux, install genhtml. On MacOS, `brew install lcov`
+
+```bash
+ make coverage
+```
+
+You can then view the file coverage/index.html to view the report. This can also be integrated into vs code with various extentions
