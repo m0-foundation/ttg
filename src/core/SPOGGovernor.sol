@@ -10,9 +10,10 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract SPOGGovernor is GovernorVotesQuorumFraction {
     ISPOGVotes public immutable votingToken;
-    address public spogAddress;
     uint256 private _votingPeriod;
+    address public spogAddress;
     uint256 public startOfNextVotingPeriod;
+    uint256 public currentVotingPeriodEpoch;
 
     /// @dev Supported vote types.
     enum VoteType {
@@ -27,6 +28,10 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     mapping(uint256 => ProposalVote) private _proposalVotes;
+    // epoch => proposalCount
+    mapping(uint256 => uint256) public epochProposalsCount;
+    // address => epoch => number of votes
+    mapping(address => mapping(uint256 => uint256)) public accountEpochVotes;
 
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
 
@@ -39,7 +44,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
 
-        startOfNextVotingPeriod = block.number + _votingPeriod;
+        // trigger epoch 0
+        startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -60,13 +66,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
+            // move any unclaimed votingToken inflation rewards to the vault
+            address vault = ISPOG(spogAddress).vault();
+            votingToken.transfer(vault, votingToken.balanceOf(address(this)));
+
             // update startOfNextVotingPeriod
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
 
-            // trigger token inflation and send it to the vault
+            currentVotingPeriodEpoch++;
+
+            // trigger token votingToken inflation
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
-            address vault = ISPOG(spogAddress).vault();
-            votingToken.mint(vault, amountToIncreaseSupplyBy);
+            votingToken.mint(address(this), amountToIncreaseSupplyBy);
         }
     }
 
@@ -100,6 +111,10 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can propose");
 
         updateStartOfNextVotingPeriod();
+
+        // update epochProposalsCount
+        epochProposalsCount[currentVotingPeriodEpoch]++;
+
         return super.propose(targets, values, calldatas, description);
     }
 
@@ -126,7 +141,33 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         returns (uint256)
     {
         updateStartOfNextVotingPeriod();
+
+        _updateAccountEpochVotes();
+
+        _withdrawVotingTokenInflationRewards();
+
         return super._castVote(proposalId, account, support, reason, params);
+    }
+
+    /// @dev update epoch votes for address
+    function _updateAccountEpochVotes() private {
+        uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
+
+        // update accountEpochVotes
+        accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]++;
+    }
+
+    /// @dev withdraw pro-rata votingToken inflation rewards when account voted in all proposals from current epoch
+    function _withdrawVotingTokenInflationRewards() private {
+        uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
+
+        if (
+            accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]
+                == epochProposalsCount[relevantEpochForEpochVoteCount]
+        ) {
+            uint256 amountToWithdraw = votingToken.balanceOf(address(this)) / votingToken.totalSupply();
+            votingToken.transfer(msg.sender, amountToWithdraw);
+        }
     }
 
     /// @dev See {IGovernor-hasVoted}.
@@ -164,9 +205,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function votingDelay() public view override returns (uint256) {
         if (startOfNextVotingPeriod > block.number) {
             return startOfNextVotingPeriod - block.number;
-        } else {
-            revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
         }
+
+        revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
     }
 
     function votingPeriod() public view override returns (uint256) {
