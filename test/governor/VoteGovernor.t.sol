@@ -83,6 +83,9 @@ contract SPOGGovernorTest is BaseTest {
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         uint8 yesVote = 1;
 
+        // spogVote balance of voter valid for voting
+        uint256 spogVoteBalance = spogVote.balanceOf(address(this));
+
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
         voteGovernor.castVote(proposalId, yesVote);
@@ -104,11 +107,8 @@ contract SPOGGovernorTest is BaseTest {
         console.log("noVotes: ", noVotes);
         console.log("yesVotes: ", yesVotes);
 
-        // spogVote balance of voter
-        uint256 spogVoteBalance = spogVote.balanceOf(address(this));
-
-        assertTrue(yesVotes == spogVoteBalance, "Proposal does not have expected yes vote");
-        assertTrue(noVotes == 0, "Proposal does not have 0 no vote");
+        assertEq(yesVotes, spogVoteBalance, "Proposal does not have expected yes vote");
+        assertEq(noVotes, 0, "Proposal does not have 0 no vote");
     }
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
@@ -121,6 +121,9 @@ contract SPOGGovernorTest is BaseTest {
 
         uint8 noVote = 0;
         uint8 yesVote = 1;
+
+        // spogVote balance of voter
+        uint256 spogVoteBalance = spogVote.balanceOf(address(this));
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
@@ -149,20 +152,20 @@ contract SPOGGovernorTest is BaseTest {
         (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
         (uint256 noVotes2, uint256 yesVotes2) = voteGovernor.proposalVotes(proposalId2);
 
-        // spogVote balance of voter
-        uint256 spogVoteBalance = spogVote.balanceOf(address(this));
+        assertEq(yesVotes, spogVoteBalance, "Proposal does not have expected yes vote");
+        assertEq(noVotes, 0, "Proposal does not have 0 no vote");
 
-        assertTrue(yesVotes == spogVoteBalance, "Proposal does not have expected yes vote");
-        assertTrue(noVotes == 0, "Proposal does not have 0 no vote");
-
-        assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
-        assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
+        assertEq(noVotes2, spogVoteBalance, "Proposal2 does not have expected no vote");
+        assertEq(yesVotes2, 0, "Proposal2 does not have 0 yes vote");
 
         /**
          * Proposal 3 *********
          */
         // Add another proposal and voting can only happen after vote delay
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+
+        // spogVote balance of voter before casting vote on proposal 3
+        uint256 spogVoteBalanceForProposal3 = spogVote.balanceOf(address(this));
 
         vm.expectRevert("Governor: vote not currently active");
         voteGovernor.castVote(proposalId3, noVote);
@@ -179,11 +182,11 @@ contract SPOGGovernorTest is BaseTest {
 
         (uint256 noVotes3, uint256 yesVotes3) = voteGovernor.proposalVotes(proposalId3);
 
-        assertTrue(noVotes3 == spogVoteBalance, "Proposal3 does not have expected no vote");
-        assertTrue(yesVotes3 == 0, "Proposal3 does not have 0 yes vote");
+        assertEq(noVotes3, spogVoteBalanceForProposal3, "Proposal3 does not have expected no vote");
+        assertEq(yesVotes3, 0, "Proposal3 does not have 0 yes vote");
     }
 
-    function test_VoteTokenSupplyInflatesAfterEachVotingPeriod() public {
+    function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
         (
             uint256 proposalId,
             address[] memory targets,
@@ -193,9 +196,11 @@ contract SPOGGovernorTest is BaseTest {
         ) = proposeAddingNewListToSpog("new list to spog");
         uint8 yesVote = 1;
 
+        address voter = address(this);
+
         uint256 spogVoteSupplyBefore = spogVote.totalSupply();
 
-        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
+        uint256 voterVoteTokenBalanceBefore = spogVote.balanceOf(address(voter));
 
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -211,15 +216,15 @@ contract SPOGGovernorTest is BaseTest {
             "Vote token supply didn't inflate correctly"
         );
 
-        // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogVote.balanceOf(address(vault));
+        // check that voter has received the vote inflationary supply
+        uint256 voterVoteTokenBalanceAfterFirstPeriod = spogVote.balanceOf(address(voter));
         assertEq(
-            vaultVoteTokenBalanceAfterFirstPeriod,
-            vaultVoteTokenBalanceBefore + amountAddedByInflation,
+            voterVoteTokenBalanceAfterFirstPeriod,
+            voterVoteTokenBalanceBefore + amountAddedByInflation,
             "Vault did not receive the accurate vote inflationary supply"
         );
 
-        // fast forward to end of voting period
+        // start of new wpoch inflation is triggered
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
@@ -234,13 +239,6 @@ contract SPOGGovernorTest is BaseTest {
             "Vote token supply didn't inflate correctly in the second period"
         );
 
-        // check that vault has received the vote inflationary supply in the second period
-        uint256 vaultVoteTokenBalanceAfterSecondPeriod = spogVote.balanceOf(address(vault));
-        assertEq(
-            vaultVoteTokenBalanceAfterSecondPeriod,
-            vaultVoteTokenBalanceAfterFirstPeriod + amountAddedByInflation2,
-            "Vault did not receive the accurate vote inflationary supply in the second period"
-        );
     }
 
     // TODO: good candidate for fuzzy testing with different numbers of proposals
