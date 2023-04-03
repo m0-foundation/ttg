@@ -200,7 +200,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // If we request to change config parameter, value governance should vote as well
         if (bytes4(calldatas[0]) == this.change.selector) {
-            // TODO: encode parallel double-vote proposals logic,
+            // TODO: code parallel double-vote proposals logic,
             // TODO: connect proposalId from vote and value governors
             // uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
         }
@@ -235,6 +235,7 @@ contract SPOG is SPOGStorage, ERC165 {
     function _isSupportedFuncSelector(bytes4 _selector) private pure returns (bool) {
         // @note To save gas order checks by the probability of being called from highest to lowest,
         // `append` will be the most common method, and `change` - the least common
+        // TODO: check if hardcoding selectors is cheaper than using `this.method.selector`
         return _selector == this.append.selector || _selector == this.changeTax.selector
             || _selector == this.remove.selector || _selector == this.addNewList.selector
             || _selector == this.removeList.selector || _selector == this.change.selector
