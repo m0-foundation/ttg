@@ -117,7 +117,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can execute");
 
         updateStartOfNextVotingPeriod();
-        return super._execute(proposalId, targets, values, calldatas, descriptionHash);
+        super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     /// @notice override to use updateStartOfNextVotingPeriod
