@@ -62,7 +62,7 @@ contract SPOG_change is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax was not modified
-        (uint256 tax,,,,,) = spog.spogData();
+        (uint256 tax,,,,,,) = spog.spogData();
         assertFalse(tax == 11, "Tax should not have been changed");
     }
 
@@ -101,7 +101,7 @@ contract SPOG_change is SPOG_Base {
         emit DoubleQuorumFinalized(identifier);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,, uint256 rewardFirstCheck,) = spog.spogData();
+        (,,,,, uint256 rewardFirstCheck,) = spog.spogData();
 
         // assert that reward been changed
         assertTrue(rewardFirstCheck == 11, "Reward should have been changed");
@@ -150,7 +150,7 @@ contract SPOG_change is SPOG_Base {
         emit DoubleQuorumFinalized(identifier);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,,, IERC20 cashFirstCheck) = spog.spogData();
+        (,,,,,, IERC20 cashFirstCheck) = spog.spogData();
 
         // assert that cash has been changed
         assertTrue(address(cashFirstCheck) == address(newCashInstance), "Cash token was not changed");

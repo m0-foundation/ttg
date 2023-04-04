@@ -84,14 +84,14 @@ contract SPOGDeployScript is BaseScript {
 
         spogFactory = new SPOGFactory();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData =
+            abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, forkTime, tax);
 
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
             initSPOGData,
             address(vault),
             voteTime,
-            forkTime,
             voteQuorum,
             valueQuorum,
             ISPOGGovernor(address(voteGovernor)),
@@ -105,13 +105,13 @@ contract SPOGDeployScript is BaseScript {
     function run() public broadcaster {
         triggerSetUp();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData =
+            abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, forkTime, tax);
 
         spog = spogFactory.deploy(
             initSPOGData,
             address(vault),
             voteTime,
-            forkTime,
             voteQuorum,
             valueQuorum,
             ISPOGGovernor(address(voteGovernor)),

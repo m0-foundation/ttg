@@ -13,7 +13,6 @@ contract SPOGFactory {
     /// @param _initSPOGData The data used to initialize spogData
     /// @param _vault The address of the `Vault` contract
     /// @param _voteTime The duration of a voting epoch
-    /// @param _forkTime The duration that $VALUE holders have to choose a fork
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _voteGovernor The address of the SPOG governor contract for $VOTE token
@@ -24,7 +23,6 @@ contract SPOGFactory {
         bytes memory _initSPOGData,
         address _vault,
         uint256 _voteTime,
-        uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         ISPOGGovernor _voteGovernor,
@@ -35,7 +33,6 @@ contract SPOGFactory {
             _initSPOGData,
             _vault,
             _voteTime,
-            _forkTime,
             _voteQuorum,
             _valueQuorum,
             _voteGovernor,
@@ -52,7 +49,6 @@ contract SPOGFactory {
         bytes memory _initSPOGData,
         address _vault,
         uint256 _voteTime,
-        uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         ISPOGGovernor _voteGovernor,
@@ -62,9 +58,7 @@ contract SPOGFactory {
 
         return abi.encodePacked(
             bytecode,
-            abi.encode(
-                _initSPOGData, _vault, _voteTime, _forkTime, _voteQuorum, _valueQuorum, _voteGovernor, _valueGovernor
-            )
+            abi.encode(_initSPOGData, _vault, _voteTime, _voteQuorum, _valueQuorum, _voteGovernor, _valueGovernor)
         );
     }
 

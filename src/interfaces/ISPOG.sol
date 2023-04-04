@@ -10,8 +10,9 @@ interface ISPOG {
     event AddressAppendedToList(address _list, address _address);
     event AddressRemovedFromList(address _list, address _address);
     event EmergencyAddressRemovedFromList(address _list, address _address);
-    event NewProposal(uint256 indexed proposalId);
     event TaxChanged(uint256 indexed tax);
+    event NewProposal(uint256 indexed proposalId);
+    event NewDoubleQuorumProposal(uint256 indexed proposalId);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
 
     // Errors

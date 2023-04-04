@@ -11,6 +11,7 @@ abstract contract SPOGStorage is ISPOG {
         uint256 tax;
         uint256 inflatorTime;
         uint256 sellTime;
+        uint256 forkTime;
         uint256 inflator;
         uint256 reward;
         uint256[2] taxRange;
@@ -28,7 +29,6 @@ abstract contract SPOGStorage is ISPOG {
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor,
         uint256 _voteTime,
-        uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum
     ) {
@@ -47,7 +47,7 @@ abstract contract SPOGStorage is ISPOG {
 
         // set quorum and voting period for value governor
         valueGovernor.updateQuorumNumerator(_valueQuorum);
-        valueGovernor.updateVotingTime(_forkTime);
+        valueGovernor.updateVotingTime(_voteTime);
     }
 
     modifier onlyVoteGovernor() {
@@ -94,16 +94,16 @@ abstract contract SPOGStorage is ISPOG {
             spogData.inflator = abi.decode(value, (uint256));
         } else if (what == "reward") {
             spogData.reward = abi.decode(value, (uint256));
-        } else if (what == "voteTime") {
-            uint256 decodedVoteTime = abi.decode(value, (uint256));
-            voteGovernor.updateVotingTime(decodedVoteTime);
         } else if (what == "inflatorTime") {
             spogData.inflatorTime = abi.decode(value, (uint256));
         } else if (what == "sellTime") {
             spogData.sellTime = abi.decode(value, (uint256));
         } else if (what == "forkTime") {
-            uint256 decodedForkTime = abi.decode(value, (uint256));
-            valueGovernor.updateVotingTime(decodedForkTime);
+            spogData.forkTime = abi.decode(value, (uint256));
+        } else if (what == "voteTime") {
+            uint256 decodedVoteTime = abi.decode(value, (uint256));
+            voteGovernor.updateVotingTime(decodedVoteTime);
+            valueGovernor.updateVotingTime(decodedVoteTime);
         } else if (what == "voteQuorum") {
             uint256 decodedVoteQuorum = abi.decode(value, (uint256));
             voteGovernor.updateQuorumNumerator(decodedVoteQuorum);

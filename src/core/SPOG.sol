@@ -28,7 +28,6 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _initSPOGData The data used to initialize spogData
     /// @param _vault The address of the `Vault` contract
     /// @param _voteTime The duration of a voting epoch in blocks
-    /// @param _forkTime The duration that $VALUE holders have to choose a fork
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _voteGovernor The address of the `SPOGGovernor` which $VOTE token is used for voting
@@ -37,12 +36,11 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes memory _initSPOGData,
         address _vault,
         uint256 _voteTime,
-        uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor
-    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _forkTime, _voteQuorum, _valueQuorum) {
+    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _voteQuorum, _valueQuorum) {
         // TODO: add require statements for variables
         vault = _vault;
 
@@ -65,8 +63,9 @@ contract SPOG is SPOGStorage, ERC165 {
             uint256 _reward,
             uint256 _inflatorTime,
             uint256 _sellTime,
+            uint256 _forkTime,
             uint256 _tax
-        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256));
+        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256, uint256));
 
         spogData = SPOGData({
             cash: IERC20(_cash),
@@ -75,6 +74,7 @@ contract SPOG is SPOGStorage, ERC165 {
             reward: _reward,
             inflatorTime: _inflatorTime,
             sellTime: _sellTime,
+            forkTime: _forkTime,
             tax: _tax
         });
     }
@@ -170,14 +170,16 @@ contract SPOG is SPOGStorage, ERC165 {
 
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
 
-        // If we request to change config parameter, value governance should vote as well
+        // If we request to change config parameter, value governance should vote too
         if (executableFuncSelector == this.change.selector) {
             uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
             // TODO: remove it, make them diffent + mapping?
             assert(valueProposalId == proposalId);
+
+            emit NewDoubleQuorumProposal(proposalId);
+        } else {
+            emit NewProposal(proposalId);
         }
-        // TODO: different events for single and double quorum proposals?
-        emit NewProposal(proposalId);
 
         return proposalId;
     }
