@@ -104,11 +104,11 @@ abstract contract SPOGStorage is ISPOG {
             uint256 decodedForkTime = abi.decode(value, (uint256));
             valueGovernor.updateVotingTime(decodedForkTime);
         } else if (what == "voteQuorum") {
-            uint256 decodedvoteQuorum = abi.decode(value, (uint256));
-            voteGovernor.updateQuorumNumerator(decodedvoteQuorum);
+            uint256 decodedVoteQuorum = abi.decode(value, (uint256));
+            voteGovernor.updateQuorumNumerator(decodedVoteQuorum);
         } else if (what == "valueQuorum") {
-            uint256 valueQuorum = abi.decode(value, (uint256));
-            valueGovernor.updateQuorumNumerator(valueQuorum);
+            uint256 decodedValueQuorum = abi.decode(value, (uint256));
+            valueGovernor.updateQuorumNumerator(decodedValueQuorum);
         } else {
             revert InvalidParameter(what);
         }
