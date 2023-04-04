@@ -35,14 +35,14 @@ abstract contract SPOGStorage is ISPOG {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
 
-        // Set SPOG address in vote governor
+        // set SPOG address in vote governor
         voteGovernor.initSPOGAddress(address(this));
 
         // set quorum and voting period for vote governor
         voteGovernor.updateQuorumNumerator(_voteQuorum);
         voteGovernor.updateVotingTime(_voteTime);
 
-        // Set SPOG address in value governor
+        // set SPOG address in value governor
         valueGovernor.initSPOGAddress(address(this));
 
         // set quorum and voting period for value governor

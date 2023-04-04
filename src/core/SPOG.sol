@@ -161,12 +161,11 @@ contract SPOG is SPOGStorage, ERC165 {
     ) external override returns (uint256) {
         bytes4 executableFuncSelector = _validateProposal(targets, values, calldatas);
 
-        // For all the operations pay flat fee, except emergency remove fee
-        if (executableFuncSelector == this.emergencyRemove.selector) {
-            _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
-        } else {
-            _pay(spogData.tax);
-        }
+        // For all the operations pay flat fee, except for emergency remove pay 12 * fee
+        uint256 fee = executableFuncSelector == this.emergencyRemove.selector
+            ? EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax
+            : spogData.tax;
+        _pay(fee);
 
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
 
