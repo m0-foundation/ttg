@@ -61,7 +61,7 @@ contract SPOG_RemoveList is SPOG_Base {
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is executed
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Proposal not executed");

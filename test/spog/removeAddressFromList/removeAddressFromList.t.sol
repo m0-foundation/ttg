@@ -53,7 +53,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");

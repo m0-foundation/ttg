@@ -223,7 +223,7 @@ contract SPOGGovernorTest is BaseTest {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         uint256 spogVoteSupplyAfterSecondPeriod = spogVote.totalSupply();
         uint256 amountAddedByInflation2 = (spogVoteSupplyAfterFirstPeriod * deployScript.inflator()) / 100;

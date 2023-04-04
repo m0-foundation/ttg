@@ -55,7 +55,7 @@ contract SPOG_AddNewList is SPOG_Base {
         // spog.queue(proposalId);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is executed
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Proposal not executed");

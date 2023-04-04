@@ -11,12 +11,12 @@ interface ISPOG {
     event AddressRemovedFromList(address _list, address _address);
     event NewProposal(uint256 indexed proposalId);
     event TaxChanged(uint256 indexed tax);
-    event DoubleQuorumInitiated(bytes32 indexed identifier);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
 
+    // Errors
     error InvalidParameter(bytes32 what);
 
-    // functions
+    // Logic functions
     function vault() external view returns (address);
 
     function addNewList(IList list) external;
@@ -30,4 +30,19 @@ interface ISPOG {
     function emergencyRemove(address _address, IList _list) external;
 
     function tokenInflationCalculation() external view returns (uint256);
+
+    // Governance process functions
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) external returns (uint256);
+
+    function execute(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) external returns (uint256);
 }

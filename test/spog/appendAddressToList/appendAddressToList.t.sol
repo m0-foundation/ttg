@@ -53,7 +53,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");

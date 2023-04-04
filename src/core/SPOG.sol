@@ -143,22 +143,10 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
+    // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
+    // TODO: IMPORTANT: implement immediate remove
     function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
-        _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
-
-        address[] memory targets = new address[](1);
-        uint256[] memory values = new uint256[](1);
-        bytes[] memory calldatas = new bytes[](1);
-
-        targets[0] = address(this);
-        values[0] = 0;
-        calldatas[0] = abi.encodeWithSignature("remove(address,IList)", _address, _list);
-
-        string memory description = "Emergency Remove address from list";
-
-        uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
-
-        emit NewProposal(proposalId);
+        this.remove(_address, _list);
     }
 
     /// @dev check SPOG interface support
@@ -179,8 +167,8 @@ contract SPOG is SPOGStorage, ERC165 {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public returns (uint256) {
-        // allow only 1 SPOG change per proposal at a time
+    ) external override returns (uint256) {
+        // allow only 1 SPOG change with no value per proposal at a time
         require(targets.length == 1, "Only 1 change per proposal");
         require(targets[0] == address(this), "Only SPOG can be target");
         require(values[0] == 0, "No ETH value should be passed");
@@ -188,25 +176,50 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes4 executableFuncSelector = bytes4(calldatas[0]);
         require(_isSupportedFuncSelector(executableFuncSelector), "Method is not supported");
 
-        _pay(spogData.tax);
-        // // For all the operations pay flat fee, except emergency remove
-        // if (executableFuncSelector == this.emergencyRemove.selector) {
-        //     _pay(spogData.tax);
-        // } else {
-        //     _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
-        // }
+        // For all the operations pay flat fee, except emergency remove fee
+        if (executableFuncSelector == this.emergencyRemove.selector) {
+            _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
+        } else {
+            _pay(spogData.tax);
+        }
 
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
 
         // If we request to change config parameter, value governance should vote as well
-        if (bytes4(calldatas[0]) == this.change.selector) {
+        if (executableFuncSelector == this.change.selector) {
             // TODO: code parallel double-vote proposals logic,
             // TODO: connect proposalId from vote and value governors
-            // uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+            // TODO: remove it later
+            require(valueProposalId == proposalId, "Proposal IDs should be equal");
         }
 
         emit NewProposal(proposalId);
 
+        return proposalId;
+    }
+
+    function execute(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) external override returns (uint256) {
+        require(targets.length == 1, "Only 1 change per proposal");
+        require(targets[0] == address(this), "Only SPOG can be target");
+        require(values[0] == 0, "No ETH value should be passed");
+
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
+        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
+
+        // Check that value governance approved config parameter change in addition to vote governance
+        if (executableFuncSelector == this.change.selector) {
+            if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {
+                revert("Value governor did not approve the proposal");
+            }
+        }
+
+        voteGovernor.execute(targets, values, calldatas, descriptionHash);
         return proposalId;
     }
 
