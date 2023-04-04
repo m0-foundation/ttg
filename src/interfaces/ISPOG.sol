@@ -9,6 +9,7 @@ interface ISPOG {
     event ListRemoved(address _list);
     event AddressAppendedToList(address _list, address _address);
     event AddressRemovedFromList(address _list, address _address);
+    event EmergencyAddressRemovedFromList(address _list, address _address);
     event NewProposal(uint256 indexed proposalId);
     event TaxChanged(uint256 indexed tax);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
@@ -29,6 +30,7 @@ interface ISPOG {
 
     function emergencyRemove(address _address, IList _list) external;
 
+    // Utility functions
     function tokenInflationCalculation() external view returns (uint256);
 
     // Governance process functions

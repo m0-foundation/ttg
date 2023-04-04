@@ -75,6 +75,7 @@ abstract contract SPOGStorage is ISPOG {
     /// @param value The new value
     function change(bytes32 what, bytes calldata value) external onlyVoteGovernor {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
+
         _fileWithDoubleQuorum(what, value);
 
         emit DoubleQuorumFinalized(identifier);

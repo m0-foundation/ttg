@@ -128,14 +128,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
     function remove(address _address, IList _list) external onlyVoteGovernor {
-        // require that the list is on the master list
-        require(masterlist.contains(address(_list)), "List is not on the master list");
-
-        // require that the address is on the list
-        require(_list.contains(_address), "Address is not on the list");
-
-        // remove the address from the list
-        _list.remove(_address);
+        _removeFromList(_address, _list);
         emit AddressRemovedFromList(address(_list), _address);
     }
 
@@ -146,14 +139,12 @@ contract SPOG is SPOGStorage, ERC165 {
     // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
     // TODO: IMPORTANT: implement immediate remove
     function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
-        this.remove(_address, _list);
+        _removeFromList(_address, _list);
+        emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
-    /// @dev check SPOG interface support
-    /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
-    }
+    // ********** SPOG Governance interface FUNCTIONS ********** //
+    // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
     /// @notice Create a new proposal
     /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
@@ -218,6 +209,7 @@ contract SPOG is SPOGStorage, ERC165 {
         return proposalId;
     }
 
+    // ********** Utility FUNCTIONS ********** //
     function tokenInflationCalculation() public view returns (uint256) {
         if (msg.sender == address(voteGovernor)) {
             uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
@@ -229,6 +221,12 @@ contract SPOG is SPOGStorage, ERC165 {
         return 0;
     }
 
+    /// @dev check SPOG interface support
+    /// @param interfaceId The interface ID to check
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
+    }
+
     // ********** PRIVATE Function ********** //
 
     /// @notice pay tax from the caller to the SPOG
@@ -238,6 +236,17 @@ contract SPOG is SPOGStorage, ERC165 {
         require(_amount >= spogData.tax, "Caller must pay tax to call this function");
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
+    }
+
+    function _removeFromList(address _address, IList _list) private {
+        // require that the list is on the master list
+        require(masterlist.contains(address(_list)), "List is not on the master list");
+
+        // require that the address is on the list
+        require(_list.contains(_address), "Address is not on the list");
+
+        // remove the address from the list
+        _list.remove(_address);
     }
 
     function _isSupportedFuncSelector(bytes4 _selector) private pure returns (bool) {
