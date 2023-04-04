@@ -281,6 +281,24 @@ contract SPOGGovernorTest is BaseTest {
         spog.propose(targets, values, calldatas, description);
     }
 
+    function test_Revert_Propose_WhenTargetIsNotSPOG() public {
+        address[] memory targets = new address[](1);
+        // Instead of SPOG, we are passing the list contract
+        targets[0] = address(list);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        string memory description = "add merchant to spog";
+
+        // approve cash spend for proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+
+        // revert when proposal expects ETH value
+        vm.expectRevert("Only SPOG can be target");
+        spog.propose(targets, values, calldatas, description);
+    }
+
     function test_Revert_Propose_WhenMethodIsNotSupported() public {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);

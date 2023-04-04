@@ -72,7 +72,7 @@ contract SPOGDeployScript is BaseScript {
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
-        valueGovernor = governorFactory.deploy(value, valueQuorum, forkTime, "ValueGovernor", valueGovernorSalt);
+        valueGovernor = governorFactory.deploy(value, valueQuorum, voteTime, "ValueGovernor", valueGovernorSalt);
 
         // sanity check
         assert(address(voteGovernor) == voteGovernorAddress); // SPOG vote governor address mismatch
