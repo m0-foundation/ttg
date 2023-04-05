@@ -159,7 +159,29 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         string memory description
     ) external override returns (uint256) {
-        bytes4 executableFuncSelector = _validateProposal(targets, values, calldatas);
+        // allow only 1 SPOG change with no value per proposal at a time
+        require(targets.length == 1, "Only 1 change per proposal");
+        require(targets[0] == address(this), "Only SPOG can be target");
+        require(values[0] == 0, "No ETH value should be passed");
+
+        return propose(calldatas[0], description);
+    }
+
+    /// @notice Create a new proposal
+    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
+    /// @param callData The calldata of the proposal
+    /// @param description The description of the proposal
+    /// @return proposalId The ID of the proposal
+    function propose(bytes memory callData, string memory description) public override returns (uint256) {
+        bytes4 executableFuncSelector = bytes4(callData);
+        require(_isSupportedFuncSelector(executableFuncSelector), "Method is not supported");
+
+        address[] memory targets = new address[](1);
+        targets[0] = address(this);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = callData;
 
         // For all the operations pay flat fee, except for emergency remove pay 12 * fee
         uint256 fee = executableFuncSelector == this.emergencyRemove.selector
@@ -199,7 +221,7 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) external override returns (uint256) {
-        bytes4 executableFuncSelector = _validateProposal(targets, values, calldatas);
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
         uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
 
         // Check that both value and vote governance approved parameter change
@@ -260,22 +282,6 @@ contract SPOG is SPOGStorage, ERC165 {
             || _selector == this.remove.selector || _selector == this.addNewList.selector
             || _selector == this.removeList.selector || _selector == this.change.selector
             || _selector == this.emergencyRemove.selector;
-    }
-
-    function _validateProposal(address[] memory targets, uint256[] memory values, bytes[] memory calldatas)
-        private
-        view
-        returns (bytes4)
-    {
-        // allow only 1 SPOG change with no value per proposal at a time
-        require(targets.length == 1, "Only 1 change per proposal");
-        require(targets[0] == address(this), "Only SPOG can be target");
-        require(values[0] == 0, "No ETH value should be passed");
-
-        bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        require(_isSupportedFuncSelector(executableFuncSelector), "Method is not supported");
-
-        return executableFuncSelector;
     }
 
     fallback() external {
