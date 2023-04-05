@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
+import "forge-std/console.sol";
+
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract SPOGGovernor is GovernorVotesQuorumFraction {
@@ -138,7 +140,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        return quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
+        return quorum(proposalSnapshot(proposalId)) > 0 && quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
     }
 
     /// @dev See {Governor-_countVote}.
