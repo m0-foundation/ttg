@@ -172,8 +172,11 @@ contract SPOG is SPOGStorage, ERC165 {
         // If we request to change config parameter, value governance should vote too
         if (executableFuncSelector == this.change.selector) {
             uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-            // TODO: remove it, make them diffent + mapping?
-            assert(valueProposalId == proposalId);
+
+            // proposal ids should match
+            if (valueProposalId != proposalId) {
+                revert("Vote and value proposal ids do not match");
+            }
 
             emit NewDoubleQuorumProposal(proposalId);
         } else {
