@@ -45,7 +45,8 @@ contract SPOG_AddNewList is SPOG_Base {
 
         // cast vote on proposal
         uint8 yesVote = uint8(VoteType.Yes);
-        valueGovernor.castVote(proposalId, yesVote);
+        uint8 noVote = uint8(VoteType.No);
+        valueGovernor.castVote(proposalId, noVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
@@ -92,7 +93,7 @@ contract SPOG_AddNewList is SPOG_Base {
 
         // cast vote on proposal
         uint8 yesVote = uint8(VoteType.Yes);
-        voteGovernor.castVote(proposalId, yesVote);
+        // voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
