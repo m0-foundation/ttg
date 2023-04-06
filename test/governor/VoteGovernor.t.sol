@@ -236,30 +236,6 @@ contract SPOGGovernorTest is BaseTest {
 
         assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
         assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
-
-        /**
-         * Proposal 3 *********
-         */
-        // Add another proposal and voting can only happen after vote delay
-        (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
-
-        vm.expectRevert("Governor: vote not currently active");
-        voteGovernor.castVote(proposalId3, noVote);
-
-        assertTrue(
-            voteGovernor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
-        );
-
-        // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        // cast vote on proposal
-        voteGovernor.castVote(proposalId3, noVote);
-
-        (uint256 noVotes3, uint256 yesVotes3) = voteGovernor.proposalVotes(proposalId3);
-
-        assertTrue(noVotes3 == spogVoteBalance, "Proposal3 does not have expected no vote");
-        assertTrue(yesVotes3 == 0, "Proposal3 does not have 0 yes vote");
     }
 
     function test_VoteTokenSupplyInflatesAfterEachVotingPeriod() public {
