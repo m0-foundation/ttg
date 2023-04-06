@@ -9,6 +9,8 @@ on:
 env:
   FOUNDRY_PROFILE: ci
 
+permissions: write-all
+
 jobs:
   check:
     name: Foundry project
