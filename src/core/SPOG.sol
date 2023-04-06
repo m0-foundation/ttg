@@ -16,8 +16,11 @@ contract SPOG is SPOGStorage, ERC165 {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     address public immutable vault;
-    uint256 private constant inMasterList = 1;
 
+    // List of methods that can be executed by SPOG governance
+    mapping(bytes4 => bool) public governedMethods;
+
+    uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
 
     // List of addresses that are part of the masterlist
@@ -45,6 +48,18 @@ contract SPOG is SPOGStorage, ERC165 {
         vault = _vault;
 
         initSPOGData(_initSPOGData);
+        initGovernedMethods();
+    }
+
+    function initGovernedMethods() internal {
+        // TODO: review if there is better, more efficient way to do it
+        governedMethods[this.append.selector] = true;
+        governedMethods[this.changeTax.selector] = true;
+        governedMethods[this.remove.selector] = true;
+        governedMethods[this.removeList.selector] = true;
+        governedMethods[this.addNewList.selector] = true;
+        governedMethods[this.change.selector] = true;
+        governedMethods[this.emergencyRemove.selector] = true;
     }
 
     /// @param _initSPOGData The data used to initialize spogData
@@ -174,7 +189,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @return proposalId The ID of the proposal
     function propose(bytes memory callData, string memory description) public override returns (uint256) {
         bytes4 executableFuncSelector = bytes4(callData);
-        require(_isSupportedFuncSelector(executableFuncSelector), "Method is not supported");
+        require(governedMethods[executableFuncSelector], "Method is not supported");
 
         address[] memory targets = new address[](1);
         targets[0] = address(this);
@@ -253,7 +268,7 @@ contract SPOG is SPOGStorage, ERC165 {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    // ********** PRIVATE Function ********** //
+    // ********** Private FUNCTIONS ********** //
 
     /// @notice pay tax from the caller to the SPOG
     /// @param _amount The amount to be transferred
@@ -273,15 +288,6 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // remove the address from the list
         _list.remove(_address);
-    }
-
-    function _isSupportedFuncSelector(bytes4 _selector) private pure returns (bool) {
-        // @note To save gas order checks by the probability of being called from highest to lowest,
-        // `append` will be the most common method, and `change` - the least common
-        return _selector == this.append.selector || _selector == this.changeTax.selector
-            || _selector == this.remove.selector || _selector == this.addNewList.selector
-            || _selector == this.removeList.selector || _selector == this.change.selector
-            || _selector == this.emergencyRemove.selector;
     }
 
     fallback() external {
