@@ -90,6 +90,9 @@ contract SPOG_AddNewList is SPOG_Base {
         // proposal should be active now
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
+        // check proposal is not yet succeeded
+        assertFalse(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Already in succeeded state");
+
         // cast vote on proposal
         uint8 yesVote = uint8(VoteType.Yes);
         voteGovernor.castVote(proposalId, yesVote);

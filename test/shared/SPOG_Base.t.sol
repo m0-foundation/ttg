@@ -37,11 +37,11 @@ contract SPOG_Base is BaseTest {
         valueGovernor = deployScript.valueGovernor();
 
         // mint spogVote to address(this) and self-delegate
-        deal({token: address(spogVote), to: address(this), give: 100e18, adjust: true});
+        spogVote.mint(address(this), 100e18);
         spogVote.delegate(address(this));
 
         // mint spogValue to address(this) and self-delegate
-        deal({token: address(spogValue), to: address(this), give: 100e18, adjust: true});
+        spogValue.mint(address(this), 100e18);
         spogValue.delegate(address(this));
 
         // deploy list and change admin to spog
