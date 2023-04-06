@@ -72,7 +72,7 @@ contract SPOGDeployScript is BaseScript {
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
-        valueGovernor = governorFactory.deploy(value, valueQuorum, forkTime, "ValueGovernor", valueGovernorSalt);
+        valueGovernor = governorFactory.deploy(value, valueQuorum, voteTime, "ValueGovernor", valueGovernorSalt);
 
         // sanity check
         assert(address(voteGovernor) == voteGovernorAddress); // SPOG vote governor address mismatch
@@ -88,14 +88,14 @@ contract SPOGDeployScript is BaseScript {
 
         spogFactory = new SPOGFactory();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData =
+            abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, forkTime, tax);
 
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
             initSPOGData,
             address(vault),
             voteTime,
-            forkTime,
             voteQuorum,
             valueQuorum,
             ISPOGGovernor(address(voteGovernor)),
@@ -109,13 +109,13 @@ contract SPOGDeployScript is BaseScript {
     function run() public broadcaster {
         triggerSetUp();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData =
+            abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, forkTime, tax);
 
         spog = spogFactory.deploy(
             initSPOGData,
             address(vault),
             voteTime,
-            forkTime,
             voteQuorum,
             valueQuorum,
             ISPOGGovernor(address(voteGovernor)),

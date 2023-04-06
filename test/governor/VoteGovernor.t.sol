@@ -61,7 +61,7 @@ contract SPOGGovernorTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -223,7 +223,7 @@ contract SPOGGovernorTest is BaseTest {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         uint256 spogVoteSupplyAfterSecondPeriod = spogVote.totalSupply();
         uint256 amountAddedByInflation2 = (spogVoteSupplyAfterFirstPeriod * deployScript.inflator()) / 100;
@@ -243,8 +243,7 @@ contract SPOGGovernorTest is BaseTest {
         );
     }
 
-    // TODO: good candidate for fuzzy testing with different numbers of proposals
-    function test_CashTaxIsPaidForEachProposal() public {
+    function test_Revert_Propose_WhenMoreThanOneProposalPassed() public {
         // set data for 2 proposals at once
         address[] memory targets = new address[](2);
         targets[0] = address(spog);
@@ -257,21 +256,62 @@ contract SPOGGovernorTest is BaseTest {
         calldatas[1] = abi.encodeWithSignature("append(address,address)", users.bob, list);
         string memory description = "add 2 merchants to spog";
 
-        // check vault and sender balances before proposal
-        assertEq(deployScript.cash().balanceOf(address(vault)), 0, "Vault should have zero balance before proposal");
-        uint256 senderBalanceBefore = deployScript.cash().balanceOf(address(this));
+        // approve cash spend for proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
 
-        // vote on proposal
-        deployScript.cash().approve(address(spog), 2 * deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        // revert when method is not supported
+        vm.expectRevert("Only 1 change per proposal");
+        spog.propose(targets, values, calldatas, description);
+    }
 
-        // check vault and sender balances after proposal
-        uint256 senderBalanceAfter = deployScript.cash().balanceOf(address(this));
-        assertEq(senderBalanceBefore - senderBalanceAfter, 2 * deployScript.tax(), "Sender should have paid 2 * tax");
-        assertEq(
-            deployScript.cash().balanceOf(address(vault)),
-            deployScript.tax() * 2,
-            "Balance of vault should be 2x tax, 2 proposals were executed at once"
-        );
+    function test_Revert_Propose_WhenEtherValueIsPassed() public {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 1 ether;
+        bytes[] memory calldatas = new bytes[](2);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        string memory description = "add merchant to spog";
+
+        // approve cash spend for proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+
+        // revert when proposal expects ETH value
+        vm.expectRevert("No ETH value should be passed");
+        spog.propose(targets, values, calldatas, description);
+    }
+
+    function test_Revert_Propose_WhenTargetIsNotSPOG() public {
+        address[] memory targets = new address[](1);
+        // Instead of SPOG, we are passing the list contract
+        targets[0] = address(list);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        string memory description = "add merchant to spog";
+
+        // approve cash spend for proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+
+        // revert when proposal expects ETH value
+        vm.expectRevert("Only SPOG can be target");
+        spog.propose(targets, values, calldatas, description);
+    }
+
+    function test_Revert_Propose_WhenMethodIsNotSupported() public {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("addNewListFun(address)", list);
+        string memory description = "Should not pass proposal";
+
+        // approve cash spend for proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        // revert when method signature is not supported
+        vm.expectRevert("Method is not supported");
+        spog.propose(targets, values, calldatas, description);
     }
 }

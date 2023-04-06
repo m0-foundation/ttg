@@ -77,7 +77,7 @@ contract SPOG_Base is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -89,7 +89,7 @@ contract SPOG_Base is BaseTest {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpogAndAppendAnAddressToIt() internal {
@@ -112,7 +112,7 @@ contract SPOG_Base is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -124,6 +124,6 @@ contract SPOG_Base is BaseTest {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // execute proposal
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
+        spog.execute(targets, values, calldatas, hashedDescription);
     }
 }
