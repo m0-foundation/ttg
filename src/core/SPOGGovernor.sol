@@ -32,8 +32,12 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of votes
     mapping(address => mapping(uint256 => uint256)) public accountEpochVotes;
+    // epoch => vote inflation amount
+    mapping(uint256 => uint256) public epochVotingTokenInflationAmount;
 
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
+    event VotingTokenInflation(uint256 indexed epoch, uint256 amount);
+    event VotingTokenInflationWithdrawn(address indexed voter, uint256 amount);
 
     constructor(
         ISPOGVotes votingTokenContract,
@@ -78,8 +82,12 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
             // trigger token votingToken inflation
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
-            // question: should we mint to the vault or to the SPOGGovernor contract?
+
+            epochVotingTokenInflationAmount[currentVotingPeriodEpoch] = amountToIncreaseSupplyBy;
+
             votingToken.mint(address(this), amountToIncreaseSupplyBy);
+
+            emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
         }
     }
 
@@ -150,7 +158,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         _updateAccountEpochVotes();
 
-        _withdrawVotingTokenInflationRewards();
+        _withdrawVotingTokenInflationRewards(proposalId);
 
         return super._castVote(proposalId, account, support, reason, params);
     }
@@ -164,25 +172,26 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     /// @dev withdraw pro-rata votingToken inflation rewards when account voted in all proposals from current epoch
-    function _withdrawVotingTokenInflationRewards() private {
+    function _withdrawVotingTokenInflationRewards(uint256 proposalId) private {
         uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
 
         if (
             accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]
                 == epochProposalsCount[relevantEpochForEpochVoteCount]
         ) {
-            // TODO: question should withdraw be taken from SPOGGovernor votingToken balance or from Vault's votingToken balance?
-            // Is there any attack vector if using balanceOf()? Say if someone transfers tokens to SPOGGovernor contract or should we have exact accounting for tokens created through inflation and only distribute that?
+            uint256 accountVotingTokenBalance = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
 
-            uint256 currentVotingPeriodStartBlock = startOfNextVotingPeriod - _votingPeriod;
-            uint256 accountVotingTokenBalance = getVotes(msg.sender, currentVotingPeriodStartBlock);
+            uint256 amountToBeSharedOnProRataBasis = epochVotingTokenInflationAmount[currentVotingPeriodEpoch];
 
-            uint256 totalVotingTokenSupplyApplicable = votingToken.totalSupply() - votingToken.balanceOf(address(this));
+            uint256 totalVotingTokenSupplyApplicable = votingToken.totalSupply() - amountToBeSharedOnProRataBasis;
 
-            uint256 amountToWithdraw =
-                (accountVotingTokenBalance / totalVotingTokenSupplyApplicable) * votingToken.balanceOf(address(this));
+            uint256 percentageOfTotalSupply = accountVotingTokenBalance * 100 / totalVotingTokenSupplyApplicable;
+
+            uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
             votingToken.transfer(msg.sender, amountToWithdraw);
+
+            emit VotingTokenInflationWithdrawn(msg.sender, amountToWithdraw);
         }
     }
 

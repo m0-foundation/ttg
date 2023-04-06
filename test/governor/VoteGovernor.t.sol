@@ -21,6 +21,15 @@ contract SPOGGovernorTest is BaseTest {
     List public list;
     Vault public vault;
 
+    address alice = createUser("alice");
+    address bob = createUser("bob");
+    address carol = createUser("carol");
+
+    uint256 spogVoteAmountToMint = 1000e18;
+
+    uint8 noVote = 0;
+    uint8 yesVote = 1;
+
     function setUp() public {
         deployScript = new SPOGDeployScript();
         deployScript.run();
@@ -41,7 +50,7 @@ contract SPOGGovernorTest is BaseTest {
     }
 
     /**
-     * Helpers *******
+     * Helpers
      */
 
     function proposeAddingNewListToSpog(string memory proposalDescription)
@@ -66,8 +75,28 @@ contract SPOGGovernorTest is BaseTest {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
+    // calculate vote token inflation rewards for voter
+    function calculateVoteTokenInflationRewardsForVoter(address voter, uint256 proposalId)
+        private
+        view
+        returns (uint256)
+    {
+        uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
+
+        uint256 amountToBeSharedOnProRataBasis =
+            voteGovernor.epochVotingTokenInflationAmount(voteGovernor.currentVotingPeriodEpoch());
+
+        uint256 totalVotingTokenSupplyApplicable = spogVote.totalSupply() - amountToBeSharedOnProRataBasis;
+
+        uint256 percentageOfTotalSupply = accountVotingTokenBalance * 100 / totalVotingTokenSupplyApplicable;
+
+        uint256 inflationRewards = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
+
+        return inflationRewards;
+    }
+
     /**
-     * Test Functions *******
+     * Test Functions
      */
 
     function test_StartOfNextVotingPeriod() public {
@@ -96,7 +125,6 @@ contract SPOGGovernorTest is BaseTest {
     function test_CanOnlyVoteOnAProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
-        uint8 yesVote = 1;
 
         // spogVote balance of voter valid for voting
         uint256 spogVoteBalance = spogVote.balanceOf(address(this));
@@ -133,9 +161,6 @@ contract SPOGGovernorTest is BaseTest {
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
-
-        uint8 noVote = 0;
-        uint8 yesVote = 1;
 
         // spogVote balance of voter
         uint256 spogVoteBalance = spogVote.balanceOf(address(this));
@@ -201,6 +226,156 @@ contract SPOGGovernorTest is BaseTest {
         assertEq(yesVotes3, 0, "Proposal3 does not have 0 yes vote");
     }
 
+    function test_UsersGetsVoteTokenInflationAfterVotingOnInAllProposals() public {
+        // set up proposals
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+        (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+
+        // mint ether and spogVote to alice, bob and carol
+        vm.deal({account: alice, newBalance: 1000 ether});
+        spogVote.mint(alice, spogVoteAmountToMint);
+        vm.startPrank(alice);
+        spogVote.delegate(alice); // self delegate
+        vm.stopPrank();
+
+        vm.deal({account: bob, newBalance: 1000 ether});
+        spogVote.mint(bob, spogVoteAmountToMint);
+        vm.startPrank(bob);
+        spogVote.delegate(bob); // self delegate
+        vm.stopPrank();
+
+        vm.deal({account: carol, newBalance: 1000 ether});
+        spogVote.mint(carol, spogVoteAmountToMint);
+        vm.startPrank(carol);
+        spogVote.delegate(carol); // self delegate
+        vm.stopPrank();
+
+        uint256 relevantEpochProposals = voteGovernor.currentVotingPeriodEpoch();
+
+        // epochProposalsCount for epoch 0 should be 3
+        assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
+
+        // cannot vote in epoch 0
+        vm.expectRevert("Governor: vote not currently active");
+        voteGovernor.castVote(proposalId, yesVote);
+
+        // balance of spogVote for voteGovernor should be 0
+        uint256 spogVoteBalanceForVoteGovernorForEpochZero = spogVote.balanceOf(address(voteGovernor));
+        assertEq(spogVoteBalanceForVoteGovernorForEpochZero, 0, "voteGovernor should have 0 spogVote balance");
+
+        // balance of spogVote for Vault should be 0
+        uint256 spogVoteBalanceForVaultForEpochZero = spogVote.balanceOf(address(vault));
+        assertEq(spogVoteBalanceForVaultForEpochZero, 0, "Vault should have 0 spogVote balance");
+
+        // voting period started
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // alice votes on proposal 1
+        vm.startPrank(alice);
+        voteGovernor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        uint256 spogVoteBalanceForVoteGovernorForEpochOne = spogVote.balanceOf(address(voteGovernor));
+        assertGt(
+            spogVoteBalanceForVoteGovernorForEpochOne,
+            spogVoteBalanceForVoteGovernorForEpochZero,
+            "voteGovernor should have more spogVote balance"
+        );
+
+        // bob votes on proposal 1
+        vm.startPrank(bob);
+        voteGovernor.castVote(proposalId, noVote);
+        vm.stopPrank();
+
+        // check that both have voted once in epoch 1
+        assertEq(
+            voteGovernor.accountEpochVotes(alice, relevantEpochProposals), 1, "Alice should have voted once in epoch 1"
+        );
+        assertEq(
+            voteGovernor.accountEpochVotes(bob, relevantEpochProposals), 1, "Bob should have voted once in epoch 1"
+        );
+
+        // alice and bobs vote token balance should be the same as before voting
+        assertEq(spogVote.balanceOf(alice), spogVoteAmountToMint, "Alice should have same spogVote balance");
+        assertEq(spogVote.balanceOf(bob), spogVoteAmountToMint, "Bob should have same spogVote balance");
+
+        // alice votes on proposal 2 and 3
+        vm.startPrank(alice);
+        voteGovernor.castVote(proposalId2, yesVote);
+        voteGovernor.castVote(proposalId3, noVote);
+        vm.stopPrank();
+
+        // bob votes on proposal 2 and 3
+        vm.startPrank(bob);
+        voteGovernor.castVote(proposalId2, noVote);
+        voteGovernor.castVote(proposalId3, noVote);
+        vm.stopPrank();
+
+        // check that both alice and bob have voted 3 times in relevant epoch
+        assertEq(
+            voteGovernor.accountEpochVotes(alice, relevantEpochProposals),
+            3,
+            "Alice should have voted 3 times in epoch 1"
+        );
+        assertEq(
+            voteGovernor.accountEpochVotes(bob, relevantEpochProposals), 3, "Bob should have voted 3 times in epoch 1"
+        );
+
+        // and carol has not voted at all
+        assertEq(
+            voteGovernor.accountEpochVotes(carol, relevantEpochProposals),
+            0,
+            "Carol should have voted 0 times in epoch 1"
+        );
+
+        assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
+
+        // alice and bobs should have received vote token inflationary rewards from epoch 1 for having voted in all proposals proposed from epoch 0
+        assertEq(
+            spogVote.balanceOf(alice),
+            calculateVoteTokenInflationRewardsForVoter(alice, proposalId)
+                + voteGovernor.getVotes(alice, voteGovernor.proposalSnapshot(proposalId)),
+            "Alice should have more spogVote balance"
+        );
+        assertEq(
+            spogVote.balanceOf(bob),
+            calculateVoteTokenInflationRewardsForVoter(bob, proposalId)
+                + voteGovernor.getVotes(bob, voteGovernor.proposalSnapshot(proposalId)),
+            "Bob should have more spogVote balance"
+        );
+
+        // alice and bob have received the same amount of inflation rewards so their balance are the same
+        assertEq(spogVote.balanceOf(alice), spogVote.balanceOf(bob), "Alice and Bob should have same spogVote balance");
+
+        // carol votes on proposal 3 only
+        vm.startPrank(carol);
+        voteGovernor.castVote(proposalId3, noVote);
+        vm.stopPrank();
+
+        // carol voted in 1 proposal 
+        assertEq(
+            voteGovernor.accountEpochVotes(carol, relevantEpochProposals),
+            1,
+            "Carol should have voted 1 times in epoch 1"
+        );
+
+        // voting epoch 1 finished, epoch 2 started
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        voteGovernor.updateStartOfNextVotingPeriod();
+
+        // carol remains with the same balance
+        assertEq(spogVote.balanceOf(carol), spogVoteAmountToMint, "Carol should have same spogVote balance");
+
+        // vault should have received the remaining inflationary rewards from epoch 1
+        assertGt(
+            spogVote.balanceOf(address(vault)),
+            spogVoteBalanceForVaultForEpochZero,
+            "vault should have received the remaining inflationary rewards from epoch 1"
+        );
+    }
+
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
         (
             uint256 proposalId,
@@ -209,7 +384,6 @@ contract SPOGGovernorTest is BaseTest {
             bytes[] memory calldatas,
             bytes32 hashedDescription
         ) = proposeAddingNewListToSpog("new list to spog");
-        uint8 yesVote = 1;
 
         address voter = address(this);
 
