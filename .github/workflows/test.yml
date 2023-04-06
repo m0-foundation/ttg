@@ -39,12 +39,13 @@ jobs:
           forge coverage --report lcov
         id: coverage
 
-      - name: Setup LCOV
-        uses: hrishikesh-kadam/setup-lcov@v1
+      - name: Install genhtml
+        run: sudo apt-get install -y genhtml
 
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v3
         with:
-          coverage-files: ./lcov.info
+          coverage-files: lcov.info
+          artifact-name: code-coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
