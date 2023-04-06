@@ -39,8 +39,8 @@ jobs:
           forge coverage --report lcov
         id: coverage
 
-      - name: Install genhtml
-        run: sudo apt-get install -y genhtml
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
 
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v3
