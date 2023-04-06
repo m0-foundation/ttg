@@ -78,6 +78,21 @@ contract SPOGGovernorTest is BaseTest {
         assertEq(startOfNextVotingPeriod, block.number + votingPeriod);
     }
 
+    function test_AccurateIncrementOfCurrentVotingPeriodEpoch() public {
+        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+
+        assertEq(currentVotingPeriodEpoch, 0); // initial value
+
+        for (uint256 i = 0; i < 6; i++) {
+            vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+            voteGovernor.updateStartOfNextVotingPeriod();
+            currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+
+            assertEq(currentVotingPeriodEpoch, i + 1);
+        }
+    }
+
     function test_CanOnlyVoteOnAProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
@@ -238,7 +253,6 @@ contract SPOGGovernorTest is BaseTest {
             spogVoteSupplyAfterFirstPeriod + amountAddedByInflation2,
             "Vote token supply didn't inflate correctly in the second period"
         );
-
     }
 
     function test_Revert_Propose_WhenMoreThanOneProposalPassed() public {
