@@ -194,12 +194,17 @@ contract SPOGGovernorTest is BaseTest {
         uint8 noVote = 0;
         uint8 yesVote = 1;
 
+        uint256[] memory proposals = new uint256[](2);
+        proposals[0] = proposalId;
+        proposals[1] = proposalId2;
+
+        uint8[] memory support  = new uint8[](2);
+        support[0] = yesVote;
+        support[1] = noVote;
+
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
-        voteGovernor.castVote(proposalId, yesVote);
-
-        vm.expectRevert("Governor: vote not currently active");
-        voteGovernor.castVote(proposalId2, noVote);
+        voteGovernor.castVotes(proposals, support);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
@@ -212,14 +217,6 @@ contract SPOGGovernorTest is BaseTest {
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        uint256[] memory proposals = new uint256[](2);
-        proposals[0] = proposalId;
-        proposals[1] = proposalId2;
-
-        uint8[] memory support  = new uint8[](2);
-        support[0] = yesVote;
-        support[1] = noVote;
 
         // cast vote on proposals
         voteGovernor.castVotes(proposals, support);
