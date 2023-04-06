@@ -16,8 +16,11 @@ contract SPOG is SPOGStorage, ERC165 {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     address public immutable vault;
-    uint256 private constant inMasterList = 1;
 
+    // List of methods that can be executed by SPOG governance
+    mapping(bytes4 => bool) public governedMethods;
+
+    uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
 
     // List of addresses that are part of the masterlist
@@ -45,6 +48,18 @@ contract SPOG is SPOGStorage, ERC165 {
         vault = _vault;
 
         initSPOGData(_initSPOGData);
+        initGovernedMethods();
+    }
+
+    function initGovernedMethods() internal {
+        // TODO: review if there is better, more efficient way to do it
+        governedMethods[this.append.selector] = true;
+        governedMethods[this.changeTax.selector] = true;
+        governedMethods[this.remove.selector] = true;
+        governedMethods[this.removeList.selector] = true;
+        governedMethods[this.addNewList.selector] = true;
+        governedMethods[this.change.selector] = true;
+        governedMethods[this.emergencyRemove.selector] = true;
     }
 
     /// @param _initSPOGData The data used to initialize spogData
@@ -146,7 +161,8 @@ contract SPOG is SPOGStorage, ERC165 {
     // ********** SPOG Governance interface FUNCTIONS ********** //
     // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
-    /// @notice Create a new proposal
+    /// @notice Create a new proposal.
+    // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
     /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
@@ -159,7 +175,29 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         string memory description
     ) external override returns (uint256) {
-        bytes4 executableFuncSelector = _validateProposal(targets, values, calldatas);
+        // allow only 1 SPOG change with no value per proposal at a time
+        require(targets.length == 1, "Only 1 change per proposal");
+        require(targets[0] == address(this), "Only SPOG can be target");
+        require(values[0] == 0, "No ETH value should be passed");
+
+        return propose(calldatas[0], description);
+    }
+
+    /// @notice Create a new proposal
+    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
+    /// @param callData The calldata of the proposal
+    /// @param description The description of the proposal
+    /// @return proposalId The ID of the proposal
+    function propose(bytes memory callData, string memory description) public override returns (uint256) {
+        bytes4 executableFuncSelector = bytes4(callData);
+        require(governedMethods[executableFuncSelector], "Method is not supported");
+
+        address[] memory targets = new address[](1);
+        targets[0] = address(this);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = callData;
 
         // For all the operations pay flat fee, except for emergency remove pay 12 * fee
         uint256 fee = executableFuncSelector == this.emergencyRemove.selector
@@ -199,7 +237,7 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) external override returns (uint256) {
-        bytes4 executableFuncSelector = _validateProposal(targets, values, calldatas);
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
         uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
 
         // Check that both value and vote governance approved parameter change
@@ -231,7 +269,7 @@ contract SPOG is SPOGStorage, ERC165 {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    // ********** PRIVATE Function ********** //
+    // ********** Private FUNCTIONS ********** //
 
     /// @notice pay tax from the caller to the SPOG
     /// @param _amount The amount to be transferred
@@ -251,31 +289,6 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // remove the address from the list
         _list.remove(_address);
-    }
-
-    function _isSupportedFuncSelector(bytes4 _selector) private pure returns (bool) {
-        // @note To save gas order checks by the probability of being called from highest to lowest,
-        // `append` will be the most common method, and `change` - the least common
-        return _selector == this.append.selector || _selector == this.changeTax.selector
-            || _selector == this.remove.selector || _selector == this.addNewList.selector
-            || _selector == this.removeList.selector || _selector == this.change.selector
-            || _selector == this.emergencyRemove.selector;
-    }
-
-    function _validateProposal(address[] memory targets, uint256[] memory values, bytes[] memory calldatas)
-        private
-        view
-        returns (bytes4)
-    {
-        // allow only 1 SPOG change with no value per proposal at a time
-        require(targets.length == 1, "Only 1 change per proposal");
-        require(targets[0] == address(this), "Only SPOG can be target");
-        require(values[0] == 0, "No ETH value should be passed");
-
-        bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        require(_isSupportedFuncSelector(executableFuncSelector), "Method is not supported");
-
-        return executableFuncSelector;
     }
 
     fallback() external {
