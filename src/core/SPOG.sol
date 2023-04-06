@@ -16,8 +16,11 @@ contract SPOG is SPOGStorage, ERC165 {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     address public immutable vault;
-    uint256 private constant inMasterList = 1;
 
+    // List of methods that can be executed by SPOG governance
+    mapping(bytes4 => bool) public governedMethods;
+
+    uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
 
     // List of addresses that are part of the masterlist
@@ -28,7 +31,6 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _initSPOGData The data used to initialize spogData
     /// @param _vault The address of the `Vault` contract
     /// @param _voteTime The duration of a voting epoch in blocks
-    /// @param _forkTime The duration that $VALUE holders have to choose a fork
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _voteGovernor The address of the `SPOGGovernor` which $VOTE token is used for voting
@@ -37,16 +39,27 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes memory _initSPOGData,
         address _vault,
         uint256 _voteTime,
-        uint256 _forkTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor
-    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _forkTime, _voteQuorum, _valueQuorum) {
+    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _voteQuorum, _valueQuorum) {
         // TODO: add require statements for variables
         vault = _vault;
 
         initSPOGData(_initSPOGData);
+        initGovernedMethods();
+    }
+
+    function initGovernedMethods() internal {
+        // TODO: review if there is better, more efficient way to do it
+        governedMethods[this.append.selector] = true;
+        governedMethods[this.changeTax.selector] = true;
+        governedMethods[this.remove.selector] = true;
+        governedMethods[this.removeList.selector] = true;
+        governedMethods[this.addNewList.selector] = true;
+        governedMethods[this.change.selector] = true;
+        governedMethods[this.emergencyRemove.selector] = true;
     }
 
     /// @param _initSPOGData The data used to initialize spogData
@@ -65,8 +78,9 @@ contract SPOG is SPOGStorage, ERC165 {
             uint256 _reward,
             uint256 _inflatorTime,
             uint256 _sellTime,
+            uint256 _forkTime,
             uint256 _tax
-        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256));
+        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256, uint256));
 
         spogData = SPOGData({
             cash: IERC20(_cash),
@@ -75,6 +89,7 @@ contract SPOG is SPOGStorage, ERC165 {
             reward: _reward,
             inflatorTime: _inflatorTime,
             sellTime: _sellTime,
+            forkTime: _forkTime,
             tax: _tax
         });
     }
@@ -128,14 +143,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
     function remove(address _address, IList _list) external onlyVoteGovernor {
-        // require that the list is on the master list
-        require(masterlist.contains(address(_list)), "List is not on the master list");
-
-        // require that the address is on the list
-        require(_list.contains(_address), "Address is not on the list");
-
-        // remove the address from the list
-        _list.remove(_address);
+        _removeFromList(_address, _list);
         emit AddressRemovedFromList(address(_list), _address);
     }
 
@@ -143,56 +151,107 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
+    // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
+    // TODO: IMPORTANT: implement immediate remove
     function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
-        _pay(EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax);
-
-        address[] memory targets = new address[](1);
-        uint256[] memory values = new uint256[](1);
-        bytes[] memory calldatas = new bytes[](1);
-
-        targets[0] = address(this);
-        values[0] = 0;
-        calldatas[0] = abi.encodeWithSignature("remove(address,IList)", _address, _list);
-
-        string memory description = "Emergency Remove address from list";
-
-        uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
-
-        emit NewProposal(proposalId);
+        _removeFromList(_address, _list);
+        emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
-    /// @dev check SPOG interface support
-    /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
-    }
+    // ********** SPOG Governance interface FUNCTIONS ********** //
+    // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
-    /// @notice Create a new proposal
-    /// @dev `propose` function of the `Governor` contract
-    /// @param governor The SPOG governor contract. Either `voteGovernor` or `valueGovernor`
+    /// @notice Create a new proposal.
+    // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
+    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
     /// @param calldatas The calldatas of the proposal
     /// @param description The description of the proposal
     /// @return proposalId The ID of the proposal
     function propose(
-        ISPOGGovernor governor,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public returns (uint256) {
-        // TODO: check for tax for emergency remove proposals
-        // TODO: check that governor is one of the two governors?
-        // require that the caller pays the tax for each proposal
-        _pay(targets.length * spogData.tax);
+    ) external override returns (uint256) {
+        // allow only 1 SPOG change with no value per proposal at a time
+        require(targets.length == 1, "Only 1 change per proposal");
+        require(targets[0] == address(this), "Only SPOG can be target");
+        require(values[0] == 0, "No ETH value should be passed");
 
-        uint256 proposalId = governor.propose(targets, values, calldatas, description);
-        emit NewProposal(proposalId);
+        return propose(calldatas[0], description);
+    }
+
+    /// @notice Create a new proposal
+    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
+    /// @param callData The calldata of the proposal
+    /// @param description The description of the proposal
+    /// @return proposalId The ID of the proposal
+    function propose(bytes memory callData, string memory description) public override returns (uint256) {
+        bytes4 executableFuncSelector = bytes4(callData);
+        require(governedMethods[executableFuncSelector], "Method is not supported");
+
+        address[] memory targets = new address[](1);
+        targets[0] = address(this);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = callData;
+
+        // For all the operations pay flat fee, except for emergency remove pay 12 * fee
+        uint256 fee = executableFuncSelector == this.emergencyRemove.selector
+            ? EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax
+            : spogData.tax;
+        _pay(fee);
+
+        uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
+
+        // If we request to change config parameter, value governance should vote too
+        if (executableFuncSelector == this.change.selector) {
+            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+            // proposal ids should match
+            if (valueProposalId != proposalId) {
+                revert("Vote and value proposal ids do not match");
+            }
+
+            emit NewDoubleQuorumProposal(proposalId);
+        } else {
+            emit NewProposal(proposalId);
+        }
 
         return proposalId;
     }
 
+    /// @notice Execute a proposal
+    /// @dev Calls `execute` function of the vote governors, possibly checking value governor quorum (double quorum)
+    /// @param targets The targets of the proposal
+    /// @param values The values of the proposal
+    /// @param calldatas The calldatas of the proposal
+    /// @param descriptionHash The description hash of the proposal
+    /// @return proposalId The ID of the proposal
+    function execute(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) external override returns (uint256) {
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
+        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
+
+        // Check that both value and vote governance approved parameter change
+        if (executableFuncSelector == this.change.selector) {
+            if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {
+                revert("Value governor did not approve the proposal");
+            }
+        }
+
+        voteGovernor.execute(targets, values, calldatas, descriptionHash);
+        return proposalId;
+    }
+
+    // ********** Utility FUNCTIONS ********** //
     function tokenInflationCalculation() public view returns (uint256) {
         if (msg.sender == address(voteGovernor)) {
             uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
@@ -204,7 +263,13 @@ contract SPOG is SPOGStorage, ERC165 {
         return 0;
     }
 
-    // ********** PRIVATE Function ********** //
+    /// @dev check SPOG interface support
+    /// @param interfaceId The interface ID to check
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    // ********** Private FUNCTIONS ********** //
 
     /// @notice pay tax from the caller to the SPOG
     /// @param _amount The amount to be transferred
@@ -213,6 +278,17 @@ contract SPOG is SPOGStorage, ERC165 {
         require(_amount >= spogData.tax, "Caller must pay tax to call this function");
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
+    }
+
+    function _removeFromList(address _address, IList _list) private {
+        // require that the list is on the master list
+        require(masterlist.contains(address(_list)), "List is not on the master list");
+
+        // require that the address is on the list
+        require(_list.contains(_address), "Address is not on the list");
+
+        // remove the address from the list
+        _list.remove(_address);
     }
 
     fallback() external {
