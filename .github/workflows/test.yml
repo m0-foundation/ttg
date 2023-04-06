@@ -41,8 +41,10 @@ jobs:
           forge coverage --report lcov
         id: coverage
 
-      - name: Install lcov
-        run: sudo apt-get install -y lcov
+      - name: Install lcov and filter report
+        run: |
+          sudo apt-get install -y lcov
+          lcov --remove ./lcov.info -o ./lcov.info 'script/*' 'test/*'
 
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v3
