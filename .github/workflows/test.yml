@@ -43,9 +43,8 @@ jobs:
         run: sudo apt-get install -y lcov
 
       - name: Report code coverage
-        uses: zgosalvez/github-actions-report-lcov@v3
+        uses: kefasjw/lcov-pull-request-report@v1
         with:
-          coverage-files: lcov.info
+          lcov-file: lcov.info
           artifact-name: code-coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          update-comment: true
