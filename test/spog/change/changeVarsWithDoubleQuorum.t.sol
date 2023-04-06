@@ -12,7 +12,7 @@ contract SPOG_change is SPOG_Base {
     uint8 internal yesVote;
     uint8 internal noVote;
 
-    event DoubleQuorumInitiated(bytes32 indexed identifier);
+    event NewDoubleQuorumProposal(uint256 indexed proposalId);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
 
     function setUp() public override {
@@ -45,6 +45,11 @@ contract SPOG_change is SPOG_Base {
 
         // create proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
+
+        // Check the event is emitted
+        expectEmit();
+        emit NewDoubleQuorumProposal(proposalId);
+
         uint256 spogProposalId = spog.propose(callData, description);
         assertTrue(spogProposalId == proposalId, "spog proposal id does not match vote governor proposal id");
 
@@ -158,22 +163,13 @@ contract SPOG_change is SPOG_Base {
     }
 
     function test_Change_SPOGProposalToChangeVariableInSpog() public {
-        // create proposal to change variable in spog
-        address[] memory targets = new address[](1);
-        targets[0] = address(spog);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-
-        calldatas[0] = abi.encodeWithSignature("change(bytes32,bytes)", reward, elevenAsCalldataValue);
-        string memory description = "Change reward variable in spog";
-
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
-
-        // create proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeRewardChange("Change reward variable in spog");
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
