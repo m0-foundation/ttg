@@ -57,7 +57,7 @@ abstract contract SPOGStorage is ISPOG {
     }
 
     /// @param _initSPOGData The data used to initialize spogData
-    function initSPOGData(bytes memory _initSPOGData) private {
+    function initSPOGData(bytes memory _initSPOGData) internal {
         // _cash The currency accepted for tax payment in the SPOG (must be ERC20)
         // _taxRange The minimum and maximum value of `tax`
         // _inflator The percentage supply increase in $VOTE for each voting epoch

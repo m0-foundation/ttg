@@ -56,12 +56,12 @@ contract SPOG_change is SPOG_Base {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function test_Revert_ChangeWhenNotCalledFromGovernance() public {
+    function test_Revert_Change_WhenNotCalledFromGovernance() public {
         vm.expectRevert("SPOG: Only vote governor");
         spog.change(reward, elevenAsCalldataValue);
     }
 
-    function test_Revert_WhenPassingAnIncorrectParamsToChange() public {
+    function test_Revert_Change_WhenPassingAnIncorrectParamsToChange() public {
         bytes32 incorrectParams = "tax";
 
         address[] memory targets = new address[](1);
@@ -101,7 +101,7 @@ contract SPOG_change is SPOG_Base {
         assertFalse(tax == 11, "Tax should not have been changed");
     }
 
-    function test_Revert_WhenValueHoldersDoNotVote() public {
+    function test_Revert_Change_WhenValueHoldersDoNotVote() public {
         (
             uint256 proposalId,
             address[] memory targets,
@@ -130,7 +130,7 @@ contract SPOG_change is SPOG_Base {
         assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
     }
 
-    function test_Revert_WhenVoteHoldersDoNotAgree() public {
+    function test_Revert_Change_WhenVoteHoldersDoNotAgree() public {
         (
             uint256 proposalId,
             address[] memory targets,
