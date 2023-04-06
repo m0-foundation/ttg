@@ -161,7 +161,8 @@ contract SPOG is SPOGStorage, ERC165 {
     // ********** SPOG Governance interface FUNCTIONS ********** //
     // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
-    /// @notice Create a new proposal
+    /// @notice Create a new proposal.
+    // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
     /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
     /// @param targets The targets of the proposal
     /// @param values The values of the proposal
