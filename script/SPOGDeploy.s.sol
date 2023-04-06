@@ -82,6 +82,10 @@ contract SPOGDeployScript is BaseScript {
         IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), address(voteGovernor));
         IAccessControl(address(value)).grantRole(value.MINTER_ROLE(), address(valueGovernor));
 
+        // grant minter role for test runner
+        IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), msg.sender);
+        IAccessControl(address(value)).grantRole(value.MINTER_ROLE(), msg.sender);
+
         spogFactory = new SPOGFactory();
 
         bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
