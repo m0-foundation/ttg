@@ -22,122 +22,8 @@ contract SPOG_change is SPOG_Base {
     }
 
     function test_Revert_ChangeWhenNotCalledFromGovernance() public {
-        vm.expectRevert("SPOG: Only vote or value governor");
+        vm.expectRevert("SPOG: Only vote governor");
         spog.change(reward, elevenAsCalldataValue);
-    }
-
-    function test_Revert_ChangeMustBeProposedByVoteHoldersFirst() public {
-        // value holders vote on proposal
-        address[] memory targetsForValueHolders = new address[](1);
-        targetsForValueHolders[0] = address(spog);
-        uint256[] memory valuesForValueHolders = new uint256[](1);
-        valuesForValueHolders[0] = 0;
-        bytes[] memory calldatasForValueHolders = new bytes[](1);
-
-        calldatasForValueHolders[0] = abi.encodeWithSignature("change(bytes32,bytes)", reward, elevenAsCalldataValue);
-        string memory descriptionForValueHolders = "SPOGGovernorValue change reward variable in spog";
-
-        (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-        getProposalIdAndHashedDescription(
-            valueGovernor,
-            targetsForValueHolders,
-            valuesForValueHolders,
-            calldatasForValueHolders,
-            descriptionForValueHolders
-        );
-
-        // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(
-            ISPOGGovernor(address(valueGovernor)),
-            targetsForValueHolders,
-            valuesForValueHolders,
-            calldatasForValueHolders,
-            descriptionForValueHolders
-        );
-
-        vm.roll(block.number + valueGovernor.votingDelay() + 1);
-
-        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of valueGovernor voting period
-        vm.roll(block.number + deployScript.forkTime() + 1);
-
-        vm.expectRevert("SPOG: Double quorum not met");
-        valueGovernor.execute(
-            targetsForValueHolders, valuesForValueHolders, calldatasForValueHolders, hashedDescriptionForValueHolders
-        );
-
-        (,,,, uint256 rewardSecondCheck,) = spog.spogData();
-        // assert that reward was not modified
-        assertTrue(rewardSecondCheck == deployScript.reward(), "Reward must not be changed");
-    }
-
-    function test_Revert_WhenValueQuorumIsReachedAfterDoubleQuorumDeadline() public {
-        address[] memory targets = new address[](1);
-        targets[0] = address(spog);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-
-        calldatas[0] = abi.encodeWithSignature("change(bytes32,bytes)", reward, elevenAsCalldataValue);
-        string memory description = "Change reward variable in spog";
-
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
-
-        // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
-
-        // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
-        // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
-
-        bytes32 identifier = keccak256(abi.encodePacked(reward, elevenAsCalldataValue));
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
-
-        (,,,, uint256 rewardFirstCheck,) = spog.spogData();
-
-        // assert that reward has not been changed yet as it needs to be voted on again by value holders
-        assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
-
-        /**
-         *  value holders vote on proposal *********
-         */
-        (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
-
-        // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
-            valueGovernor.updateStartOfNextVotingPeriod();
-        }
-
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
-
-        vm.roll(block.number + valueGovernor.votingDelay() + 1);
-
-        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
-
-        // fast forward to a time longer that double quorum deadline
-        vm.roll(block.number + deployScript.forkTime() * 3); // time longer than double quorum deadline
-
-        // must revert as double quorum deadline has passed
-        vm.expectRevert("SPOG: Double quorum deadline passed");
-        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
-
-        (uint256 voteValueQuorumDeadline, bool passedVoteQuorum) = spog.doubleQuorumChecker(identifier);
-
-        assertTrue(passedVoteQuorum, "Vote quorum must have been passed");
-        assertTrue(voteValueQuorumDeadline < block.number, "Vote value quorum deadline must have passed");
-
-        // assert that reward was not modified via valueGovernor holder vote
-        (,,,, uint256 rewardSecondCheck,) = spog.spogData();
-        assertFalse(rewardSecondCheck == 11, "Reward should not have been changed");
     }
 
     function test_Revert_WhenPassingAnIncorrectParamsToChange() public {
@@ -157,50 +43,26 @@ contract SPOG_change is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        // cast vote on proposal
+        // vote holders vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
+
+        // value holders vote on proposal
+        valueGovernor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
-
-        /**
-         *  value holders vote on proposal *********
-         */
-        (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
-
-        // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
-            valueGovernor.updateStartOfNextVotingPeriod();
-        }
-
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
-
-        vm.roll(block.number + valueGovernor.votingDelay() + 1);
-
-        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
-
-        vm.roll(block.number + deployScript.forkTime());
-
-        // must revert because of incorrect params
-
-        // test revert for custom error:
-        // bytes4 selector = bytes4(keccak256("InvalidParameter(bytes32)"));
-        // vm.expectRevert(abi.encodeWithSelector(selector, incorrectParams));
-
         // another way to get custom error selector:
         vm.expectRevert(abi.encodeWithSelector(ISPOG.InvalidParameter.selector, incorrectParams));
-        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax was not modified
-        (uint256 tax,,,,,) = spog.spogData();
+        (uint256 tax,,,,,,) = spog.spogData();
         assertFalse(tax == 11, "Tax should not have been changed");
     }
 
@@ -218,59 +80,31 @@ contract SPOG_change is SPOG_Base {
         (bytes32 hashedDescription, uint256 proposalId) =
             getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
-        // vote on proposal
+        // create proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        // cast vote on proposal
+        // vote holders vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
+        // value holders vote on proposal
+        valueGovernor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(reward, elevenAsCalldataValue));
-        // check that DoubleQuorumInitiated event was triggered
-        expectEmit();
-        emit DoubleQuorumInitiated(identifier);
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
-
-        (,,,, uint256 rewardFirstCheck,) = spog.spogData();
-
-        // assert that reward has not been changed yet as it needs to be voted on again by value holders
-        assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
-
-        /**
-         *  value holders vote on proposal *********
-         */
-        vm.warp(1 hours);
-
-        (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
-
-        // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
-            valueGovernor.updateStartOfNextVotingPeriod();
-        }
-
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
-
-        vm.roll(block.number + valueGovernor.votingDelay() + 1);
-
-        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of valueGovernor voting period
-        vm.roll(block.number + deployScript.forkTime() + 1);
-
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
-        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,, uint256 rewardSecondCheck,) = spog.spogData();
-        // assert that reward was modified by double quorum
-        assertTrue(rewardSecondCheck == 11, "Reward was not changed");
+        (,,,,, uint256 rewardFirstCheck,) = spog.spogData();
+
+        // assert that reward been changed
+        assertTrue(rewardFirstCheck == 11, "Reward should have been changed");
     }
 
     function test_Change_ChangeCashToken_SPOGProposalToChangeVariableInSpog() public {
@@ -295,59 +129,30 @@ contract SPOG_change is SPOG_Base {
         (bytes32 hashedDescription, uint256 proposalId) =
             getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
-        // vote on proposal
+        // create proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(voteGovernor)), targets, values, calldatas, description);
+        spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        // cast vote on proposal
+        // vote holders vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
+        // value holders vote on proposal
+        valueGovernor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(cash, newCash));
-        // check that DoubleQuorumInitiated event was triggered
-        expectEmit();
-        emit DoubleQuorumInitiated(identifier);
-        voteGovernor.execute(targets, values, calldatas, hashedDescription);
-
-        (,,,,, IERC20 cashFirstCheck) = spog.spogData();
-
-        // assert that cash has not been changed yet as it needs to be voted on again by value holders
-        assertFalse(address(cashFirstCheck) == address(newCashInstance), "Reward should not have been changed");
-        assertTrue(address(cashFirstCheck) == address(deployScript.cash()), "Cash was changed");
-
-        /**
-         *  value holders vote on proposal *********
-         */
-        vm.warp(1 hours);
-
-        (bytes32 hashedDescriptionForValueHolders, uint256 proposalIdForValueHolders) =
-            getProposalIdAndHashedDescription(valueGovernor, targets, values, calldatas, description);
-
-        // must update start of next voting period so as to not revert on votingDelay() check
-        while (block.number >= valueGovernor.startOfNextVotingPeriod()) {
-            valueGovernor.updateStartOfNextVotingPeriod();
-        }
-
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(ISPOGGovernor(address(valueGovernor)), targets, values, calldatas, description);
-
-        vm.roll(block.number + valueGovernor.votingDelay() + 1);
-
-        valueGovernor.castVote(proposalIdForValueHolders, yesVote);
-        // fast forward to end of valueGovernor voting period
-        vm.roll(block.number + deployScript.forkTime() + 1);
-
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
-        valueGovernor.execute(targets, values, calldatas, hashedDescriptionForValueHolders);
+        spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,,, IERC20 cashSecondCheck) = spog.spogData();
-        // assert that cash was modified by double quorum
-        assertTrue(address(cashSecondCheck) == address(newCashInstance), "Reward was not changed");
+        (,,,,,, IERC20 cashFirstCheck) = spog.spogData();
+
+        // assert that cash has been changed
+        assertTrue(address(cashFirstCheck) == address(newCashInstance), "Cash token was not changed");
     }
 }

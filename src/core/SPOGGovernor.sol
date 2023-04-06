@@ -120,19 +120,21 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return super.propose(targets, values, calldatas, description);
     }
 
-    /// @notice override to use updateStartOfNextVotingPeriod
+    /// @notice override to use updateStartOfNextVotingPeriod and check that caller is SPOG
     /**
-     * @dev Hook after execution is triggered.
+     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
-    function _afterExecute(
+    function _execute(
         uint256 proposalId,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal virtual override {
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can execute");
+
         updateStartOfNextVotingPeriod();
-        super._afterExecute(proposalId, targets, values, calldatas, descriptionHash);
+        super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     /// @notice override to use updateStartOfNextVotingPeriod
