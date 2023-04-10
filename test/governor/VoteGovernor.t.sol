@@ -75,6 +75,11 @@ contract SPOGGovernorTest is BaseTest {
      * Test Functions *******
      */
 
+    function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
+        vm.expectRevert("SPOGGovernor: only SPOG can register emergency proposal");
+        voteGovernor.registerEmergencyProposal(1);
+    }
+
     function test_StartOfNextVotingPeriod() public {
         uint256 votingPeriod = voteGovernor.votingPeriod();
         uint256 startOfNextVotingPeriod = voteGovernor.startOfNextVotingPeriod();
