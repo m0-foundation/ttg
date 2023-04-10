@@ -228,7 +228,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     // ********** Private FUNCTIONS ********** //
 
-    function initGovernedMethods() internal {
+    function initGovernedMethods() private {
         // TODO: review if there is better, more efficient way to do it
         governedMethods[this.append.selector] = true;
         governedMethods[this.changeTax.selector] = true;
