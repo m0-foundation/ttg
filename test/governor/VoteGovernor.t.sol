@@ -1,43 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "forge-std/console.sol";
-import {BaseTest} from "test/Base.t.sol";
-
-import "src/core/SPOG.sol";
-import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
-import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {IList} from "src/interfaces/IList.sol";
-import {List} from "src/periphery/List.sol";
+import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
-import {Vault} from "src/periphery/Vault.sol";
+import "forge-std/console.sol";
 
-contract SPOGGovernorTest is BaseTest {
-    SPOG public spog;
-    SPOGVotes public spogVote;
-    SPOGGovernor public voteGovernor;
-    SPOGDeployScript public deployScript;
-    List public list;
-    Vault public vault;
-
-    function setUp() public {
-        deployScript = new SPOGDeployScript();
-        deployScript.run();
-
-        spog = deployScript.spog();
-        spogVote = SPOGVotes(address(deployScript.vote()));
-        voteGovernor = deployScript.voteGovernor();
-
-        // mint spogVote to address(this) and self-delegate
-        spogVote.mint(address(this), 100e18);
-        spogVote.delegate(address(this));
-
-        // deploy list and change admin to spog
-        list = new List("My List");
-        list.changeAdmin(address(spog));
-
-        vault = deployScript.vault();
+contract SPOGGovernorTest is SPOG_Base {
+    // Setup function, add test-specific initializations here
+    function setUp() public override {
+        super.setUp();
     }
 
     /**

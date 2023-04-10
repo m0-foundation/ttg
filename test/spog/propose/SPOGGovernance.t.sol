@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "test/shared/SPOG_Base.t.sol";
+import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 
 contract SPOGGovernanceTest is SPOG_Base {
+    // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
     }
