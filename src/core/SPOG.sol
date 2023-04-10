@@ -206,9 +206,14 @@ contract SPOG is SPOGStorage, ERC165 {
         _pay(fee);
 
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
+        // Register emergency proposal with vote governor
+        if (executableFuncSelector == this.emergencyRemove.selector) {
+            voteGovernor.registerEmergencyProposal(proposalId);
 
+            emit NewEmergencyProposal(proposalId);
+        }
         // If we request to change config parameter, value governance should vote too
-        if (executableFuncSelector == this.change.selector) {
+        else if (executableFuncSelector == this.change.selector) {
             uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
 
             // proposal ids should match
