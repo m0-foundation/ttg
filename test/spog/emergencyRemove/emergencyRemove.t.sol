@@ -44,7 +44,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // emergency propose, 12 * tax price
         deployScript.cash().approve(address(spog), spog.EMERGENCY_REMOVE_TAX_MULTIPLIER() * deployScript.tax());
 
-        // Check that event is emitted
+        // Check that `NewEmergencyProposal` event is emitted
         expectEmit();
         emit NewEmergencyProposal(proposalId);
         spog.propose(targets, values, calldatas, description);

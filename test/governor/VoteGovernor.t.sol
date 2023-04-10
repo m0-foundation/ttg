@@ -21,6 +21,8 @@ contract SPOGGovernorTest is BaseTest {
     List public list;
     Vault public vault;
 
+    event NewSingleQuorumProposal(uint256 indexed proposalId);
+
     function setUp() public {
         deployScript = new SPOGDeployScript();
         deployScript.run();
@@ -61,6 +63,9 @@ contract SPOGGovernorTest is BaseTest {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
+        // Check that `NewSingleQuorumProposal` event is emitted
+        expectEmit();
+        emit NewSingleQuorumProposal(proposalId);
         spog.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);

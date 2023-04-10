@@ -223,7 +223,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
             emit NewDoubleQuorumProposal(proposalId);
         } else {
-            emit NewProposal(proposalId);
+            emit NewSingleQuorumProposal(proposalId);
         }
 
         return proposalId;
