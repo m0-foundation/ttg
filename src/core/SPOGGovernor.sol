@@ -75,12 +75,13 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @param proposalIds an array of proposalIds
     /// @param support an array of vote values for each proposal
     function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns(uint256[] memory) {
-      uint propLength = proposalIds.length;
-      uint supLength = support.length;
+      uint256 propLength = proposalIds.length;
+      uint256 supLength = support.length;
       require(propLength == supLength, "Array mismatch");
       uint256[] memory results = new uint256[](propLength);
-      for(uint i = 0; i < propLength; i++) {
-        results[i] = (castVote(proposalIds[i], support[i]));
+      for(uint256 i = 0; i < propLength;) {
+        results[i] = castVote(proposalIds[i], support[i]);
+        unchecked {  ++i; }
       }
       return results;
     }
