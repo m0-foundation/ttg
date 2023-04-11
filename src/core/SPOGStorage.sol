@@ -56,6 +56,38 @@ abstract contract SPOGStorage is ISPOG {
         _;
     }
 
+    /// @param _initSPOGData The data used to initialize spogData
+    function initSPOGData(bytes memory _initSPOGData) internal {
+        // _cash The currency accepted for tax payment in the SPOG (must be ERC20)
+        // _taxRange The minimum and maximum value of `tax`
+        // _inflator The percentage supply increase in $VOTE for each voting epoch
+        // _reward The number of $VALUE to be distributed in each voting epoch
+        // _inflatorTime The duration of an auction if $VOTE is inflated (should be less than `VOTE TIME`)
+        // _sellTime The duration of an auction if `SELL` is called
+        // _tax The cost (in `cash`) to call various functions
+        (
+            address _cash,
+            uint256[2] memory _taxRange,
+            uint256 _inflator,
+            uint256 _reward,
+            uint256 _inflatorTime,
+            uint256 _sellTime,
+            uint256 _forkTime,
+            uint256 _tax
+        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256, uint256));
+
+        spogData = SPOGData({
+            cash: IERC20(_cash),
+            taxRange: _taxRange,
+            inflator: _inflator,
+            reward: _reward,
+            inflatorTime: _inflatorTime,
+            sellTime: _sellTime,
+            forkTime: _forkTime,
+            tax: _tax
+        });
+    }
+
     /// @dev Getter for taxRange. It returns the minimum and maximum value of `tax`
     /// @return The minimum and maximum value of `tax`
     function taxRange() external view returns (uint256, uint256) {
