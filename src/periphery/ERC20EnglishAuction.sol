@@ -11,7 +11,8 @@ contract EnglishAuction {
     uint256 public highestBid;
     address public highestBidder;
     uint256 public minimumBidIncrement;
-    bool public auctionEnded;
+    uint256 public auctionTokenAmount;
+    bool public auctionCompleted;
     address public vault;
 
     event HighestBidIncreased(address indexed bidder, uint256 amount);
@@ -22,13 +23,18 @@ contract EnglishAuction {
         IERC20 _paymentToken,
         uint256 _auctionDuration,
         uint256 _minimumBidIncrement,
+        uint256 _auctionTokenAmount,
         address _vault
     ) {
         auctionToken = _auctionToken;
         paymentToken = _paymentToken;
         auctionEndTime = block.timestamp + _auctionDuration;
         minimumBidIncrement = _minimumBidIncrement;
+        auctionTokenAmount = _auctionTokenAmount;
         vault = _vault;
+
+        require(auctionToken.transferFrom(vault, address(this), auctionTokenAmount), "Token transfer failed");
+
     }
 
     function bid(uint256 amount) public {
@@ -46,17 +52,27 @@ contract EnglishAuction {
     }
 
     function endAuction() public {
-        require(!auctionEnded, "Auction already ended");
+        require(!auctionCompleted, "Auction already ended");
         require(block.timestamp >= auctionEndTime, "Auction not yet ended");
         require(highestBidder == msg.sender, "Not the highest bidder");
 
-        auctionEnded = true;
-        emit AuctionEnded(highestBidder, highestBid);
+        auctionCompleted = true;
 
         // Transfer the auctioned tokens to the highest bidder
         require(auctionToken.transfer(highestBidder, auctionToken.balanceOf(address(this))), "Token transfer failed");
 
         // Transfer the winning bid amount to the vault
         require(paymentToken.transfer(vault, highestBid), "Token transfer failed");
+
+        emit AuctionEnded(highestBidder, highestBid);
+    }
+
+    function withdraw() public {
+        require(block.timestamp > auctionEndTime, "Auction not yet ended");
+        require(!auctionCompleted, "Auction already completed");
+
+        auctionCompleted = true;
+
+        require(auctionToken.transfer(vault, auctionToken.balanceOf(address(this))), "Token transfer failed");
     }
 }
