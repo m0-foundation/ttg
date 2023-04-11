@@ -16,7 +16,6 @@ contract SPOGGovernorTest is SPOG_Base {
     /**
      * Helpers *******
      */
-
     function proposeAddingNewListToSpog(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
@@ -32,9 +31,8 @@ contract SPOGGovernorTest is SPOG_Base {
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
         uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
 
-        // vote on proposal
+        // create new proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        // Check that `NewSingleQuorumProposal` event is emitted
         expectEmit();
         emit NewSingleQuorumProposal(proposalId);
         spog.propose(targets, values, calldatas, description);

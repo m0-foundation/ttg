@@ -6,7 +6,6 @@ import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 
 contract SPOG_emergencyRemove is SPOG_Base {
     address internal addressToRemove;
-    address internal addressToRemoveB;
     uint8 internal yesVote;
     uint8 internal noVote;
 
@@ -23,6 +22,9 @@ contract SPOG_emergencyRemove is SPOG_Base {
         addressToRemove = address(0x1234);
     }
 
+    /**
+     * Helpers *******
+     */
     function createEmergencyProposal()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
