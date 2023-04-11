@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 
 contract SPOGGovernorTest is SPOG_Base {
     event NewSingleQuorumProposal(uint256 indexed proposalId);
-    
+
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
