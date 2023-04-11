@@ -51,49 +51,6 @@ contract SPOG is SPOGStorage, ERC165 {
         initGovernedMethods();
     }
 
-    function initGovernedMethods() internal {
-        // TODO: review if there is better, more efficient way to do it
-        governedMethods[this.append.selector] = true;
-        governedMethods[this.changeTax.selector] = true;
-        governedMethods[this.remove.selector] = true;
-        governedMethods[this.removeList.selector] = true;
-        governedMethods[this.addNewList.selector] = true;
-        governedMethods[this.change.selector] = true;
-        governedMethods[this.emergencyRemove.selector] = true;
-    }
-
-    /// @param _initSPOGData The data used to initialize spogData
-    function initSPOGData(bytes memory _initSPOGData) internal {
-        // _cash The currency accepted for tax payment in the SPOG (must be ERC20)
-        // _taxRange The minimum and maximum value of `tax`
-        // _inflator The percentage supply increase in $VOTE for each voting epoch
-        // _reward The number of $VALUE to be distributed in each voting epoch
-        // _inflatorTime The duration of an auction if $VOTE is inflated (should be less than `VOTE TIME`)
-        // _sellTime The duration of an auction if `SELL` is called
-        // _tax The cost (in `cash`) to call various functions
-        (
-            address _cash,
-            uint256[2] memory _taxRange,
-            uint256 _inflator,
-            uint256 _reward,
-            uint256 _inflatorTime,
-            uint256 _sellTime,
-            uint256 _forkTime,
-            uint256 _tax
-        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256, uint256));
-
-        spogData = SPOGData({
-            cash: IERC20(_cash),
-            taxRange: _taxRange,
-            inflator: _inflator,
-            reward: _reward,
-            inflatorTime: _inflatorTime,
-            sellTime: _sellTime,
-            forkTime: _forkTime,
-            tax: _tax
-        });
-    }
-
     /// @dev Getter for finding whether a list is in a masterlist
     /// @return Whether the list is in the masterlist
     function isListInMasterList(address list) external view returns (bool) {
@@ -270,6 +227,17 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     // ********** Private FUNCTIONS ********** //
+
+    function initGovernedMethods() private {
+        // TODO: review if there is better, more efficient way to do it
+        governedMethods[this.append.selector] = true;
+        governedMethods[this.changeTax.selector] = true;
+        governedMethods[this.remove.selector] = true;
+        governedMethods[this.removeList.selector] = true;
+        governedMethods[this.addNewList.selector] = true;
+        governedMethods[this.change.selector] = true;
+        governedMethods[this.emergencyRemove.selector] = true;
+    }
 
     /// @notice pay tax from the caller to the SPOG
     /// @param _amount The amount to be transferred
