@@ -165,27 +165,26 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev update epoch votes for address
     function _updateAccountEpochVotes() private {
-        uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
+        uint256 relevantEpochVoteCount = currentVotingPeriodEpoch - 1;
 
         // update accountEpochVotes
-        accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]++;
+        accountEpochVotes[msg.sender][relevantEpochVoteCount]++;
     }
 
     /// @dev withdraw pro-rata votingToken inflation rewards when account voted in all proposals from current epoch
     function _withdrawVotingTokenInflationRewards(uint256 proposalId) private {
-        uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
+        uint256 relevantEpochVoteCount = currentVotingPeriodEpoch - 1;
 
-        if (
-            accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]
-                == epochProposalsCount[relevantEpochForEpochVoteCount]
-        ) {
-            uint256 accountVotingTokenBalance = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
+        if (accountEpochVotes[msg.sender][relevantEpochVoteCount] == epochProposalsCount[relevantEpochVoteCount]) {
+            require(!hasVoted(proposalId, msg.sender), "SPOGGovernor: already voted"); // fail early during withdraw if already voted.
+
+            uint256 accountVotesWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
 
             uint256 amountToBeSharedOnProRataBasis = epochVotingTokenInflationAmount[currentVotingPeriodEpoch];
 
             uint256 totalVotingTokenSupplyApplicable = votingToken.totalSupply() - amountToBeSharedOnProRataBasis;
 
-            uint256 percentageOfTotalSupply = accountVotingTokenBalance * 100 / totalVotingTokenSupplyApplicable;
+            uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
 
             uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
