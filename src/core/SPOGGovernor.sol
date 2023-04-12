@@ -79,7 +79,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
       uint256 supLength = support.length;
       require(propLength == supLength, "Array mismatch");
       uint256[] memory results = new uint256[](propLength);
-      for(uint256 i = 0; i < propLength;) {
+      for(uint256 i; i < propLength;) {
         results[i] = castVote(proposalIds[i], support[i]);
         unchecked {  ++i; }
       }
