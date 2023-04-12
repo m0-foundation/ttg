@@ -144,10 +144,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         ProposalState status = super.state(proposalId);
 
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
-        if (
-            emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)
-                && _voteSucceeded(proposalId)
-        ) {
+        // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
+        if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
             return ProposalState.Succeeded;
         }
 
