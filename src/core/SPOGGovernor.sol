@@ -144,7 +144,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256 weight, bytes memory)
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
         internal
         virtual
         override
@@ -155,9 +155,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         proposalVote.hasVoted[account] = true;
 
         if (support == uint8(VoteType.No)) {
-            proposalVote.noVotes += weight;
+            proposalVote.noVotes += votes;
         } else {
-            proposalVote.yesVotes += weight;
+            proposalVote.yesVotes += votes;
         }
     }
 
