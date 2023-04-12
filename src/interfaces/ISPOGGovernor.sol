@@ -4,6 +4,20 @@ pragma solidity 0.8.17;
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
 interface ISPOGGovernor {
+    function currentVotingPeriodEpoch() external view returns (uint256);
+
+    function accountEpochNumProposalsVotedOn(address account, uint256 epoch) external view returns (uint256);
+
+    function epochProposalsCount(uint256 epoch) external view returns (uint256);
+
+    function epochVotingTokenInflationAmount(uint256 epoch) external view returns (uint256);
+
+    function epochVotingTokenSupply(uint256 epoch) external view returns (uint256);
+
+    function accountEpochVoteWeight(address account, uint256 epoch) external view returns (uint256);
+
+    function epochSumOfVoteWeight(uint256 epoch) external view returns (uint256);
+
     function spogAddress() external view returns (address);
 
     function initSPOGAddress(address) external;

@@ -28,6 +28,7 @@ contract SPOGDeployScript is BaseScript {
     uint256 public forkTime;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
+    uint256 public valueFixedInflationAmount;
     uint256 public tax;
     SPOGGovernor public voteGovernor;
     SPOGGovernor public valueGovernor;
@@ -50,6 +51,7 @@ contract SPOGDeployScript is BaseScript {
         forkTime = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
+        valueFixedInflationAmount = 100;
         tax = 5;
 
         vote = new SPOGVotes("SPOGVote", "vote");
@@ -68,7 +70,7 @@ contract SPOGDeployScript is BaseScript {
         address valueGovernorAddress =
             governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
 
-        vault = new Vault(voteGovernorAddress, valueGovernorAddress);
+        vault = new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress));
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
@@ -98,6 +100,7 @@ contract SPOGDeployScript is BaseScript {
             voteTime,
             voteQuorum,
             valueQuorum,
+            valueFixedInflationAmount,
             ISPOGGovernor(address(voteGovernor)),
             ISPOGGovernor(address(valueGovernor))
         );
@@ -118,6 +121,7 @@ contract SPOGDeployScript is BaseScript {
             voteTime,
             voteQuorum,
             valueQuorum,
+            valueFixedInflationAmount,
             ISPOGGovernor(address(voteGovernor)),
             ISPOGGovernor(address(valueGovernor)),
             spogCreationSalt

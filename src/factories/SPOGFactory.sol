@@ -15,6 +15,7 @@ contract SPOGFactory {
     /// @param _voteTime The duration of a voting epoch
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
+    /// @param _valueFixedInflationAmount The fixed inflation amount for the $VALUE token
     /// @param _voteGovernor The address of the SPOG governor contract for $VOTE token
     /// @param _valueGovernor The address of the SPOG governor contract for $VALUE token
     /// @param _salt The salt used to deploy the SPOG contract
@@ -25,6 +26,7 @@ contract SPOGFactory {
         uint256 _voteTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
+        uint256 _valueFixedInflationAmount,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor,
         uint256 _salt
@@ -35,6 +37,7 @@ contract SPOGFactory {
             _voteTime,
             _voteQuorum,
             _valueQuorum,
+            _valueFixedInflationAmount,
             _voteGovernor,
             _valueGovernor
         );
@@ -51,6 +54,7 @@ contract SPOGFactory {
         uint256 _voteTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
+        uint256 _valueFixedInflationAmount,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor
     ) public pure returns (bytes memory) {
@@ -58,7 +62,16 @@ contract SPOGFactory {
 
         return abi.encodePacked(
             bytecode,
-            abi.encode(_initSPOGData, _vault, _voteTime, _voteQuorum, _valueQuorum, _voteGovernor, _valueGovernor)
+            abi.encode(
+                _initSPOGData,
+                _vault,
+                _voteTime,
+                _voteQuorum,
+                _valueQuorum,
+                _valueFixedInflationAmount,
+                _voteGovernor,
+                _valueGovernor
+            )
         );
     }
 
