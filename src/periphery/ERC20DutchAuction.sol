@@ -20,21 +20,19 @@ contract DutchAuction {
         IERC20 _auctionToken,
         IERC20 _paymentToken,
         uint256 _auctionDuration,
-        uint256 _ceilingPrice,
-        uint256 _floorPrice,
         address _vault
     ) {
         auctionToken = _auctionToken;
         paymentToken = _paymentToken;
         auctionDuration = _auctionDuration;
         auctionEndTime = block.timestamp + _auctionDuration;
-        ceilingPrice = _ceilingPrice;
-        floorPrice = _floorPrice;
+        ceilingPrice = paymentToken.totalSupply();
+        floorPrice = 1;
         vault = _vault;
     }
 
-    function depositFromVault(uint256 _auctionTokenAmount) public {
-        require(auctionToken.transferFrom(vault, address(this), _auctionTokenAmount), "Token transfer failed");
+    function depositFromVault(uint256 auctionTokenAmount) public {
+        require(auctionToken.transferFrom(vault, address(this), auctionTokenAmount), "Token transfer failed");
     }
 
     function getCurrentPrice() public view returns (uint256) {
