@@ -13,6 +13,8 @@ contract DutchAuction {
     uint256 public ceilingPrice;
     uint256 public floorPrice;
     address public vault;
+    uint256 public auctionTokenAmount;
+    uint256 public amountSold;
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
 
@@ -33,6 +35,7 @@ contract DutchAuction {
 
     function depositFromVault(uint256 _auctionTokenAmount) public {
         require(auctionToken.transferFrom(vault, address(this), _auctionTokenAmount), "Token transfer failed");
+        auctionTokenAmount+=_auctionTokenAmount;
     }
 
     function getCurrentPrice() public view returns (uint256) {
@@ -42,7 +45,8 @@ contract DutchAuction {
 
         uint256 timePassed = block.timestamp - (auctionEndTime - auctionDuration);
         uint256 priceDifference = ceilingPrice - floorPrice;
-        uint256 priceDrop = (priceDifference * timePassed) / auctionDuration;
+        uint256 percentSold = 100 * amountSold / auctionTokenAmount;
+        uint256 priceDrop = ((priceDifference * timePassed) / auctionDuration) * (100 - percentSold) / 100;
 
         return ceilingPrice - priceDrop;
     }
