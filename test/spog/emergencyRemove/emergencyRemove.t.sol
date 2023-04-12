@@ -107,6 +107,47 @@ contract SPOG_emergencyRemove is SPOG_Base {
         assertTrue(list.contains(addressToRemove), "Address is not in the list");
     }
 
+    function test_Revert_EmergencyRemove_SameProposal() public {
+        // PART 1: create proposal to emergency remove address from list
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = createEmergencyProposal();
+
+        // Emergency proposal is in the governor list
+        assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
+
+        // fast forward to an active voting period
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // cast vote on proposal
+        voteGovernor.castVote(proposalId, yesVote);
+
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        // check proposal was executed
+        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
+
+        // assert that address is in the list
+        assertFalse(list.contains(addressToRemove), "Address is still in the list");
+
+        // PART 2: Add address back to the list
+        targets[0] = address(spog);
+        values[0] = 0;
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToRemove, address(list));
+        string memory description = "Append address to a list";
+
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        vm.expectRevert("Governor: proposal already exists");
+        spog.propose(targets, values, calldatas, description);
+
+        // PART 3: Emergency remove address from list
+        // Not possible because same proposals can't be created
+    }
+
     function test_EmergencyRemove_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
         uint256 balanceBeforeProposal = deployScript.cash().balanceOf(address(vault));
