@@ -26,6 +26,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         mapping(address => bool) hasVoted;
     }
 
+    mapping(uint256 => bool) public emergencyProposals;
     mapping(uint256 => ProposalVote) private _proposalVotes;
 
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
@@ -104,6 +105,11 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emit VotingPeriodSet(_votingPeriod, newVotingTime);
     }
 
+    function registerEmergencyProposal(uint256 proposalId) external {
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can register emergency proposal");
+        emergencyProposals[proposalId] = true;
+    }
+
     // ********** Override functions ********** //
 
     /// @notice override to use updateStartOfNextVotingPeriod
@@ -145,6 +151,21 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     {
         updateStartOfNextVotingPeriod();
         return super._castVote(proposalId, account, support, reason, params);
+    }
+
+    /**
+     * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
+     */
+    function state(uint256 proposalId) public view virtual override returns (ProposalState) {
+        ProposalState status = super.state(proposalId);
+
+        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
+        // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
+        if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
+            return ProposalState.Succeeded;
+        }
+
+        return status;
     }
 
     /// @dev See {IGovernor-hasVoted}.

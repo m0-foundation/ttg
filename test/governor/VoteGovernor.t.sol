@@ -6,6 +6,8 @@ import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import "forge-std/console.sol";
 
 contract SPOGGovernorTest is SPOG_Base {
+    event NewSingleQuorumProposal(uint256 indexed proposalId);
+
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
@@ -14,7 +16,6 @@ contract SPOGGovernorTest is SPOG_Base {
     /**
      * Helpers *******
      */
-
     function proposeAddingNewListToSpog(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
@@ -30,8 +31,10 @@ contract SPOGGovernorTest is SPOG_Base {
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
         uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
 
-        // vote on proposal
+        // create new proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
+        expectEmit();
+        emit NewSingleQuorumProposal(proposalId);
         spog.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
@@ -82,6 +85,11 @@ contract SPOGGovernorTest is SPOG_Base {
         // revert when called not by SPOG, execute methods are closed to the public
         vm.expectRevert("SPOGGovernor: only SPOG can execute");
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
+    }
+
+    function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
+        vm.expectRevert("SPOGGovernor: only SPOG can register emergency proposal");
+        voteGovernor.registerEmergencyProposal(1);
     }
 
     function test_StartOfNextVotingPeriod() public {
