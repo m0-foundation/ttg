@@ -140,7 +140,10 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        return quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
+        uint256 proposalQuorum = quorum(proposalSnapshot(proposalId));
+        // if token has 0 supply, make sure that quorum was not reached
+        // @dev short-circuiting the rare usecase of 0 supply check to save gas
+        return proposalQuorum <= proposalVote.yesVotes && proposalQuorum > 0;
     }
 
     /// @dev See {Governor-_countVote}.
