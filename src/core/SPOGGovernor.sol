@@ -156,11 +156,14 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        return quorum(proposalSnapshot(proposalId)) > 0 && quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
+        uint256 proposalQuorum = quorum(proposalSnapshot(proposalId));
+        // if token has 0 supply, make sure that quorum was not reached
+        // @dev short-circuiting the rare usecase of 0 supply check to save gas
+        return proposalQuorum <= proposalVote.yesVotes && proposalQuorum > 0;
     }
 
     /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256, bytes memory)
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
         internal
         virtual
         override
@@ -169,8 +172,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         require(!proposalVote.hasVoted[account], "SPOGGovernor: vote already cast");
         proposalVote.hasVoted[account] = true;
-
-        uint256 votes = _getVotes(account, proposalSnapshot(proposalId), "");
 
         if (support == uint8(VoteType.No)) {
             proposalVote.noVotes += votes;
@@ -199,7 +200,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase
     function COUNTING_MODE() public pure virtual override returns (string memory) {
-        return "support=bravo&quorum=bravo";
+        return "support=alpha&quorum=alpha";
     }
 
     fallback() external {
