@@ -70,6 +70,22 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         }
     }
 
+    /// @dev Allows batch voting
+    /// @notice Uses same params as castVote, but in arrays.
+    /// @param proposalIds an array of proposalIds
+    /// @param support an array of vote values for each proposal
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns(uint256[] memory) {
+      uint256 propLength = proposalIds.length;
+      uint256 supLength = support.length;
+      require(propLength == supLength, "Array mismatch");
+      uint256[] memory results = new uint256[](propLength);
+      for(uint256 i; i < propLength;) {
+        results[i] = castVote(proposalIds[i], support[i]);
+        unchecked {  ++i; }
+      }
+      return results;
+    }
+
     // ********** Setters ********** //
 
     /// @dev Update quorum numerator only by SPOG

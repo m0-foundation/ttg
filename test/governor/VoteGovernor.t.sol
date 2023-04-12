@@ -197,6 +197,58 @@ contract SPOGGovernorTest is SPOG_Base {
         assertTrue(yesVotes3 == 0, "Proposal3 does not have 0 yes vote");
     }
 
+    function test_CanBatchVoteOnMultipleProposalsAfterItsVotingDelay() public {
+        /**
+         * Proposal 1 and 2 *********
+         */
+        // propose adding a new list to spog
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+
+        uint8 noVote = 0;
+        uint8 yesVote = 1;
+
+        uint256[] memory proposals = new uint256[](2);
+        proposals[0] = proposalId;
+        proposals[1] = proposalId2;
+
+        uint8[] memory support  = new uint8[](2);
+        support[0] = yesVote;
+        support[1] = noVote;
+
+        // revert happens when voting on proposal before voting period has started
+        vm.expectRevert("Governor: vote not currently active");
+        voteGovernor.castVotes(proposals, support);
+
+        // check proposal is pending. Note voting is not active until voteDelay is reached
+        assertTrue(
+            voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
+        );
+
+        assertTrue(
+            voteGovernor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // cast vote on proposals
+        voteGovernor.castVotes(proposals, support);
+
+        // check that proposal has 1 vote
+        (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
+        (uint256 noVotes2, uint256 yesVotes2) = voteGovernor.proposalVotes(proposalId2);
+
+        // spogVote balance of voter
+        uint256 spogVoteBalance = spogVote.balanceOf(address(this));
+
+        assertTrue(yesVotes == spogVoteBalance, "Proposal does not have expected yes vote");
+        assertTrue(noVotes == 0, "Proposal does not have 0 no vote");
+
+        assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
+        assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
+    }
+
     function test_VoteTokenSupplyInflatesAfterEachVotingPeriod() public {
         (
             uint256 proposalId,
