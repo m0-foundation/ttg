@@ -176,7 +176,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriod;
     }
 
-    // ********** Counting module funtions ********** //
+    // ********** Counting module functions ********** //
 
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase
