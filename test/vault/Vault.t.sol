@@ -30,22 +30,4 @@ contract VaultTest is BaseTest {
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
     }
-
-    // function test_RevertWithdraw() public {
-    //     vm.expectRevert("Vault: withdraw not allowed");
-    //     vault.releaseAssetBalance(address(dai), address(this));
-
-    //     assertEq(dai.balanceOf(address(this)), 0);
-    // }
-
-    // function test_Withdraw() public {
-    //     address spogAddress = ISPOGGovernor(vault.govSpogVoteAddress()).spogAddress();
-    //     vm.prank(spogAddress);
-
-    //     expectEmit();
-    //     emit Withdraw(address(this), address(dai), 1000e18);
-    //     vault.releaseAssetBalance(address(dai), address(this));
-
-    //     assertEq(dai.balanceOf(address(this)), 1000e18);
-    // }
 }

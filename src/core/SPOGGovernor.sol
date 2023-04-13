@@ -34,12 +34,10 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
     // epoch => vote inflation amount
     mapping(uint256 => uint256) public epochVotingTokenInflationAmount;
-    // epoch => vote token supply
+    // epoch => vote token supply at epoch start
     mapping(uint256 => uint256) public epochVotingTokenSupply;
-
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
-
     // address => epoch => epoch vote weight
     mapping(address => mapping(uint256 => uint256)) public accountEpochVoteWeight;
 
@@ -170,8 +168,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         if (currentVotingPeriodEpoch == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
 
-        _updateAccountEpochVoteWeight(proposalId);
         _updateAccountEpochVotes();
+        _updateAccountEpochVoteWeight(proposalId);
 
         return super._castVote(proposalId, account, support, reason, params);
     }

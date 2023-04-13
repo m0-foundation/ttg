@@ -5,7 +5,7 @@ import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import "forge-std/console.sol";
 
-contract SPOGGovernorTest is SPOG_Base {
+contract VoteSPOGGovernorTest is SPOG_Base {
     address alice = createUser("alice");
     address bob = createUser("bob");
     address carol = createUser("carol");

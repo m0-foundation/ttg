@@ -51,11 +51,12 @@ contract SPOGDeployScript is BaseScript {
         forkTime = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
-        valueFixedInflationAmount = 100;
         tax = 5;
 
         vote = new SPOGVotes("SPOGVote", "vote");
         value = new SPOGVotes("SPOGValue", "value");
+
+        valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
 
         governorFactory = new SPOGGovernorFactory();
 

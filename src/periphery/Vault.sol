@@ -25,19 +25,6 @@ contract Vault {
         govSpogValue = _govSpogValue;
     }
 
-    // /// @dev Release vault's asset entire balance for the auction.
-    // /// @param token Address of token to withdraw
-    // /// @param account Address to withdraw to. Must support auction contract.
-    // function releaseAssetBalance(address token, address account) public {
-    //     // TODO: add require that account must implement auction contract interface
-
-    //     uint256 total = IERC20(token).balanceOf(address(this));
-    //     require(msg.sender == ISPOGGovernor(govSpogValue).spogAddress(), "Vault: withdraw not allowed");
-    //     IERC20(token).safeTransfer(account, total);
-
-    //     emit Withdraw(account, token, total);
-    // }
-
     /// @dev Withdraw Vote Token Rewards
     function withdrawVoteTokenRewards() external {
         uint256 currentVotingPeriodEpoch = govSpogVote.currentVotingPeriodEpoch();
@@ -70,9 +57,7 @@ contract Vault {
     }
 
     function withdrawValueTokenRewards() external {
-        uint256 currentVotingPeriodEpoch = govSpogVote.currentVotingPeriodEpoch();
-
-        uint256 relevantEpoch = currentVotingPeriodEpoch - 1;
+        uint256 relevantEpoch = govSpogVote.currentVotingPeriodEpoch() - 1;
 
         uint256 numOfProposalsVotedOnRelevantEpoch =
             govSpogVote.accountEpochNumProposalsVotedOn(msg.sender, relevantEpoch);
