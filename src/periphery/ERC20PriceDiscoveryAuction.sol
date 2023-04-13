@@ -81,13 +81,6 @@ contract PriceDiscoveryAuction {
         emit AuctionPurchase(msg.sender, amountToBuy, currentPrice);
     }
 
-    function buyAllTokens() public {
-        uint256 currentPrice = getCurrentPrice();
-        uint256 amountToPay = auctionToken.balanceOf(address(this)) * currentPrice;
-        
-        buyTokens(amountToPay);
-    }
-
     function withdraw() public {
         require(block.timestamp > auctionEndTime, "Auction not yet ended");
         require(auctionToken.balanceOf(address(this)) > 0, "Auction already completed");
