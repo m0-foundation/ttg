@@ -56,7 +56,7 @@ contract SPOGGovernorTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert("SPOGGovernor: only SPOG can propose");
+        vm.expectRevert("SPOGGovernor: caller is not SPOG");
         voteGovernor.propose(targets, values, calldatas, description);
     }
 
@@ -83,12 +83,12 @@ contract SPOGGovernorTest is SPOG_Base {
 
         // execute proposal
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert("SPOGGovernor: only SPOG can execute");
+        vm.expectRevert("SPOGGovernor: caller is not SPOG");
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
-        vm.expectRevert("SPOGGovernor: only SPOG can register emergency proposal");
+        vm.expectRevert("SPOGGovernor: caller is not SPOG");
         voteGovernor.registerEmergencyProposal(1);
     }
 
@@ -220,7 +220,7 @@ contract SPOGGovernorTest is SPOG_Base {
         proposals[0] = proposalId;
         proposals[1] = proposalId2;
 
-        uint8[] memory support  = new uint8[](2);
+        uint8[] memory support = new uint8[](2);
         support[0] = yesVote;
         support[1] = noVote;
 

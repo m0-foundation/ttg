@@ -30,6 +30,12 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => ProposalVote) private _proposalVotes;
 
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
+    event StartOfNextVotingPeriodUpdated(uint256 startOfNextVotingPeriod);
+
+    modifier onlySPOG() {
+        require(msg.sender == spogAddress, "SPOGGovernor: caller is not SPOG");
+        _;
+    }
 
     constructor(
         ISPOGVotes votingTokenContract,
@@ -62,6 +68,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
             address vault = ISPOG(spogAddress).vault();
             votingToken.mint(vault, amountToIncreaseSupplyBy);
+
+            emit StartOfNextVotingPeriodUpdated(startOfNextVotingPeriod);
         }
     }
 
@@ -87,22 +95,19 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
-    function updateQuorumNumerator(uint256 newQuorumNumerator) external override {
-        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can update quorum numerator");
+    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlySPOG {
         _updateQuorumNumerator(newQuorumNumerator);
     }
 
     /// @dev Update voting time only by SPOG
     /// @param newVotingTime New voting time
-    function updateVotingTime(uint256 newVotingTime) external {
-        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can update voting time");
+    function updateVotingTime(uint256 newVotingTime) external onlySPOG {
+        emit VotingPeriodSet(_votingPeriod, newVotingTime);
 
         _votingPeriod = newVotingTime;
-        emit VotingPeriodSet(_votingPeriod, newVotingTime);
     }
 
-    function registerEmergencyProposal(uint256 proposalId) external {
-        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can register emergency proposal");
+    function registerEmergencyProposal(uint256 proposalId) external onlySPOG {
         emergencyProposals[proposalId] = true;
     }
 
@@ -114,9 +119,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public virtual override returns (uint256) {
-        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can propose");
-
+    ) public virtual override onlySPOG returns (uint256) {
         updateStartOfNextVotingPeriod();
         return super.propose(targets, values, calldatas, description);
     }
@@ -131,9 +134,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) internal virtual override {
-        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can execute");
-
+    ) internal virtual override onlySPOG {
         updateStartOfNextVotingPeriod();
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }

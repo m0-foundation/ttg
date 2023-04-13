@@ -5,11 +5,11 @@ import {IList} from "src/interfaces/IList.sol";
 
 interface ISPOG {
     // Events
-    event NewListAdded(address _list);
-    event ListRemoved(address _list);
-    event AddressAppendedToList(address _list, address _address);
-    event AddressRemovedFromList(address _list, address _address);
-    event EmergencyAddressRemovedFromList(address _list, address _address);
+    event NewListAdded(address indexed _list);
+    event ListRemoved(address indexed _list);
+    event AddressAppendedToList(address indexed _list, address indexed _address);
+    event AddressRemovedFromList(address indexed _list, address indexed _address);
+    event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
     event TaxChanged(uint256 indexed tax);
     event NewSingleQuorumProposal(uint256 indexed proposalId);
     event NewDoubleQuorumProposal(uint256 indexed proposalId);
