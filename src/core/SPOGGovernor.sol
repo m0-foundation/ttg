@@ -52,12 +52,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
-    /// @dev Accessor to the internal vote counts.
-    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-        return (proposalVote.noVotes, proposalVote.yesVotes);
-    }
-
     /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
@@ -75,16 +69,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @notice Uses same params as castVote, but in arrays.
     /// @param proposalIds an array of proposalIds
     /// @param support an array of vote values for each proposal
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns(uint256[] memory) {
-      uint256 propLength = proposalIds.length;
-      uint256 supLength = support.length;
-      require(propLength == supLength, "Array mismatch");
-      uint256[] memory results = new uint256[](propLength);
-      for(uint256 i; i < propLength;) {
-        results[i] = castVote(proposalIds[i], support[i]);
-        unchecked {  ++i; }
-      }
-      return results;
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns (uint256[] memory) {
+        uint256 propLength = proposalIds.length;
+        uint256 supLength = support.length;
+        require(propLength == supLength, "Array mismatch");
+        uint256[] memory results = new uint256[](propLength);
+        for (uint256 i; i < propLength;) {
+            results[i] = castVote(proposalIds[i], support[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        return results;
     }
 
     // ********** Setters ********** //
@@ -168,9 +164,35 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return status;
     }
 
+    function votingDelay() public view override returns (uint256) {
+        if (startOfNextVotingPeriod > block.number) {
+            return startOfNextVotingPeriod - block.number;
+        } else {
+            revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
+        }
+    }
+
+    function votingPeriod() public view override returns (uint256) {
+        return _votingPeriod;
+    }
+
+    // ********** Counting module funtions ********** //
+
+    /// @dev See {IGovernor-COUNTING_MODE}.
+    // solhint-disable-next-line func-name-mixedcase
+    function COUNTING_MODE() public pure virtual override returns (string memory) {
+        return "support=alpha&quorum=alpha";
+    }
+
     /// @dev See {IGovernor-hasVoted}.
     function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
+    }
+
+    /// @dev Accessor to the internal vote counts.
+    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        return (proposalVote.noVotes, proposalVote.yesVotes);
     }
 
     /// @dev See {Governor-_quorumReached}.
@@ -181,6 +203,11 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         // if token has 0 supply, make sure that quorum was not reached
         // @dev short-circuiting the rare usecase of 0 supply check to save gas
         return proposalQuorum <= proposalVote.yesVotes && proposalQuorum > 0;
+    }
+
+    /// @dev See {Governor-_voteSucceeded}.
+    function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
+        return _quorumReached(proposalId);
     }
 
     /// @dev See {Governor-_countVote}.
@@ -199,29 +226,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         } else {
             proposalVote.yesVotes += votes;
         }
-    }
-
-    function votingDelay() public view override returns (uint256) {
-        if (startOfNextVotingPeriod > block.number) {
-            return startOfNextVotingPeriod - block.number;
-        } else {
-            revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
-        }
-    }
-
-    function votingPeriod() public view override returns (uint256) {
-        return _votingPeriod;
-    }
-
-    /// @dev See {Governor-_voteSucceeded}.
-    function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
-        return _quorumReached(proposalId);
-    }
-
-    /// @dev See {IGovernor-COUNTING_MODE}.
-    // solhint-disable-next-line func-name-mixedcase
-    function COUNTING_MODE() public pure virtual override returns (string memory) {
-        return "support=alpha&quorum=alpha";
     }
 
     fallback() external {
