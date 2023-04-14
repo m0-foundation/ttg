@@ -85,9 +85,6 @@ contract DutchAuction {
           unchecked { ++i;}
         }
 
-        if (price < floorPrice) {
-            price = floorPrice;
-        }
         return price;
     }
 
