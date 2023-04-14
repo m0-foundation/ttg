@@ -12,6 +12,10 @@ contract DutchAuction {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    error AuctionEnded();
+    error AuctionNotEnded();
+    error AuctionBalanceInsufficient();
+
     IERC20Metadata public auctionToken;
     IERC20 public paymentToken;
     uint256 public auctionDuration;
@@ -90,12 +94,16 @@ contract DutchAuction {
     /// @notice Returns the current price of the auction
     /// @param amountToBuy The amount of tokens to buy
     function buyTokens(uint256 amountToBuy) public {
-        require(block.timestamp <= auctionEndTime, "Auction already ended");
+        if (block.timestamp >= auctionEndTime) {
+            revert AuctionEnded();
+        }
 
         uint256 currentPrice = getCurrentPrice();
         uint256 amountToPay = amountToBuy * currentPrice / 10 ** auctionToken.decimals();
 
-        require(auctionTokenAmount - amountSold >= amountToBuy, "Auction balance is insufficient");
+        if(auctionTokenAmount - amountSold < amountToBuy) {
+          revert AuctionBalanceInsufficient();
+        }
 
         // Transfer the winning bid amount to the vault
         paymentToken.safeTransferFrom(msg.sender, vault, amountToPay);
@@ -112,7 +120,9 @@ contract DutchAuction {
     /// @notice Withdraws the unsold auction tokens to the vault
     /// @dev this allows to withdraw any ERC20 tokens, including those sent directly without init()
     function withdraw(IERC20 token) public {
-        require(block.timestamp > auctionEndTime, "Auction not yet ended");
+        if (block.timestamp < auctionEndTime) {
+            revert AuctionNotEnded();
+        }
 
         token.safeTransfer(vault, token.balanceOf(address(this)));
     }
