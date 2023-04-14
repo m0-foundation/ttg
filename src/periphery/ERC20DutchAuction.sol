@@ -11,7 +11,7 @@ contract DutchAuction {
     using SafeMath for uint256;
 
     IERC20Metadata public auctionToken;
-    IERC20Metadata public paymentToken;
+    IERC20 public paymentToken;
     uint256 public auctionDuration;
     uint256 public auctionEndTime;
     uint256 public ceilingPrice;
@@ -30,7 +30,7 @@ contract DutchAuction {
     /// @param _vault The address where the payment tokens will be sent
     constructor(
         IERC20Metadata _auctionToken,
-        IERC20Metadata _paymentToken,
+        IERC20 _paymentToken,
         uint256 _auctionDuration,
         address _vault
     ) {
