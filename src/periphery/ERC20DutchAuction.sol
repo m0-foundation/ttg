@@ -3,12 +3,14 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @title DutchAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens
 contract DutchAuction {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     IERC20Metadata public auctionToken;
     IERC20 public paymentToken;
@@ -48,7 +50,7 @@ contract DutchAuction {
     /// @dev called after deploy, then approve of the auctionToken to the auction contract
     /// @dev this can be called multiple times to add more tokens to the auction
     function init(uint256 _auctionTokenAmount) public {
-        require(auctionToken.transferFrom(vault, address(this), _auctionTokenAmount), "Token transfer failed");
+        IERC20(auctionToken).safeTransferFrom(vault, address(this), _auctionTokenAmount);
         auctionTokenAmount+=_auctionTokenAmount;
     }
 
@@ -96,10 +98,10 @@ contract DutchAuction {
         require(auctionTokenAmount - amountSold >= amountToBuy, "Auction balance is insufficient");
 
         // Transfer the winning bid amount to the vault
-        require(paymentToken.transferFrom(msg.sender, vault, amountToPay), "Token transfer failed");
+        paymentToken.safeTransferFrom(msg.sender, vault, amountToPay);
 
         // Transfer the auctioned tokens to the highest bidder
-        require(auctionToken.transfer(msg.sender, amountToBuy), "Token transfer failed");
+        IERC20(auctionToken).safeTransfer(msg.sender, amountToBuy);
 
         amountSold+=amountToBuy;
         lastBuyPrice = currentPrice;
@@ -112,6 +114,6 @@ contract DutchAuction {
     function withdraw(IERC20 token) public {
         require(block.timestamp > auctionEndTime, "Auction not yet ended");
 
-        require(token.transfer(vault, token.balanceOf(address(this))), "Token transfer failed");
+        token.safeTransfer(vault, token.balanceOf(address(this)));
     }
 }
