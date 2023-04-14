@@ -94,7 +94,7 @@ contract DutchAuction {
     /// @notice Returns the current price of the auction
     /// @param amountToBuy The amount of tokens to buy
     function buyTokens(uint256 amountToBuy) public {
-        if (block.timestamp >= auctionEndTime) {
+        if (block.timestamp > auctionEndTime) {
             revert AuctionEnded();
         }
 
@@ -120,7 +120,7 @@ contract DutchAuction {
     /// @notice Withdraws the unsold auction tokens to the vault
     /// @dev this allows to withdraw any ERC20 tokens, including those sent directly without init()
     function withdraw(IERC20 token) public {
-        if (block.timestamp < auctionEndTime) {
+        if (block.timestamp <= auctionEndTime) {
             revert AuctionNotEnded();
         }
 

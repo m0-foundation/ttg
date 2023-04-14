@@ -74,19 +74,30 @@ contract ERC20DutchAuctionTest is SPOG_Base {
         }
 
         assertEq(voteToken.balanceOf(address(dutchAuction)), dutchAuction.auctionTokenAmount() - dutchAuction.amountSold());
+
+        vm.roll(block.number + 1);
+        vm.warp(block.timestamp + 1 hours);
+
+        bytes memory customError = abi.encodeWithSignature("AuctionEnded()");
+        vm.expectRevert(customError);
+        dutchAuction.buyTokens(1);
+
     }
 
     function test_withdraw() public {
         mintAndApproveVoteTokens(1000e18);
 
         dutchAuction.init(1000e18);
-
-        vm.expectRevert("Auction not yet ended");
+        bytes memory customError = abi.encodeWithSignature("AuctionNotEnded()");
+        vm.expectRevert(customError);
         dutchAuction.withdraw(voteToken);
                 
         for(uint i = 0; i < 30 * 24; i++) {
             vm.roll(block.number + 1);
             vm.warp(block.timestamp + 1 hours);
+
+            vm.expectRevert(customError);
+            dutchAuction.withdraw(voteToken);
         }
 
         vm.roll(block.number + 1);
