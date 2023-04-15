@@ -14,7 +14,6 @@ contract Vault {
     ISPOGGovernor public immutable govSpogVote;
     ISPOGGovernor public immutable govSpogValue;
 
-    event Withdraw(address indexed account, address token, uint256 amount);
     event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
     event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
 

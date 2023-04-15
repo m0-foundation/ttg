@@ -18,10 +18,6 @@ contract MockSPOGGovernor is StdCheats {
 contract VaultTest is BaseTest {
     Vault public vault;
 
-    // Event to test
-    event Withdraw(address indexed account, address token, uint256 amount);
-    event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-
     function setUp() public {
         ISPOGGovernor govSpogVoteAddress = ISPOGGovernor(address(new MockSPOGGovernor()));
         ISPOGGovernor govSpogValueAddress = ISPOGGovernor(address(new MockSPOGGovernor()));
@@ -30,4 +26,6 @@ contract VaultTest is BaseTest {
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
     }
+
+    // NOTE: withdrawVoteTokenRewards() and withdrawValueTokenRewards() are tested in VoteGovernor.t.sol and ValueGovernor.t.sol
 }
