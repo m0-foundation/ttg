@@ -27,6 +27,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         mapping(address => bool) hasVoted;
     }
 
+    mapping(uint256 => bool) public emergencyProposals;
     mapping(uint256 => ProposalVote) private _proposalVotes;
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
@@ -69,12 +70,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
-    /// @dev Accessor to the internal vote counts.
-    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-        return (proposalVote.noVotes, proposalVote.yesVotes);
-    }
-
     /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
@@ -103,6 +98,24 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         }
     }
 
+    /// @dev Allows batch voting
+    /// @notice Uses same params as castVote, but in arrays.
+    /// @param proposalIds an array of proposalIds
+    /// @param support an array of vote values for each proposal
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns (uint256[] memory) {
+        uint256 propLength = proposalIds.length;
+        uint256 supLength = support.length;
+        require(propLength == supLength, "Array mismatch");
+        uint256[] memory results = new uint256[](propLength);
+        for (uint256 i; i < propLength;) {
+            results[i] = castVote(proposalIds[i], support[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        return results;
+    }
+
     // ********** Setters ********** //
 
     /// @dev Update quorum numerator only by SPOG
@@ -119,6 +132,11 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         _votingPeriod = newVotingTime;
         emit VotingPeriodSet(_votingPeriod, newVotingTime);
+    }
+
+    function registerEmergencyProposal(uint256 proposalId) external {
+        require(msg.sender == spogAddress, "SPOGGovernor: only SPOG can register emergency proposal");
+        emergencyProposals[proposalId] = true;
     }
 
     // ********** Override functions ********** //
@@ -201,32 +219,19 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
     }
+    /**
+     * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
+     */
+    function state(uint256 proposalId) public view virtual override returns (ProposalState) {
+        ProposalState status = super.state(proposalId);
 
-    /// @dev See {Governor-_quorumReached}.
-    function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-
-        return quorum(proposalSnapshot(proposalId)) > 0 && quorum(proposalSnapshot(proposalId)) <= proposalVote.yesVotes;
-    }
-
-    /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256, bytes memory)
-        internal
-        virtual
-        override
-    {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-
-        require(!proposalVote.hasVoted[account], "SPOGGovernor: vote already cast");
-        proposalVote.hasVoted[account] = true;
-
-        uint256 votes = _getVotes(account, proposalSnapshot(proposalId), "");
-
-        if (support == uint8(VoteType.No)) {
-            proposalVote.noVotes += votes;
-        } else {
-            proposalVote.yesVotes += votes;
+        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
+        // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
+        if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
+            return ProposalState.Succeeded;
         }
+
+        return status;
     }
 
     function votingDelay() public view override returns (uint256) {
@@ -241,15 +246,56 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriod;
     }
 
+    // ********** Counting module functions ********** //
+
+    /// @dev See {IGovernor-COUNTING_MODE}.
+    // solhint-disable-next-line func-name-mixedcase
+    function COUNTING_MODE() public pure virtual override returns (string memory) {
+        return "support=alpha&quorum=alpha";
+    }
+
+    /// @dev See {IGovernor-hasVoted}.
+    function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
+        return _proposalVotes[proposalId].hasVoted[account];
+    }
+
+    /// @dev Accessor to the internal vote counts.
+    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        return (proposalVote.noVotes, proposalVote.yesVotes);
+    }
+
+    /// @dev See {Governor-_quorumReached}.
+    function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+
+        uint256 proposalQuorum = quorum(proposalSnapshot(proposalId));
+        // if token has 0 supply, make sure that quorum was not reached
+        // @dev short-circuiting the rare usecase of 0 supply check to save gas
+        return proposalQuorum <= proposalVote.yesVotes && proposalQuorum > 0;
+    }
+
     /// @dev See {Governor-_voteSucceeded}.
     function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
         return _quorumReached(proposalId);
     }
 
-    /// @dev See {IGovernor-COUNTING_MODE}.
-    // solhint-disable-next-line func-name-mixedcase
-    function COUNTING_MODE() public pure virtual override returns (string memory) {
-        return "support=bravo&quorum=bravo";
+    /// @dev See {Governor-_countVote}.
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
+        internal
+        virtual
+        override
+    {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+
+        require(!proposalVote.hasVoted[account], "SPOGGovernor: vote already cast");
+        proposalVote.hasVoted[account] = true;
+
+        if (support == uint8(VoteType.No)) {
+            proposalVote.noVotes += votes;
+        } else {
+            proposalVote.yesVotes += votes;
+        }
     }
 
     fallback() external {

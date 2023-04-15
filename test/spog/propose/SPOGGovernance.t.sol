@@ -84,4 +84,24 @@ contract SPOGGovernanceTest is SPOG_Base {
         vm.expectRevert("Method is not supported");
         spog.propose(targets, values, calldatas, description);
     }
+
+    function test_Revert_Propose_SameProposal() public {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](2);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        string memory description = "add merchant to spog";
+
+        // approve cash spend for proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+
+        // propose
+        spog.propose(targets, values, calldatas, description);
+
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        vm.expectRevert("Governor: proposal already exists");
+        spog.propose(targets, values, calldatas, description);
+    }
 }

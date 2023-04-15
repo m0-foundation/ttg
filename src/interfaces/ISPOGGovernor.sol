@@ -279,4 +279,6 @@ interface ISPOGGovernor {
         bytes32 r,
         bytes32 s
     ) external returns (uint256 balance);
+
+    function registerEmergencyProposal(uint256 proposalId) external;
 }

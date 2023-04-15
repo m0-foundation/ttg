@@ -5,6 +5,7 @@ import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import "forge-std/console.sol";
 
+<<<<<<< HEAD
 contract VoteSPOGGovernorTest is SPOG_Base {
     address alice = createUser("alice");
     address bob = createUser("bob");
@@ -13,6 +14,10 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     uint256 spogVoteAmountToMint = 1000e18;
     uint8 noVote = 0;
     uint8 yesVote = 1;
+=======
+contract SPOGGovernorTest is SPOG_Base {
+    event NewSingleQuorumProposal(uint256 indexed proposalId);
+>>>>>>> main
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
@@ -22,7 +27,6 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     /**
      * Helpers
      */
-
     function proposeAddingNewListToSpog(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
@@ -38,8 +42,10 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
         uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
 
-        // vote on proposal
+        // create new proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
+        expectEmit();
+        emit NewSingleQuorumProposal(proposalId);
         spog.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
@@ -108,6 +114,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // revert when called not by SPOG, execute methods are closed to the public
         vm.expectRevert("SPOGGovernor: only SPOG can execute");
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
+    }
+
+    function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
+        vm.expectRevert("SPOGGovernor: only SPOG can register emergency proposal");
+        voteGovernor.registerEmergencyProposal(1);
     }
 
     function test_StartOfNextVotingPeriod() public {
@@ -407,6 +418,58 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             spogVoteBalanceForVaultForEpochZero,
             "vault should have received the remaining inflationary rewards from epoch 1"
         );
+    }
+
+    function test_CanBatchVoteOnMultipleProposalsAfterItsVotingDelay() public {
+        /**
+         * Proposal 1 and 2 *********
+         */
+        // propose adding a new list to spog
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+
+        uint8 noVote = 0;
+        uint8 yesVote = 1;
+
+        uint256[] memory proposals = new uint256[](2);
+        proposals[0] = proposalId;
+        proposals[1] = proposalId2;
+
+        uint8[] memory support  = new uint8[](2);
+        support[0] = yesVote;
+        support[1] = noVote;
+
+        // revert happens when voting on proposal before voting period has started
+        vm.expectRevert("Governor: vote not currently active");
+        voteGovernor.castVotes(proposals, support);
+
+        // check proposal is pending. Note voting is not active until voteDelay is reached
+        assertTrue(
+            voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
+        );
+
+        assertTrue(
+            voteGovernor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
+        );
+
+        // fast forward to an active voting period
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // cast vote on proposals
+        voteGovernor.castVotes(proposals, support);
+
+        // check that proposal has 1 vote
+        (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
+        (uint256 noVotes2, uint256 yesVotes2) = voteGovernor.proposalVotes(proposalId2);
+
+        // spogVote balance of voter
+        uint256 spogVoteBalance = spogVote.balanceOf(address(this));
+
+        assertTrue(yesVotes == spogVoteBalance, "Proposal does not have expected yes vote");
+        assertTrue(noVotes == 0, "Proposal does not have 0 no vote");
+
+        assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
+        assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
     }
 
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {

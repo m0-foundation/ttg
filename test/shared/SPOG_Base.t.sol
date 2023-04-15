@@ -98,7 +98,7 @@ contract SPOG_Base is BaseTest {
         address listToAddAddressTo = address(list);
         address addressToAdd = address(0x1234);
 
-        // create proposal to remove list
+        // create proposal to append address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
