@@ -15,10 +15,12 @@ contract Vault {
     ISPOGGovernor public immutable govSpogValue;
 
     event Withdraw(address indexed account, address token, uint256 amount);
-
     event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-
     event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
+
+    // address => voting epoch => bool
+    mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
+    mapping(address => mapping(uint256 => bool)) public hasClaimedValueTokenRewardsForEpoch;
 
     constructor(ISPOGGovernor _govSpogVote, ISPOGGovernor _govSpogValue) {
         govSpogVote = _govSpogVote;
@@ -28,6 +30,12 @@ contract Vault {
     /// @dev Withdraw Vote Token Rewards
     function withdrawVoteTokenRewards() external {
         uint256 currentVotingPeriodEpoch = govSpogVote.currentVotingPeriodEpoch();
+
+        require(
+            !hasClaimedVoteTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch],
+            "Vault: vote rewards already withdrawn"
+        );
+        hasClaimedVoteTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch] = true;
 
         uint256 numOfProposalsVotedOnEpoch =
             govSpogVote.accountEpochNumProposalsVotedOn(msg.sender, currentVotingPeriodEpoch);
@@ -58,6 +66,11 @@ contract Vault {
 
     function withdrawValueTokenRewards() external {
         uint256 relevantEpoch = govSpogVote.currentVotingPeriodEpoch() - 1;
+
+        require(
+            !hasClaimedValueTokenRewardsForEpoch[msg.sender][relevantEpoch], "Vault: value rewards already withdrawn"
+        );
+        hasClaimedValueTokenRewardsForEpoch[msg.sender][relevantEpoch] = true;
 
         uint256 numOfProposalsVotedOnRelevantEpoch =
             govSpogVote.accountEpochNumProposalsVotedOn(msg.sender, relevantEpoch);

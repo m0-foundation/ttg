@@ -344,6 +344,9 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
 
+        assertFalse(vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals), "Alice should not have claimed vote token rewards");
+        assertFalse(vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals), "Bob should not have claimed vote token rewards");
+
         // alice and bob withdraw their vote token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
         vault.withdrawVoteTokenRewards();
@@ -352,6 +355,9 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         vm.startPrank(bob);
         vault.withdrawVoteTokenRewards();
         vm.stopPrank();
+
+        assertTrue(vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals), "Alice should have claimed vote token rewards");
+        assertTrue(vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals), "Bob should have claimed vote token rewards");
 
         // alice and bobs should have received vote token inflationary rewards from epoch 1 for having voted in all proposals proposed from epoch 0
         assertEq(

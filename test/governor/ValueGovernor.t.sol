@@ -205,6 +205,17 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         uint256 aliceValueBalanceBefore = spogValue.balanceOf(alice);
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);
 
+        uint256 relevantEpoch = valueGovernor.currentVotingPeriodEpoch() - 1;
+
+        assertFalse(
+            vault.hasClaimedValueTokenRewardsForEpoch(alice, relevantEpoch),
+            "Alice should not have claimed value token rewards"
+        );
+        assertFalse(
+            vault.hasClaimedValueTokenRewardsForEpoch(bob, relevantEpoch),
+            "Bob should not have claimed value token rewards"
+        );
+
         // alice and bob withdraw their value token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
         vault.withdrawValueTokenRewards();
@@ -213,6 +224,14 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         vm.startPrank(bob);
         vault.withdrawValueTokenRewards();
         vm.stopPrank();
+
+        assertTrue(
+            vault.hasClaimedValueTokenRewardsForEpoch(alice, relevantEpoch),
+            "Alice should have claimed value token rewards"
+        );
+        assertTrue(
+            vault.hasClaimedValueTokenRewardsForEpoch(bob, relevantEpoch), "Bob should have claimed value token rewards"
+        );
 
         // alice and bobs should have received value token inflationary rewards from epoch 1 in epoch 2
         assertEq(
