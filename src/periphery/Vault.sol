@@ -11,42 +11,91 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 contract Vault {
     using SafeERC20 for IERC20;
 
-    address public immutable govSpogVoteAddress;
-    address public immutable govSpogValueAddress;
+    ISPOGGovernor public immutable voteGovernor;
+    ISPOGGovernor public immutable valueGovernor;
 
-    event Withdraw(address indexed account, address token, uint256 amount);
+    event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
+    event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
 
-    constructor(address _govSpogVoteAddress, address _govSpogValueAddress) {
-        govSpogVoteAddress = _govSpogVoteAddress;
-        govSpogValueAddress = _govSpogValueAddress;
+    // address => voting epoch => bool
+    mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
+    mapping(address => mapping(uint256 => bool)) public hasClaimedValueTokenRewardsForEpoch;
+
+    constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor) {
+        voteGovernor = _voteGovernor;
+        valueGovernor = _valueGovernor;
     }
 
-    /// @dev Release vault's asset entire balance for the auction.
-    /// @param token Address of token to withdraw
-    /// @param account Address to withdraw to. Must support auction contract.
-    function releaseAssetBalance(address token, address account) public {
-        // TODO: add require that account must implement auction contract interface
+    /// @dev Withdraw Vote Token Rewards
+    function withdrawVoteTokenRewards() external {
+        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
-        uint256 total = IERC20(token).balanceOf(address(this));
-        require(msg.sender == ISPOGGovernor(govSpogValueAddress).spogAddress(), "Vault: withdraw not allowed");
-        IERC20(token).safeTransfer(account, total);
+        require(
+            !hasClaimedVoteTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch],
+            "Vault: vote rewards already withdrawn"
+        );
+        hasClaimedVoteTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch] = true;
 
-        emit Withdraw(account, token, total);
+        uint256 numOfProposalsVotedOnEpoch =
+            voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, currentVotingPeriodEpoch);
+
+        uint256 totalProposalsEpoch = voteGovernor.epochProposalsCount(currentVotingPeriodEpoch);
+
+        require(
+            numOfProposalsVotedOnEpoch == totalProposalsEpoch,
+            "Vault: unable to withdraw due to not voting on all proposals"
+        );
+
+        uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
+
+        uint256 amountToBeSharedOnProRataBasis = voteGovernor.epochVotingTokenInflationAmount(currentVotingPeriodEpoch);
+
+        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochVotingTokenSupply(currentVotingPeriodEpoch);
+
+        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
+
+        uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
+
+        address token = address(voteGovernor.votingToken());
+
+        IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
+
+        emit VoteTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
-    /// @dev Withdraw a specific amount to msg.sender. Must be allowed to withdraw.
-    /// @param token address Address of token to withdraw
-    /// @param amount uint256 Amount of token to withdraw
-    function withdraw(address token, uint256 amount) public {
-        // TODO: create isAllowedToWithdraw function in govSpogVote
-        // require(
-        //     ISPOGGovernor(govSpogVoteAddress).isAllowedToWithdraw(msg.sender),
-        //     "Vault: withdraw not allowed"
-        // );
+    function withdrawValueTokenRewards() external {
+        uint256 relevantEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
-        IERC20(token).safeTransfer(msg.sender, amount);
+        require(
+            !hasClaimedValueTokenRewardsForEpoch[msg.sender][relevantEpoch], "Vault: value rewards already withdrawn"
+        );
+        hasClaimedValueTokenRewardsForEpoch[msg.sender][relevantEpoch] = true;
 
-        emit Withdraw(msg.sender, token, amount);
+        uint256 numOfProposalsVotedOnRelevantEpoch =
+            voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, relevantEpoch);
+
+        uint256 totalProposalsRelevantEpoch = voteGovernor.epochProposalsCount(relevantEpoch);
+
+        require(
+            numOfProposalsVotedOnRelevantEpoch == totalProposalsRelevantEpoch,
+            "Vault: unable to withdraw due to not voting on all proposals"
+        );
+
+        uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, relevantEpoch);
+
+        uint256 valueTokenAmountToBeSharedOnProRataBasis = valueGovernor.epochVotingTokenInflationAmount(relevantEpoch);
+
+        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantEpoch);
+
+        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
+
+        uint256 amountToWithdraw = percentageOfTotalSupply * valueTokenAmountToBeSharedOnProRataBasis / 100;
+
+        address token = address(valueGovernor.votingToken());
+
+        IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
+
+        emit ValueTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
     fallback() external {
