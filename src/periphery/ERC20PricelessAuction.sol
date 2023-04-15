@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-/// @title DutchAuction
+/// @title ERC20PricelessAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
 contract ERC20PricelessAuction {
     using SafeMath for uint256;
@@ -29,7 +29,7 @@ contract ERC20PricelessAuction {
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
 
-    /// @notice Initializes the Dutch auction contract
+    /// @notice Initializes the auction contract
     /// @param _auctionToken The address of the ERC20 token being auctioned
     /// @param _paymentToken The address of the ERC20 token used as payment
     /// @param _auctionDuration The duration of the auction in seconds
