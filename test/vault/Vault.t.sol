@@ -19,9 +19,9 @@ contract VaultTest is BaseTest {
     Vault public vault;
 
     function setUp() public {
-        ISPOGGovernor govSpogVoteAddress = ISPOGGovernor(address(new MockSPOGGovernor()));
-        ISPOGGovernor govSpogValueAddress = ISPOGGovernor(address(new MockSPOGGovernor()));
-        vault = new Vault(govSpogVoteAddress, govSpogValueAddress);
+        ISPOGGovernor voteGovernorAddress = ISPOGGovernor(address(new MockSPOGGovernor()));
+        ISPOGGovernor valueGovernorAddress = ISPOGGovernor(address(new MockSPOGGovernor()));
+        vault = new Vault(voteGovernorAddress, valueGovernorAddress);
 
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
