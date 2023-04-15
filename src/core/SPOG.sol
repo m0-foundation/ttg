@@ -33,6 +33,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _voteTime The duration of a voting epoch in blocks
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
+    /// @param _valueFixedInflationAmount The fixed inflation amount for the $VALUE token
     /// @param _voteGovernor The address of the `SPOGGovernor` which $VOTE token is used for voting
     /// @param _valueGovernor The address of the `SPOGGovernor` which $VALUE token is used for voting
     constructor(
@@ -41,9 +42,10 @@ contract SPOG is SPOGStorage, ERC165 {
         uint256 _voteTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
+        uint256 _valueFixedInflationAmount,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor
-    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _voteQuorum, _valueQuorum) {
+    ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _voteQuorum, _valueQuorum, _valueFixedInflationAmount) {
         // TODO: add require statements for variables
         vault = _vault;
 
@@ -220,6 +222,8 @@ contract SPOG is SPOGStorage, ERC165 {
             uint256 inflator = spogData.inflator;
 
             return (votingTokenTotalSupply * inflator) / 100;
+        } else if (msg.sender == address(valueGovernor)) {
+            return valueFixedInflationAmount;
         }
 
         return 0;

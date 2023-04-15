@@ -31,10 +31,21 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => ProposalVote) private _proposalVotes;
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
-    // address => epoch => number of votes
-    mapping(address => mapping(uint256 => uint256)) public accountEpochVotes;
+    // address => epoch => number of proposals voted on
+    mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
+    // epoch => vote inflation amount
+    mapping(uint256 => uint256) public epochVotingTokenInflationAmount;
+    // epoch => vote token supply at epoch start
+    mapping(uint256 => uint256) public epochVotingTokenSupply;
+    // epoch => cumulative epoch vote weight casted
+    mapping(uint256 => uint256) public epochSumOfVoteWeight;
+    // address => epoch => epoch vote weight
+    mapping(address => mapping(uint256 => uint256)) public accountEpochVoteWeight;
 
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
+    event VotingTokenInflation(uint256 indexed epoch, uint256 amount);
+    event VotingTokenInflationWithdrawn(address indexed voter, uint256 amount);
+    event EpochVotingTokenSupplySet(uint256 indexed epoch, uint256 amount);
 
     constructor(
         ISPOGVotes votingTokenContract,
@@ -46,7 +57,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         _votingPeriod = votingPeriod_;
 
         // trigger epoch 0
-        startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
+        startOfNextVotingPeriod = block.number + _votingPeriod;
+        currentVotingPeriodEpoch = 0;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -61,18 +73,28 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
-            // move any unclaimed votingToken inflation rewards to the vault
+            // move any votingToken stuck in this contract to the vault
             address vault = ISPOG(spogAddress).vault();
             votingToken.transfer(vault, votingToken.balanceOf(address(this)));
+
+            // update currentVotingPeriodEpoch
+            currentVotingPeriodEpoch++;
+
+            // update epochVotingTokenSupply
+            epochVotingTokenSupply[currentVotingPeriodEpoch] = votingToken.getPastTotalSupply(startOfNextVotingPeriod);
+            emit EpochVotingTokenSupplySet(currentVotingPeriodEpoch, epochVotingTokenSupply[currentVotingPeriodEpoch]);
 
             // update startOfNextVotingPeriod
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
 
-            currentVotingPeriodEpoch++;
-
             // trigger token votingToken inflation
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
-            votingToken.mint(address(this), amountToIncreaseSupplyBy);
+
+            epochVotingTokenInflationAmount[currentVotingPeriodEpoch] = amountToIncreaseSupplyBy;
+
+            votingToken.mint(vault, amountToIncreaseSupplyBy); // send inflation to vault
+
+            emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
         }
     }
 
@@ -130,8 +152,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         updateStartOfNextVotingPeriod();
 
-        // update epochProposalsCount
-        epochProposalsCount[currentVotingPeriodEpoch]++;
+        // update epochProposalsCount. Proposals are voted on in the next epoch
+        epochProposalsCount[currentVotingPeriodEpoch + 1]++;
 
         return super.propose(targets, values, calldatas, description);
     }
@@ -162,38 +184,37 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     {
         updateStartOfNextVotingPeriod();
 
-        _updateAccountEpochVotes();
+        if (currentVotingPeriodEpoch == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
 
-        _withdrawVotingTokenInflationRewards();
+        _updateAccountEpochVotes();
+        _updateAccountEpochVoteWeight(proposalId);
 
         return super._castVote(proposalId, account, support, reason, params);
     }
 
     /// @dev update epoch votes for address
     function _updateAccountEpochVotes() private {
-        uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
-
-        // update accountEpochVotes
-        accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]++;
+        accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch]++;
     }
 
-    /// @dev withdraw pro-rata votingToken inflation rewards when account voted in all proposals from current epoch
-    function _withdrawVotingTokenInflationRewards() private {
-        uint256 relevantEpochForEpochVoteCount = currentVotingPeriodEpoch - 1;
+    /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
+    function _updateAccountEpochVoteWeight(uint256 proposalId) private {
+        uint256 voteWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
 
+        // update address vote weight for epoch
+        if (accountEpochVoteWeight[msg.sender][currentVotingPeriodEpoch] == 0) {
+            accountEpochVoteWeight[msg.sender][currentVotingPeriodEpoch] = voteWeight;
+        }
+
+        // update cumulative vote weight for epoch if user voted in all proposals
         if (
-            accountEpochVotes[msg.sender][relevantEpochForEpochVoteCount]
-                == epochProposalsCount[relevantEpochForEpochVoteCount]
+            accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch]
+                == epochProposalsCount[currentVotingPeriodEpoch]
         ) {
-            uint256 amountToWithdraw = votingToken.balanceOf(address(this)) / votingToken.totalSupply();
-            votingToken.transfer(msg.sender, amountToWithdraw);
+            epochSumOfVoteWeight[currentVotingPeriodEpoch] = epochSumOfVoteWeight[currentVotingPeriodEpoch] + voteWeight;
         }
     }
 
-    /// @dev See {IGovernor-hasVoted}.
-    function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
-        return _proposalVotes[proposalId].hasVoted[account];
-    }
     /**
      * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
      */

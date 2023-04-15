@@ -19,6 +19,7 @@ abstract contract SPOGStorage is ISPOG {
     }
 
     SPOGData public spogData;
+    uint256 public immutable valueFixedInflationAmount;
 
     ISPOGGovernor public immutable voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
@@ -30,10 +31,13 @@ abstract contract SPOGStorage is ISPOG {
         ISPOGGovernor _valueGovernor,
         uint256 _voteTime,
         uint256 _voteQuorum,
-        uint256 _valueQuorum
+        uint256 _valueQuorum,
+        uint256 _valueFixedInflationAmount
     ) {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
+
+        valueFixedInflationAmount = _valueFixedInflationAmount;
 
         // set SPOG address in vote governor
         voteGovernor.initSPOGAddress(address(this));
