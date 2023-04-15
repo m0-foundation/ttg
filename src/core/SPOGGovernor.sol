@@ -30,14 +30,21 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => ProposalVote) private _proposalVotes;
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
-    // address => epoch => number of votes
-    mapping(address => mapping(uint256 => uint256)) public accountEpochVotes;
+    // address => epoch => number of proposals voted on
+    mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
     // epoch => vote inflation amount
     mapping(uint256 => uint256) public epochVotingTokenInflationAmount;
+    // epoch => vote token supply at epoch start
+    mapping(uint256 => uint256) public epochVotingTokenSupply;
+    // epoch => cumulative epoch vote weight casted
+    mapping(uint256 => uint256) public epochSumOfVoteWeight;
+    // address => epoch => epoch vote weight
+    mapping(address => mapping(uint256 => uint256)) public accountEpochVoteWeight;
 
     event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
     event VotingTokenInflation(uint256 indexed epoch, uint256 amount);
     event VotingTokenInflationWithdrawn(address indexed voter, uint256 amount);
+    event EpochVotingTokenSupplySet(uint256 indexed epoch, uint256 amount);
 
     constructor(
         ISPOGVotes votingTokenContract,
@@ -71,21 +78,26 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
-            // move any unclaimed votingToken inflation rewards to the vault
+            // move any votingToken stuck in this contract to the vault
             address vault = ISPOG(spogAddress).vault();
             votingToken.transfer(vault, votingToken.balanceOf(address(this)));
 
+            // update currentVotingPeriodEpoch
+            currentVotingPeriodEpoch++;
+
+            // update epochVotingTokenSupply
+            epochVotingTokenSupply[currentVotingPeriodEpoch] = votingToken.getPastTotalSupply(startOfNextVotingPeriod);
+            emit EpochVotingTokenSupplySet(currentVotingPeriodEpoch, epochVotingTokenSupply[currentVotingPeriodEpoch]);
+
             // update startOfNextVotingPeriod
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
-
-            currentVotingPeriodEpoch++;
 
             // trigger token votingToken inflation
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
 
             epochVotingTokenInflationAmount[currentVotingPeriodEpoch] = amountToIncreaseSupplyBy;
 
-            votingToken.mint(address(this), amountToIncreaseSupplyBy);
+            votingToken.mint(vault, amountToIncreaseSupplyBy); // send inflation to vault
 
             emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
         }
@@ -122,8 +134,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         updateStartOfNextVotingPeriod();
 
-        // update epochProposalsCount
-        epochProposalsCount[currentVotingPeriodEpoch]++;
+        // update epochProposalsCount. Proposals are voted on in the next epoch
+        epochProposalsCount[currentVotingPeriodEpoch + 1]++;
 
         return super.propose(targets, values, calldatas, description);
     }
@@ -157,40 +169,31 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         if (currentVotingPeriodEpoch == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
 
         _updateAccountEpochVotes();
-
-        _withdrawVotingTokenInflationRewards(proposalId);
+        _updateAccountEpochVoteWeight(proposalId);
 
         return super._castVote(proposalId, account, support, reason, params);
     }
 
     /// @dev update epoch votes for address
     function _updateAccountEpochVotes() private {
-        uint256 relevantEpochVoteCount = currentVotingPeriodEpoch - 1;
-
-        // update accountEpochVotes
-        accountEpochVotes[msg.sender][relevantEpochVoteCount]++;
+        accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch]++;
     }
 
-    /// @dev withdraw pro-rata votingToken inflation rewards when account voted in all proposals from current epoch
-    function _withdrawVotingTokenInflationRewards(uint256 proposalId) private {
-        uint256 relevantEpochVoteCount = currentVotingPeriodEpoch - 1;
+    /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
+    function _updateAccountEpochVoteWeight(uint256 proposalId) private {
+        uint256 voteWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
 
-        if (accountEpochVotes[msg.sender][relevantEpochVoteCount] == epochProposalsCount[relevantEpochVoteCount]) {
-            require(!hasVoted(proposalId, msg.sender), "SPOGGovernor: already voted"); // fail early during withdraw if already voted.
+        // update address vote weight for epoch
+        if (accountEpochVoteWeight[msg.sender][currentVotingPeriodEpoch] == 0) {
+            accountEpochVoteWeight[msg.sender][currentVotingPeriodEpoch] = voteWeight;
+        }
 
-            uint256 accountVotesWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
-
-            uint256 amountToBeSharedOnProRataBasis = epochVotingTokenInflationAmount[currentVotingPeriodEpoch];
-
-            uint256 totalVotingTokenSupplyApplicable = votingToken.totalSupply() - amountToBeSharedOnProRataBasis;
-
-            uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
-
-            uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
-
-            votingToken.transfer(msg.sender, amountToWithdraw);
-
-            emit VotingTokenInflationWithdrawn(msg.sender, amountToWithdraw);
+        // update cumulative vote weight for epoch if user voted in all proposals
+        if (
+            accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch]
+                == epochProposalsCount[currentVotingPeriodEpoch]
+        ) {
+            epochSumOfVoteWeight[currentVotingPeriodEpoch] = epochSumOfVoteWeight[currentVotingPeriodEpoch] + voteWeight;
         }
     }
 

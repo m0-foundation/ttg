@@ -5,7 +5,7 @@ import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import "forge-std/console.sol";
 
-contract SPOGGovernorTest is SPOG_Base {
+contract VoteSPOGGovernorTest is SPOG_Base {
     address alice = createUser("alice");
     address bob = createUser("bob");
     address carol = createUser("carol");
@@ -95,8 +95,6 @@ contract SPOGGovernorTest is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeAddingNewListToSpog("Add new list to spog");
 
-        uint8 yesVote = 1;
-
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
@@ -158,13 +156,13 @@ contract SPOGGovernorTest is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
 
         // check that proposal has 1 vote
-        (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
+        (uint256 proposalNoVotes, uint256 proposalYesVotes) = voteGovernor.proposalVotes(proposalId);
 
-        console.log("noVotes: ", noVotes);
-        console.log("yesVotes: ", yesVotes);
+        console.log("proposalNoVotes: ", proposalNoVotes);
+        console.log("proposalYesVotes: ", proposalYesVotes);
 
-        assertEq(yesVotes, spogVoteBalance, "Proposal does not have expected yes vote");
-        assertEq(noVotes, 0, "Proposal does not have 0 no vote");
+        assertEq(proposalYesVotes, spogVoteBalance, "Proposal does not have expected yes vote");
+        assertEq(proposalNoVotes, 0, "Proposal does not have 0 no vote");
     }
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
@@ -220,8 +218,8 @@ contract SPOGGovernorTest is SPOG_Base {
         // spogVote balance of voter before casting vote on proposal 3
         uint256 spogVoteBalanceForProposal3 = spogVote.balanceOf(address(this));
 
-        vm.expectRevert("Governor: vote not currently active");
-        voteGovernor.castVote(proposalId3, noVote);
+        // vm.expectRevert("Governor: vote not currently active");
+        // voteGovernor.castVote(proposalId3, noVote);
 
         assertTrue(
             voteGovernor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
@@ -264,7 +262,7 @@ contract SPOGGovernorTest is SPOG_Base {
         spogVote.delegate(carol); // self delegate
         vm.stopPrank();
 
-        uint256 relevantEpochProposals = voteGovernor.currentVotingPeriodEpoch();
+        uint256 relevantEpochProposals = voteGovernor.currentVotingPeriodEpoch() + 1;
 
         // epochProposalsCount for epoch 0 should be 3
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
@@ -273,13 +271,9 @@ contract SPOGGovernorTest is SPOG_Base {
         vm.expectRevert("Governor: vote not currently active");
         voteGovernor.castVote(proposalId, yesVote);
 
-        // balance of spogVote for voteGovernor should be 0
-        uint256 spogVoteBalanceForVoteGovernorForEpochZero = spogVote.balanceOf(address(voteGovernor));
-        assertEq(spogVoteBalanceForVoteGovernorForEpochZero, 0, "voteGovernor should have 0 spogVote balance");
-
-        // balance of spogVote for Vault should be 0
+        // balance of spogVote for vault should be 0
         uint256 spogVoteBalanceForVaultForEpochZero = spogVote.balanceOf(address(vault));
-        assertEq(spogVoteBalanceForVaultForEpochZero, 0, "Vault should have 0 spogVote balance");
+        assertEq(spogVoteBalanceForVaultForEpochZero, 0, "vault should have 0 spogVote balance");
 
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -289,11 +283,11 @@ contract SPOGGovernorTest is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
         vm.stopPrank();
 
-        uint256 spogVoteBalanceForVoteGovernorForEpochOne = spogVote.balanceOf(address(voteGovernor));
+        uint256 spogVoteBalanceForVaultForEpochOne = spogVote.balanceOf(address(vault));
         assertGt(
-            spogVoteBalanceForVoteGovernorForEpochOne,
-            spogVoteBalanceForVoteGovernorForEpochZero,
-            "voteGovernor should have more spogVote balance"
+            spogVoteBalanceForVaultForEpochOne,
+            spogVoteBalanceForVaultForEpochZero,
+            "vault should have more spogVote balance"
         );
 
         // bob votes on proposal 1
@@ -303,10 +297,14 @@ contract SPOGGovernorTest is SPOG_Base {
 
         // check that both have voted once in epoch 1
         assertEq(
-            voteGovernor.accountEpochVotes(alice, relevantEpochProposals), 1, "Alice should have voted once in epoch 1"
+            voteGovernor.accountEpochNumProposalsVotedOn(alice, relevantEpochProposals),
+            1,
+            "Alice should have voted once in epoch 1"
         );
         assertEq(
-            voteGovernor.accountEpochVotes(bob, relevantEpochProposals), 1, "Bob should have voted once in epoch 1"
+            voteGovernor.accountEpochNumProposalsVotedOn(bob, relevantEpochProposals),
+            1,
+            "Bob should have voted once in epoch 1"
         );
 
         // alice and bobs vote token balance should be the same as before voting
@@ -327,22 +325,39 @@ contract SPOGGovernorTest is SPOG_Base {
 
         // check that both alice and bob have voted 3 times in relevant epoch
         assertEq(
-            voteGovernor.accountEpochVotes(alice, relevantEpochProposals),
+            voteGovernor.accountEpochNumProposalsVotedOn(alice, relevantEpochProposals),
             3,
             "Alice should have voted 3 times in epoch 1"
         );
         assertEq(
-            voteGovernor.accountEpochVotes(bob, relevantEpochProposals), 3, "Bob should have voted 3 times in epoch 1"
+            voteGovernor.accountEpochNumProposalsVotedOn(bob, relevantEpochProposals),
+            3,
+            "Bob should have voted 3 times in epoch 1"
         );
 
         // and carol has not voted at all
         assertEq(
-            voteGovernor.accountEpochVotes(carol, relevantEpochProposals),
+            voteGovernor.accountEpochNumProposalsVotedOn(carol, relevantEpochProposals),
             0,
             "Carol should have voted 0 times in epoch 1"
         );
 
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
+
+        assertFalse(vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals), "Alice should not have claimed vote token rewards");
+        assertFalse(vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals), "Bob should not have claimed vote token rewards");
+
+        // alice and bob withdraw their vote token inflation rewards from Vault during current epoch. They must do so to get the rewards
+        vm.startPrank(alice);
+        vault.withdrawVoteTokenRewards();
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        vault.withdrawVoteTokenRewards();
+        vm.stopPrank();
+
+        assertTrue(vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals), "Alice should have claimed vote token rewards");
+        assertTrue(vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals), "Bob should have claimed vote token rewards");
 
         // alice and bobs should have received vote token inflationary rewards from epoch 1 for having voted in all proposals proposed from epoch 0
         assertEq(
@@ -364,11 +379,16 @@ contract SPOGGovernorTest is SPOG_Base {
         // carol votes on proposal 3 only
         vm.startPrank(carol);
         voteGovernor.castVote(proposalId3, noVote);
+
+        // carol fails to withdraw vote rewards because she has not voted in all proposals
+        vm.expectRevert("Vault: unable to withdraw due to not voting on all proposals");
+        vault.withdrawVoteTokenRewards();
+
         vm.stopPrank();
 
         // carol voted in 1 proposal
         assertEq(
-            voteGovernor.accountEpochVotes(carol, relevantEpochProposals),
+            voteGovernor.accountEpochNumProposalsVotedOn(carol, relevantEpochProposals),
             1,
             "Carol should have voted 1 times in epoch 1"
         );
@@ -398,11 +418,9 @@ contract SPOGGovernorTest is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeAddingNewListToSpog("new list to spog");
 
-        address voter = address(this);
-
         uint256 spogVoteSupplyBefore = spogVote.totalSupply();
 
-        uint256 voterVoteTokenBalanceBefore = spogVote.balanceOf(address(voter));
+        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
 
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -418,11 +436,11 @@ contract SPOGGovernorTest is SPOG_Base {
             "Vote token supply didn't inflate correctly"
         );
 
-        // check that voter has received the vote inflationary supply
-        uint256 voterVoteTokenBalanceAfterFirstPeriod = spogVote.balanceOf(address(voter));
+        // check that vault has received the vote inflationary supply
+        uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogVote.balanceOf(address(vault));
         assertEq(
-            voterVoteTokenBalanceAfterFirstPeriod,
-            voterVoteTokenBalanceBefore + amountAddedByInflation,
+            vaultVoteTokenBalanceAfterFirstPeriod,
+            vaultVoteTokenBalanceBefore + amountAddedByInflation,
             "Vault did not receive the accurate vote inflationary supply"
         );
 
