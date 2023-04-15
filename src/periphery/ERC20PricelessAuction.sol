@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @title DutchAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
-contract DutchAuction {
+contract ERC20PricelessAuction {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
