@@ -63,7 +63,7 @@ contract ERC20PricelessAuction {
     /// @return The current price per token in payment tokens
     function getCurrentPrice() public view returns (uint256) {
         if(auctionTokenAmount - amountSold == 0) {
-          return lastBuyPrice;
+            return lastBuyPrice;
         }
 
         if (block.timestamp >= auctionEndTime) {
@@ -82,8 +82,8 @@ contract ERC20PricelessAuction {
 
         uint8 i;
         for (i; i < 20;) {
-          price = price * percentIncomplete / 1e18;
-          unchecked { ++i;}
+            price = price * percentIncomplete / 1e18;
+            unchecked { ++i;}
         }
 
         return price;
@@ -100,7 +100,7 @@ contract ERC20PricelessAuction {
         uint256 amountToPay = amountToBuy * currentPrice / 10 ** auctionToken.decimals();
 
         if(auctionTokenAmount - amountSold < amountToBuy) {
-          revert AuctionBalanceInsufficient();
+            revert AuctionBalanceInsufficient();
         }
 
         // Transfer the winning bid amount to the vault
