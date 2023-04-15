@@ -92,17 +92,14 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
         vm.expectRevert(customError);
         auction.withdraw(voteToken);
 
-        // start at 1 because endtime is not inclusive      
-        for(uint i = 1; i < 30 * 24; i++) {
-            vm.roll(block.number + 1);
-            vm.warp(block.timestamp + 1 hours);
+        vm.roll(block.number + 1);
+        vm.warp(block.timestamp + 30 days - 1 seconds);
 
-            vm.expectRevert(customError);
-            auction.withdraw(voteToken);
-        }
+        vm.expectRevert(customError);
+        auction.withdraw(voteToken);
 
         vm.roll(block.number + 1);
-        vm.warp(block.timestamp + 1 hours);
+        vm.warp(block.timestamp + 1 seconds);
 
         auction.withdraw(voteToken);
 
