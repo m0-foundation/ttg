@@ -215,10 +215,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         }
     }
 
-    /// @dev See {IGovernor-hasVoted}.
-    function hasVoted(uint256 proposalId, address account) public view virtual override returns (bool) {
-        return _proposalVotes[proposalId].hasVoted[account];
-    }
     /**
      * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
      */

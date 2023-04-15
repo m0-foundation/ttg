@@ -5,7 +5,6 @@ import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import "forge-std/console.sol";
 
-<<<<<<< HEAD
 contract VoteSPOGGovernorTest is SPOG_Base {
     address alice = createUser("alice");
     address bob = createUser("bob");
@@ -14,10 +13,8 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     uint256 spogVoteAmountToMint = 1000e18;
     uint8 noVote = 0;
     uint8 yesVote = 1;
-=======
-contract SPOGGovernorTest is SPOG_Base {
+
     event NewSingleQuorumProposal(uint256 indexed proposalId);
->>>>>>> main
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
@@ -355,8 +352,14 @@ contract SPOGGovernorTest is SPOG_Base {
 
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
 
-        assertFalse(vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals), "Alice should not have claimed vote token rewards");
-        assertFalse(vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals), "Bob should not have claimed vote token rewards");
+        assertFalse(
+            vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals),
+            "Alice should not have claimed vote token rewards"
+        );
+        assertFalse(
+            vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals),
+            "Bob should not have claimed vote token rewards"
+        );
 
         // alice and bob withdraw their vote token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
@@ -367,8 +370,14 @@ contract SPOGGovernorTest is SPOG_Base {
         vault.withdrawVoteTokenRewards();
         vm.stopPrank();
 
-        assertTrue(vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals), "Alice should have claimed vote token rewards");
-        assertTrue(vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals), "Bob should have claimed vote token rewards");
+        assertTrue(
+            vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals),
+            "Alice should have claimed vote token rewards"
+        );
+        assertTrue(
+            vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals),
+            "Bob should have claimed vote token rewards"
+        );
 
         // alice and bobs should have received vote token inflationary rewards from epoch 1 for having voted in all proposals proposed from epoch 0
         assertEq(
@@ -421,21 +430,15 @@ contract SPOGGovernorTest is SPOG_Base {
     }
 
     function test_CanBatchVoteOnMultipleProposalsAfterItsVotingDelay() public {
-        /**
-         * Proposal 1 and 2 *********
-         */
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
-
-        uint8 noVote = 0;
-        uint8 yesVote = 1;
 
         uint256[] memory proposals = new uint256[](2);
         proposals[0] = proposalId;
         proposals[1] = proposalId2;
 
-        uint8[] memory support  = new uint8[](2);
+        uint8[] memory support = new uint8[](2);
         support[0] = yesVote;
         support[1] = noVote;
 
