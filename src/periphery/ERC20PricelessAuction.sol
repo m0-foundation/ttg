@@ -17,7 +17,7 @@ contract ERC20PricelessAuction {
     error AuctionBalanceInsufficient();
 
     IERC20Metadata public auctionToken;
-    IERC20Metadata public paymentToken;
+    IERC20 public paymentToken;
     uint256 public auctionDuration;
     uint256 public auctionEndTime;
     uint256 public ceilingPrice;
@@ -36,7 +36,7 @@ contract ERC20PricelessAuction {
     /// @param _vault The address where the payment tokens will be sent
     constructor(
         IERC20Metadata _auctionToken,
-        IERC20Metadata _paymentToken,
+        IERC20 _paymentToken,
         uint256 _auctionDuration,
         address _vault
     ) {
@@ -104,7 +104,7 @@ contract ERC20PricelessAuction {
         }
 
         // Transfer the winning bid amount to the vault
-        IERC20(paymentToken).safeTransferFrom(msg.sender, vault, amountToPay);
+        paymentToken.safeTransferFrom(msg.sender, vault, amountToPay);
 
         // Transfer the auctioned tokens to the highest bidder
         IERC20(auctionToken).safeTransfer(msg.sender, amountToBuy);
