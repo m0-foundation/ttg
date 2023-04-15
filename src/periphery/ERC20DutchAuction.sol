@@ -17,7 +17,7 @@ contract DutchAuction {
     error AuctionBalanceInsufficient();
 
     IERC20Metadata public auctionToken;
-    IERC20 public paymentToken;
+    IERC20Metadata public paymentToken;
     uint256 public auctionDuration;
     uint256 public auctionEndTime;
     uint256 public ceilingPrice;
@@ -36,7 +36,7 @@ contract DutchAuction {
     /// @param _vault The address where the payment tokens will be sent
     constructor(
         IERC20Metadata _auctionToken,
-        IERC20 _paymentToken,
+        IERC20Metadata _paymentToken,
         uint256 _auctionDuration,
         address _vault
     ) {
@@ -56,6 +56,7 @@ contract DutchAuction {
     function init(uint256 _auctionTokenAmount) public {
         IERC20(auctionToken).safeTransferFrom(vault, address(this), _auctionTokenAmount);
         auctionTokenAmount+=_auctionTokenAmount;
+        ceilingPrice = paymentToken.totalSupply() / (auctionTokenAmount / 10 ** auctionToken.decimals());
     }
 
     /// @notice Returns the current price of the auction
@@ -103,7 +104,7 @@ contract DutchAuction {
         }
 
         // Transfer the winning bid amount to the vault
-        paymentToken.safeTransferFrom(msg.sender, vault, amountToPay);
+        IERC20(paymentToken).safeTransferFrom(msg.sender, vault, amountToPay);
 
         // Transfer the auctioned tokens to the highest bidder
         IERC20(auctionToken).safeTransfer(msg.sender, amountToBuy);
@@ -117,7 +118,7 @@ contract DutchAuction {
     /// @notice Withdraws the unsold auction tokens to the vault
     /// @dev this allows to withdraw any ERC20 tokens, including those sent directly without init()
     function withdraw(IERC20 token) public {
-        if (block.timestamp <= auctionEndTime) {
+        if (block.timestamp < auctionEndTime) {
             revert AuctionNotEnded();
         }
 

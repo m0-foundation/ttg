@@ -40,7 +40,7 @@ contract ERC20DutchAuctionTest is SPOG_Base {
         mintAndApproveVoteTokens(1000e18);
 
         dutchAuction.init(1000e18);
-        assertEq(dutchAuction.getCurrentPrice(), usdc.totalSupply());
+        assertEq(dutchAuction.getCurrentPrice(), usdc.totalSupply() / 1000);
 
         for(uint i = 0; i < 30 * 24; i++) {
             vm.roll(block.number + 1);
@@ -91,8 +91,9 @@ contract ERC20DutchAuctionTest is SPOG_Base {
         bytes memory customError = abi.encodeWithSignature("AuctionNotEnded()");
         vm.expectRevert(customError);
         dutchAuction.withdraw(voteToken);
-                
-        for(uint i = 0; i < 30 * 24; i++) {
+
+        // start at 1 because endtime is not inclusive      
+        for(uint i = 1; i < 30 * 24; i++) {
             vm.roll(block.number + 1);
             vm.warp(block.timestamp + 1 hours);
 
