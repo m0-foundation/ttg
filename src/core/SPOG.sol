@@ -65,7 +65,9 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
     function addNewList(IList list) external onlyVoteGovernor {
-        if (list.admin() != address(this)) revert ListAdminIsNotSPOG();
+        if (list.admin() != address(this)) {
+            revert ListAdminIsNotSPOG();
+        }
         // add the list to the master list
         masterlist.set(address(list), inMasterList);
         emit NewListAdded(address(list));
