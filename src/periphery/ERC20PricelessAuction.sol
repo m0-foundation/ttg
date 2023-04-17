@@ -103,7 +103,9 @@ contract ERC20PricelessAuction {
             revert AuctionBalanceInsufficient();
         }
 
-        amountSold+=amountToBuy;
+        unchecked {
+            amountSold = amountSold + amountToBuy;
+        }
 
         // Transfer the winning bid amount to the vault
         paymentToken.safeTransferFrom(msg.sender, vault, amountToPay);
