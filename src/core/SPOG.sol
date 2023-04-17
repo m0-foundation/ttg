@@ -154,7 +154,7 @@ contract SPOG is SPOGStorage, ERC165 {
     function propose(bytes memory callData, string memory description) public override returns (uint256) {
         bytes4 executableFuncSelector = bytes4(callData);
         if (!governedMethods[executableFuncSelector]) {
-            revert NotGovernedMethod();
+            revert NotGovernedMethod(executableFuncSelector);
         }
 
         address[] memory targets = new address[](1);
@@ -183,7 +183,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
             // proposal ids should match
             if (valueProposalId != proposalId) {
-                revert ValueVoteProposalIdsMistmatch();
+                revert ValueVoteProposalIdsMistmatch(proposalId, valueProposalId);
             }
 
             emit NewDoubleQuorumProposal(proposalId);
@@ -213,7 +213,7 @@ contract SPOG is SPOGStorage, ERC165 {
         // Check that both value and vote governance approved parameter change
         if (executableFuncSelector == this.change.selector) {
             if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {
-                revert ValueGovernorDidNotApprove();
+                revert ValueGovernorDidNotApprove(proposalId);
             }
         }
 

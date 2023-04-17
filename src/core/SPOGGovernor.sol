@@ -10,10 +10,10 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract SPOGGovernor is GovernorVotesQuorumFraction {
     // Errors
-    error CallerIsNotSPOG();
-    error SPOGAddressAlreadySet();
-    error AlreadyVoted();
-    error ArrayLengthsMistmatch();
+    error CallerIsNotSPOG(address caller);
+    error SPOGAddressAlreadySet(address spog);
+    error AlreadyVoted(uint256 proposalId, address account);
+    error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
     error StartOfNextVotingPeriodWasNotUpdated();
 
     ISPOGVotes public immutable votingToken;
@@ -40,7 +40,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     event StartOfNextVotingPeriodUpdated(uint256 startOfNextVotingPeriod);
 
     modifier onlySPOG() {
-        if (msg.sender != spogAddress) revert CallerIsNotSPOG();
+        if (msg.sender != spogAddress) revert CallerIsNotSPOG(msg.sender);
 
         _;
     }
@@ -61,7 +61,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
         if (spogAddress != address(0)) {
-            revert SPOGAddressAlreadySet();
+            revert SPOGAddressAlreadySet(spogAddress);
         }
 
         votingToken.initSPOGAddress(_spogAddress);
@@ -91,7 +91,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         uint256 propLength = proposalIds.length;
         uint256 supLength = support.length;
         if (propLength != supLength) {
-            revert ArrayLengthsMistmatch();
+            revert ArrayLengthsMistmatch(propLength, supLength);
         }
         uint256[] memory results = new uint256[](propLength);
         for (uint256 i; i < propLength;) {
@@ -232,7 +232,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         if (proposalVote.hasVoted[account]) {
-            revert AlreadyVoted();
+            revert AlreadyVoted(proposalId, account);
         }
         proposalVote.hasVoted[account] = true;
 

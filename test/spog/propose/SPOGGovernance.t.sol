@@ -82,7 +82,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         // approve cash spend for proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         // revert when method signature is not supported
-        vm.expectRevert(ISPOG.NotGovernedMethod.selector);
+        vm.expectRevert(abi.encodeWithSelector(ISPOG.NotGovernedMethod.selector, bytes4(calldatas[0])));
         spog.propose(targets, values, calldatas, description);
     }
 

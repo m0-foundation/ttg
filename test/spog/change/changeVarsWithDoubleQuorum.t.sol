@@ -122,7 +122,7 @@ contract SPOG_change is SPOG_Base {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // Check that execute function is reverted if value quorum is not reached
-        vm.expectRevert(ISPOG.ValueGovernorDidNotApprove.selector);
+        vm.expectRevert(abi.encodeWithSelector(ISPOG.ValueGovernorDidNotApprove.selector, proposalId));
         spog.execute(targets, values, calldatas, hashedDescription);
 
         (,,,,, uint256 rewardFirstCheck,) = spog.spogData();

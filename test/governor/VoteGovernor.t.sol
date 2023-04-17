@@ -57,7 +57,7 @@ contract SPOGGovernorTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert(SPOGGovernor.CallerIsNotSPOG.selector);
+        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.propose(targets, values, calldatas, description);
     }
 
@@ -84,12 +84,12 @@ contract SPOGGovernorTest is SPOG_Base {
 
         // execute proposal
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert(SPOGGovernor.CallerIsNotSPOG.selector);
+        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
-        vm.expectRevert(SPOGGovernor.CallerIsNotSPOG.selector);
+        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.registerEmergencyProposal(1);
     }
 
