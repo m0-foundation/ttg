@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import "forge-std/console.sol";
 
 contract SPOGGovernorTest is SPOG_Base {
@@ -56,7 +57,7 @@ contract SPOGGovernorTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert("SPOGGovernor: caller is not SPOG");
+        vm.expectRevert(SPOGGovernor.CallerIsNotSPOG.selector);
         voteGovernor.propose(targets, values, calldatas, description);
     }
 
@@ -83,12 +84,12 @@ contract SPOGGovernorTest is SPOG_Base {
 
         // execute proposal
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert("SPOGGovernor: caller is not SPOG");
+        vm.expectRevert(SPOGGovernor.CallerIsNotSPOG.selector);
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
-        vm.expectRevert("SPOGGovernor: caller is not SPOG");
+        vm.expectRevert(SPOGGovernor.CallerIsNotSPOG.selector);
         voteGovernor.registerEmergencyProposal(1);
     }
 

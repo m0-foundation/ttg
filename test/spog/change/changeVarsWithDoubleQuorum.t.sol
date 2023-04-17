@@ -5,6 +5,7 @@ import "test/shared/SPOG_Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 contract SPOG_change is SPOG_Base {
     bytes32 internal reward;
@@ -121,7 +122,7 @@ contract SPOG_change is SPOG_Base {
         vm.roll(block.number + deployScript.voteTime() + 1);
 
         // Check that execute function is reverted if value quorum is not reached
-        vm.expectRevert("Value governor did not approve the proposal");
+        vm.expectRevert(ISPOG.ValueGovernorDidNotApprove.selector);
         spog.execute(targets, values, calldatas, hashedDescription);
 
         (,,,,, uint256 rewardFirstCheck,) = spog.spogData();

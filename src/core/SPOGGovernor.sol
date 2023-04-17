@@ -9,6 +9,13 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
 contract SPOGGovernor is GovernorVotesQuorumFraction {
+    // Errors
+    error CallerIsNotSPOG();
+    error SPOGAddressAlreadySet();
+    error AlreadyVoted();
+    error ArrayLengthsMistmatch();
+    error StartOfNextVotingPeriodWasNotUpdated();
+
     ISPOGVotes public immutable votingToken;
     address public spogAddress;
     uint256 private _votingPeriod;
@@ -33,7 +40,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     event StartOfNextVotingPeriodUpdated(uint256 startOfNextVotingPeriod);
 
     modifier onlySPOG() {
-        require(msg.sender == spogAddress, "SPOGGovernor: caller is not SPOG");
+        if (msg.sender != spogAddress) revert CallerIsNotSPOG();
+
         _;
     }
 
@@ -52,7 +60,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
-        require(spogAddress == address(0), "SPOGGovernor: spogAddress already set");
+        if (spogAddress != address(0)) {
+            revert SPOGAddressAlreadySet();
+        }
 
         votingToken.initSPOGAddress(_spogAddress);
         spogAddress = _spogAddress;
@@ -80,7 +90,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns (uint256[] memory) {
         uint256 propLength = proposalIds.length;
         uint256 supLength = support.length;
-        require(propLength == supLength, "Array mismatch");
+        if (propLength != supLength) {
+            revert ArrayLengthsMistmatch();
+        }
         uint256[] memory results = new uint256[](propLength);
         for (uint256 i; i < propLength;) {
             results[i] = castVote(proposalIds[i], support[i]);
@@ -169,7 +181,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         if (startOfNextVotingPeriod > block.number) {
             return startOfNextVotingPeriod - block.number;
         } else {
-            revert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
+            revert StartOfNextVotingPeriodWasNotUpdated();
         }
     }
 
@@ -219,7 +231,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        require(!proposalVote.hasVoted[account], "SPOGGovernor: vote already cast");
+        if (proposalVote.hasVoted[account]) {
+            revert AlreadyVoted();
+        }
         proposalVote.hasVoted[account] = true;
 
         if (support == uint8(VoteType.No)) {

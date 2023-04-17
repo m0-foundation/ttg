@@ -18,6 +18,15 @@ interface ISPOG {
 
     // Errors
     error InvalidParameter(bytes32 what);
+    error ListAdminIsNotSPOG();
+    error ListIsNotInMasterList();
+    error ListIsAlreadyInMasterList();
+    error AddressIsAlreadyInList();
+    error AddressIsNotInList();
+    error InvalidProposal();
+    error NotGovernedMethod();
+    error ValueVoteProposalIdsMistmatch();
+    error ValueGovernorDidNotApprove();
 
     // Logic functions
     function vault() external view returns (address);

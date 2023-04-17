@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 contract SPOGGovernanceTest is SPOG_Base {
     // Setup function, add test-specific initializations here
@@ -30,7 +31,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when method is not supported
-        vm.expectRevert("Only 1 change per proposal");
+        vm.expectRevert(ISPOG.InvalidProposal.selector);
         spog.propose(targets, values, calldatas, description);
     }
 
@@ -47,7 +48,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when proposal expects ETH value
-        vm.expectRevert("No ETH value should be passed");
+        vm.expectRevert(ISPOG.InvalidProposal.selector);
         spog.propose(targets, values, calldatas, description);
     }
 
@@ -65,7 +66,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when proposal expects ETH value
-        vm.expectRevert("Only SPOG can be target");
+        vm.expectRevert(ISPOG.InvalidProposal.selector);
         spog.propose(targets, values, calldatas, description);
     }
 
@@ -81,7 +82,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         // approve cash spend for proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         // revert when method signature is not supported
-        vm.expectRevert("Method is not supported");
+        vm.expectRevert(ISPOG.NotGovernedMethod.selector);
         spog.propose(targets, values, calldatas, description);
     }
 
