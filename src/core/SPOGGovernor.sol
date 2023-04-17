@@ -244,7 +244,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         if (startOfNextVotingPeriod > block.number) {
             return startOfNextVotingPeriod - block.number;
         }
-        
+
         revert StartOfNextVotingPeriodWasNotUpdated();
     }
 
