@@ -1,30 +1,29 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @title ERC20PricelessAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
 contract ERC20PricelessAuction {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     error AuctionEnded();
     error AuctionNotEnded();
     error AuctionBalanceInsufficient();
 
-    IERC20Metadata public auctionToken;
-    IERC20 public paymentToken;
-    uint256 public auctionDuration;
-    uint256 public auctionEndTime;
-    uint256 public ceilingPrice;
-    uint256 public floorPrice;
-    address public vault;
+    IERC20Metadata public immutable auctionToken;
+    IERC20 public immutable paymentToken;
+    address public immutable vault;
+    uint256 public immutable auctionDuration;
+    uint256 public immutable auctionEndTime;
+    uint256 public immutable floorPrice;
+
     uint256 public auctionTokenAmount;
     uint256 public amountSold;
+    uint256 public ceilingPrice;
     uint256 public lastBuyPrice;
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
@@ -53,6 +52,7 @@ contract ERC20PricelessAuction {
     /// @param _auctionTokenAmount The amount of tokens to be auctioned
     /// @dev called after deploy, then approve of the auctionToken to the auction contract
     /// @dev this can be called multiple times to add more tokens to the auction
+    /// TODO: revisit how auction is initialized when integrated with the vault
     function init(uint256 _auctionTokenAmount) public {
         IERC20(auctionToken).safeTransferFrom(vault, address(this), _auctionTokenAmount);
         auctionTokenAmount+=_auctionTokenAmount;
@@ -103,13 +103,14 @@ contract ERC20PricelessAuction {
             revert AuctionBalanceInsufficient();
         }
 
+        amountSold+=amountToBuy;
+
         // Transfer the winning bid amount to the vault
         paymentToken.safeTransferFrom(msg.sender, vault, amountToPay);
 
         // Transfer the auctioned tokens to the highest bidder
         IERC20(auctionToken).safeTransfer(msg.sender, amountToBuy);
 
-        amountSold+=amountToBuy;
         lastBuyPrice = currentPrice;
 
         emit AuctionPurchase(msg.sender, amountToBuy, currentPrice);
