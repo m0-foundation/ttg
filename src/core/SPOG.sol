@@ -8,6 +8,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
+import "forge-std/console.sol";
+
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -177,13 +179,20 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // handle any value quorum proposals first
         if (executableFuncSelector == this.sellERC20.selector) {
-          (address sellToken,) = abi.decode(callData, (address, uint256));
+          console.log('proposing sell erc20');
+          bytes memory params = _removeSelector(callData);
+          (address sellToken, uint256 amount) = abi.decode(params, (address, uint256));
+
+          if(address(0) == sellToken) revert InvalidProposal();
+          if(amount == 0) revert InvalidProposal();
  
           // disallow proposing selling cash for cash
           if(sellToken == address(spogData.cash)) revert InvalidProposal();
 
           // disallow proposing selling voting token. Does not require voting
           if(sellToken == address(voteGovernor.votingToken())) revert InvalidProposal();
+
+          if(IERC20(sellToken).balanceOf(vault) < amount) revert InvalidProposal();
 
           uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
 
@@ -312,6 +321,19 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // remove the address from the list
         _list.remove(_address);
+    }
+
+    function _removeSelector(bytes memory callData) internal pure returns (bytes memory) {
+        uint256 length = callData.length - 4;
+        bytes memory params = new bytes(length);
+
+        uint256 i;
+        for (i; i < length;) {
+            params[i] = callData[i + 4];
+            unchecked { ++i; }
+        }
+
+        return params;
     }
 
     fallback() external {
