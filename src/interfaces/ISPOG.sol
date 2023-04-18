@@ -5,11 +5,11 @@ import {IList} from "src/interfaces/IList.sol";
 
 interface ISPOG {
     // Events
-    event NewListAdded(address _list);
-    event ListRemoved(address _list);
-    event AddressAppendedToList(address _list, address _address);
-    event AddressRemovedFromList(address _list, address _address);
-    event EmergencyAddressRemovedFromList(address _list, address _address);
+    event NewListAdded(address indexed _list);
+    event ListRemoved(address indexed _list);
+    event AddressAppendedToList(address indexed _list, address indexed _address);
+    event AddressRemovedFromList(address indexed _list, address indexed _address);
+    event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
     event TaxChanged(uint256 indexed tax);
     event NewValueQuorumProposal(uint256 indexed proposalId);
     event NewVoteQuorumProposal(uint256 indexed proposalId);
@@ -19,6 +19,15 @@ interface ISPOG {
 
     // Errors
     error InvalidParameter(bytes32 what);
+    error ListAdminIsNotSPOG();
+    error ListIsNotInMasterList();
+    error ListIsAlreadyInMasterList();
+    error AddressIsAlreadyInList();
+    error AddressIsNotInList();
+    error InvalidProposal();
+    error NotGovernedMethod(bytes4 funcSelector);
+    error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
+    error ValueGovernorDidNotApprove(uint256 proposalId);
 
     // Logic functions
     function vault() external view returns (address);
