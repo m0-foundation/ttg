@@ -48,7 +48,7 @@ contract SPOG_Base is BaseTest {
         list = new List("My List");
         list.changeAdmin(address(spog));
 
-        vault = deployScript.vault();
+        vault = Vault(spog.vault());
     }
 
     /* Helper functions */
