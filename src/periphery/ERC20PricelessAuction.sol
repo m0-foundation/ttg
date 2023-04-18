@@ -26,7 +26,7 @@ contract ERC20PricelessAuction {
     uint256 public ceilingPrice;
     uint256 public lastBuyPrice;
 
-    uint8 CURVE_STEPS = 20;
+    uint256 CURVE_STEPS = 20;
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
 
