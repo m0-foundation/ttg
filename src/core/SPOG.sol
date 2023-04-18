@@ -320,6 +320,9 @@ contract SPOG is SPOGStorage, ERC165 {
         _list.remove(_address);
     }
 
+    /// @notice remove selector from the call data
+    /// @param callData The call data with selector in first 4 bytes
+    /// @dev used to inspect params before allowing proposal
     function _removeSelector(bytes memory callData) internal pure returns (bytes memory) {
         uint256 length = callData.length - 4;
         bytes memory params = new bytes(length);
