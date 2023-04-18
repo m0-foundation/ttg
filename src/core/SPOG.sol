@@ -177,6 +177,14 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // handle any value quorum proposals first
         if (executableFuncSelector == this.sellERC20.selector) {
+          (address sellToken,) = abi.decode(callData, (address, uint256));
+ 
+          // disallow proposing selling cash for cash
+          if(sellToken == address(spogData.cash)) revert InvalidProposal();
+
+          // disallow proposing selling voting token. Does not require voting
+          if(sellToken == address(voteGovernor.votingToken())) revert InvalidProposal();
+
           uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
 
           emit NewValueQuorumProposal(valueProposalId);
@@ -244,6 +252,8 @@ contract SPOG is SPOGStorage, ERC165 {
 
     /// @notice Sell an asset in the vault
     /// @dev Calls `sell` function of the vault
+    /// @param token The token to sell
+    /// @param amount The amount of the token to sell
     function sellERC20(address token, uint256 amount) external onlyValueGovernor {
         IVault(vault).sellERC20(token, address(spogData.cash), spogData.sellTime, amount);
     }
