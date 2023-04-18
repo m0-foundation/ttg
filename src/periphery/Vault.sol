@@ -5,17 +5,15 @@ pragma solidity 0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {IVault} from "src/interfaces/IVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract Vault {
+contract Vault is IVault {
     using SafeERC20 for IERC20;
 
     ISPOGGovernor public immutable voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
-
-    event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-    event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
 
     // address => voting epoch => bool
     mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
@@ -97,6 +95,11 @@ contract Vault {
 
         emit ValueTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
+
+    function sellERC20(address token, uint256 amount) external {
+        // IERC20(token).safeTransfer(msg.sender, amount);
+    }
+
 
     fallback() external {
         revert("Vault: non-existent function");

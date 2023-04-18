@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
 import {IList} from "src/interfaces/IList.sol";
+import {IVault} from "src/interfaces/IVault.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -233,8 +234,8 @@ contract SPOG is SPOGStorage, ERC165 {
 
     /// @notice Sell an asset in the vault
     /// @dev Calls `sell` function of the vault
-    function sellERC20(address _token, uint256 _amount) external onlyValueGovernor {
-        // vault.sell(_token, _amount);
+    function sellERC20(address token, uint256 amount) external onlyValueGovernor {
+        IVault(vault).sellERC20(token, amount);
     }
 
     // ********** Utility FUNCTIONS ********** //
