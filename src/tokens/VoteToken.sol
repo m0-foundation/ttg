@@ -21,7 +21,7 @@ contract VoteToken is SPOGVotes {
     constructor(string memory name, string memory symbol, address _valueToken) SPOGVotes(name, symbol) {
         valueToken = _valueToken;
 
-        // TODO: make sure snapshot role is ser correctly
+        // TODO: make sure snapshot role is set correctly
         valueStartSnapshotId = ValueToken(valueToken).snapshot();
 
         _totalSupply = ERC20Snapshot(valueToken).totalSupplyAt(valueStartSnapshotId);
@@ -32,7 +32,7 @@ contract VoteToken is SPOGVotes {
         return _balances(account);
     }
 
-    // Check if this function needs to be overriden or it will work with parent definition and child _totalSupply var
+    // Check if this function needs to be overriden at all ? or it will work with parent definition and child _totalSupply var
     function totalSupply() public view virtual override(ERC20, IERC20) returns (uint256) {
         return _totalSupply;
     }

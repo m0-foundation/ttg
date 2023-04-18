@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 
 import "./SPOGVotes.sol";
 
@@ -10,7 +10,7 @@ contract ValueToken is ERC20Snapshot, SPOGVotes {
     bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
 
     constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {
-        _setupRole(SNAPSHOT_ROLE, _msgSender());
+        // _setupRole(SNAPSHOT_ROLE, _msgSender());
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
@@ -37,7 +37,13 @@ contract ValueToken is ERC20Snapshot, SPOGVotes {
         super._mint(account, amount);
     }
 
-    function snapshot() public onlyRole(SNAPSHOT_ROLE) returns (uint256) {
+    function snapshot()
+        public
+        returns (
+            // onlyRole(SNAPSHOT_ROLE)
+            uint256
+        )
+    {
         return _snapshot();
     }
 }
