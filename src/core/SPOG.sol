@@ -164,6 +164,16 @@ contract SPOG is SPOGStorage, ERC165 {
             : spogData.tax;
         _pay(fee);
 
+        // handle any value quorum proposals first
+        if (executableFuncSelector == this.sellERC20.selector) {
+          uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+          emit NewValueQuorumProposal(valueProposalId);
+
+          return valueProposalId;
+        }
+
+        // Create proposal in vote governor
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
         // Register emergency proposal with vote governor
         if (executableFuncSelector == this.emergencyRemove.selector) {
@@ -182,7 +192,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
             emit NewDoubleQuorumProposal(proposalId);
         } else {
-            emit NewSingleQuorumProposal(proposalId);
+            emit NewVoteQuorumProposal(proposalId);
         }
 
         return proposalId;
@@ -211,8 +221,20 @@ contract SPOG is SPOGStorage, ERC165 {
             }
         }
 
-        voteGovernor.execute(targets, values, calldatas, descriptionHash);
+        if (executableFuncSelector == this.sellERC20.selector) {
+            valueGovernor.execute(targets, values, calldatas, descriptionHash);
+        } else {
+            voteGovernor.execute(targets, values, calldatas, descriptionHash);
+        }
+
         return proposalId;
+
+    }
+
+    /// @notice Sell an asset in the vault
+    /// @dev Calls `sell` function of the vault
+    function sellERC20(address _token, uint256 _amount) external onlyValueGovernor {
+        // vault.sell(_token, _amount);
     }
 
     // ********** Utility FUNCTIONS ********** //
