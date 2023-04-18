@@ -8,8 +8,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import "forge-std/console.sol";
-
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -179,7 +177,6 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // handle any value quorum proposals first
         if (executableFuncSelector == this.sellERC20.selector) {
-          console.log('proposing sell erc20');
           bytes memory params = _removeSelector(callData);
           (address sellToken, uint256 amount) = abi.decode(params, (address, uint256));
 
