@@ -34,7 +34,6 @@ contract SPOGDeployScript is BaseScript {
     SPOGGovernor public valueGovernor;
     ISPOGVotes public vote;
     ISPOGVotes public value;
-    // Vault public vault;
 
     uint256 public spogCreationSalt = createSalt("Simple Participatory Onchain Governance");
 
@@ -71,8 +70,6 @@ contract SPOGDeployScript is BaseScript {
         address valueGovernorAddress =
             governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
 
-        // vault = new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress));
-
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
         valueGovernor = governorFactory.deploy(value, valueQuorum, voteTime, "ValueGovernor", valueGovernorSalt);
@@ -97,7 +94,6 @@ contract SPOGDeployScript is BaseScript {
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
             initSPOGData,
-            // address(vault),
             voteTime,
             voteQuorum,
             valueQuorum,
@@ -118,7 +114,6 @@ contract SPOGDeployScript is BaseScript {
 
         spog = spogFactory.deploy(
             initSPOGData,
-            // address(vault),
             voteTime,
             voteQuorum,
             valueQuorum,
