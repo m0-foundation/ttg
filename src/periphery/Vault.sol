@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import {IERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {IVault} from "src/interfaces/IVault.sol";
 
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 
@@ -13,15 +14,11 @@ error NotAdmin();
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract Vault {
+contract Vault is IVault {
     using SafeERC20 for IERC20;
 
     ISPOGGovernor public immutable voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
-
-    event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-    event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-    event NewAuction(uint256 indexed endTime, address indexed token, address paymentToken, uint256 amount, address auction);
 
     // address => voting epoch => bool
     mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
@@ -38,6 +35,15 @@ contract Vault {
     /// @notice Returns the admin address
     function admin() public view returns (address) {
         return _admin;
+    }
+
+    /// @notice Change the admin address
+    /// @param _newAdmin The new admin address
+    function changeAdmin(address _newAdmin) external {
+        if (msg.sender != _admin) revert NotAdmin();
+
+        _admin = _newAdmin;
+        emit AdminChanged(_newAdmin);
     }
 
     /// @dev Withdraw Vote Token Rewards

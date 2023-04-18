@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
 import {IList} from "src/interfaces/IList.sol";
-import {Vault} from "src/periphery/Vault.sol";
+import {IVault} from "src/interfaces/IVault.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -30,6 +30,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     /// @notice Create a new SPOG
     /// @param _initSPOGData The data used to initialize spogData
+    /// @param _vault The address of the `Vault` contract
     /// @param _voteTime The duration of a voting epoch in blocks
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
@@ -38,6 +39,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _valueGovernor The address of the `SPOGGovernor` which $VALUE token is used for voting
     constructor(
         bytes memory _initSPOGData,
+        address _vault,
         uint256 _voteTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -46,7 +48,7 @@ contract SPOG is SPOGStorage, ERC165 {
         ISPOGGovernor _valueGovernor
     ) SPOGStorage(_voteGovernor, _valueGovernor, _voteTime, _voteQuorum, _valueQuorum, _valueFixedInflationAmount) {
         // TODO: add require statements for variables
-        vault = address(new Vault(_voteGovernor, _valueGovernor));
+        vault = _vault;
 
         initSPOGData(_initSPOGData);
         initGovernedMethods();
@@ -243,7 +245,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Sell an asset in the vault
     /// @dev Calls `sell` function of the vault
     function sellERC20(address token, uint256 amount) external onlyValueGovernor {
-        Vault(vault).sellERC20(token, address(spogData.cash), spogData.sellTime, amount);
+        IVault(vault).sellERC20(token, address(spogData.cash), spogData.sellTime, amount);
     }
 
     // ********** Utility FUNCTIONS ********** //

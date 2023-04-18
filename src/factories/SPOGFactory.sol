@@ -12,6 +12,7 @@ contract SPOGFactory {
     /// @notice Create a new SPOG
     /// @param _initSPOGData The data used to initialize spogData
     /// @param _voteTime The duration of a voting epoch
+    /// @param _vault The address of the `Vault` contract
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _valueFixedInflationAmount The fixed inflation amount for the $VALUE token
@@ -21,6 +22,7 @@ contract SPOGFactory {
     /// @return the address of the newly deployed contract
     function deploy(
         bytes memory _initSPOGData,
+        address _vault,
         uint256 _voteTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -31,6 +33,7 @@ contract SPOGFactory {
     ) public returns (SPOG) {
         SPOG spog = new SPOG{salt: bytes32(_salt)}(
             _initSPOGData,
+            _vault,
             _voteTime,
             _voteQuorum,
             _valueQuorum,
@@ -47,6 +50,7 @@ contract SPOGFactory {
     /// @dev This function is used to get the bytecode of the SPOG contract to be deployed
     function getBytecode(
         bytes memory _initSPOGData,
+        address _vault,
         uint256 _voteTime,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -60,6 +64,7 @@ contract SPOGFactory {
             bytecode,
             abi.encode(
                 _initSPOGData,
+                _vault,
                 _voteTime,
                 _voteQuorum,
                 _valueQuorum,
