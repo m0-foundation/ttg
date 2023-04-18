@@ -9,7 +9,6 @@ import {IVault} from "src/interfaces/IVault.sol";
 
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 
-error InvalidAuction();
 error NotAdmin();
 
 /// @title Vault
@@ -120,7 +119,6 @@ contract Vault is IVault {
 
     function sellERC20(address token, address paymentToken, uint256 duration, uint256 amount) external {
         if (msg.sender != _admin) revert NotAdmin();
-        if(token == paymentToken) revert InvalidAuction();
         
         ERC20PricelessAuction auction = new ERC20PricelessAuction(IERC20Metadata(token), IERC20(paymentToken), duration, address(this));
         IERC20(token).safeTransfer(address(auction), amount);
