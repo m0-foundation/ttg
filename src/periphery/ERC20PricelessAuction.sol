@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.17;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -25,6 +25,8 @@ contract ERC20PricelessAuction {
     uint256 public amountSold;
     uint256 public ceilingPrice;
     uint256 public lastBuyPrice;
+
+    uint8 CURVE_STEPS = 20;
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
 
@@ -80,8 +82,8 @@ contract ERC20PricelessAuction {
 
         uint256 price = ceilingPrice - priceDrop;
 
-        uint8 i;
-        for (i; i < 20;) {
+        uint256 i;
+        for (i; i < CURVE_STEPS;) {
             price = price * percentIncomplete / 1e18;
             unchecked { ++i;}
         }
