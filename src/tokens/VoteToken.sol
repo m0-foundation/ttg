@@ -37,7 +37,7 @@ contract VoteToken is SPOGVotes {
         return _totalSupply;
     }
 
-    function _transfer(address from, address to, uint256 amount) internal virtual override {
+    function _transfer(address from, address to, uint256 amount) internal virtual override(ERC20) {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
@@ -58,6 +58,8 @@ contract VoteToken is SPOGVotes {
     }
 
     function _mint(address account, uint256 amount) internal virtual override(ERC20Votes) {
+        super._mint(account, amount);
+
         require(account != address(0), "ERC20: mint to the zero address");
 
         _beforeTokenTransfer(address(0), account, amount);
@@ -73,6 +75,8 @@ contract VoteToken is SPOGVotes {
     }
 
     function _burn(address account, uint256 amount) internal virtual override(ERC20Votes) {
+        super._burn(account, amount);
+
         require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);

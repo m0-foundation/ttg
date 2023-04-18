@@ -13,6 +13,8 @@ import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {Vault} from "src/periphery/Vault.sol";
+import {VoteToken} from "src/tokens/VoteToken.sol";
+import {ValueToken} from "src/tokens/ValueToken.sol";
 
 contract SPOGDeployScript is BaseScript {
     SPOGFactory public spogFactory;
@@ -53,8 +55,8 @@ contract SPOGDeployScript is BaseScript {
         valueQuorum = 4;
         tax = 5;
 
-        vote = new SPOGVotes("SPOGVote", "vote");
-        value = new SPOGVotes("SPOGValue", "value");
+        value = new ValueToken("SPOGValue", "value");
+        vote = new VoteToken("SPOGVote", "vote", address(value));
 
         valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
 
