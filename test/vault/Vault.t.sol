@@ -28,4 +28,5 @@ contract VaultTest is BaseTest {
     }
 
     // NOTE: withdrawVoteTokenRewards() and withdrawValueTokenRewards() are tested in VoteGovernor.t.sol and ValueGovernor.t.sol
+    // NOTE: sellERC20() is tested in spog/sellERC20/sellERC20.t.sol
 }
