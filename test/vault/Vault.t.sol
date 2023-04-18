@@ -29,4 +29,17 @@ contract VaultTest is BaseTest {
 
     // NOTE: withdrawVoteTokenRewards() and withdrawValueTokenRewards() are tested in VoteGovernor.t.sol and ValueGovernor.t.sol
     // NOTE: sellERC20() is tested in spog/sellERC20/sellERC20.t.sol
+
+    function test_admin() public {
+        assertEq(vault.admin(), address(this));
+    }
+
+    function test_changeAdmin() public {
+        assertEq(vault.admin(), address(this));
+
+        address newAddress = createUser("somethingNew");
+        vault.changeAdmin(newAddress);
+
+        assertEq(vault.admin(), newAddress);
+    }
 }
