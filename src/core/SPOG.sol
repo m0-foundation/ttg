@@ -245,7 +245,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Sell an asset in the vault
     /// @dev Calls `sell` function of the vault
     function sellERC20(address token, uint256 amount) external onlyValueGovernor {
-        IVault(vault).sellERC20(token, amount);
+        IVault(vault).sellERC20(token, address(spogData.cash), spogData.sellTime, amount);
     }
 
     // ********** Utility FUNCTIONS ********** //
@@ -279,6 +279,7 @@ contract SPOG is SPOGStorage, ERC165 {
         governedMethods[this.addNewList.selector] = true;
         governedMethods[this.change.selector] = true;
         governedMethods[this.emergencyRemove.selector] = true;
+        governedMethods[this.sellERC20.selector] = true;
     }
 
     /// @notice pay tax from the caller to the SPOG

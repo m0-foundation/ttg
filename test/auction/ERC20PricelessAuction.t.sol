@@ -20,26 +20,39 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
         super.setUp();
 
         uint256 auctionDuration = 30 days;
+        vm.prank(fakeVault);
         auction = new ERC20PricelessAuction(voteToken, usdc, auctionDuration, fakeVault);
     }
 
-    function mintAndApproveVoteTokens(uint256 amount) internal {
+    function mintTokensToVault(uint256 amount) internal {
         voteToken.mint(address(fakeVault), amount);
-        vm.prank(fakeVault);
-        voteToken.approve(address(auction), amount);
     }
 
     function test_init() public {
-        mintAndApproveVoteTokens(1000e18);
+        mintTokensToVault(1000e18);
+        
+        // vault transfers tokens to auction
+        vm.prank(fakeVault);
+        voteToken.transfer(address(auction), 1000e18);
 
-        auction.init(1000e18);
+        // vault calls init
+        vm.prank(fakeVault);
+        auction.init();
+
         assertEq(voteToken.balanceOf(address(auction)), 1000e18);
     }
 
     function test_getCurrentPrice() public {
-        mintAndApproveVoteTokens(1000e18);
+        mintTokensToVault(1000e18);
+        
+        // vault transfers tokens to auction
+        vm.prank(fakeVault);
+        voteToken.transfer(address(auction), 1000e18);
 
-        auction.init(1000e18);
+        // vault calls init
+        vm.prank(fakeVault);
+        auction.init();
+
         assertEq(auction.getCurrentPrice(), usdc.totalSupply() / 1000);
 
         for(uint i = 0; i < 30 * 24; i++) {
@@ -51,9 +64,16 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     }
 
     function test_buyTokens() public {
-        mintAndApproveVoteTokens(1000e18);
+        mintTokensToVault(1000e18);
+        
+        // vault transfers tokens to auction
+        vm.prank(fakeVault);
+        voteToken.transfer(address(auction), 1000e18);
 
-        auction.init(1000e18);
+        // vault calls init
+        vm.prank(fakeVault);
+        auction.init();
+
         address buyer = createUser("buyer");
         
         for(uint i = 0; i < 30 * 24; i++) {
@@ -85,9 +105,16 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     }
 
     function test_withdraw() public {
-        mintAndApproveVoteTokens(1000e18);
+       mintTokensToVault(1000e18);
+        
+        // vault transfers tokens to auction
+        vm.prank(fakeVault);
+        voteToken.transfer(address(auction), 1000e18);
 
-        auction.init(1000e18);
+        // vault calls init
+        vm.prank(fakeVault);
+        auction.init();
+        
         bytes memory customError = abi.encodeWithSignature("AuctionNotEnded()");
         vm.expectRevert(customError);
         auction.withdraw(voteToken);

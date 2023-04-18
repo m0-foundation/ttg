@@ -10,9 +10,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract ERC20PricelessAuction {
     using SafeERC20 for IERC20;
 
+    error AlreadyInitialized();
     error AuctionEnded();
     error AuctionNotEnded();
     error AuctionBalanceInsufficient();
+    error NotAdmin();
+
+    address private _admin;
 
     IERC20Metadata public immutable auctionToken;
     IERC20 public immutable paymentToken;
@@ -27,6 +31,8 @@ contract ERC20PricelessAuction {
     uint256 public lastBuyPrice;
 
     uint256 CURVE_STEPS = 20;
+
+    bool initialized;
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
 
@@ -45,20 +51,27 @@ contract ERC20PricelessAuction {
         paymentToken = _paymentToken;
         auctionDuration = _auctionDuration;
         auctionEndTime = block.timestamp + _auctionDuration;
-        ceilingPrice = paymentToken.totalSupply();
         floorPrice = 1;
         vault = _vault;
+        _admin = msg.sender;
+    }
+
+    /// @notice Returns the admin address
+    function admin() public view returns (address) {
+        return _admin;
     }
 
     /// @notice Initializes the auction with the token amount to be auctioned
-    /// @param _auctionTokenAmount The amount of tokens to be auctioned
     /// @dev called after deploy, then approve of the auctionToken to the auction contract
     /// @dev this can be called multiple times to add more tokens to the auction
-    /// TODO: revisit how auction is initialized when integrated with the vault
-    function init(uint256 _auctionTokenAmount) public {
-        IERC20(auctionToken).safeTransferFrom(vault, address(this), _auctionTokenAmount);
-        auctionTokenAmount+=_auctionTokenAmount;
+    function init() public {
+        if (msg.sender != _admin) revert NotAdmin();
+
+        if(initialized) revert AlreadyInitialized();
+
+        auctionTokenAmount = auctionToken.balanceOf(address(this));
         ceilingPrice = paymentToken.totalSupply() / (auctionTokenAmount / 10 ** auctionToken.decimals());
+        initialized = true;
     }
 
     /// @notice Returns the current price of the auction

@@ -2,10 +2,15 @@
 
 pragma solidity 0.8.17;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IVault} from "src/interfaces/IVault.sol";
+
+import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+
+error InvalidAuction();
+error NotAdmin();
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
@@ -19,9 +24,17 @@ contract Vault is IVault {
     mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
     mapping(address => mapping(uint256 => bool)) public hasClaimedValueTokenRewardsForEpoch;
 
+    address private _admin;
+
     constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor) {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
+        _admin = msg.sender;
+    }
+
+    /// @notice Returns the admin address
+    function admin() public view returns (address) {
+        return _admin;
     }
 
     /// @dev Withdraw Vote Token Rewards
@@ -96,10 +109,16 @@ contract Vault is IVault {
         emit ValueTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
-    function sellERC20(address token, uint256 amount) external {
-        // IERC20(token).safeTransfer(msg.sender, amount);
-    }
+    function sellERC20(address token, address paymentToken, uint256 duration, uint256 amount) external {
+        if (msg.sender != _admin) revert NotAdmin();
+        if(token == paymentToken) revert InvalidAuction();
+        
+        ERC20PricelessAuction auction = new ERC20PricelessAuction(IERC20Metadata(token), IERC20(paymentToken), duration, address(this));
+        IERC20(token).safeTransfer(address(auction), amount);
+        auction.init();
 
+        emit NewAuction(auction.auctionEndTime(), token, paymentToken, amount, address(auction));
+    }
 
     fallback() external {
         revert("Vault: non-existent function");
