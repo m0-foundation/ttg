@@ -18,6 +18,8 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     /// @param symbol The symbol of the token
     constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        // TODO: I think we miss it, revisit later ?
+        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     /// @dev sets the spog address. Can only be called once.
