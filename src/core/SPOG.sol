@@ -308,6 +308,7 @@ contract SPOG is SPOGStorage, ERC165 {
         governedMethods[this.addNewList.selector] = true;
         governedMethods[this.change.selector] = true;
         governedMethods[this.emergencyRemove.selector] = true;
+        governedMethods[this.reset.selector] = true;
     }
 
     /// @notice pay tax from the caller to the SPOG
