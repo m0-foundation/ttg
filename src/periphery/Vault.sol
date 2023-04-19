@@ -69,7 +69,7 @@ contract Vault is IVault {
 
     /// @dev Withdraw unsold vote tokens from auction back to vote governor
     /// where they can be sold again next epoch
-    function reclaimUnsoldVoteTokens(address auction) public onlySpog {
+    function reclaimUnsoldVoteTokens(address auction) external onlySpog {
         address recipient = address(voteGovernor);
         ERC20PricelessAuction(auction).withdraw(recipient);
     }

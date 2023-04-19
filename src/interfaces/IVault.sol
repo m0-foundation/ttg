@@ -13,6 +13,8 @@ interface IVault {
 
     function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
 
+    function reclaimUnsoldVoteTokens(address auction) external;
+
     function withdrawVoteTokenRewards() external;
 
     function withdrawValueTokenRewards() external;
