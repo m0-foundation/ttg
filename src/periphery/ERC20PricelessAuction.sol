@@ -32,6 +32,7 @@ contract ERC20PricelessAuction {
     uint256 CURVE_STEPS = 20;
 
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
+    event AuctionWithdrawal(address indexed taker, uint256 amount);
 
     modifier onlyVault() {
         require(msg.sender == vault, "ERC20PricelessAuction: Only vault");
@@ -135,6 +136,10 @@ contract ERC20PricelessAuction {
             revert AuctionNotEnded();
         }
 
-        IERC20(auctionToken).safeTransfer(msg.sender, IERC20(auctionToken).balanceOf(address(this)));
+        uint256 balance = IERC20(auctionToken).balanceOf(address(this));
+
+        IERC20(auctionToken).safeTransfer(msg.sender, balance);
+
+        emit AuctionWithdrawal(msg.sender, balance);
     }
 }
