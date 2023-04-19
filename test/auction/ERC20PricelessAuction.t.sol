@@ -87,27 +87,21 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     function test_withdraw() public {
         mintAndApproveVoteTokens(1000e18);
 
-        address recipient = createUser("fakeVoteGovernor");
-
-
         auction.init(1000e18);
         bytes memory customError = abi.encodeWithSignature("AuctionNotEnded()");
         vm.expectRevert(customError);
-        vm.prank(fakeVault);
-        auction.withdraw(recipient);
+        auction.withdraw();
 
         vm.roll(block.number + 1);
         vm.warp(block.timestamp + 30 days - 1 seconds);
 
         vm.expectRevert(customError);
-        vm.prank(fakeVault);
-        auction.withdraw(recipient);
+        auction.withdraw();
 
         vm.roll(block.number + 1);
         vm.warp(block.timestamp + 1 seconds);
 
-        vm.prank(fakeVault);
-        auction.withdraw(recipient);
+        auction.withdraw();
 
         assertEq(voteToken.balanceOf(address(auction)),0);
     }

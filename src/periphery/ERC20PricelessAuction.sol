@@ -130,11 +130,11 @@ contract ERC20PricelessAuction {
     }
 
     /// @notice Withdraws the unsold auction tokens
-    function withdraw(address recipient) public onlyVault {
+    function withdraw() public {
         if (block.timestamp < auctionEndTime) {
             revert AuctionNotEnded();
         }
 
-        IERC20(auctionToken).safeTransfer(recipient, IERC20(auctionToken).balanceOf(address(this)));
+        IERC20(auctionToken).safeTransfer(msg.sender, IERC20(auctionToken).balanceOf(address(this)));
     }
 }
