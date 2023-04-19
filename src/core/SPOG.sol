@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
-import {IList} from "src/interfaces/IList.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+
+import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
+import {IList} from "src/interfaces/IList.sol";
+import {VoteToken} from "src/tokens/VoteToken.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -125,6 +127,11 @@ contract SPOG is SPOGStorage, ERC165 {
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
+    function reset() external onlyValueGovernor {
+        VoteToken vote = new VoteToken("Vote Token Fork", "VOTE", address(valueGovernor.votingToken()));
+        voteGovernor.updateVotingToken(address(vote));
+    }
+
     // ********** SPOG Governance interface FUNCTIONS ********** //
     // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
@@ -174,25 +181,39 @@ contract SPOG is SPOGStorage, ERC165 {
             : spogData.tax;
         _pay(fee);
 
+        // Only $VALUE governance proposals
+        if (executableFuncSelector == this.reset.selector) {
+            // TODO: IMPORTANT: figure out how to do voting for the fork time
+            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+            emit NewValueQuorumProposal(valueProposalId);
+            return valueProposalId;
+        }
+
+        // $VALUE and $VOTE governance proposals
+        // If we request to change config parameter, value governance should vote too
+        if (executableFuncSelector == this.change.selector) {
+            uint256 voteProposalId = voteGovernor.propose(targets, values, calldatas, description);
+            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+            // proposal ids should match
+            if (valueProposalId != voteProposalId) {
+                revert ValueVoteProposalIdsMistmatch(voteProposalId, valueProposalId);
+            }
+
+            emit NewDoubleQuorumProposal(voteProposalId);
+            return voteProposalId;
+        }
+
+        // Only $VOTE governance proposals
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
         // Register emergency proposal with vote governor
         if (executableFuncSelector == this.emergencyRemove.selector) {
             voteGovernor.registerEmergencyProposal(proposalId);
 
             emit NewEmergencyProposal(proposalId);
-        }
-        // If we request to change config parameter, value governance should vote too
-        else if (executableFuncSelector == this.change.selector) {
-            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-
-            // proposal ids should match
-            if (valueProposalId != proposalId) {
-                revert ValueVoteProposalIdsMistmatch(proposalId, valueProposalId);
-            }
-
-            emit NewDoubleQuorumProposal(proposalId);
         } else {
-            emit NewSingleQuorumProposal(proposalId);
+            emit NewVoteQuorumProposal(proposalId);
         }
 
         return proposalId;

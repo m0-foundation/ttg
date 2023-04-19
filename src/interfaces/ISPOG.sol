@@ -11,7 +11,8 @@ interface ISPOG {
     event AddressRemovedFromList(address indexed _list, address indexed _address);
     event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
     event TaxChanged(uint256 indexed tax);
-    event NewSingleQuorumProposal(uint256 indexed proposalId);
+    event NewVoteQuorumProposal(uint256 indexed proposalId);
+    event NewValueQuorumProposal(uint256 indexed proposalId);
     event NewDoubleQuorumProposal(uint256 indexed proposalId);
     event NewEmergencyProposal(uint256 indexed proposalId);
     event DoubleQuorumFinalized(bytes32 indexed identifier);

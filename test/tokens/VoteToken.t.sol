@@ -19,7 +19,7 @@ contract VoteTokenTest is SPOG_Base {
     uint8 noVote = 0;
     uint8 yesVote = 1;
 
-    event NewSingleQuorumProposal(uint256 indexed proposalId);
+    event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
