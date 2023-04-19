@@ -77,6 +77,7 @@ contract Vault is IVault {
     /// @dev Withdraw Vote Token Rewards
     function withdrawVoteTokenRewards() external {
         address token = address(voteGovernor.votingToken());
+        
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
         require(
@@ -113,6 +114,8 @@ contract Vault is IVault {
     }
 
     function withdrawValueTokenRewards() external {
+        address token = address(valueGovernor.votingToken());
+
         uint256 relevantEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         require(
@@ -132,15 +135,13 @@ contract Vault is IVault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, relevantEpoch);
 
-        uint256 valueTokenAmountToBeSharedOnProRataBasis = valueGovernor.epochVotingTokenInflationAmount(relevantEpoch);
+        uint256 valueTokenAmountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][relevantEpoch];
 
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantEpoch);
 
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
 
         uint256 amountToWithdraw = percentageOfTotalSupply * valueTokenAmountToBeSharedOnProRataBasis / 100;
-
-        address token = address(valueGovernor.votingToken());
 
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
