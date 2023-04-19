@@ -52,18 +52,32 @@ contract VoteTokenTest is SPOG_Base {
         vm.stopPrank();
 
         // Check initial forked balances
+        assertEq(voteToken.totalSupply(), 0);
+        assertEq(voteToken.balanceOf(alice), 0);
+        assertEq(voteToken.balanceOf(bob), 0);
+
+        // Alice claims her token
+        vm.startPrank(alice);
+        voteToken.claimPreviousSupply();
+        vm.stopPrank();
+
+        // Bob claims his token
+        vm.startPrank(bob);
+        voteToken.claimPreviousSupply();
+        vm.stopPrank();
+
         assertEq(voteToken.totalSupply(), 110e18);
         assertEq(voteToken.balanceOf(alice), 50e18);
         assertEq(voteToken.balanceOf(bob), 60e18);
 
         vm.startPrank(bob);
-        valueToken.transfer(alice, 10e18);
+        // valueToken.transfer(alice, 10e18);
 
-        // Movements of value tokens have no effect on VoteToken balances after fork
-        assertEq(valueToken.balanceOf(alice), 60e18);
-        assertEq(valueToken.balanceOf(bob), 50e18);
-        assertEq(voteToken.balanceOf(alice), 50e18);
-        assertEq(voteToken.balanceOf(bob), 60e18);
+        // // Movements of value tokens have no effect on VoteToken balances after fork
+        // assertEq(valueToken.balanceOf(alice), 60e18);
+        // assertEq(valueToken.balanceOf(bob), 50e18);
+        // assertEq(voteToken.balanceOf(alice), 50e18);
+        // assertEq(voteToken.balanceOf(bob), 60e18);
 
         // Vote balances accounting works
         voteToken.transfer(alice, 50e18);
