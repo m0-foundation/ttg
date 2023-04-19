@@ -8,6 +8,7 @@ import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap
 import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
 import {IList} from "src/interfaces/IList.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
+import {ValueToken} from "src/tokens/ValueToken.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -128,7 +129,8 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     function reset() external onlyValueGovernor {
-        VoteToken vote = new VoteToken("Vote Token Fork", "VOTE", address(valueGovernor.votingToken()));
+        uint256 forkSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
+        VoteToken vote = new VoteToken("SPOG Vote", "SPOGVote", address(valueGovernor.votingToken()), forkSnapshotId);
         voteGovernor.updateVotingToken(address(vote));
     }
 
@@ -233,8 +235,16 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes32 descriptionHash
     ) external override returns (uint256) {
         bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
 
+        // $VALUE governance proposals
+        if (executableFuncSelector == this.reset.selector) {
+            uint256 valueProposalId = valueGovernor.hashProposal(targets, values, calldatas, descriptionHash);
+            valueGovernor.execute(targets, values, calldatas, descriptionHash);
+            return valueProposalId;
+        }
+
+        // $VOTE governance proposals
+        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
         // Check that both value and vote governance approved parameter change
         if (executableFuncSelector == this.change.selector) {
             if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {

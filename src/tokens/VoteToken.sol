@@ -12,19 +12,22 @@ import {ValueToken} from "./ValueToken.sol";
 
 contract VoteToken is SPOGVotes {
     address public immutable valueToken;
-    uint256 public immutable valueStartSnapshotId;
+    uint256 public immutable forkSnapshotId;
 
     uint256 private _totalSupply;
 
     mapping(address => int256) private _updates;
 
-    constructor(string memory name, string memory symbol, address _valueToken) SPOGVotes(name, symbol) {
+    constructor(string memory name, string memory symbol, address _valueToken, uint256 _forkSnapshotId)
+        SPOGVotes(name, symbol)
+    {
         valueToken = _valueToken;
+        forkSnapshotId = _forkSnapshotId;
 
         // TODO: make sure snapshot role is set correctly
-        valueStartSnapshotId = ValueToken(valueToken).snapshot();
+        // valueStartSnapshotId = ValueToken(valueToken).snapshot();
 
-        _totalSupply = ERC20Snapshot(valueToken).totalSupplyAt(valueStartSnapshotId);
+        _totalSupply = ERC20Snapshot(valueToken).totalSupplyAt(forkSnapshotId);
     }
 
     // ERC20 functions we need to override to make sure new balances accounting is correct
@@ -97,9 +100,9 @@ contract VoteToken is SPOGVotes {
     // Balances with accounting for initial snapshot
     function _balances(address account) internal view virtual returns (uint256) {
         if (_updates[account] >= 0) {
-            return ERC20Snapshot(valueToken).balanceOfAt(account, valueStartSnapshotId) + uint256(_updates[account]);
+            return ERC20Snapshot(valueToken).balanceOfAt(account, forkSnapshotId) + uint256(_updates[account]);
         } else {
-            return ERC20Snapshot(valueToken).balanceOfAt(account, valueStartSnapshotId) - uint256(-_updates[account]);
+            return ERC20Snapshot(valueToken).balanceOfAt(account, forkSnapshotId) - uint256(-_updates[account]);
         }
     }
 }

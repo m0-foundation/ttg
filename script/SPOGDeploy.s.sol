@@ -34,8 +34,8 @@ contract SPOGDeployScript is BaseScript {
     uint256 public tax;
     SPOGGovernor public voteGovernor;
     SPOGGovernor public valueGovernor;
-    ISPOGVotes public vote;
-    ISPOGVotes public value;
+    VoteToken public vote;
+    ValueToken public value;
     Vault public vault;
 
     uint256 public spogCreationSalt = createSalt("Simple Participatory Onchain Governance");
@@ -56,7 +56,7 @@ contract SPOGDeployScript is BaseScript {
         tax = 5;
 
         value = new ValueToken("SPOGValue", "value");
-        vote = new VoteToken("SPOGVote", "vote", address(value));
+        vote = new VoteToken("SPOGVote", "vote", address(value), value.snapshot());
 
         valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
 

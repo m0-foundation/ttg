@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 
-import "./SPOGVotes.sol";
+import {SPOGVotes} from "./SPOGVotes.sol";
 
 contract ValueToken is ERC20Snapshot, SPOGVotes {
     bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
@@ -44,6 +44,7 @@ contract ValueToken is ERC20Snapshot, SPOGVotes {
             uint256
         )
     {
+        require(msg.sender == spogAddress, "Only SPOG can snapshot");
         return _snapshot();
     }
 }

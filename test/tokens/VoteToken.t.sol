@@ -35,6 +35,7 @@ contract VoteTokenTest is SPOG_Base {
         vm.deal({account: bob, newBalance: 10 ether});
 
         ValueToken valueToken = new ValueToken("SPOGValue", "value");
+        valueToken.initSPOGAddress(address(spog));
 
         // Mint initial balances to users
         valueToken.mint(alice, 50e18);
@@ -46,7 +47,9 @@ contract VoteTokenTest is SPOG_Base {
         assertEq(valueToken.totalSupply(), 110e18);
 
         // Create new VoteToken with forked balances of ValueToken holders
-        VoteToken voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
+        vm.startPrank(address(spog));
+        VoteToken voteToken = new VoteToken("SPOGVote", "vote", address(valueToken), valueToken.snapshot());
+        vm.stopPrank();
 
         // Check initial forked balances
         assertEq(voteToken.totalSupply(), 110e18);
