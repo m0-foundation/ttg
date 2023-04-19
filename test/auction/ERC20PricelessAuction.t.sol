@@ -20,7 +20,7 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
         super.setUp();
 
         uint256 auctionDuration = 30 days;
-        auction = new ERC20PricelessAuction(voteToken, usdc, auctionDuration, fakeVault);
+        auction = new ERC20PricelessAuction(address(voteToken), address(usdc), auctionDuration, fakeVault);
     }
 
     function mintAndApproveVoteTokens(uint256 amount) internal {
@@ -87,21 +87,27 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     function test_withdraw() public {
         mintAndApproveVoteTokens(1000e18);
 
+        address recipient = createUser("fakeVoteGovernor");
+
+
         auction.init(1000e18);
         bytes memory customError = abi.encodeWithSignature("AuctionNotEnded()");
         vm.expectRevert(customError);
-        auction.withdraw(voteToken);
+        vm.prank(fakeVault);
+        auction.withdraw(recipient);
 
         vm.roll(block.number + 1);
         vm.warp(block.timestamp + 30 days - 1 seconds);
 
         vm.expectRevert(customError);
-        auction.withdraw(voteToken);
+        vm.prank(fakeVault);
+        auction.withdraw(recipient);
 
         vm.roll(block.number + 1);
         vm.warp(block.timestamp + 1 seconds);
 
-        auction.withdraw(voteToken);
+        vm.prank(fakeVault);
+        auction.withdraw(recipient);
 
         assertEq(voteToken.balanceOf(address(auction)),0);
     }

@@ -199,6 +199,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
         // start epoch 2
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.prank(address(voteGovernor));
         voteGovernor.updateStartOfNextVotingPeriod();
         valueGovernor.updateStartOfNextVotingPeriod();
 
