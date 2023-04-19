@@ -65,7 +65,9 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
     function addNewList(IList list) external onlyVoteGovernor {
-        require(list.admin() == address(this), "List admin is not SPOG");
+        if (list.admin() != address(this)) {
+            revert ListAdminIsNotSPOG();
+        }
         // add the list to the master list
         masterlist.set(address(list), inMasterList);
         emit NewListAdded(address(list));
@@ -75,7 +77,9 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param list  The list address of the list to be removed
     function removeList(IList list) external onlyVoteGovernor {
         // require that the list is on the master list
-        require(masterlist.contains(address(list)), "List is not on the master list");
+        if (!masterlist.contains(address(list))) {
+            revert ListIsNotInMasterList();
+        }
 
         // remove the list from the master list
         masterlist.remove(address(list));
@@ -87,10 +91,14 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _list The list to which the address will be appended
     function append(address _address, IList _list) external onlyVoteGovernor {
         // require that the list is on the master list
-        require(masterlist.contains(address(_list)), "List is not on the master list");
+        if (!masterlist.contains(address(_list))) {
+            revert ListIsNotInMasterList();
+        }
 
         // require that the address is not already on the list
-        require(!_list.contains(_address), "Address is already on the list");
+        if (_list.contains(_address)) {
+            revert AddressIsAlreadyInList();
+        }
 
         // append the address to the list
         _list.add(_address);
@@ -134,10 +142,10 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas,
         string memory description
     ) external override returns (uint256) {
-        // allow only 1 SPOG change with no value per proposal at a time
-        require(targets.length == 1, "Only 1 change per proposal");
-        require(targets[0] == address(this), "Only SPOG can be target");
-        require(values[0] == 0, "No ETH value should be passed");
+        // allow only 1 SPOG change with no value per proposal
+        if (targets.length != 1 || targets[0] != address(this) || values[0] != 0) {
+            revert InvalidProposal();
+        }
 
         return propose(calldatas[0], description);
     }
@@ -149,7 +157,9 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @return proposalId The ID of the proposal
     function propose(bytes memory callData, string memory description) public override returns (uint256) {
         bytes4 executableFuncSelector = bytes4(callData);
-        require(governedMethods[executableFuncSelector], "Method is not supported");
+        if (!governedMethods[executableFuncSelector]) {
+            revert NotGovernedMethod(executableFuncSelector);
+        }
 
         address[] memory targets = new address[](1);
         targets[0] = address(this);
@@ -177,7 +187,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
             // proposal ids should match
             if (valueProposalId != proposalId) {
-                revert("Vote and value proposal ids do not match");
+                revert ValueVoteProposalIdsMistmatch(proposalId, valueProposalId);
             }
 
             emit NewDoubleQuorumProposal(proposalId);
@@ -207,7 +217,7 @@ contract SPOG is SPOGStorage, ERC165 {
         // Check that both value and vote governance approved parameter change
         if (executableFuncSelector == this.change.selector) {
             if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {
-                revert("Value governor did not approve the proposal");
+                revert ValueGovernorDidNotApprove(proposalId);
             }
         }
 
@@ -251,18 +261,20 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice pay tax from the caller to the SPOG
     /// @param _amount The amount to be transferred
     function _pay(uint256 _amount) private {
-        // require that the caller pays the tax
-        require(_amount >= spogData.tax, "Caller must pay tax to call this function");
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
     }
 
     function _removeFromList(address _address, IList _list) private {
         // require that the list is on the master list
-        require(masterlist.contains(address(_list)), "List is not on the master list");
+        if (!masterlist.contains(address(_list))) {
+            revert ListIsNotInMasterList();
+        }
 
         // require that the address is on the list
-        require(_list.contains(_address), "Address is not on the list");
+        if (!_list.contains(_address)) {
+            revert AddressIsNotInList();
+        }
 
         // remove the address from the list
         _list.remove(_address);
