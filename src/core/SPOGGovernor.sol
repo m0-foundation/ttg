@@ -110,7 +110,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
             votingToken.mint(address(this), amountToIncreaseSupplyBy); // send inflation to this contract
             votingToken.approve(vault, amountStuck + amountToIncreaseSupplyBy);
-            IVault(vault).depositVoteTokens(currentVotingPeriodEpoch, amountStuck + amountToIncreaseSupplyBy);
+            IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(votingToken), amountStuck + amountToIncreaseSupplyBy);
 
             emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
         }

@@ -30,8 +30,8 @@ contract Vault is IVault {
         valueGovernor = _valueGovernor;
     }
 
-    modifier onlyVoteGovernor() {
-        require(msg.sender == address(voteGovernor), "Vault: Only vote governor");
+    modifier onlyGovernor() {
+        require(msg.sender == address(voteGovernor) || msg.sender == address(valueGovernor), "Vault: Only governor");
 
         _;
     }
@@ -42,16 +42,15 @@ contract Vault is IVault {
         _;
     }
 
-    /// @dev Deposit vote tokens for epoch
-    /// @param epoch Epoch to deposit vote tokens for
+    /// @dev Deposit voting (vote and value) reward tokens for epoch
+    /// @param epoch Epoch to deposit tokens for
+    /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
-    function depositVoteTokens(uint256 epoch, uint256 amount) external onlyVoteGovernor {
-        address token = address(voteGovernor.votingToken());
-
+    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlyGovernor {
         epochVotingTokenDeposit[token][epoch] += amount;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
-        emit VoteTokenRewardsDeposit(epoch, token, amount);
+        emit EpochRewardsDeposit(epoch, token, amount);
     }
 
     /// @dev Sell unclaimed vote tokens
@@ -70,7 +69,7 @@ contract Vault is IVault {
 
     /// @dev Withdraw unsold vote tokens from auction back to vote governor
     /// where they can be sold again next epoch
-    function withdrawUnsoldVoteTokens(address auction) public {
+    function reclaimUnsoldVoteTokens(address auction) public onlySpog {
         address recipient = address(voteGovernor);
         ERC20PricelessAuction(auction).withdraw(recipient);
     }
