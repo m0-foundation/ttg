@@ -16,7 +16,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
     error StartOfNextVotingPeriodWasNotUpdated();
 
-    ISPOGVotes public votingToken;
+    ISPOGVotes public immutable votingToken;
     uint256 private _votingPeriod;
     address public spogAddress;
     uint256 public startOfNextVotingPeriod;
@@ -50,7 +50,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(address => mapping(uint256 => uint256)) public accountEpochVoteWeight;
 
     event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
-    event VotingTokenUpdated(address indexed oldVotingToken, address indexed newVotingToken);
     event VotingTokenInflation(uint256 indexed epoch, uint256 amount);
     event VotingTokenInflationWithdrawn(address indexed voter, uint256 amount);
     event EpochVotingTokenSupplySet(uint256 indexed epoch, uint256 amount);
@@ -148,12 +147,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emit VotingPeriodUpdated(_votingPeriod, newVotingTime);
 
         _votingPeriod = newVotingTime;
-    }
-
-    function updateVotingToken(ISPOGVotes newVotingToken) external onlySPOG {
-        emit VotingTokenUpdated(address(votingToken), address(newVotingToken));
-
-        votingToken = newVotingToken;
     }
 
     function registerEmergencyProposal(uint256 proposalId) external onlySPOG {

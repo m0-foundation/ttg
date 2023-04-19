@@ -16,6 +16,7 @@ interface ISPOG {
     event NewDoubleQuorumProposal(uint256 indexed proposalId);
     event NewEmergencyProposal(uint256 indexed proposalId);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
+    event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
     error InvalidParameter(bytes32 what);

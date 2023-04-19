@@ -172,6 +172,8 @@ interface ISPOGGovernor {
      */
     function votingPeriod() external view returns (uint256);
 
+    function quorumNumerator() external view returns (uint256);
+
     /**
      * @notice module:user-config
      * @dev Minimum number of cast voted required for a proposal to be successful.

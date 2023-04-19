@@ -4,9 +4,14 @@ pragma solidity 0.8.17;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
 import {IList} from "src/interfaces/IList.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
+
+import {SPOGStorage} from "src/core/SPOGStorage.sol";
+import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 
@@ -129,9 +134,25 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     function reset() external onlyValueGovernor {
+        // Take snapshot of value token balances at the moment of fork
+        // TODO: verify that we need to take it at this exact moment?
         uint256 forkSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
-        VoteToken vote = new VoteToken("SPOG Vote", "SPOGVote", address(valueGovernor.votingToken()), forkSnapshotId);
-        voteGovernor.updateVotingToken(address(vote));
+
+        // Create new vote token and vote governor
+        VoteToken newVoteToken =
+            new VoteToken("SPOG Vote", "SPOGVote", address(valueGovernor.votingToken()), forkSnapshotId);
+
+        // TODO: check with team on parameters here, we can pass them as arguments to the reset function ?
+        SPOGGovernor newVoteGovernor = new SPOGGovernor{salt: bytes32("Vote governor forked")}(
+            newVoteToken,
+            voteGovernor.quorumNumerator(),
+            voteGovernor.votingPeriod(),
+            voteGovernor.name()
+        );
+
+        voteGovernor = ISPOGGovernor(address(newVoteGovernor));
+
+        emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
     }
 
     // ********** SPOG Governance interface FUNCTIONS ********** //

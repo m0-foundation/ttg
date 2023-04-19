@@ -34,13 +34,13 @@ contract VoteToken is SPOGVotes {
         }
         alreadyClaimed[msg.sender] = true;
 
-        uint256 balance = ERC20Snapshot(valueToken).balanceOfAt(msg.sender, forkSnapshotId);
-        _mint(msg.sender, balance);
+        uint256 claimBalance = forkBalance();
+        _mint(msg.sender, claimBalance);
 
-        emit PreviousSupplyClaimed(msg.sender, balance);
+        emit PreviousSupplyClaimed(msg.sender, claimBalance);
     }
 
-    function forkBalance() external view returns (uint256) {
+    function forkBalance() public view returns (uint256) {
         return ERC20Snapshot(valueToken).balanceOfAt(msg.sender, forkSnapshotId);
     }
 }

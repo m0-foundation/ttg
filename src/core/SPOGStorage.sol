@@ -21,7 +21,8 @@ abstract contract SPOGStorage is ISPOG {
     SPOGData public spogData;
     uint256 public immutable valueFixedInflationAmount;
 
-    ISPOGGovernor public immutable voteGovernor;
+    // @note The vote governor can be changed by value governance during fork `RESET`
+    ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
