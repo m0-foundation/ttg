@@ -42,7 +42,7 @@ contract Vault is IVault {
         _;
     }
 
-    /// @dev Deposit voting (vote and value) reward tokens for epoch
+    /// @notice Deposit voting (vote and value) reward tokens for epoch
     /// @param epoch Epoch to deposit tokens for
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
@@ -53,15 +53,27 @@ contract Vault is IVault {
         emit EpochRewardsDeposit(epoch, token, amount);
     }
 
-    /// @dev Sell unclaimed vote tokens
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySpog {
+    /// @notice Sell unclaimed vote tokens
+    /// @param epoch Epoch to view unclaimed tokens
+    function unclaimedVoteTokensForEpoch(uint256 epoch) public view returns (uint256) {
         address token = address(voteGovernor.votingToken());
+        return epochVotingTokenDeposit[token][epoch] - epochVotingTokenTotalWithdrawn[token][epoch];
+    }
+
+    /// @notice Sell unclaimed vote tokens
+    /// @param epoch Epoch to sell tokens from
+    /// @param paymentToken Token to accept for payment
+    /// @param duration The duration of the auction
+    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySpog {
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
         require(epoch < currentVotingPeriodEpoch, "Vault: epoch is not in the past");
 
+        address token = address(voteGovernor.votingToken());
         address auction = address(new ERC20PricelessAuction(token, paymentToken, duration, address(this)));
-        uint256 unclaimed = epochVotingTokenDeposit[token][epoch] - epochVotingTokenTotalWithdrawn[token][epoch];
+
+        uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
         IERC20(token).approve(auction, unclaimed);
+        
         ERC20PricelessAuction(auction).init(unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
