@@ -30,6 +30,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
+    uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
     // List of addresses that are part of the masterlist
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
@@ -133,6 +134,7 @@ contract SPOG is SPOGStorage, ERC165 {
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
+    // reset current vote governance, only value governance can do it
     function reset() external onlyValueGovernor {
         // Take snapshot of value token balances at the moment of reset
         uint256 resetSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
@@ -197,11 +199,7 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = callData;
 
-        // For all the operations pay flat fee, except for emergency remove pay 12 * fee
-        uint256 fee = executableFuncSelector == this.emergencyRemove.selector
-            ? EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax
-            : spogData.tax;
-        _pay(fee);
+        _payFee(executableFuncSelector);
 
         // Only $VALUE governance proposals
         if (executableFuncSelector == this.reset.selector) {
@@ -310,10 +308,21 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     /// @notice pay tax from the caller to the SPOG
-    /// @param _amount The amount to be transferred
-    function _pay(uint256 _amount) private {
-        // transfer the amount from the caller to the SPOG
-        spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
+    /// @param funcSelector The executable function selector
+    function _payFee(bytes4 funcSelector) private {
+        uint256 fee;
+
+        // Pay flat fee for all the operations except emergency remove and reset
+        if (funcSelector == this.emergencyRemove.selector) {
+            fee = EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax;
+        } else if (funcSelector == this.reset.selector) {
+            fee = RESET_TAX_MULTIPLIER * spogData.tax;
+        } else {
+            fee = spogData.tax;
+        }
+
+        // transfer the fee amount from the caller to the SPOG's vault
+        spogData.cash.safeTransferFrom(msg.sender, address(vault), fee);
     }
 
     function _removeFromList(address _address, IList _list) private {

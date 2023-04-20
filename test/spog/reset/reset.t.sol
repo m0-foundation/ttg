@@ -41,7 +41,7 @@ contract SPOG_reset is SPOG_Base {
         uint256 proposalId = valueGovernor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
+        deployScript.cash().approve(address(spog), 12 * deployScript.tax());
 
         // Check the event is emitted
         expectEmit();
