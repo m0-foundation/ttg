@@ -54,7 +54,7 @@ contract SPOGDeployScript is BaseScript {
         tax = 5;
 
         value = new ValueToken("SPOGValue", "value");
-        vote = new VoteToken("SPOGVote", "vote", address(value), value.snapshot());
+        vote = new VoteToken("SPOGVote", "vote", address(value));
 
         valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
 

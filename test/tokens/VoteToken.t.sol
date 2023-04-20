@@ -48,7 +48,10 @@ contract VoteTokenTest is SPOG_Base {
 
         // Create new VoteToken with snapshotted balances of ValueToken holders
         vm.startPrank(address(spog));
-        VoteToken voteToken = new VoteToken("SPOGVote", "vote", address(valueToken), valueToken.snapshot());
+        VoteToken voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
+        voteToken.initSPOGAddress(address(spog));
+        uint256 snapshotId = valueToken.snapshot();
+        voteToken.initReset(snapshotId);
         vm.stopPrank();
 
         // Check initial balances after reset

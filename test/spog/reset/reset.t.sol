@@ -6,10 +6,12 @@ import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
+import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
 
 contract SPOG_reset is SPOG_Base {
     uint8 internal yesVote;
     uint8 internal noVote;
+    SPOGGovernorFactory governorFactory;
 
     event NewValueQuorumProposal(uint256 indexed proposalId);
     event SPOGResetExecuted(address indexed newVoteToken, address indexed newVoteGovernor);
@@ -19,11 +21,26 @@ contract SPOG_reset is SPOG_Base {
         noVote = 0;
 
         super.setUp();
+
+        governorFactory = new SPOGGovernorFactory();
     }
 
     /**
      * Helpers *******
      */
+
+    function createNewVoteGovernor() private returns (address) {
+        // deploy vote governor from factory
+        VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", address(spogValue));
+        newVoteToken.initSPOGAddress(address(spog));
+        uint256 voteGovernorSalt = createSalt("new VoteGovernor");
+        uint256 voteTime = 10; // in blocks
+        uint256 voteQuorum = 4;
+        SPOGGovernor newVoteGovernor =
+            governorFactory.deploy(newVoteToken, voteQuorum, voteTime, "new VoteGovernor", voteGovernorSalt);
+        return address(newVoteGovernor);
+    }
+
     function proposeGovernanceReset(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
@@ -33,7 +50,8 @@ contract SPOG_reset is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        bytes memory callData = abi.encodeWithSignature("reset()");
+        address newVoteGovernor = createNewVoteGovernor();
+        bytes memory callData = abi.encodeWithSignature("reset(address)", newVoteGovernor);
         string memory description = proposalDescription;
         calldatas[0] = callData;
 
@@ -55,7 +73,7 @@ contract SPOG_reset is SPOG_Base {
 
     function test_Revert_Change_WhenNotCalledFromGovernance() public {
         vm.expectRevert("SPOG: Only value governor");
-        spog.reset();
+        spog.reset(ISPOGGovernor(address(voteGovernor)));
     }
 
     function test_Reset_Success() public {
@@ -134,4 +152,8 @@ contract SPOG_reset is SPOG_Base {
     //     // assert that cash has been changed
     //     assertTrue(address(cashFirstCheck) == address(newCashInstance), "Cash token was not changed");
     // }
+
+    function createSalt(string memory saltValue) private view returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(saltValue, address(this), block.timestamp, block.number)));
+    }
 }

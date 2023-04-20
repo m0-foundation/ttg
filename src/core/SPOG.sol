@@ -135,23 +135,21 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     // reset current vote governance, only value governance can do it
-    function reset() external onlyValueGovernor {
-        // Take snapshot of value token balances at the moment of reset
-        uint256 resetSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
+    function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
+        //TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
-        // Create new vote token and vote governor
-        VoteToken newVoteToken =
-            new VoteToken("SPOG Vote", "SPOGVote", address(valueGovernor.votingToken()), resetSnapshotId);
-
-        // TODO: check with team on parameters here, we can pass them as arguments to the reset function ?
-        SPOGGovernor newVoteGovernor = new SPOGGovernor{salt: bytes32("Vote governor reset")}(
-            newVoteToken,
-            voteGovernor.quorumNumerator(),
-            voteGovernor.votingPeriod(),
-            voteGovernor.name()
+        VoteToken newVoteToken = VoteToken(address(newVoteGovernor.votingToken()));
+        require(
+            valueGovernor.votingToken() == newVoteToken.valueToken(),
+            "Implicit value token of new vote token is different)"
         );
 
-        voteGovernor = ISPOGGovernor(address(newVoteGovernor));
+        // Take snapshot of value token balances at the moment of reset
+        // Update snapshot if for the voting token
+        uint256 resetSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
+        newVoteToken.initReset(resetSnapshotId);
+
+        voteGovernor = newVoteGovernor;
 
         emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
     }
