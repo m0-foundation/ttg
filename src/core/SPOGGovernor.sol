@@ -41,8 +41,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
     mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
-    // epoch => vote inflation amount
-    mapping(uint256 => uint256) public epochVotingTokenInflationAmount;
     // epoch => vote token supply at epoch start
     mapping(uint256 => uint256) public epochVotingTokenSupply;
     // epoch => cumulative epoch vote weight casted
@@ -105,8 +103,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
             // trigger token votingToken inflation
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
-
-            epochVotingTokenInflationAmount[currentVotingPeriodEpoch] = amountToIncreaseSupplyBy;
 
             votingToken.mint(address(this), amountToIncreaseSupplyBy); // send inflation to this contract
             votingToken.approve(vault, amountStuck + amountToIncreaseSupplyBy);

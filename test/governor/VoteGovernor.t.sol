@@ -50,15 +50,12 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate vote token inflation rewards for voter
-    function calculateVoteTokenInflationRewardsForVoter(address voter, uint256 proposalId)
+    function calculateVoteTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
         private
         view
         returns (uint256)
     {
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
-
-        uint256 amountToBeSharedOnProRataBasis =
-            voteGovernor.epochVotingTokenInflationAmount(voteGovernor.currentVotingPeriodEpoch());
 
         uint256 totalVotingTokenSupplyApplicable = spogVote.totalSupply() - amountToBeSharedOnProRataBasis;
 
@@ -287,6 +284,9 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
+        vm.prank(address(voteGovernor));
+        uint256 epochInflation = spog.tokenInflationCalculation();
+
         // alice votes on proposal 1
         vm.startPrank(alice);
         voteGovernor.castVote(proposalId, yesVote);
@@ -383,13 +383,13 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // alice and bobs should have received vote token inflationary rewards from epoch 1 for having voted in all proposals proposed from epoch 0
         assertEq(
             spogVote.balanceOf(alice),
-            calculateVoteTokenInflationRewardsForVoter(alice, proposalId)
+            calculateVoteTokenInflationRewardsForVoter(alice, proposalId, epochInflation)
                 + voteGovernor.getVotes(alice, voteGovernor.proposalSnapshot(proposalId)),
             "Alice should have more spogVote balance"
         );
         assertEq(
             spogVote.balanceOf(bob),
-            calculateVoteTokenInflationRewardsForVoter(bob, proposalId)
+            calculateVoteTokenInflationRewardsForVoter(bob, proposalId, epochInflation)
                 + voteGovernor.getVotes(bob, voteGovernor.proposalSnapshot(proposalId)),
             "Bob should have more spogVote balance"
         );

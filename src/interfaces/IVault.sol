@@ -3,7 +3,6 @@
 pragma solidity 0.8.17;
 
 interface IVault {
-
     event EpochRewardsDeposit(uint256 indexed epoch, address token, uint256 amount);
     event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
     event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
