@@ -24,7 +24,7 @@ contract SPOG_reset is SPOG_Base {
     /**
      * Helpers *******
      */
-    function proposeResetFork(string memory proposalDescription)
+    function proposeGovernanceReset(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -65,7 +65,7 @@ contract SPOG_reset is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeResetFork("Propose reset fork");
+        ) = proposeGovernanceReset("Propose reset of vote governance");
 
         // fast forward to an active voting period
         vm.roll(block.number + valueGovernor.votingDelay() + 1);

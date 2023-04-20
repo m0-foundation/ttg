@@ -134,16 +134,15 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     function reset() external onlyValueGovernor {
-        // Take snapshot of value token balances at the moment of fork
-        // TODO: verify that we need to take it at this exact moment?
-        uint256 forkSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
+        // Take snapshot of value token balances at the moment of reset
+        uint256 resetSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
 
         // Create new vote token and vote governor
         VoteToken newVoteToken =
-            new VoteToken("SPOG Vote", "SPOGVote", address(valueGovernor.votingToken()), forkSnapshotId);
+            new VoteToken("SPOG Vote", "SPOGVote", address(valueGovernor.votingToken()), resetSnapshotId);
 
         // TODO: check with team on parameters here, we can pass them as arguments to the reset function ?
-        SPOGGovernor newVoteGovernor = new SPOGGovernor{salt: bytes32("Vote governor forked")}(
+        SPOGGovernor newVoteGovernor = new SPOGGovernor{salt: bytes32("Vote governor reset")}(
             newVoteToken,
             voteGovernor.quorumNumerator(),
             voteGovernor.votingPeriod(),
@@ -206,7 +205,6 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Only $VALUE governance proposals
         if (executableFuncSelector == this.reset.selector) {
-            // TODO: IMPORTANT: figure out how to do voting for the fork time
             uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
 
             emit NewValueQuorumProposal(valueProposalId);

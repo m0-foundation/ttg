@@ -20,7 +20,7 @@ abstract contract SPOGStorage is ISPOG {
     SPOGData public spogData;
     uint256 public immutable valueFixedInflationAmount;
 
-    // @note The vote governor can be changed by value governance during fork `RESET`
+    // @note The vote governor can be changed by value governance with `RESET` proposal
     ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 

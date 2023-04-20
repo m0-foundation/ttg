@@ -8,7 +8,7 @@ import {SPOGVotes} from "./SPOGVotes.sol";
 
 contract VoteToken is SPOGVotes {
     address public immutable valueToken;
-    uint256 public immutable forkSnapshotId;
+    uint256 public immutable resetSnapshotId;
 
     // Errors
     error AlreadyClaimed();
@@ -18,14 +18,11 @@ contract VoteToken is SPOGVotes {
 
     mapping(address => bool) public alreadyClaimed;
 
-    constructor(string memory name, string memory symbol, address _valueToken, uint256 _forkSnapshotId)
+    constructor(string memory name, string memory symbol, address _valueToken, uint256 _resetSnapshotId)
         SPOGVotes(name, symbol)
     {
         valueToken = _valueToken;
-        forkSnapshotId = _forkSnapshotId;
-
-        // TODO: make sure snapshot role is set correctly
-        // valueStartSnapshotId = ValueToken(valueToken).snapshot();
+        resetSnapshotId = _resetSnapshotId;
     }
 
     function claimPreviousSupply() external {
@@ -34,13 +31,13 @@ contract VoteToken is SPOGVotes {
         }
         alreadyClaimed[msg.sender] = true;
 
-        uint256 claimBalance = forkBalance();
+        uint256 claimBalance = resetBalance();
         _mint(msg.sender, claimBalance);
 
         emit PreviousSupplyClaimed(msg.sender, claimBalance);
     }
 
-    function forkBalance() public view returns (uint256) {
-        return ERC20Snapshot(valueToken).balanceOfAt(msg.sender, forkSnapshotId);
+    function resetBalance() public view returns (uint256) {
+        return ERC20Snapshot(valueToken).balanceOfAt(msg.sender, resetSnapshotId);
     }
 }

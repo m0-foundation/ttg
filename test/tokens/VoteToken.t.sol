@@ -46,12 +46,12 @@ contract VoteTokenTest is SPOG_Base {
         assertEq(valueToken.balanceOf(bob), 60e18);
         assertEq(valueToken.totalSupply(), 110e18);
 
-        // Create new VoteToken with forked balances of ValueToken holders
+        // Create new VoteToken with snapshotted balances of ValueToken holders
         vm.startPrank(address(spog));
         VoteToken voteToken = new VoteToken("SPOGVote", "vote", address(valueToken), valueToken.snapshot());
         vm.stopPrank();
 
-        // Check initial forked balances
+        // Check initial balances after reset
         assertEq(voteToken.totalSupply(), 0);
         assertEq(voteToken.balanceOf(alice), 0);
         assertEq(voteToken.balanceOf(bob), 0);
@@ -71,13 +71,6 @@ contract VoteTokenTest is SPOG_Base {
         assertEq(voteToken.balanceOf(bob), 60e18);
 
         vm.startPrank(bob);
-        // valueToken.transfer(alice, 10e18);
-
-        // // Movements of value tokens have no effect on VoteToken balances after fork
-        // assertEq(valueToken.balanceOf(alice), 60e18);
-        // assertEq(valueToken.balanceOf(bob), 50e18);
-        // assertEq(voteToken.balanceOf(alice), 50e18);
-        // assertEq(voteToken.balanceOf(bob), 60e18);
 
         // Vote balances accounting works
         voteToken.transfer(alice, 50e18);
