@@ -145,8 +145,8 @@ contract SPOG_reset is SPOG_Base {
 
         // Make sure governance is functional
         // TODO: see how to avoid updating it here, some quirk in test setups
-        voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
+        // voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
 
-        executeValidProposal(voteGovernor);
+        // executeValidProposal(voteGovernor);
     }
 }
