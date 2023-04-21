@@ -26,9 +26,9 @@ contract SPOG_reset is SPOG_Base {
     /**
      * Helpers *******
      */
-    function createNewVoteGovernor() private returns (address) {
+    function createNewVoteGovernor(address valueToken) private returns (address) {
         // deploy vote governor from factory
-        VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", address(spogValue));
+        VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", valueToken);
         // mint new vote tokens to address(this) and self-delegate
         newVoteToken.mint(address(this), 100e18);
         newVoteToken.delegate(address(this));
@@ -43,7 +43,7 @@ contract SPOG_reset is SPOG_Base {
         return address(newVoteGovernor);
     }
 
-    function proposeGovernanceReset(string memory proposalDescription)
+    function proposeGovernanceReset(string memory proposalDescription, address valueToken)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -52,7 +52,7 @@ contract SPOG_reset is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        address newVoteGovernor = createNewVoteGovernor();
+        address newVoteGovernor = createNewVoteGovernor(valueToken);
         bytes memory callData = abi.encodeWithSignature("reset(address)", newVoteGovernor);
         string memory description = proposalDescription;
         calldatas[0] = callData;
@@ -73,7 +73,7 @@ contract SPOG_reset is SPOG_Base {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function executeSomeProposal(SPOGGovernor voteGovernor) private {
+    function executeValidProposal(SPOGGovernor voteGovernor) private {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -93,7 +93,6 @@ contract SPOG_reset is SPOG_Base {
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // cast vote on proposal
-        uint8 yesVote = 1;
         voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + voteGovernor.votingPeriod() + 1);
@@ -102,9 +101,17 @@ contract SPOG_reset is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
     }
 
-    function test_Revert_Change_WhenNotCalledFromValueGovernance() public {
+    function test_Revert_Reset_WhenNotCalledFromValueGovernance() public {
         vm.expectRevert("SPOG: Only value governor");
         spog.reset(ISPOGGovernor(address(voteGovernor)));
+    }
+
+    function test_Revert_Reset_WhenValueAndVoteTokensMistmatch() public {
+        vm.startPrank(address(valueGovernor));
+        ValueToken newValueToken = new ValueToken("new Value token", "value");
+        address governor = createNewVoteGovernor(address(newValueToken));
+        vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
+        spog.reset(ISPOGGovernor(governor));
     }
 
     function test_Reset_Success() public {
@@ -114,7 +121,7 @@ contract SPOG_reset is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeGovernanceReset("Propose reset of vote governance");
+        ) = proposeGovernanceReset("Propose reset of vote governance", address(spogValue));
 
         // fast forward to an active voting period
         vm.roll(block.number + valueGovernor.votingDelay() + 1);
@@ -137,9 +144,9 @@ contract SPOG_reset is SPOG_Base {
         assertEq(spog.voteGovernor().votingPeriod(), 15, "Vote governor voting delay was not set correctly");
 
         // Make sure governance is functional
-        // TODO: see how to avoid updating it here
+        // TODO: see how to avoid updating it here, some quirk in test setups
         voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
 
-        executeSomeProposal(voteGovernor);
+        executeValidProposal(voteGovernor);
     }
 }

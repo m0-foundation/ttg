@@ -140,10 +140,7 @@ contract SPOG is SPOGStorage, ERC165 {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         VoteToken newVoteToken = VoteToken(address(newVoteGovernor.votingToken()));
-        require(
-            valueGovernor.votingToken() == newVoteToken.valueToken(),
-            "Implicit value token of new vote token is different)"
-        );
+        if (valueGovernor.votingToken() != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         voteGovernor = newVoteGovernor;
         // Important: initialize SPOG address in the new vote governor

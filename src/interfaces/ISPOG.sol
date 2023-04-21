@@ -29,6 +29,7 @@ interface ISPOG {
     error NotGovernedMethod(bytes4 funcSelector);
     error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
     error ValueGovernorDidNotApprove(uint256 proposalId);
+    error ValueTokenMistmatch();
 
     // Logic functions
     function vault() external view returns (address);
