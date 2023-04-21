@@ -136,11 +136,7 @@ contract SPOGDeployScript is BaseScript {
         console.log("Vault address: ", address(vault));
     }
 
-    /**
-     * Private Function *******
-     */
-
-    function createSalt(string memory saltValue) private view returns (uint256) {
+    function createSalt(string memory saltValue) public view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(saltValue, address(this), block.timestamp, block.number)));
     }
 }

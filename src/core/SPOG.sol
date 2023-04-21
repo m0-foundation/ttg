@@ -134,9 +134,10 @@ contract SPOG is SPOGStorage, ERC165 {
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
-    // reset current vote governance, only value governance can do it
+    // reset current vote governance, only value governor can do it
+    // @param newVoteGovernor The address of the new vote governance
     function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
-        //TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
+        // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         VoteToken newVoteToken = VoteToken(address(newVoteGovernor.votingToken()));
         require(
@@ -144,12 +145,14 @@ contract SPOG is SPOGStorage, ERC165 {
             "Implicit value token of new vote token is different)"
         );
 
+        voteGovernor = newVoteGovernor;
+        // Important: initialize SPOG address in the new vote governor
+        voteGovernor.initSPOGAddress(address(this));
+
         // Take snapshot of value token balances at the moment of reset
-        // Update snapshot if for the voting token
+        // Update reset snapshot id for the voting token
         uint256 resetSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
         newVoteToken.initReset(resetSnapshotId);
-
-        voteGovernor = newVoteGovernor;
 
         emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
     }

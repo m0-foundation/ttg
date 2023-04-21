@@ -7,37 +7,39 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract SPOG_reset is SPOG_Base {
     uint8 internal yesVote;
-    uint8 internal noVote;
-    SPOGGovernorFactory governorFactory;
+    SPOGGovernorFactory internal governorFactory;
 
     event NewValueQuorumProposal(uint256 indexed proposalId);
     event SPOGResetExecuted(address indexed newVoteToken, address indexed newVoteGovernor);
 
     function setUp() public override {
-        yesVote = 1;
-        noVote = 0;
-
         super.setUp();
 
+        yesVote = 1;
         governorFactory = new SPOGGovernorFactory();
     }
 
     /**
      * Helpers *******
      */
-
     function createNewVoteGovernor() private returns (address) {
         // deploy vote governor from factory
         VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", address(spogValue));
-        newVoteToken.initSPOGAddress(address(spog));
-        uint256 voteGovernorSalt = createSalt("new VoteGovernor");
-        uint256 voteTime = 10; // in blocks
-        uint256 voteQuorum = 4;
+        // mint new vote tokens to address(this) and self-delegate
+        newVoteToken.mint(address(this), 100e18);
+        newVoteToken.delegate(address(this));
+
+        uint256 voteGovernorSalt = deployScript.createSalt("new VoteGovernor");
+        uint256 voteTime = 15; // in blocks
+        uint256 voteQuorum = 5;
         SPOGGovernor newVoteGovernor =
             governorFactory.deploy(newVoteToken, voteQuorum, voteTime, "new VoteGovernor", voteGovernorSalt);
+
+        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(newVoteGovernor));
         return address(newVoteGovernor);
     }
 
@@ -71,7 +73,36 @@ contract SPOG_reset is SPOG_Base {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function test_Revert_Change_WhenNotCalledFromGovernance() public {
+    function executeSomeProposal(SPOGGovernor voteGovernor) private {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
+        string memory description = "Add new list";
+
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+
+        // vote on proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        // fast forward to an active voting period
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        voteGovernor.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + voteGovernor.votingPeriod() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+    }
+
+    function test_Revert_Change_WhenNotCalledFromValueGovernance() public {
         vm.expectRevert("SPOG: Only value governor");
         spog.reset(ISPOGGovernor(address(voteGovernor)));
     }
@@ -102,58 +133,13 @@ contract SPOG_reset is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
 
         assertFalse(address(spog.voteGovernor()) == voteGovernorBeforeFork, "Vote governor was not reset");
-    }
+        assertEq(spog.voteGovernor().quorumNumerator(), 5, "Vote governor quorum was not set correctly");
+        assertEq(spog.voteGovernor().votingPeriod(), 15, "Vote governor voting delay was not set correctly");
 
-    // function test_Change_ChangeCashToken_SPOGProposalToChangeVariableInSpog() public {
-    //     ERC20GodMode newCashInstance = new ERC20GodMode(
-    //         "New Cash",
-    //         "NCASH",
-    //         18
-    //     );
-    //     bytes32 cash = "cash";
-    //     bytes memory newCash = abi.encode(address(newCashInstance));
+        // Make sure governance is functional
+        // TODO: see how to avoid updating it here
+        voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
 
-    //     // create proposal to change variable in spog
-    //     address[] memory targets = new address[](1);
-    //     targets[0] = address(spog);
-    //     uint256[] memory values = new uint256[](1);
-    //     values[0] = 0;
-    //     bytes[] memory calldatas = new bytes[](1);
-
-    //     calldatas[0] = abi.encodeWithSignature("change(bytes32,bytes)", cash, newCash);
-    //     string memory description = "Change cash variable in spog";
-
-    //     (bytes32 hashedDescription, uint256 proposalId) =
-    //         getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
-
-    //     // create proposal
-    //     deployScript.cash().approve(address(spog), deployScript.tax());
-    //     spog.propose(targets, values, calldatas, description);
-
-    //     // fast forward to an active voting period
-    //     vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-    //     // vote holders vote on proposal
-    //     voteGovernor.castVote(proposalId, yesVote);
-    //     // value holders vote on proposal
-    //     valueGovernor.castVote(proposalId, yesVote);
-
-    //     // fast forward to end of voting period
-    //     vm.roll(block.number + deployScript.voteTime() + 1);
-
-    //     bytes32 identifier = keccak256(abi.encodePacked(cash, newCash));
-    //     // check that DoubleQuorumFinalized event was triggered
-    //     expectEmit();
-    //     emit DoubleQuorumFinalized(identifier);
-    //     spog.execute(targets, values, calldatas, hashedDescription);
-
-    //     (,,,,,, IERC20 cashFirstCheck) = spog.spogData();
-
-    //     // assert that cash has been changed
-    //     assertTrue(address(cashFirstCheck) == address(newCashInstance), "Cash token was not changed");
-    // }
-
-    function createSalt(string memory saltValue) private view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(saltValue, address(this), block.timestamp, block.number)));
+        executeSomeProposal(voteGovernor);
     }
 }
