@@ -8,6 +8,11 @@ import {ERC20Votes} from "openzeppelin-contracts/contracts/token/ERC20/extension
 
 import {SPOGVotes} from "./SPOGVotes.sol";
 
+/// @title ValueToken
+/// @dev Main token of value governance, has a built-in snapshot functionality.
+/// @dev Snapshot is taken at the moment of reset by SPOG.
+/// @dev This snapshot is used by new Vote token to set initial supply of tokens.
+/// @dev All value holders become vote holders of the new Vote governance.
 contract ValueToken is ERC20Snapshot, SPOGVotes {
     constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {}
 
@@ -35,6 +40,7 @@ contract ValueToken is ERC20Snapshot, SPOGVotes {
         super._mint(account, amount);
     }
 
+    /// @dev Takes a snapshot of the current token supply and returns its snapshot id.
     function snapshot() public returns (uint256) {
         if (msg.sender != spogAddress) revert CallerIsNotSPOG();
         return _snapshot();
