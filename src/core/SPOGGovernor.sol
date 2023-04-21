@@ -20,6 +20,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     ISPOGVotes public immutable votingToken;
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
+    uint256 private _votingPeriodChangedEpoch;
     address public spogAddress;
 
     /// @dev Supported vote types.
@@ -82,7 +83,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev get current epoch
     function currentVotingPeriodEpoch() public view returns (uint256) {
-        return (block.number - _votingPeriodChangedBlockNumber) / _votingPeriod;
+        return _votingPeriodChangedEpoch + ((block.number - _votingPeriodChangedBlockNumber) / _votingPeriod);
     }
 
     /// @dev get voting token supply @ epoch
@@ -153,6 +154,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         _votingPeriod = newVotingTime;
         _votingPeriodChangedBlockNumber = block.number;
+        _votingPeriodChangedEpoch = currentVotingPeriodEpoch();
     }
 
     function registerEmergencyProposal(uint256 proposalId) external onlySPOG {
