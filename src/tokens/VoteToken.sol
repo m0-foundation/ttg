@@ -9,40 +9,40 @@ import {SPOGVotes} from "./SPOGVotes.sol";
 contract VoteToken is SPOGVotes {
     address public immutable valueToken;
     uint256 public resetSnapshotId;
-    bool initialized;
+    mapping(address => bool) public alreadyClaimed;
 
     // Errors
-    error AlreadyClaimed();
-    error AlreadyInitialized();
-    error NotInitialized();
+    error ResetTokensAlreadyClaimed();
+    error ResetAlreadyInitialized();
+    error ResetNotInitialized();
 
     // Events
-    event PreviousSupplyClaimed(address indexed account, uint256 amount);
-
-    mapping(address => bool) public alreadyClaimed;
+    event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
+    event ResetInitialized(uint256 indexed resetSnapshotId);
 
     constructor(string memory name, string memory symbol, address _valueToken) SPOGVotes(name, symbol) {
         valueToken = _valueToken;
     }
 
     function initReset(uint256 _resetSnapshotId) external {
-        if (initialized) revert AlreadyInitialized();
-        require(msg.sender == spogAddress, "Only SPOG can initialize");
-        initialized = true;
+        if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
+        if (msg.sender != spogAddress) revert CallerIsNotSPOG();
 
         resetSnapshotId = _resetSnapshotId;
+
+        emit ResetInitialized(_resetSnapshotId);
     }
 
     function claimPreviousSupply() external {
-        if (!initialized) revert NotInitialized();
-        if (alreadyClaimed[msg.sender]) revert AlreadyClaimed();
+        if (resetSnapshotId == 0) revert ResetNotInitialized();
+        if (alreadyClaimed[msg.sender]) revert ResetTokensAlreadyClaimed();
 
         alreadyClaimed[msg.sender] = true;
 
         uint256 claimBalance = resetBalance();
         _mint(msg.sender, claimBalance);
 
-        emit PreviousSupplyClaimed(msg.sender, claimBalance);
+        emit PreviousResetSupplyClaimed(msg.sender, claimBalance);
     }
 
     // TODO: check what happens if cnapshot taken at 0?

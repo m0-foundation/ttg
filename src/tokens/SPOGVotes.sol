@@ -13,6 +13,9 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;
 
+    // Errors
+    error CallerIsNotSPOG();
+
     /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token

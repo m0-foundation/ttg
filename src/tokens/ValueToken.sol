@@ -9,11 +9,7 @@ import {ERC20Votes} from "openzeppelin-contracts/contracts/token/ERC20/extension
 import {SPOGVotes} from "./SPOGVotes.sol";
 
 contract ValueToken is ERC20Snapshot, SPOGVotes {
-    bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
-
-    constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {
-        // _setupRole(SNAPSHOT_ROLE, _msgSender());
-    }
+    constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {}
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
@@ -39,14 +35,8 @@ contract ValueToken is ERC20Snapshot, SPOGVotes {
         super._mint(account, amount);
     }
 
-    function snapshot()
-        public
-        returns (
-            // onlyRole(SNAPSHOT_ROLE)
-            uint256
-        )
-    {
-        require(msg.sender == spogAddress, "Only SPOG can snapshot");
+    function snapshot() public returns (uint256) {
+        if (msg.sender != spogAddress) revert CallerIsNotSPOG();
         return _snapshot();
     }
 }
