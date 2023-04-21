@@ -270,7 +270,13 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param _amount The amount to be transferred
     function _pay(uint256 _amount) private {
         // transfer the amount from the caller to the SPOG
-        spogData.cash.safeTransferFrom(msg.sender, address(vault), _amount);
+        spogData.cash.safeTransferFrom(msg.sender, address(this), _amount);
+        // approve amount to be sent to the vault
+        spogData.cash.approve(address(vault), _amount);
+
+        // deposit the amount to the vault
+        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+        IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), _amount);
     }
 
     function _removeFromList(address _address, IList _list) private {
