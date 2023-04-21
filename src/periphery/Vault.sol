@@ -103,7 +103,7 @@ contract Vault is IVault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
 
-        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in updateStartOfNextVotingPeriod()
+        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in inflateVotingTokens()
         uint256 amountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][currentVotingPeriodEpoch];
 
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochVotingTokenSupply(currentVotingPeriodEpoch);
