@@ -104,20 +104,21 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function inflateVotingTokens() public {
         uint256 currentEpoch = currentVotingPeriodEpoch();
         if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
-            // move any votingToken stuck in this contract to the vault
-            address vault = ISPOG(spogAddress).vault();
-            uint256 amountStuck = votingToken.balanceOf(address(this));
-
-            // trigger token votingToken inflation
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
 
-            votingTokensMinted[currentVotingPeriodEpoch()] = true;
+            // mint tokens
+            votingTokensMinted[currentEpoch] = true;
+            votingToken.mint(address(this), amountToIncreaseSupplyBy);
+            
+            uint256 balance = votingToken.balanceOf(address(this));
+            address vault = ISPOG(spogAddress).vault();
 
-            votingToken.mint(address(this), amountToIncreaseSupplyBy); // send inflation to this contract
-            votingToken.approve(vault, amountStuck + amountToIncreaseSupplyBy);
-            IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch(), address(votingToken), amountStuck + amountToIncreaseSupplyBy);
+            // pull new tokens and any previous balance to vault
+            votingToken.approve(vault, balance);
+            IVault(vault).depositEpochRewardTokens(currentEpoch, address(votingToken), balance);
 
-            emit VotingTokenInflation(currentVotingPeriodEpoch(), amountToIncreaseSupplyBy);
+            // emit event for new tokens minted (not balance)
+            emit VotingTokenInflation(currentEpoch, amountToIncreaseSupplyBy);
         }
     }
 
