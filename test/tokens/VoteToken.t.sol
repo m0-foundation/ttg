@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
-
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
@@ -42,13 +40,14 @@ contract VoteTokenTest is SPOG_Base {
         valueToken.initSPOGAddress(address(spog));
 
         // Mint initial balances to users
-        valueToken.mint(alice, 50e18);
-        valueToken.mint(bob, 60e18);
-        valueToken.mint(carol, 30e18);
+        valueToken.mint(alice, aliceStartBalance);
+        valueToken.mint(bob, bobStartBalance);
+        valueToken.mint(carol, carolStartBalance);
 
         // Check initial balances
-        assertEq(valueToken.balanceOf(alice), 50e18);
-        assertEq(valueToken.balanceOf(bob), 60e18);
+        assertEq(valueToken.balanceOf(alice), aliceStartBalance);
+        assertEq(valueToken.balanceOf(bob), bobStartBalance);
+        assertEq(valueToken.balanceOf(carol), carolStartBalance);
         assertEq(valueToken.totalSupply(), 140e18);
 
         // Create new VoteToken
@@ -146,7 +145,7 @@ contract VoteTokenTest is SPOG_Base {
         assertEq(voteToken.balanceOf(nothing), 0, "Balance stays 0");
     }
 
-    function test_VoteToken_afterReset() public {
+    function test_balances_beforeAndAfterReset() public {
         initTokens();
         resetGovernance();
 
