@@ -526,4 +526,30 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             "Vote token supply didn't inflate correctly in the second period"
         );
     }
+
+    function test_NoActivityInEpoch() public {
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingNewListToSpog("new list to spog");
+
+        // fast forward to an active voting period. Inflate vote token supply
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        voteGovernor.castVote(proposalId, yesVote);
+
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        vm.roll(block.number + 5 * voteGovernor.votingDelay() + 1);
+
+        // vm.expectRevert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
+        proposeAddingNewListToSpog("new list to spog 2");
+    }
 }
