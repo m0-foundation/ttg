@@ -46,11 +46,11 @@ contract ValueSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate value token inflation rewards for voter
-    function calculateValueTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
-        private
-        view
-        returns (uint256)
-    {
+    function calculateValueTokenInflationRewardsForVoter(
+        address voter,
+        uint256 proposalId,
+        uint256 amountToBeSharedOnProRataBasis
+    ) private view returns (uint256) {
         uint256 relevantVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
@@ -208,11 +208,11 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         uint256 relevantEpoch = valueGovernor.currentVotingPeriodEpoch() - 1;
 
         assertFalse(
-            vault.hasClaimedValueTokenRewardsForEpoch(alice, relevantEpoch),
+            vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpoch, address(spogValue)),
             "Alice should not have claimed value token rewards"
         );
         assertFalse(
-            vault.hasClaimedValueTokenRewardsForEpoch(bob, relevantEpoch),
+            vault.hasClaimedTokenRewardsForEpoch(bob, relevantEpoch, address(spogValue)),
             "Bob should not have claimed value token rewards"
         );
 
@@ -226,11 +226,12 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         vm.stopPrank();
 
         assertTrue(
-            vault.hasClaimedValueTokenRewardsForEpoch(alice, relevantEpoch),
+            vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpoch, address(spogValue)),
             "Alice should have claimed value token rewards"
         );
         assertTrue(
-            vault.hasClaimedValueTokenRewardsForEpoch(bob, relevantEpoch), "Bob should have claimed value token rewards"
+            vault.hasClaimedTokenRewardsForEpoch(bob, relevantEpoch, address(spogValue)),
+            "Bob should have claimed value token rewards"
         );
 
         // alice and bobs should have received value token inflationary rewards from epoch 1 in epoch 2

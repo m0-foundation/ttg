@@ -354,11 +354,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
 
         assertFalse(
-            vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals),
+            vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
             "Alice should not have claimed vote token rewards"
         );
         assertFalse(
-            vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals),
+            vault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
             "Bob should not have claimed vote token rewards"
         );
 
@@ -372,11 +372,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         vm.stopPrank();
 
         assertTrue(
-            vault.hasClaimedVoteTokenRewardsForEpoch(alice, relevantEpochProposals),
+            vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
             "Alice should have claimed vote token rewards"
         );
         assertTrue(
-            vault.hasClaimedVoteTokenRewardsForEpoch(bob, relevantEpochProposals),
+            vault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
             "Bob should have claimed vote token rewards"
         );
 
