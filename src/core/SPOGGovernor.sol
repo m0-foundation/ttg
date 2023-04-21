@@ -83,7 +83,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev get current epoch
     function currentVotingPeriodEpoch() public view returns (uint256) {
-        uint256 blocksSinceVotingPeriodChange =  block.number - _votingPeriodChangedBlockNumber;
+        uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 
         return _votingPeriodChangedEpoch + blocksSinceVotingPeriodChange / _votingPeriod;
     }
@@ -95,7 +95,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function startOfNextVotingPeriod() public view returns (uint256) {
-        uint256 blocksSinceVotingPeriodChange =  block.number - _votingPeriodChangedBlockNumber;
+        uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 
         return block.number + _votingPeriod - blocksSinceVotingPeriodChange % _votingPeriod;
     }
