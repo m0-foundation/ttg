@@ -46,7 +46,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate value token inflation rewards for voter
-    function calculateValueTokenInflationRewardsForVoter(address voter, uint256 proposalId)
+    function calculateValueTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
         private
         view
         returns (uint256)
@@ -54,9 +54,6 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         uint256 relevantVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
-
-        uint256 amountToBeSharedOnProRataBasis =
-            valueGovernor.epochVotingTokenInflationAmount(relevantVotingPeriodEpoch);
 
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantVotingPeriodEpoch);
 
@@ -171,6 +168,9 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         voteGovernor.updateStartOfNextVotingPeriod();
         valueGovernor.updateStartOfNextVotingPeriod();
 
+        vm.prank(address(valueGovernor));
+        uint256 epochInflation = spog.tokenInflationCalculation();
+
         uint256 spogValueBalanceForVaultForEpochOne = spogValue.balanceOf(address(vault));
         assertGt(
             spogValueBalanceForVaultForEpochOne,
@@ -236,12 +236,12 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         // alice and bobs should have received value token inflationary rewards from epoch 1 in epoch 2
         assertEq(
             spogValue.balanceOf(alice),
-            calculateValueTokenInflationRewardsForVoter(alice, proposalId) + aliceValueBalanceBefore,
+            calculateValueTokenInflationRewardsForVoter(alice, proposalId, epochInflation) + aliceValueBalanceBefore,
             "Alice has unexpected balance"
         );
         assertEq(
             spogValue.balanceOf(bob),
-            calculateValueTokenInflationRewardsForVoter(bob, proposalId) + bobValueBalanceBefore,
+            calculateValueTokenInflationRewardsForVoter(bob, proposalId, epochInflation) + bobValueBalanceBefore,
             "Bob has unexpected balance"
         );
 

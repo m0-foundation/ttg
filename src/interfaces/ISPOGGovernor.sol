@@ -10,8 +10,6 @@ interface ISPOGGovernor {
 
     function epochProposalsCount(uint256 epoch) external view returns (uint256);
 
-    function epochVotingTokenInflationAmount(uint256 epoch) external view returns (uint256);
-
     function epochVotingTokenSupply(uint256 epoch) external view returns (uint256);
 
     function accountEpochVoteWeight(address account, uint256 epoch) external view returns (uint256);

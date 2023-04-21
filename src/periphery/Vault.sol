@@ -5,29 +5,84 @@ pragma solidity 0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {IVault} from "src/interfaces/IVault.sol";
+
+import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract Vault {
+contract Vault is IVault {
     using SafeERC20 for IERC20;
 
     ISPOGGovernor public immutable voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 
-    event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-    event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-
     // address => voting epoch => bool
     mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
     mapping(address => mapping(uint256 => bool)) public hasClaimedValueTokenRewardsForEpoch;
+
+    // token address => epoch => amount
+    mapping(address => mapping(uint256 => uint256)) public epochVotingTokenDeposit;
+    mapping(address => mapping(uint256 => uint256)) public epochVotingTokenTotalWithdrawn;
 
     constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor) {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
     }
 
+    modifier onlyGovernor() {
+        require(msg.sender == address(voteGovernor) || msg.sender == address(valueGovernor), "Vault: Only governor");
+
+        _;
+    }
+
+    modifier onlySpog() {
+        require(msg.sender == address(voteGovernor.spogAddress()), "Vault: Only spog");
+
+        _;
+    }
+
+    /// @notice Deposit voting (vote and value) reward tokens for epoch
+    /// @param epoch Epoch to deposit tokens for
+    /// @param token Token to deposit
+    /// @param amount Amount of vote tokens to deposit
+    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlyGovernor {
+        epochVotingTokenDeposit[token][epoch] += amount;
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit EpochRewardsDeposit(epoch, token, amount);
+    }
+
+    /// @notice Sell unclaimed vote tokens
+    /// @param epoch Epoch to view unclaimed tokens
+    function unclaimedVoteTokensForEpoch(uint256 epoch) public view returns (uint256) {
+        address token = address(voteGovernor.votingToken());
+        return epochVotingTokenDeposit[token][epoch] - epochVotingTokenTotalWithdrawn[token][epoch];
+    }
+
+    /// @notice Sell unclaimed vote tokens
+    /// @param epoch Epoch to sell tokens from
+    /// @param paymentToken Token to accept for payment
+    /// @param duration The duration of the auction
+    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySpog {
+        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+        require(epoch < currentVotingPeriodEpoch, "Vault: epoch is not in the past");
+
+        address token = address(voteGovernor.votingToken());
+        address auction = address(new ERC20PricelessAuction(token, paymentToken, duration, address(this)));
+
+        uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
+        IERC20(token).approve(auction, unclaimed);
+        
+        ERC20PricelessAuction(auction).init(unclaimed);
+
+        emit VoteTokenAuction(token, epoch, auction, unclaimed);
+    }
+
     /// @dev Withdraw Vote Token Rewards
     function withdrawVoteTokenRewards() external {
+        address token = address(voteGovernor.votingToken());
+
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
         require(
@@ -48,7 +103,8 @@ contract Vault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
 
-        uint256 amountToBeSharedOnProRataBasis = voteGovernor.epochVotingTokenInflationAmount(currentVotingPeriodEpoch);
+        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in updateStartOfNextVotingPeriod()
+        uint256 amountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][currentVotingPeriodEpoch];
 
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochVotingTokenSupply(currentVotingPeriodEpoch);
 
@@ -56,14 +112,15 @@ contract Vault {
 
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
-        address token = address(voteGovernor.votingToken());
-
+        epochVotingTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;  
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit VoteTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
     function withdrawValueTokenRewards() external {
+        address token = address(valueGovernor.votingToken());
+
         uint256 relevantEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         require(
@@ -83,15 +140,13 @@ contract Vault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, relevantEpoch);
 
-        uint256 valueTokenAmountToBeSharedOnProRataBasis = valueGovernor.epochVotingTokenInflationAmount(relevantEpoch);
+        uint256 valueTokenAmountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][relevantEpoch];
 
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantEpoch);
 
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
 
         uint256 amountToWithdraw = percentageOfTotalSupply * valueTokenAmountToBeSharedOnProRataBasis / 100;
-
-        address token = address(valueGovernor.votingToken());
 
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
