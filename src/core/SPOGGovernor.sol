@@ -37,6 +37,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     mapping(uint256 => bool) public emergencyProposals;
     mapping(uint256 => ProposalVote) private _proposalVotes;
+    // epoch => start block number
+    mapping(uint256 => uint256) public epochStartBlockNumber;
+    // address => epoch => number of proposals voted on
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
@@ -71,6 +74,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         // trigger epoch 0
         startOfNextVotingPeriod = block.number + _votingPeriod;
         currentVotingPeriodEpoch = 0;
+
+        epochStartBlockNumber[currentVotingPeriodEpoch] = block.number;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -87,18 +92,21 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
     function updateStartOfNextVotingPeriod() public {
         if (block.number >= startOfNextVotingPeriod) {
+            // updates for starting epoch
+            currentVotingPeriodEpoch++;
+            uint256 currentEpochStartBlockNumber = startOfNextVotingPeriod;
+            epochStartBlockNumber[currentVotingPeriodEpoch] = currentEpochStartBlockNumber;
+
             // move any votingToken stuck in this contract to the vault
             address vault = ISPOG(spogAddress).vault();
             uint256 amountStuck = votingToken.balanceOf(address(this));
 
-            // update currentVotingPeriodEpoch
-            currentVotingPeriodEpoch++;
-
             // update epochVotingTokenSupply
-            epochVotingTokenSupply[currentVotingPeriodEpoch] = votingToken.getPastTotalSupply(startOfNextVotingPeriod);
+            epochVotingTokenSupply[currentVotingPeriodEpoch] =
+                votingToken.getPastTotalSupply(currentEpochStartBlockNumber);
             emit EpochVotingTokenSupplySet(currentVotingPeriodEpoch, epochVotingTokenSupply[currentVotingPeriodEpoch]);
 
-            // update startOfNextVotingPeriod
+            // update startOfNextVotingPeriod for next epoch
             startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
 
             // trigger token votingToken inflation
@@ -106,7 +114,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
             votingToken.mint(address(this), amountToIncreaseSupplyBy); // send inflation to this contract
             votingToken.approve(vault, amountStuck + amountToIncreaseSupplyBy);
-            IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(votingToken), amountStuck + amountToIncreaseSupplyBy);
+            IVault(vault).depositEpochRewardTokens(
+                currentVotingPeriodEpoch, address(votingToken), amountStuck + amountToIncreaseSupplyBy
+            );
 
             emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
         }
