@@ -15,7 +15,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     error SPOGAddressAlreadySet(address spog);
     error AlreadyVoted(uint256 proposalId, address account);
     error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
-    error StartOfNextVotingPeriodWasNotUpdated();
 
     ISPOGVotes public immutable votingToken;
     uint256 private _votingPeriod;
@@ -253,11 +252,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        if (startOfNextVotingPeriod() > block.number) {
-            return startOfNextVotingPeriod() - block.number;
-        }
-
-        revert StartOfNextVotingPeriodWasNotUpdated();
+      uint256 startOfNext = startOfNextVotingPeriod();
+      return startOfNext - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {
