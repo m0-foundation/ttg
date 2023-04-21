@@ -8,8 +8,6 @@ import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 
-import "forge-std/console.sol";
-
 contract VoteTokenTest is SPOG_Base {
     address alice = createUser("alice");
     address bob = createUser("bob");
@@ -97,7 +95,6 @@ contract VoteTokenTest is SPOG_Base {
 
         vm.expectRevert(VoteToken.ResetAlreadyInitialized.selector);
         voteToken.initReset(randomSnapshotId);
-        vm.stopPrank();
     }
 
     function test_Revert_ClaimPreviousSupply_WhenAlreadyClaimed() public {
@@ -117,8 +114,36 @@ contract VoteTokenTest is SPOG_Base {
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice), aliceStartBalance, "Alice should have 50e18 tokens");
+    }
 
-        vm.stopPrank();
+    function test_Revert_ClaimPreviousSupply_WhenResetNotInitialized() public {
+        initTokens();
+
+        // Alice claims her tokens
+        vm.startPrank(alice);
+        vm.expectRevert(VoteToken.ResetNotInitialized.selector);
+        voteToken.claimPreviousSupply();
+
+        assertEq(voteToken.balanceOf(alice), 0, "Alice should have 0 tokens");
+    }
+
+    function test_Revert_ResetBalance_WhenResetNotInitialized() public {
+        initTokens();
+
+        vm.expectRevert("ERC20Snapshot: id is 0");
+        voteToken.resetBalanceOf(address(alice));
+    }
+
+    function test_Revert_ClaimPreviousSupply_WhenNoTokensToClaim() public {
+        initTokens();
+        resetGovernance();
+
+        // Nothing attempts to claim their tokens
+        vm.startPrank(nothing);
+        vm.expectRevert(VoteToken.NoResetTokensToClaim.selector);
+        voteToken.claimPreviousSupply();
+
+        assertEq(voteToken.balanceOf(nothing), 0, "Balance stays 0");
     }
 
     function test_VoteToken_afterReset() public {
@@ -132,17 +157,19 @@ contract VoteTokenTest is SPOG_Base {
 
         // Alice claims her tokens
         vm.startPrank(alice);
+        assertEq(voteToken.resetBalanceOf(address(alice)), aliceStartBalance, "Alice reset balance is incorrect");
         voteToken.claimPreviousSupply();
         vm.stopPrank();
 
         // Bob claims his tokens
         vm.startPrank(bob);
+        assertEq(voteToken.resetBalanceOf(address(bob)), bobStartBalance, "Bob reset balance is incorrect");
         voteToken.claimPreviousSupply();
         vm.stopPrank();
 
         assertEq(voteToken.totalSupply(), 110e18);
-        assertEq(voteToken.balanceOf(alice), 50e18);
-        assertEq(voteToken.balanceOf(bob), 60e18);
+        assertEq(voteToken.balanceOf(alice), aliceStartBalance);
+        assertEq(voteToken.balanceOf(bob), bobStartBalance);
 
         vm.startPrank(bob);
 

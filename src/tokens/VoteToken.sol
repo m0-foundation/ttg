@@ -20,6 +20,7 @@ contract VoteToken is SPOGVotes {
     error ResetTokensAlreadyClaimed();
     error ResetAlreadyInitialized();
     error ResetNotInitialized();
+    error NoResetTokensToClaim();
 
     // Events
     event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
@@ -49,15 +50,18 @@ contract VoteToken is SPOGVotes {
         alreadyClaimed[msg.sender] = true;
 
         // Mint new balance of tokens to the user
-        uint256 claimBalance = resetBalance();
+        uint256 claimBalance = resetBalanceOf(msg.sender);
+
+        // TODO: Check if we want to revert or silently fail by not minting any tokens
+        if (claimBalance == 0) revert NoResetTokensToClaim();
         _mint(msg.sender, claimBalance);
 
         emit PreviousResetSupplyClaimed(msg.sender, claimBalance);
     }
 
-    // TODO: check what happens if snapshot taken at 0?
     /// @dev Returns balance of the user at the moment of reset.
-    function resetBalance() public view returns (uint256) {
-        return ERC20Snapshot(valueToken).balanceOfAt(msg.sender, resetSnapshotId);
+    /// @notice Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
+    function resetBalanceOf(address account) public view returns (uint256) {
+        return ERC20Snapshot(valueToken).balanceOfAt(account, resetSnapshotId);
     }
 }
