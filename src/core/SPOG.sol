@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
 import {IList} from "src/interfaces/IList.sol";
+import {IVault} from "src/interfaces/IVault.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -223,6 +224,13 @@ contract SPOG is SPOGStorage, ERC165 {
 
         voteGovernor.execute(targets, values, calldatas, descriptionHash);
         return proposalId;
+    }
+
+    // ********** Public Functions ********** //
+    /// @notice sell unclaimed $vote tokens
+    /// @param epoch The epoch for which to sell unclaimed $vote tokens
+    function sellUnclaimedVoteTokens(uint256 epoch) public {
+        IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), spogData.sellTime);
     }
 
     // ********** Utility FUNCTIONS ********** //
