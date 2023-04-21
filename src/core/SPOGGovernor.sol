@@ -142,7 +142,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return results;
     }
 
-    // ********** Setters ********** //
+    /*//////////////////////////////////////////////////////////////
+                            SETTERS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
@@ -162,7 +164,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emergencyProposals[proposalId] = true;
     }
 
-    // ********** Override functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            OVERRIDE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice override to use updateStartOfNextVotingPeriod
     function propose(
@@ -261,7 +265,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriod;
     }
 
-    // ********** Counting module functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            COUNTING MODULE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase

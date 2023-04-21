@@ -19,9 +19,10 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         super.setUp();
     }
 
-    /**
-     * Helpers
-     */
+    /*//////////////////////////////////////////////////////////////
+                                HELPERS
+    //////////////////////////////////////////////////////////////*/
+
     function proposeAddingNewListToSpog(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
@@ -63,9 +64,10 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         return inflationRewards;
     }
 
-    /**
-     * Test Functions
-     */
+    /*//////////////////////////////////////////////////////////////
+                                 TESTS
+    //////////////////////////////////////////////////////////////*/
+
     function test_Revert_Propose_WhenCalledNotBySPOG() public {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -169,9 +171,8 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
-        /**
-         * Proposal 1 and 2 *********
-         */
+        // Proposal 1 and 2
+
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
@@ -212,9 +213,8 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         assertEq(noVotes2, spogVoteBalance, "Proposal2 does not have expected no vote");
         assertEq(yesVotes2, 0, "Proposal2 does not have 0 yes vote");
 
-        /**
-         * Proposal 3 *********
-         */
+        // Proposal 3
+
         // Add another proposal and voting can only happen after vote delay
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 

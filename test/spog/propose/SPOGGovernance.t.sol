@@ -10,9 +10,9 @@ contract SPOGGovernanceTest is SPOG_Base {
         super.setUp();
     }
 
-    /**
-     * Test Functions *******
-     */
+    /*//////////////////////////////////////////////////////////////
+                                 TESTS
+    //////////////////////////////////////////////////////////////*/
 
     function test_Revert_Propose_WhenMoreThanOneProposalPassed() public {
         // set data for 2 proposals at once

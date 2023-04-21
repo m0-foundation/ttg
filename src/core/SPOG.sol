@@ -60,7 +60,9 @@ contract SPOG is SPOGStorage, ERC165 {
         return masterlist.contains(list);
     }
 
-    // ********** CRUD Masterlist FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            MASTERLIST FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
@@ -126,7 +128,10 @@ contract SPOG is SPOGStorage, ERC165 {
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
-    // ********** SPOG Governance interface FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            GOVERNANCE INTERFACE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
     /// @notice Create a new proposal.
@@ -226,14 +231,18 @@ contract SPOG is SPOGStorage, ERC165 {
         return proposalId;
     }
 
-    // ********** Public Functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            PUBLIC FUNCTION
+    //////////////////////////////////////////////////////////////*/
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), spogData.sellTime);
     }
 
-    // ********** Utility FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            UTILITY FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     function tokenInflationCalculation() public view returns (uint256) {
         if (msg.sender == address(voteGovernor)) {
             uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
@@ -253,7 +262,9 @@ contract SPOG is SPOGStorage, ERC165 {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    // ********** Private FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function initGovernedMethods() private {
         // TODO: review if there is better, more efficient way to do it

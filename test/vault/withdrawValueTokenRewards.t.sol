@@ -13,9 +13,9 @@ contract Vault_WithdrawValueTokenRewards is SPOG_Base {
     uint8 noVote = 0;
     uint8 yesVote = 1;
 
-    /**
-     * Helpers *****************
-     */
+    /*//////////////////////////////////////////////////////////////
+                                HELPERS
+    //////////////////////////////////////////////////////////////*/
 
     function proposeAddingNewListToSpog(string memory proposalDescription)
         private
@@ -58,9 +58,9 @@ contract Vault_WithdrawValueTokenRewards is SPOG_Base {
         return inflationRewards;
     }
 
-    /**
-     * Tests *****************
-     */
+    /*//////////////////////////////////////////////////////////////
+                                 TESTS
+    //////////////////////////////////////////////////////////////*/
 
     function test_UsersCanClaimValueTokenInflationAfterVotingOnInAllProposals() public {
         // set up proposals
