@@ -25,6 +25,9 @@ contract MockSPOGGovernor is StdCheats {
 contract VaultTest is BaseTest {
     Vault public vault;
 
+    // events to test
+    event EpochRewardsDeposit(uint256 indexed epoch, address token, uint256 amount);
+
     ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
 
     function setUp() public {
@@ -36,22 +39,23 @@ contract VaultTest is BaseTest {
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
     }
 
-    // NOTE: withdrawVoteTokenRewards() and withdrawValueTokenRewards() are tested in VoteGovernor.t.sol and ValueGovernor.t.sol
-
     function test_depositEpochRewardTokens() public {
-      setUp();
+        setUp();
 
         // deposit rewards for previous epoch
         uint256 epoch = 1;
         voteToken.mint(address(vault.voteGovernor()), 1000e18);
         vm.startPrank(address(vault.voteGovernor()));
         voteToken.approve(address(vault), 1000e18);
+
+        expectEmit();
+        emit EpochRewardsDeposit(epoch, address(voteToken), 1000e18);
         vault.depositEpochRewardTokens(epoch, address(voteToken), 1000e18);
         vm.stopPrank();
 
         assertEq(voteToken.balanceOf(address(vault)), 1000e18);
     }
-    
+
     function test_unclaimedVoteTokensForEpoch() public {
         setUp();
 
@@ -67,7 +71,7 @@ contract VaultTest is BaseTest {
 
         assertEq(unclaimed, 1000e18);
     }
-    
+
     function test_sellUnclaimedVoteTokens() public {
         setUp();
 

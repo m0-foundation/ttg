@@ -158,7 +158,7 @@ contract Vault is IVault {
     }
 
     function withdrawRewardsForValueHolders(uint256 epoch, address token) external {
-        require(epoch < voteGovernor.currentVotingPeriodEpoch(), "Vault: epoch is not in the past");
+        require(epoch < valueGovernor.currentVotingPeriodEpoch(), "Vault: epoch is not in the past");
         require(epochTokenDeposit[token][epoch] > 0, "Vault: no rewards to withdraw");
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
 
