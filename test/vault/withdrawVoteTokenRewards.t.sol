@@ -2,45 +2,12 @@
 
 pragma solidity 0.8.17;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
 
-contract Vault_WithdrawVoteTokenRewards is SPOG_Base {
-    address alice = createUser("alice");
-    address bob = createUser("bob");
-    address carol = createUser("carol");
-
-    uint256 spogVoteAmountToMint = 1000e18;
-    uint8 noVote = 0;
-    uint8 yesVote = 1;
-
-    event NewSingleQuorumProposal(uint256 indexed proposalId);
-    /**
-     * Helpers
-     */
-
-    function proposeAddingNewListToSpog(string memory proposalDescription)
-        private
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
-        address[] memory targets = new address[](1);
-        targets[0] = address(spog);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
-        string memory description = proposalDescription;
-
-        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
-
-        // create new proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        expectEmit();
-        emit NewSingleQuorumProposal(proposalId);
-        spog.propose(targets, values, calldatas, description);
-
-        return (proposalId, targets, values, calldatas, hashedDescription);
-    }
+contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
+    /*//////////////////////////////////////////////////////////////
+                                HELPERS
+    //////////////////////////////////////////////////////////////*/
 
     // calculate vote token inflation rewards for voter
     function calculateVoteTokenInflationRewardsForVoter(
@@ -59,9 +26,9 @@ contract Vault_WithdrawVoteTokenRewards is SPOG_Base {
         return inflationRewards;
     }
 
-    /**
-     * Test Functions
-     */
+    /*//////////////////////////////////////////////////////////////
+                                 TESTS
+    //////////////////////////////////////////////////////////////*/
 
     function test_UsersGetsVoteTokenInflationAfterVotingOnInAllProposals() public {
         // set up proposals
