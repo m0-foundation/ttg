@@ -20,6 +20,7 @@ contract SPOG_Base is BaseTest {
     SPOGDeployScript public deployScript;
     List public list;
     Vault public vault;
+    IERC20 public cash;
 
     enum VoteType {
         No,
@@ -49,6 +50,8 @@ contract SPOG_Base is BaseTest {
         list.changeAdmin(address(spog));
 
         vault = deployScript.vault();
+
+        cash = IERC20(address(deployScript.cash()));
     }
 
     /* Helper functions */
