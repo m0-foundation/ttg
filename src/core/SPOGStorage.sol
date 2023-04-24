@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 

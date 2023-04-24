@@ -13,8 +13,8 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 import {SPOGStorage} from "src/core/SPOGStorage.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
-import {VoteToken} from "src/tokens/VoteToken.sol";
-import {ValueToken} from "src/tokens/ValueToken.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -140,7 +140,7 @@ contract SPOG is SPOGStorage, ERC165 {
     function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
-        VoteToken newVoteToken = VoteToken(address(newVoteGovernor.votingToken()));
+        IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));
         if (valueGovernor.votingToken() != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         voteGovernor = newVoteGovernor;
@@ -149,7 +149,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetSnapshotId = ValueToken(valueGovernor.votingToken()).snapshot();
+        uint256 resetSnapshotId = IValueToken(valueGovernor.votingToken()).snapshot();
         newVoteToken.initReset(resetSnapshotId);
 
         emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));

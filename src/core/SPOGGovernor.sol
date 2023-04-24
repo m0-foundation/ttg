@@ -3,7 +3,7 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IVault} from "src/interfaces/IVault.sol";
 
@@ -106,7 +106,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
             votingToken.mint(address(this), amountToIncreaseSupplyBy); // send inflation to this contract
             votingToken.approve(vault, amountStuck + amountToIncreaseSupplyBy);
-            IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(votingToken), amountStuck + amountToIncreaseSupplyBy);
+            IVault(vault).depositEpochRewardTokens(
+                currentVotingPeriodEpoch, address(votingToken), amountStuck + amountToIncreaseSupplyBy
+            );
 
             emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
         }

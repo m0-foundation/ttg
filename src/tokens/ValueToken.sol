@@ -41,7 +41,7 @@ contract ValueToken is ERC20Snapshot, SPOGVotes {
     }
 
     /// @dev Takes a snapshot of account balances and returns snapshot id.
-    function snapshot() public returns (uint256) {
+    function snapshot() external returns (uint256) {
         if (msg.sender != spogAddress) revert CallerIsNotSPOG();
         return _snapshot();
     }

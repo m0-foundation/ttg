@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import "test/shared/SPOG_Base.t.sol";
-import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {VoteToken} from "src/tokens/VoteToken.sol";
+import {ValueToken} from "src/tokens/ValueToken.sol";
+
+import "test/shared/SPOG_Base.t.sol";
+import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 
 contract SPOG_reset is SPOG_Base {
     uint8 internal yesVote;
