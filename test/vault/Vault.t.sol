@@ -29,8 +29,6 @@ contract VaultTest is BaseTest {
 
     event VoteGovernorUpdated(address indexed newVoteGovernor);
 
-    address public spogAddress;
-
     function setUp() public {
         ISPOGGovernor voteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
         ISPOGGovernor valueGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
