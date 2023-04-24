@@ -9,9 +9,38 @@ contract Vault_IntegratedWithSPOG is SPOG_Base {
     address bob = createUser("bob");
     address carol = createUser("carol");
 
-    uint256 spogVoteAmountToMint = 1000e18;
+    uint256 amountToMint = 100e18;
     uint8 noVote = 0;
     uint8 yesVote = 1;
+
+    function setUp() public override {
+        super.setUp();
+
+        // mint ether and spogVote and spogValue to alice, bob and carol
+        vm.deal({account: alice, newBalance: 100 ether});
+        spogVote.mint(alice, amountToMint);
+        spogValue.mint(alice, amountToMint);
+        vm.startPrank(alice);
+        spogVote.delegate(alice); // self delegate
+        spogValue.delegate(alice); // self delegate
+        vm.stopPrank();
+
+        vm.deal({account: bob, newBalance: 100 ether});
+        spogVote.mint(bob, amountToMint);
+        spogValue.mint(bob, amountToMint);
+        vm.startPrank(bob);
+        spogVote.delegate(bob); // self delegate
+        spogValue.delegate(bob); // self delegate
+        vm.stopPrank();
+
+        vm.deal({account: carol, newBalance: 100 ether});
+        spogVote.mint(carol, amountToMint);
+        spogValue.mint(carol, amountToMint);
+        vm.startPrank(carol);
+        spogVote.delegate(carol); // self delegate
+        spogValue.delegate(carol); // self delegate
+        vm.stopPrank();
+    }
 
     /*//////////////////////////////////////////////////////////////
                                 HELPERS

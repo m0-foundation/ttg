@@ -36,25 +36,6 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
-        // mint ether and spogVote to alice, bob and carol
-        vm.deal({account: alice, newBalance: 1000 ether});
-        spogVote.mint(alice, spogVoteAmountToMint);
-        vm.startPrank(alice);
-        spogVote.delegate(alice); // self delegate
-        vm.stopPrank();
-
-        vm.deal({account: bob, newBalance: 1000 ether});
-        spogVote.mint(bob, spogVoteAmountToMint);
-        vm.startPrank(bob);
-        spogVote.delegate(bob); // self delegate
-        vm.stopPrank();
-
-        vm.deal({account: carol, newBalance: 1000 ether});
-        spogVote.mint(carol, spogVoteAmountToMint);
-        vm.startPrank(carol);
-        spogVote.delegate(carol); // self delegate
-        vm.stopPrank();
-
         uint256 relevantEpochProposals = voteGovernor.currentVotingPeriodEpoch() + 1;
 
         // epochProposalsCount for epoch 0 should be 3
@@ -104,8 +85,8 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         );
 
         // alice and bobs vote token balance should be the same as before voting
-        assertEq(spogVote.balanceOf(alice), spogVoteAmountToMint, "Alice should have same spogVote balance");
-        assertEq(spogVote.balanceOf(bob), spogVoteAmountToMint, "Bob should have same spogVote balance");
+        assertEq(spogVote.balanceOf(alice), amountToMint, "Alice should have same spogVote balance");
+        assertEq(spogVote.balanceOf(bob), amountToMint, "Bob should have same spogVote balance");
 
         // alice votes on proposal 2 and 3
         vm.startPrank(alice);
@@ -207,7 +188,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         voteGovernor.updateStartOfNextVotingPeriod();
 
         // carol remains with the same balance
-        assertEq(spogVote.balanceOf(carol), spogVoteAmountToMint, "Carol should have same spogVote balance");
+        assertEq(spogVote.balanceOf(carol), amountToMint, "Carol should have same spogVote balance");
 
         // vault should have received the remaining inflationary rewards from epoch 1
         assertGt(

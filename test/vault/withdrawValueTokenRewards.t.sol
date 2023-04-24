@@ -38,25 +38,6 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
-        // mint ether and spogVote to alice, bob and carol
-        vm.deal({account: alice, newBalance: 1000 ether});
-        spogVote.mint(alice, spogVoteAmountToMint);
-        vm.startPrank(alice);
-        spogVote.delegate(alice); // self delegate
-        vm.stopPrank();
-
-        vm.deal({account: bob, newBalance: 1000 ether});
-        spogVote.mint(bob, spogVoteAmountToMint);
-        vm.startPrank(bob);
-        spogVote.delegate(bob); // self delegate
-        vm.stopPrank();
-
-        vm.deal({account: carol, newBalance: 1000 ether});
-        spogVote.mint(carol, spogVoteAmountToMint);
-        vm.startPrank(carol);
-        spogVote.delegate(carol); // self delegate
-        vm.stopPrank();
-
         // balance of spogValue for vault should be 0
         uint256 spogValueBalanceForVaultForEpochZero = spogValue.balanceOf(address(vault));
         assertEq(spogValueBalanceForVaultForEpochZero, 0, "vault should have 0 spogVote balance");
