@@ -77,7 +77,8 @@ contract SPOG_reset is SPOG_Base {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function executeValidProposal(SPOGGovernor voteGovernor) private {
+    function executeValidProposal() private {
+        SPOGGovernor voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -148,9 +149,6 @@ contract SPOG_reset is SPOG_Base {
         assertEq(spog.voteGovernor().votingPeriod(), 15, "Vote governor voting delay was not set correctly");
 
         // Make sure governance is functional
-        // TODO: see how to avoid updating it here, some quirk in test setups
-        // voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
-
-        // executeValidProposal(voteGovernor);
+        executeValidProposal();
     }
 }

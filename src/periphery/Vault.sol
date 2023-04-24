@@ -14,7 +14,7 @@ import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 contract Vault is IVault {
     using SafeERC20 for IERC20;
 
-    ISPOGGovernor public immutable voteGovernor;
+    ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 
     // address => voting epoch => bool
@@ -73,7 +73,7 @@ contract Vault is IVault {
 
         uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
         IERC20(token).approve(auction, unclaimed);
-        
+
         ERC20PricelessAuction(auction).init(unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
@@ -112,7 +112,7 @@ contract Vault is IVault {
 
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
-        epochVotingTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;  
+        epochVotingTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit VoteTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
@@ -151,6 +151,14 @@ contract Vault is IVault {
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit ValueTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+    }
+
+    // @notice Update vote governor after `RESET` was executed
+    // @param newVoteGovernor New vote governor
+    function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySpog {
+        voteGovernor = newVoteGovernor;
+
+        emit VoteGovernorUpdated(address(newVoteGovernor));
     }
 
     fallback() external {

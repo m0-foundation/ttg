@@ -144,6 +144,9 @@ contract SPOG is SPOGStorage, ERC165 {
         IValueToken valueToken = IValueToken(valueGovernor.votingToken());
         if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
+        // Update vote governance in the vault
+        IVault(vault).updateVoteGovernor(newVoteGovernor);
+
         voteGovernor = newVoteGovernor;
         // Important: initialize SPOG address in the new vote governor
         voteGovernor.initSPOGAddress(address(this));
