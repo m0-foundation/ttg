@@ -87,12 +87,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriodChangedEpoch + blocksSinceVotingPeriodChange / _votingPeriod;
     }
 
-    /// @dev get voting token supply @ epoch
-    /// @param epoch the epoch to get the voting token supply for
-    function epochVotingTokenSupply(uint256 epoch) public view returns (uint256) {
-        return votingToken.getPastTotalSupply(epoch);
-    }
-
     function startOfNextVotingPeriod() public view returns (uint256) {
         uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 

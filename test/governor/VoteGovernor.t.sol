@@ -527,7 +527,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         );
     }
 
-    function test_NoActivityInEpoch() public {
+    function test_ProposalsShouldBeAllowedAfterInactiveEpoch() public {
         (
             uint256 proposalId,
             address[] memory targets,
@@ -549,7 +549,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         vm.roll(block.number + 5 * voteGovernor.votingDelay() + 1);
 
-        // vm.expectRevert("SPOGGovernor: StartOfNextVotingPeriod must be updated");
+        // should not revert
         proposeAddingNewListToSpog("new list to spog 2");
     }
 }

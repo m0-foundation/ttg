@@ -106,7 +106,7 @@ contract Vault is IVault {
         // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in inflateVotingTokens()
         uint256 amountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][currentVotingPeriodEpoch];
 
-        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochVotingTokenSupply(currentVotingPeriodEpoch);
+        uint256 totalVotingTokenSupplyApplicable = voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
 
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
 
