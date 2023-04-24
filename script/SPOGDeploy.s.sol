@@ -40,7 +40,7 @@ contract SPOGDeployScript is BaseScript {
 
     function triggerSetUp() public {
         // for the actual deployment, we will use an ERC20 token for cash
-        cash = new ERC20Mock("CashToken", "cash", msg.sender, 10e18); // mint 10 tokens to msg.sender
+        cash = new ERC20Mock("CashToken", "cash", msg.sender, 100e18); // mint 10 tokens to msg.sender
 
         taxRange = [uint256(0), uint256(5)];
         inflator = 5;
@@ -51,7 +51,7 @@ contract SPOGDeployScript is BaseScript {
         forkTime = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
-        tax = 5;
+        tax = 5e18;
 
         vote = new SPOGVotes("SPOGVote", "vote");
         value = new SPOGVotes("SPOGValue", "value");
