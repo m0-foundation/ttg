@@ -102,7 +102,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
             // mint tokens
             votingTokensMinted[currentEpoch] = true;
             votingToken.mint(address(this), amountToIncreaseSupplyBy);
-            
+
             uint256 balance = votingToken.balanceOf(address(this));
             address vault = ISPOG(spogAddress).vault();
 
@@ -222,10 +222,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         }
 
         // update cumulative vote weight for epoch if user voted in all proposals
-        if (
-            accountEpochNumProposalsVotedOn[msg.sender][currentEpoch]
-                == epochProposalsCount[currentEpoch]
-        ) {
+        if (accountEpochNumProposalsVotedOn[msg.sender][currentEpoch] == epochProposalsCount[currentEpoch]) {
             epochSumOfVoteWeight[currentEpoch] = epochSumOfVoteWeight[currentEpoch] + voteWeight;
         }
     }
@@ -246,8 +243,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-      uint256 startOfNext = startOfNextVotingPeriod();
-      return startOfNext - block.number;
+        uint256 startOfNext = startOfNextVotingPeriod();
+        return startOfNext - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {

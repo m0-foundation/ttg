@@ -50,11 +50,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate vote token inflation rewards for voter
-    function calculateVoteTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
-        private
-        view
-        returns (uint256)
-    {
+    function calculateVoteTokenInflationRewardsForVoter(
+        address voter,
+        uint256 proposalId,
+        uint256 amountToBeSharedOnProRataBasis
+    ) private view returns (uint256) {
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
 
         uint256 totalVotingTokenSupplyApplicable = spogVote.totalSupply() - amountToBeSharedOnProRataBasis;
