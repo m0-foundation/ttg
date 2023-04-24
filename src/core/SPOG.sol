@@ -141,7 +141,8 @@ contract SPOG is SPOGStorage, ERC165 {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));
-        if (valueGovernor.votingToken() != newVoteToken.valueToken()) revert ValueTokenMistmatch();
+        IValueToken valueToken = IValueToken(valueGovernor.votingToken());
+        if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         voteGovernor = newVoteGovernor;
         // Important: initialize SPOG address in the new vote governor
@@ -149,7 +150,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetSnapshotId = IValueToken(valueGovernor.votingToken()).snapshot();
+        uint256 resetSnapshotId = valueToken.snapshot();
         newVoteToken.initReset(resetSnapshotId);
 
         emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
