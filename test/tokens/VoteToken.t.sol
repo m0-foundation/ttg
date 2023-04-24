@@ -5,6 +5,7 @@ import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 
 contract VoteTokenTest is SPOG_Base {
     address alice = createUser("alice");
@@ -92,7 +93,7 @@ contract VoteTokenTest is SPOG_Base {
 
         assertEq(voteToken.resetSnapshotId(), randomSnapshotId);
 
-        vm.expectRevert(VoteToken.ResetAlreadyInitialized.selector);
+        vm.expectRevert(IVoteToken.ResetAlreadyInitialized.selector);
         voteToken.initReset(randomSnapshotId);
     }
 
@@ -109,7 +110,7 @@ contract VoteTokenTest is SPOG_Base {
         assertEq(voteToken.balanceOf(alice), aliceStartBalance, "Alice should have 50e18 tokens");
 
         // Alice attempts to claim again
-        vm.expectRevert(VoteToken.ResetTokensAlreadyClaimed.selector);
+        vm.expectRevert(IVoteToken.ResetTokensAlreadyClaimed.selector);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice), aliceStartBalance, "Alice should have 50e18 tokens");
@@ -120,7 +121,7 @@ contract VoteTokenTest is SPOG_Base {
 
         // Alice claims her tokens
         vm.startPrank(alice);
-        vm.expectRevert(VoteToken.ResetNotInitialized.selector);
+        vm.expectRevert(IVoteToken.ResetNotInitialized.selector);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice), 0, "Alice should have 0 tokens");
@@ -139,7 +140,7 @@ contract VoteTokenTest is SPOG_Base {
 
         // Nothing attempts to claim their tokens
         vm.startPrank(nothing);
-        vm.expectRevert(VoteToken.NoResetTokensToClaim.selector);
+        vm.expectRevert(IVoteToken.NoResetTokensToClaim.selector);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(nothing), 0, "Balance stays 0");
