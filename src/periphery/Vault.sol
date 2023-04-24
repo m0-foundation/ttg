@@ -122,6 +122,7 @@ contract Vault is IVault {
         emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
+    /// @dev Withdraw Value Token Rewards
     function withdrawValueTokenRewards() external {
         address token = address(valueGovernor.votingToken());
 
@@ -157,7 +158,24 @@ contract Vault is IVault {
         emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
-    function withdrawRewardsForValueHolders(uint256 epoch, address token) external {
+    /// @dev Withdraw rewards for multiple epochs for a token
+    /// @param epochs Epochs to withdraw rewards for
+    /// @param token Token to withdraw rewards for
+    function withdrawRewardsForValueHolders(uint256[] memory epochs, address token) external {
+        uint256 length = epochs.length;
+        for (uint256 i; i < length;) {
+            withdrawRewardsForValueHolders(epochs[i], token);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /// @dev Withdraw rewards for a single epoch for a token
+    /// @param epoch Epoch to withdraw rewards for
+    /// @param token Token to withdraw rewards for
+    function withdrawRewardsForValueHolders(uint256 epoch, address token) public {
         require(epoch < valueGovernor.currentVotingPeriodEpoch(), "Vault: epoch is not in the past");
         require(epochTokenDeposit[token][epoch] > 0, "Vault: no rewards to withdraw");
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
