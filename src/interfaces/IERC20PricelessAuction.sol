@@ -5,7 +5,7 @@ interface IERC20PricelessAuction {
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
     event AuctionWithdrawal(address indexed taker, uint256 amount);
 
-    //immutable vars
+    // immutable vars
     function auctionToken() external returns (address);
     function paymentToken() external returns (address);
     function vault() external returns (address);
@@ -13,7 +13,7 @@ interface IERC20PricelessAuction {
     function auctionEndTime() external returns (uint256);
     function floorPrice() external returns (uint256);
 
-    //public vars
+    // public vars
     function auctionTokenAmount() external returns (uint256);
     function amountSold() external returns (uint256);
     function ceilingPrice() external returns (uint256);
