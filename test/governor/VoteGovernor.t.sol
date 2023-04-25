@@ -132,7 +132,6 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-            voteGovernor.inflateVotingTokens();
             currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
             assertEq(currentVotingPeriodEpoch, i + 1);
@@ -417,7 +416,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // voting epoch 1 finished, epoch 2 started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        voteGovernor.inflateVotingTokens();
+        // voteGovernor.inflateTokenSupply();
 
         // carol remains with the same balance
         assertEq(spogVote.balanceOf(carol), spogVoteAmountToMint, "Carol should have same spogVote balance");
