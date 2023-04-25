@@ -88,9 +88,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function startOfNextVotingPeriod() public view returns (uint256) {
-        uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
+        uint256 epochsSinceVotingPeriodChange = currentVotingPeriodEpoch() - _votingPeriodChangedEpoch;
 
-        return block.number + _votingPeriod - blocksSinceVotingPeriodChange % _votingPeriod;
+        return _votingPeriodChangedBlockNumber + (epochsSinceVotingPeriodChange + 1) * _votingPeriod;
     }
 
     /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
