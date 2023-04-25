@@ -3,7 +3,7 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IVault} from "src/interfaces/IVault.sol";
 
@@ -47,7 +47,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     // address => epoch => epoch vote weight
     mapping(address => mapping(uint256 => uint256)) public accountEpochVoteWeight;
 
-    event VotingPeriodSet(uint256 oldVotingPeriod, uint256 newVotingPeriod);
+    event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
     event VotingTokenInflation(uint256 indexed epoch, uint256 amount);
     event VotingTokenInflationWithdrawn(address indexed voter, uint256 amount);
     event EpochVotingTokenSupplySet(uint256 indexed epoch, uint256 amount);
@@ -146,7 +146,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     /// @dev Update voting time only by SPOG
     /// @param newVotingTime New voting time
     function updateVotingTime(uint256 newVotingTime) external onlySPOG {
-        emit VotingPeriodSet(_votingPeriod, newVotingTime);
+        emit VotingPeriodUpdated(_votingPeriod, newVotingTime);
 
         _votingPeriod = newVotingTime;
         _votingPeriodChangedBlockNumber = block.number;

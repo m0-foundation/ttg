@@ -11,10 +11,12 @@ interface ISPOG {
     event AddressRemovedFromList(address indexed _list, address indexed _address);
     event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
     event TaxChanged(uint256 indexed tax);
-    event NewSingleQuorumProposal(uint256 indexed proposalId);
+    event NewVoteQuorumProposal(uint256 indexed proposalId);
+    event NewValueQuorumProposal(uint256 indexed proposalId);
     event NewDoubleQuorumProposal(uint256 indexed proposalId);
     event NewEmergencyProposal(uint256 indexed proposalId);
     event DoubleQuorumFinalized(bytes32 indexed identifier);
+    event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
     error InvalidParameter(bytes32 what);
@@ -27,6 +29,7 @@ interface ISPOG {
     error NotGovernedMethod(bytes4 funcSelector);
     error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
     error ValueGovernorDidNotApprove(uint256 proposalId);
+    error ValueTokenMistmatch();
 
     // Logic functions
     function vault() external view returns (address);

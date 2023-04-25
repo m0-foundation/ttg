@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
@@ -11,7 +11,6 @@ abstract contract SPOGStorage is ISPOG {
         uint256 tax;
         uint256 inflatorTime;
         uint256 sellTime;
-        uint256 forkTime;
         uint256 inflator;
         uint256 reward;
         uint256[2] taxRange;
@@ -21,7 +20,8 @@ abstract contract SPOGStorage is ISPOG {
     SPOGData public spogData;
     uint256 public immutable valueFixedInflationAmount;
 
-    ISPOGGovernor public immutable voteGovernor;
+    // @note The vote governor can be changed by value governance with `RESET` proposal
+    ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 
     // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
@@ -60,6 +60,12 @@ abstract contract SPOGStorage is ISPOG {
         _;
     }
 
+    modifier onlyValueGovernor() {
+        require(msg.sender == address(valueGovernor), "SPOG: Only value governor");
+
+        _;
+    }
+
     /// @param _initSPOGData The data used to initialize spogData
     function initSPOGData(bytes memory _initSPOGData) internal {
         // _cash The currency accepted for tax payment in the SPOG (must be ERC20)
@@ -76,9 +82,8 @@ abstract contract SPOGStorage is ISPOG {
             uint256 _reward,
             uint256 _inflatorTime,
             uint256 _sellTime,
-            uint256 _forkTime,
             uint256 _tax
-        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256, uint256));
+        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256, uint256, uint256));
 
         spogData = SPOGData({
             cash: IERC20(_cash),
@@ -87,7 +92,6 @@ abstract contract SPOGStorage is ISPOG {
             reward: _reward,
             inflatorTime: _inflatorTime,
             sellTime: _sellTime,
-            forkTime: _forkTime,
             tax: _tax
         });
     }
@@ -106,7 +110,7 @@ abstract contract SPOGStorage is ISPOG {
         emit TaxChanged(_tax);
     }
 
-    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, inflatorTime, sellTime, forkTime, voteQuorum, and valueQuorum.
+    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, inflatorTime, sellTime, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
     function change(bytes32 what, bytes calldata value) external onlyVoteGovernor {
@@ -134,8 +138,6 @@ abstract contract SPOGStorage is ISPOG {
             spogData.inflatorTime = abi.decode(value, (uint256));
         } else if (what == "sellTime") {
             spogData.sellTime = abi.decode(value, (uint256));
-        } else if (what == "forkTime") {
-            spogData.forkTime = abi.decode(value, (uint256));
         } else if (what == "voteTime") {
             uint256 decodedVoteTime = abi.decode(value, (uint256));
             voteGovernor.updateVotingTime(decodedVoteTime);

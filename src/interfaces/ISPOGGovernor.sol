@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 interface ISPOGGovernor {
     function currentVotingPeriodEpoch() external view returns (uint256);
@@ -166,6 +166,8 @@ interface ISPOGGovernor {
      * duration compared to the voting delay.
      */
     function votingPeriod() external view returns (uint256);
+
+    function quorumNumerator() external view returns (uint256);
 
     /**
      * @notice module:user-config
