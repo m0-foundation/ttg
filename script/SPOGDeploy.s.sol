@@ -12,6 +12,8 @@ import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {Vault} from "src/periphery/Vault.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
@@ -33,6 +35,7 @@ contract SPOGDeployScript is BaseScript {
     uint256 public tax;
     SPOGGovernor public voteGovernor;
     SPOGGovernor public valueGovernor;
+    ERC20PricelessAuction public auctionImplementation;
     VoteToken public vote;
     ValueToken public value;
     Vault public vault;
@@ -71,7 +74,9 @@ contract SPOGDeployScript is BaseScript {
         address valueGovernorAddress =
             governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
 
-        vault = new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress));
+        auctionImplementation = new ERC20PricelessAuction();
+        vault =
+        new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress), IERC20PricelessAuction(auctionImplementation));
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
