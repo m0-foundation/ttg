@@ -7,6 +7,8 @@ import {Vault} from "src/periphery/Vault.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
+import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 
 contract MockSPOGGovernor is StdCheats {
     address public immutable spogAddress;
@@ -23,6 +25,7 @@ contract MockSPOGGovernor is StdCheats {
 }
 
 contract VaultTest is BaseTest {
+    IERC20PricelessAuction public auctionImplementation;
     Vault public vault;
 
     ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
@@ -32,7 +35,8 @@ contract VaultTest is BaseTest {
     function setUp() public {
         ISPOGGovernor voteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
         ISPOGGovernor valueGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
-        vault = new Vault(voteGovernor, valueGovernor);
+        auctionImplementation = new ERC20PricelessAuction();
+        vault = new Vault(voteGovernor, valueGovernor, auctionImplementation);
 
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});

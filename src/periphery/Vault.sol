@@ -7,7 +7,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IVault} from "src/interfaces/IVault.sol";
 
-import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
@@ -16,6 +17,7 @@ contract Vault is IVault {
 
     ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
+    IERC20PricelessAuction public immutable auctionContract;
 
     // address => voting epoch => bool
     mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
@@ -25,9 +27,10 @@ contract Vault is IVault {
     mapping(address => mapping(uint256 => uint256)) public epochVotingTokenDeposit;
     mapping(address => mapping(uint256 => uint256)) public epochVotingTokenTotalWithdrawn;
 
-    constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor) {
+    constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor, IERC20PricelessAuction _auctionContract) {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
+        auctionContract = _auctionContract;
     }
 
     modifier onlyGovernor() {
@@ -69,12 +72,12 @@ contract Vault is IVault {
         require(epoch < currentVotingPeriodEpoch, "Vault: epoch is not in the past");
 
         address token = address(voteGovernor.votingToken());
-        address auction = address(new ERC20PricelessAuction(token, paymentToken, duration, address(this)));
+        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
         uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
         IERC20(token).approve(auction, unclaimed);
 
-        ERC20PricelessAuction(auction).init(unclaimed);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
