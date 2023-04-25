@@ -46,11 +46,11 @@ contract ValueSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate value token inflation rewards for voter
-    function calculateValueTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
-        private
-        view
-        returns (uint256)
-    {
+    function calculateValueTokenInflationRewardsForVoter(
+        address voter,
+        uint256 proposalId,
+        uint256 amountToBeSharedOnProRataBasis
+    ) private view returns (uint256) {
         uint256 relevantVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
@@ -84,7 +84,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-            valueGovernor.updateStartOfNextVotingPeriod();
+            valueGovernor.inflateVotingTokens();
             currentVotingPeriodEpoch = valueGovernor.currentVotingPeriodEpoch();
 
             assertEq(currentVotingPeriodEpoch, i + 1);
@@ -100,7 +100,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // update voting epoch
-        valueGovernor.updateStartOfNextVotingPeriod();
+        valueGovernor.inflateVotingTokens();
 
         uint256 spogValueSupplyAfterFirstPeriod = spogValue.totalSupply();
 
@@ -123,7 +123,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         // start of new epoch inflation is triggered
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        valueGovernor.updateStartOfNextVotingPeriod();
+        valueGovernor.inflateVotingTokens();
 
         uint256 spogValueSupplyAfterSecondPeriod = spogValue.totalSupply();
 
@@ -165,8 +165,8 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
+        voteGovernor.inflateVotingTokens();
+        valueGovernor.inflateVotingTokens();
 
         vm.prank(address(valueGovernor));
         uint256 epochInflation = spog.tokenInflationCalculation();
@@ -199,8 +199,8 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
         // start epoch 2
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
+        voteGovernor.inflateVotingTokens();
+        valueGovernor.inflateVotingTokens();
 
         uint256 aliceValueBalanceBefore = spogValue.balanceOf(alice);
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);

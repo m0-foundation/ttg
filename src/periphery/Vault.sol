@@ -73,7 +73,7 @@ contract Vault is IVault {
 
         uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
         IERC20(token).approve(auction, unclaimed);
-        
+
         ERC20PricelessAuction(auction).init(unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
@@ -103,16 +103,17 @@ contract Vault is IVault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
 
-        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in updateStartOfNextVotingPeriod()
+        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in inflateVotingTokens()
         uint256 amountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][currentVotingPeriodEpoch];
 
-        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochVotingTokenSupply(currentVotingPeriodEpoch);
+        uint256 totalVotingTokenSupplyApplicable =
+            voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
 
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
 
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
-        epochVotingTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;  
+        epochVotingTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit VoteTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);

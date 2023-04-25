@@ -50,11 +50,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate vote token inflation rewards for voter
-    function calculateVoteTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
-        private
-        view
-        returns (uint256)
-    {
+    function calculateVoteTokenInflationRewardsForVoter(
+        address voter,
+        uint256 proposalId,
+        uint256 amountToBeSharedOnProRataBasis
+    ) private view returns (uint256) {
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
 
         uint256 totalVotingTokenSupplyApplicable = spogVote.totalSupply() - amountToBeSharedOnProRataBasis;
@@ -132,7 +132,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-            voteGovernor.updateStartOfNextVotingPeriod();
+            voteGovernor.inflateVotingTokens();
             currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
             assertEq(currentVotingPeriodEpoch, i + 1);
@@ -417,7 +417,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // voting epoch 1 finished, epoch 2 started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        voteGovernor.updateStartOfNextVotingPeriod();
+        voteGovernor.inflateVotingTokens();
 
         // carol remains with the same balance
         assertEq(spogVote.balanceOf(carol), spogVoteAmountToMint, "Carol should have same spogVote balance");
@@ -525,5 +525,32 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             spogVoteSupplyAfterFirstPeriod + amountAddedByInflation2,
             "Vote token supply didn't inflate correctly in the second period"
         );
+    }
+
+    function test_ProposalsShouldBeAllowedAfterInactiveEpoch() public {
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingNewListToSpog("new list to spog");
+
+        // fast forward to an active voting period. Inflate vote token supply
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        voteGovernor.castVote(proposalId, yesVote);
+
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        // fast forward 5 epochs
+        vm.roll(block.number + 5 * voteGovernor.votingDelay() + 1);
+
+        // should not revert
+        proposeAddingNewListToSpog("new list to spog 2");
     }
 }

@@ -15,13 +15,12 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     error SPOGAddressAlreadySet(address spog);
     error AlreadyVoted(uint256 proposalId, address account);
     error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
-    error StartOfNextVotingPeriodWasNotUpdated();
 
     ISPOGVotes public immutable votingToken;
     uint256 private _votingPeriod;
+    uint256 private _votingPeriodChangedBlockNumber;
+    uint256 private _votingPeriodChangedEpoch;
     address public spogAddress;
-    uint256 public startOfNextVotingPeriod;
-    uint256 public currentVotingPeriodEpoch;
 
     /// @dev Supported vote types.
     enum VoteType {
@@ -41,8 +40,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
     mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
-    // epoch => vote token supply at epoch start
-    mapping(uint256 => uint256) public epochVotingTokenSupply;
+    // epoch => bool
+    mapping(uint256 => bool) public votingTokensMinted;
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
     // address => epoch => epoch vote weight
@@ -67,10 +66,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     ) GovernorVotesQuorumFraction(quorumNumeratorValue) GovernorVotes(votingTokenContract) Governor(name_) {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
-
-        // trigger epoch 0
-        startOfNextVotingPeriod = block.number + _votingPeriod;
-        currentVotingPeriodEpoch = 0;
+        _votingPeriodChangedBlockNumber = block.number;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -84,31 +80,38 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
-    /// @dev it updates startOfNextVotingPeriod if needed. Used in propose, execute and castVote calls
-    function updateStartOfNextVotingPeriod() public {
-        if (block.number >= startOfNextVotingPeriod) {
-            // move any votingToken stuck in this contract to the vault
-            address vault = ISPOG(spogAddress).vault();
-            uint256 amountStuck = votingToken.balanceOf(address(this));
+    /// @dev get current epoch
+    function currentVotingPeriodEpoch() public view returns (uint256) {
+        uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 
-            // update currentVotingPeriodEpoch
-            currentVotingPeriodEpoch++;
+        return _votingPeriodChangedEpoch + blocksSinceVotingPeriodChange / _votingPeriod;
+    }
 
-            // update epochVotingTokenSupply
-            epochVotingTokenSupply[currentVotingPeriodEpoch] = votingToken.getPastTotalSupply(startOfNextVotingPeriod);
-            emit EpochVotingTokenSupplySet(currentVotingPeriodEpoch, epochVotingTokenSupply[currentVotingPeriodEpoch]);
+    function startOfNextVotingPeriod() public view returns (uint256) {
+        uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 
-            // update startOfNextVotingPeriod
-            startOfNextVotingPeriod = startOfNextVotingPeriod + _votingPeriod;
+        return block.number + _votingPeriod - blocksSinceVotingPeriodChange % _votingPeriod;
+    }
 
-            // trigger token votingToken inflation
+    /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
+    function inflateVotingTokens() public {
+        uint256 currentEpoch = currentVotingPeriodEpoch();
+        if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
 
-            votingToken.mint(address(this), amountToIncreaseSupplyBy); // send inflation to this contract
-            votingToken.approve(vault, amountStuck + amountToIncreaseSupplyBy);
-            IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(votingToken), amountStuck + amountToIncreaseSupplyBy);
+            // mint tokens
+            votingTokensMinted[currentEpoch] = true;
+            votingToken.mint(address(this), amountToIncreaseSupplyBy);
 
-            emit VotingTokenInflation(currentVotingPeriodEpoch, amountToIncreaseSupplyBy);
+            uint256 balance = votingToken.balanceOf(address(this));
+            address vault = ISPOG(spogAddress).vault();
+
+            // pull new tokens and any previous balance to vault
+            votingToken.approve(vault, balance);
+            IVault(vault).depositEpochRewardTokens(currentEpoch, address(votingToken), balance);
+
+            // emit event for new tokens minted (not balance)
+            emit VotingTokenInflation(currentEpoch, amountToIncreaseSupplyBy);
         }
     }
 
@@ -146,6 +149,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emit VotingPeriodSet(_votingPeriod, newVotingTime);
 
         _votingPeriod = newVotingTime;
+        _votingPeriodChangedBlockNumber = block.number;
+        _votingPeriodChangedEpoch = currentVotingPeriodEpoch();
     }
 
     function registerEmergencyProposal(uint256 proposalId) external onlySPOG {
@@ -154,22 +159,22 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     // ********** Override functions ********** //
 
-    /// @notice override to use updateStartOfNextVotingPeriod
+    /// @notice override to use inflateVotingTokens
     function propose(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
     ) public virtual override onlySPOG returns (uint256) {
-        updateStartOfNextVotingPeriod();
+        inflateVotingTokens();
 
         // update epochProposalsCount. Proposals are voted on in the next epoch
-        epochProposalsCount[currentVotingPeriodEpoch + 1]++;
+        epochProposalsCount[currentVotingPeriodEpoch() + 1]++;
 
         return super.propose(targets, values, calldatas, description);
     }
 
-    /// @notice override to use updateStartOfNextVotingPeriod and check that caller is SPOG
+    /// @notice override to use inflateVotingTokens and check that caller is SPOG
     /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
@@ -180,20 +185,20 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal virtual override onlySPOG {
-        updateStartOfNextVotingPeriod();
+        inflateVotingTokens();
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    /// @notice override to use updateStartOfNextVotingPeriod
+    /// @notice override to use inflateVotingTokens
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual
         override
         returns (uint256)
     {
-        updateStartOfNextVotingPeriod();
+        inflateVotingTokens();
 
-        if (currentVotingPeriodEpoch == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
+        if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
 
         _updateAccountEpochVotes();
         _updateAccountEpochVoteWeight(proposalId);
@@ -203,24 +208,22 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev update epoch votes for address
     function _updateAccountEpochVotes() private {
-        accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch]++;
+        accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch()]++;
     }
 
     /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
     function _updateAccountEpochVoteWeight(uint256 proposalId) private {
         uint256 voteWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
+        uint256 currentEpoch = currentVotingPeriodEpoch();
 
         // update address vote weight for epoch
-        if (accountEpochVoteWeight[msg.sender][currentVotingPeriodEpoch] == 0) {
-            accountEpochVoteWeight[msg.sender][currentVotingPeriodEpoch] = voteWeight;
+        if (accountEpochVoteWeight[msg.sender][currentEpoch] == 0) {
+            accountEpochVoteWeight[msg.sender][currentEpoch] = voteWeight;
         }
 
         // update cumulative vote weight for epoch if user voted in all proposals
-        if (
-            accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch]
-                == epochProposalsCount[currentVotingPeriodEpoch]
-        ) {
-            epochSumOfVoteWeight[currentVotingPeriodEpoch] = epochSumOfVoteWeight[currentVotingPeriodEpoch] + voteWeight;
+        if (accountEpochNumProposalsVotedOn[msg.sender][currentEpoch] == epochProposalsCount[currentEpoch]) {
+            epochSumOfVoteWeight[currentEpoch] = epochSumOfVoteWeight[currentEpoch] + voteWeight;
         }
     }
 
@@ -240,11 +243,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        if (startOfNextVotingPeriod > block.number) {
-            return startOfNextVotingPeriod - block.number;
-        }
-
-        revert StartOfNextVotingPeriodWasNotUpdated();
+        uint256 startOfNext = startOfNextVotingPeriod();
+        return startOfNext - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {
