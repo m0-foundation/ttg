@@ -547,6 +547,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
 
+        // fast forward 5 epochs
         vm.roll(block.number + 5 * voteGovernor.votingDelay() + 1);
 
         // should not revert
