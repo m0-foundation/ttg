@@ -416,8 +416,6 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // voting epoch 1 finished, epoch 2 started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        // voteGovernor.inflateTokenSupply();
-
         // carol remains with the same balance
         assertEq(spogVote.balanceOf(carol), spogVoteAmountToMint, "Carol should have same spogVote balance");
 
