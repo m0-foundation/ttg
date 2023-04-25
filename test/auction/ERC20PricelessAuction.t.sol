@@ -4,13 +4,16 @@ pragma solidity 0.8.17;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+
 import "forge-std/console.sol";
 
-
 contract ERC20PricelessAuctionTest is SPOG_Base {
-    ERC20PricelessAuction public auction;
+    IERC20PricelessAuction public auctionImplementation;
+    IERC20PricelessAuction public auction;
 
     address fakeVault = createUser("vault");
 
@@ -20,7 +23,16 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
         super.setUp();
 
         uint256 auctionDuration = 30 days;
-        auction = new ERC20PricelessAuction(address(voteToken), address(usdc), auctionDuration, fakeVault);
+
+        auctionImplementation = new ERC20PricelessAuction();
+
+        auction = IERC20PricelessAuction(Clones.cloneDeterministic(address(auctionImplementation), bytes32(0)));
+
+        mintAndApproveVoteTokens(1000e18);
+
+        IERC20PricelessAuction(auction).initialize(
+            address(voteToken), address(usdc), auctionDuration, fakeVault, 1000e18
+        );
     }
 
     function mintAndApproveVoteTokens(uint256 amount) internal {
@@ -30,19 +42,13 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     }
 
     function test_init() public {
-        mintAndApproveVoteTokens(1000e18);
-
-        auction.init(1000e18);
         assertEq(voteToken.balanceOf(address(auction)), 1000e18);
     }
 
     function test_getCurrentPrice() public {
-        mintAndApproveVoteTokens(1000e18);
-
-        auction.init(1000e18);
         assertEq(auction.getCurrentPrice(), usdc.totalSupply() / 1000);
 
-        for(uint i = 0; i < 30 * 24; i++) {
+        for (uint256 i = 0; i < 30 * 24; i++) {
             vm.roll(block.number + 1);
             vm.warp(block.timestamp + 1 hours);
         }
@@ -51,12 +57,9 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     }
 
     function test_buyTokens() public {
-        mintAndApproveVoteTokens(1000e18);
-
-        auction.init(1000e18);
         address buyer = createUser("buyer");
-        
-        for(uint i = 0; i < 30 * 24; i++) {
+
+        for (uint256 i = 0; i < 30 * 24; i++) {
             vm.roll(block.number + 1);
             vm.warp(block.timestamp + 1 hours);
 
@@ -81,13 +84,9 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
         bytes memory customError = abi.encodeWithSignature("AuctionEnded()");
         vm.expectRevert(customError);
         auction.buyTokens(1);
-
     }
 
     function test_withdraw() public {
-        mintAndApproveVoteTokens(1000e18);
-
-        auction.init(1000e18);
         bytes memory customError = abi.encodeWithSignature("AuctionNotEnded()");
         vm.expectRevert(customError);
         auction.withdraw();
@@ -103,6 +102,6 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
 
         auction.withdraw();
 
-        assertEq(voteToken.balanceOf(address(auction)),0);
+        assertEq(voteToken.balanceOf(address(auction)), 0);
     }
 }
