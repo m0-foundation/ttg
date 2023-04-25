@@ -12,7 +12,6 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 import {SPOGStorage} from "src/core/SPOGStorage.sol";
-import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 

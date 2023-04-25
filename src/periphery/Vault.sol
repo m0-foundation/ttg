@@ -159,7 +159,7 @@ contract Vault is IVault {
     function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySpog {
         voteGovernor = newVoteGovernor;
 
-        emit VoteGovernorUpdated(address(newVoteGovernor));
+        emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
     }
 
     fallback() external {

@@ -27,7 +27,7 @@ contract VaultTest is BaseTest {
 
     ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
 
-    event VoteGovernorUpdated(address indexed newVoteGovernor);
+    event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     function setUp() public {
         ISPOGGovernor voteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
@@ -100,7 +100,7 @@ contract VaultTest is BaseTest {
 
         ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
         expectEmit();
-        emit VoteGovernorUpdated(address(newVoteGovernor));
+        emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
         vault.updateVoteGovernor(newVoteGovernor);
 
         assertEq(address(vault.voteGovernor()), address(newVoteGovernor), "Governor was not updated");

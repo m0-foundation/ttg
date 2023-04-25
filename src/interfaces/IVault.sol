@@ -9,7 +9,7 @@ interface IVault {
     event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
     event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
     event VoteTokenAuction(address indexed token, uint256 indexed epoch, address auction, uint256 amount);
-    event VoteGovernorUpdated(address indexed newVoteGovernor);
+    event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external;
 
