@@ -278,8 +278,10 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Inflate token supplies
     /// @dev calls inflateTokenSupply on both governors
     function inflateTokenSupply() external onlyGovernor {
-        voteGovernor.inflateTokenSupply();
-        valueGovernor.inflateTokenSupply();
+        if (msg.sender == address(voteGovernor)) {
+            voteGovernor.inflateTokenSupply();
+            valueGovernor.inflateTokenSupply();
+        }
     }
 
     // ********** Public Functions ********** //
