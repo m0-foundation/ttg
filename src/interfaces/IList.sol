@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GLP-3.0
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
 interface IList {
