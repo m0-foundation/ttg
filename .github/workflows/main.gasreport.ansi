@@ -1,0 +1,331 @@
+Compiling 30 files with 0.8.17
+Solc 0.8.17 finished in 22.58s
+Compiler run successful
+
+Running 9 tests for test/list/List.t.sol:ListTest
+[32m[PASS][0m test_AddUsers() (gas: 70518)
+[32m[PASS][0m test_ChangeAdmin() (gas: 98978)
+[32m[PASS][0m test_Constructor() (gas: 14654)
+[32m[PASS][0m test_RemoveUsers() (gas: 56196)
+[32m[PASS][0m test_RemoveUsers_WhenListIsEmpty_OrUserIsNotInTheList() (gas: 51820)
+[32m[PASS][0m test_Revert_Add_WhenCallerIsNotAdmin() (gas: 13593)
+[32m[PASS][0m test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() (gas: 100549)
+[32m[PASS][0m test_Revert_ChangeAdmin_WhenNewAdminIsNotSPOG() (gas: 18882)
+[32m[PASS][0m test_Revert_Remove_WhenCallerIsNotAdmin() (gas: 13473)
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 21.96ms
+
+Running 5 tests for test/vault/Vault.t.sol:VaultTest
+[32m[PASS][0m test_Revert_UpdateVoteGovernor_WhenCalledNoBySPOG() (gas: 100784)
+[32m[PASS][0m test_UpdateVoteGovernor() (gas: 107834)
+[32m[PASS][0m test_depositEpochRewardTokens() (gas: 2945212)
+[32m[PASS][0m test_sellUnclaimedVoteTokens() (gas: 3204324)
+[32m[PASS][0m test_unclaimedVoteTokensForEpoch() (gas: 2945853)
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 23.09ms
+
+Running 3 tests for test/governor/ValueGovernor.t.sol:ValueSPOGGovernorTest
+[32m[PASS][0m test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() (gas: 41990)
+[32m[PASS][0m test_valueGov_StartOfNextVotingPeriod() (gas: 13696)
+[32m[PASS][0m test_value_gov_AccurateIncrementOfCurrentVotingPeriodEpoch() (gas: 42663)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 29.12ms
+
+Running 5 tests for test/spog/propose/SPOGGovernance.t.sol:SPOGGovernanceTest
+[32m[PASS][0m test_Revert_Propose_SameProposal() (gas: 330732)
+[32m[PASS][0m test_Revert_Propose_WhenEtherValueIsPassed() (gas: 56364)
+[32m[PASS][0m test_Revert_Propose_WhenMethodIsNotSupported() (gas: 56513)
+[32m[PASS][0m test_Revert_Propose_WhenMoreThanOneProposalPassed() (gas: 59499)
+[32m[PASS][0m test_Revert_Propose_WhenTargetIsNotSPOG() (gas: 55489)
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 30.68ms
+
+Running 3 tests for test/spog/change/changeTaxWithVoteGovernor.t.sol:SPOG_changeTax
+[32m[PASS][0m test_ChangeTaxViaProposalBySPOGGovernorVote() (gas: 1045250)
+[32m[PASS][0m test_Revert_ChangeTaxWhenNotCalledFromGovernance() (gas: 12774)
+[32m[PASS][0m test_Revert_WhenTaxValueIsOutOfTaxRangeBounds() (gas: 1121780)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 35.35ms
+
+Running 1 test for test/vault/withdrawRewardsForValueHolders.t.sol:Vault_WithdrawRewardsForValueHolders
+[32m[PASS][0m test_WithdrawRewardsForValueHolders_For_Single_Epoch() (gas: 964507)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 36.03ms
+
+Running 2 tests for test/spog/removeList/removeList.t.sol:SPOG_RemoveList
+[32m[PASS][0m test_Revert_RemoveListWhenNotCallingFromGovernance() (gas: 1124150)
+[32m[PASS][0m test_SPOGProposalToRemoveList() (gas: 1917116)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 37.25ms
+
+Running 2 tests for test/tokens/ValueToken.t.sol:ValueTokenTest
+[32m[PASS][0m test_Revert_Snapshot_WhenCallerIsNotSPOG() (gas: 10463)
+[32m[PASS][0m test_snapshot() (gas: 148563)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 23.48ms
+
+Running 2 tests for test/spog/addNewList/addNewList.t.sol:SPOG_AddNewList
+[32m[PASS][0m test_Revert_WhenAddingNewList_NotCallingFromGovernance() (gas: 12800)
+[32m[PASS][0m test_SPOGProposalToAddNewList() (gas: 1146874)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 22.54ms
+
+Running 1 test for test/vault/withdrawValueTokenRewards.t.sol:Vault_WithdrawValueTokenRewards
+[32m[PASS][0m test_UsersCanClaimValueTokenInflationAfterVotingOnInAllProposals() (gas: 1624805)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 26.43ms
+
+Running 12 tests for test/governor/VoteGovernor.t.sol:VoteSPOGGovernorTest
+[32m[PASS][0m test_AccurateIncrementOfCurrentVotingPeriodEpoch() (gas: 42840)
+[32m[PASS][0m test_CanBatchVoteOnMultipleProposalsAfterItsVotingDelay() (gas: 942796)
+[32m[PASS][0m test_CanOnlyVoteOnAProposalAfterItsVotingDelay() (gas: 757526)
+[32m[PASS][0m test_CanVoteOnMultipleProposalsAfterItsVotingDelay() (gas: 1479391)
+[32m[PASS][0m test_ProposalsShouldBeAllowedAfterInactiveEpoch() (gas: 1521488)
+[32m[PASS][0m test_Revert_Execute_WhenCalledNotBySPOG() (gas: 780841)
+[32m[PASS][0m test_Revert_Propose_WhenCalledNotBySPOG() (gas: 60204)
+[32m[PASS][0m test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() (gas: 11093)
+[32m[PASS][0m test_Revert_turnOnAndOffEmergencyVoting_WhenCalledNotBySPOG() (gas: 14899)
+[32m[PASS][0m test_StartOfNextVotingPeriod() (gas: 13785)
+[32m[PASS][0m test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() (gas: 1140128)
+[32m[PASS][0m test_turnOnAndOffEmergencyVoting() (gas: 34408)
+Test result: [32mok[0m. 12 passed; 0 failed; finished in 45.08ms
+
+Running 2 tests for test/spog/appendAddressToList/appendAddressToList.t.sol:SPOG_AppendAddressToList
+[32m[PASS][0m test_Revert_AppendToListWhenNotCallingFromGovernance() (gas: 15074)
+[32m[PASS][0m test_SPOGProposalToAppedToAList() (gas: 1018902)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 26.52ms
+
+Running 1 test for test/vault/withdrawVoteTokenRewards.t.sol:Vault_WithdrawVoteTokenRewards
+[32m[PASS][0m test_UsersGetsVoteTokenInflationAfterVotingOnAllProposals() (gas: 1677859)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 29.22ms
+
+Running 7 tests for test/tokens/VoteToken.t.sol:VoteTokenTest
+[32m[PASS][0m test_Revert_ClaimPreviousSupply_WhenAlreadyClaimed() (gas: 5527756)
+[32m[PASS][0m test_Revert_ClaimPreviousSupply_WhenNoTokensToClaim() (gas: 5437610)
+[32m[PASS][0m test_Revert_ClaimPreviousSupply_WhenResetNotInitialized() (gas: 5350680)
+[32m[PASS][0m test_Revert_InitReset_WhenCallerIsNotSPOG() (gas: 5347092)
+[32m[PASS][0m test_Revert_InitReset_WhenResetWasInitialized() (gas: 5370514)
+[32m[PASS][0m test_Revert_ResetBalance_WhenResetNotInitialized() (gas: 5347869)
+[32m[PASS][0m test_balances_beforeAndAfterReset() (gas: 5599297)
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 61.42ms
+
+Running 1 test for test/spog/initialState.t.sol:SPOG_InitialState
+[32m[PASS][0m test_SPOGHasSetInitialValuesCorrectly() (gas: 91549)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 19.38ms
+
+Running 2 tests for test/spog/removeAddressFromList/removeAddressFromList.t.sol:SPOG_RemoveAddressFromList
+[32m[PASS][0m test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance() (gas: 15008)
+[32m[PASS][0m test_SPOGProposalToRemoveAddressFromAList() (gas: 998252)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 26.68ms
+
+Running 4 tests for test/auction/ERC20PricelessAuction.t.sol:ERC20PricelessAuctionTest
+[32m[PASS][0m test_buyTokens() (gas: 5749168)
+[32m[PASS][0m test_getCurrentPrice() (gas: 792799)
+[32m[PASS][0m test_init() (gas: 9983)
+[32m[PASS][0m test_withdraw() (gas: 63944)
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 93.84ms
+
+Running 4 tests for test/spog/emergencyRemove/emergencyRemove.t.sol:SPOG_emergencyRemove
+[32m[PASS][0m test_EmergencyRemove_AfterDeadlineEnd() (gas: 1026646)
+[32m[PASS][0m test_EmergencyRemove_BeforeDeadlineEnd() (gas: 486161)
+[32m[PASS][0m test_Revert_EmergencyRemove_WhenNotEnoughTaxPaid() (gas: 65192)
+[32m[PASS][0m test_Revert_EmergencyRemove_WhenQuorumWasNotReached() (gas: 788614)
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 37.00ms
+
+Running 3 tests for test/spog/reset/reset.t.sol:SPOG_reset
+[32m[PASS][0m test_Reset_Success() (gas: 7994048)
+[32m[PASS][0m test_Revert_Reset_WhenNotCalledFromValueGovernance() (gas: 10758)
+[32m[PASS][0m test_Revert_Reset_WhenValueAndVoteTokensMistmatch() (gas: 8747247)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 64.78ms
+
+Running 6 tests for test/spog/change/changeVarsWithDoubleQuorum.t.sol:SPOG_change
+[32m[PASS][0m test_Change_ChangeCashToken_SPOGProposalToChangeVariableInSpog() (gas: 1962608)
+[32m[PASS][0m test_Change_SPOGProposalToChangeVariableInSpog() (gas: 1293261)
+[32m[PASS][0m test_Revert_Change_WhenNotCalledFromGovernance() (gas: 17596)
+[32m[PASS][0m test_Revert_Change_WhenPassingAnIncorrectParamsToChange() (gas: 1367595)
+[32m[PASS][0m test_Revert_Change_WhenValueHoldersDoNotVote() (gas: 878654)
+[32m[PASS][0m test_Revert_Change_WhenVoteHoldersDoNotAgree() (gas: 1032656)
+Test result: [32mok[0m. 6 passed; 0 failed; finished in 67.83ms
+| lib/openzeppelin-contracts/contracts/mocks/ERC20Mock.sol:ERC20Mock contract |                 |       |        |       |         |
+|-----------------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                                             | Deployment Size |       |        |       |         |
+| 658696                                                                      | 4133            |       |        |       |         |
+| Function Name                                                               | min             | avg   | median | max   | # calls |
+| approve                                                                     | 22551           | 23963 | 24651  | 24651 | 110     |
+| balanceOf                                                                   | 607             | 1232  | 607    | 2607  | 16      |
+| transfer                                                                    | 3105            | 16879 | 20704  | 23005 | 4       |
+| transferFrom                                                                | 971             | 18941 | 22152  | 25992 | 105     |
+
+
+| src/core/SPOG.sol:SPOG contract                      |                 |        |        |        |         |
+|------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                      | Deployment Size |        |        |        |         |
+| 2956983                                              | 15113           |        |        |        |         |
+| Function Name                                        | min             | avg    | median | max    | # calls |
+| EMERGENCY_REMOVE_TAX_MULTIPLIER                      | 307             | 307    | 307    | 307    | 4       |
+| addNewList                                           | 2608            | 87428  | 91558  | 96058  | 15      |
+| append                                               | 2776            | 25400  | 27704  | 34204  | 8       |
+| change                                               | 1239            | 4158   | 4056   | 7283   | 4       |
+| changeTax                                            | 2534            | 5344   | 4779   | 8720   | 3       |
+| emergencyRemove                                      | 10080           | 10080  | 10080  | 10080  | 2       |
+| execute                                              | 19801           | 297795 | 313893 | 384742 | 35      |
+| inflateTokenSupply                                   | 537             | 138519 | 18175  | 391828 | 152     |
+| isListInMasterList                                   | 805             | 805    | 805    | 805    | 2       |
+| propose(address[],uint256[],bytes[],string)(uint256) | 2971            | 176053 | 172363 | 527632 | 53      |
+| propose(bytes,string)(uint256)                       | 212056          | 269608 | 288792 | 288792 | 4       |
+| remove                                               | 2688            | 8148   | 8148   | 13609  | 2       |
+| removeList                                           | 631             | 1723   | 1723   | 2816   | 2       |
+| reset                                                | 532             | 38121  | 2784   | 111048 | 3       |
+| spogData                                             | 5027            | 7471   | 7027   | 13027  | 9       |
+| supportsInterface                                    | 445             | 470    | 483    | 483    | 183     |
+| taxRange                                             | 4420            | 4420   | 4420   | 4420   | 1       |
+| tokenInflationCalculation                            | 483             | 2071   | 1406   | 8829   | 142     |
+| vault                                                | 326             | 326    | 326    | 326    | 140     |
+| voteGovernor                                         | 382             | 382    | 382    | 382    | 5       |
+
+
+| src/core/SPOGGovernor.sol:SPOGGovernor contract |                 |        |        |        |         |
+|-------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                 | Deployment Size |        |        |        |         |
+| 3422581                                         | 19011           |        |        |        |         |
+| Function Name                                   | min             | avg    | median | max    | # calls |
+| MINIMUM_VOTING_DELAY                            | 285             | 285    | 285    | 285    | 1       |
+| accountEpochNumProposalsVotedOn                 | 695             | 861    | 695    | 2695   | 12      |
+| accountEpochVoteWeight                          | 719             | 719    | 719    | 719    | 4       |
+| castVote                                        | 5434            | 298129 | 367169 | 474869 | 61      |
+| castVotes                                       | 6346            | 270037 | 270037 | 533728 | 2       |
+| currentVotingPeriodEpoch                        | 836             | 2861   | 836    | 6836   | 80      |
+| emergencyProposals                              | 551             | 551    | 551    | 551    | 3       |
+| epochProposalsCount                             | 505             | 505    | 505    | 505    | 8       |
+| epochStartBlockNumber                           | 571             | 571    | 571    | 571    | 4       |
+| epochSumOfVoteWeight                            | 570             | 570    | 570    | 570    | 4       |
+| execute                                         | 9495            | 283748 | 305892 | 374965 | 35      |
+| getVotes                                        | 2617            | 4407   | 3070   | 6639   | 10      |
+| hashProposal                                    | 3920            | 3971   | 3920   | 4167   | 85      |
+| inflateTokenSupply                              | 1150            | 74323  | 68782  | 387314 | 280     |
+| initSPOGAddress                                 | 45747           | 45790  | 45834  | 45834  | 123     |
+| proposalSnapshot                                | 610             | 610    | 610    | 610    | 8       |
+| proposalVotes                                   | 2692            | 2692   | 2692   | 2692   | 6       |
+| propose                                         | 5083            | 110613 | 96741  | 480894 | 58      |
+| quorumNumerator                                 | 886             | 3552   | 4886   | 4886   | 3       |
+| registerEmergencyProposal                       | 2565            | 17655  | 22685  | 22685  | 4       |
+| spogAddress                                     | 449             | 718    | 449    | 2449   | 193     |
+| startOfNextVotingPeriod                         | 5509            | 5509   | 5509   | 5509   | 2       |
+| state                                           | 869             | 6654   | 5358   | 17501  | 30      |
+| turnOffEmergencyVoting                          | 527             | 857    | 527    | 2510   | 6       |
+| turnOnEmergencyVoting                           | 2443            | 19488  | 22497  | 24497  | 6       |
+| updateQuorumNumerator                           | 4011            | 4011   | 4011   | 4011   | 122     |
+| updateVotingTime                                | 4752            | 4752   | 4752   | 4752   | 122     |
+| votingDelay                                     | 450             | 2184   | 1768   | 9768   | 64      |
+| votingPeriod                                    | 350             | 1492   | 2350   | 2350   | 7       |
+| votingToken                                     | 327             | 327    | 327    | 327    | 90      |
+
+
+| src/factories/SPOGFactory.sol:SPOGFactory contract |                 |         |         |         |         |
+|----------------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                                    | Deployment Size |         |         |         |         |
+| 3238187                                            | 16205           |         |         |         |         |
+| Function Name                                      | min             | avg     | median  | max     | # calls |
+| deploy                                             | 2998799         | 2998799 | 2998799 | 2998799 | 61      |
+| getBytecode                                        | 75817           | 75817   | 75817   | 75817   | 61      |
+| predictSPOGAddress                                 | 7045            | 7045    | 7045    | 7045    | 61      |
+
+
+| src/factories/SPOGGovernorFactory.sol:SPOGGovernorFactory contract |                 |         |         |         |         |
+|--------------------------------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                                                    | Deployment Size |         |         |         |         |
+| 4059840                                                            | 20308           |         |         |         |         |
+| Function Name                                                      | min             | avg     | median  | max     | # calls |
+| deploy                                                             | 3465280         | 3465280 | 3465280 | 3465280 | 124     |
+| getBytecode                                                        | 95055           | 95055   | 95055   | 95055   | 122     |
+| predictSPOGGovernorAddress                                         | 8817            | 8817    | 8817    | 8817    | 122     |
+
+
+| src/periphery/ERC20PricelessAuction.sol:ERC20PricelessAuction contract |                 |        |        |        |         |
+|------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                        | Deployment Size |        |        |        |         |
+| 816803                                                                 | 4094            |        |        |        |         |
+| Function Name                                                          | min             | avg    | median | max    | # calls |
+| amountSold                                                             | 373             | 373    | 373    | 373    | 1       |
+| auctionTokenAmount                                                     | 307             | 307    | 307    | 307    | 1       |
+| buyTokens                                                              | 455             | 19606  | 19042  | 98442  | 101     |
+| getCurrentPrice                                                        | 645             | 980    | 645    | 16763  | 722     |
+| initialize                                                             | 181595          | 197515 | 201495 | 201495 | 5       |
+| withdraw                                                               | 2333            | 13534  | 2333   | 35936  | 3       |
+
+
+| src/periphery/List.sol:List contract |                 |       |        |       |         |
+|--------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                      | Deployment Size |       |        |       |         |
+| 336536                               | 2201            |       |        |       |         |
+| Function Name                        | min             | avg   | median | max   | # calls |
+| add                                  | 2493            | 21399 | 21808  | 25808 | 13      |
+| admin                                | 367             | 1367  | 1367   | 2367  | 18      |
+| changeAdmin                          | 3569            | 4919  | 4862   | 9422  | 64      |
+| contains                             | 539             | 1435  | 539    | 2539  | 29      |
+| name                                 | 3178            | 3178  | 3178   | 3178  | 1       |
+| remove                               | 1486            | 3389  | 3152   | 5326  | 8       |
+
+
+| src/periphery/Vault.sol:Vault contract |                 |        |        |        |         |
+|----------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                        | Deployment Size |        |        |        |         |
+| 1655042                                | 8541            |        |        |        |         |
+| Function Name                          | min             | avg    | median | max    | # calls |
+| depositEpochRewardTokens               | 8864            | 36152  | 32414  | 102651 | 195     |
+| epochTokenDeposit                      | 672             | 672    | 672    | 672    | 1       |
+| hasClaimedTokenRewardsForEpoch         | 820             | 1820   | 1820   | 2820   | 8       |
+| sellUnclaimedVoteTokens                | 256869          | 256869 | 256869 | 256869 | 1       |
+| unclaimedVoteTokensForEpoch            | 3698            | 3698   | 3698   | 3698   | 1       |
+| updateVoteGovernor                     | 5793            | 6356   | 6477   | 6799   | 3       |
+| voteGovernor                           | 415             | 637    | 415    | 2415   | 9       |
+| withdrawRewardsForValueHolders         | 42660           | 54457  | 56304  | 62560  | 4       |
+| withdrawValueTokenRewards              | 27476           | 54600  | 60589  | 75736  | 3       |
+| withdrawVoteTokenRewards               | 27549           | 62773  | 69436  | 91336  | 3       |
+
+
+| src/tokens/ValueToken.sol:ValueToken contract |                 |       |        |        |         |
+|-----------------------------------------------|-----------------|-------|--------|--------|---------|
+| Deployment Cost                               | Deployment Size |       |        |        |         |
+| 2496467                                       | 13134           |       |        |        |         |
+| Function Name                                 | min             | avg   | median | max    | # calls |
+| MINTER_ROLE                                   | 283             | 283   | 283    | 283    | 122     |
+| approve                                       | 22581           | 23541 | 22581  | 24681  | 70      |
+| balanceOf                                     | 673             | 766   | 673    | 2673   | 107     |
+| balanceOfAt                                   | 636             | 1780  | 1373   | 5373   | 8       |
+| decimals                                      | 267             | 267   | 267    | 267    | 61      |
+| delegate                                      | 69871           | 69871 | 69871  | 69871  | 70      |
+| getPastTotalSupply                            | 1486            | 2145  | 1939   | 5486   | 15      |
+| getPastVotes                                  | 1658            | 3816  | 2854   | 5658   | 20      |
+| grantRole                                     | 70536           | 71536 | 71536  | 72536  | 122     |
+| initSPOGAddress                               | 22655           | 22655 | 22655  | 22655  | 70      |
+| mint                                          | 32578           | 75090 | 74337  | 221565 | 162     |
+| snapshot                                      | 2420            | 19597 | 21833  | 25833  | 6       |
+| totalSupply                                   | 394             | 594   | 394    | 2394   | 10      |
+| transfer                                      | 35350           | 39768 | 39768  | 44187  | 2       |
+| transferFrom                                  | 6350            | 15795 | 6350   | 80773  | 70      |
+
+
+| src/tokens/VoteToken.sol:VoteToken contract |                 |       |        |        |         |
+|---------------------------------------------|-----------------|-------|--------|--------|---------|
+| Deployment Cost                             | Deployment Size |       |        |        |         |
+| 2414713                                     | 12824           |       |        |        |         |
+| Function Name                               | min             | avg   | median | max    | # calls |
+| MINTER_ROLE                                 | 239             | 239   | 239    | 239    | 124     |
+| approve                                     | 22581           | 23541 | 22581  | 24681  | 70      |
+| balanceOf                                   | 651             | 964   | 651    | 2651   | 102     |
+| claimPreviousSupply                         | 591             | 53407 | 40603  | 118124 | 6       |
+| delegate                                    | 26866           | 69230 | 69827  | 69827  | 72      |
+| getPastTotalSupply                          | 1895            | 2064  | 1895   | 7957   | 76      |
+| getPastVotes                                | 832             | 2465  | 1636   | 5636   | 165     |
+| grantRole                                   | 70536           | 71552 | 72536  | 72536  | 124     |
+| initReset                                   | 515             | 17434 | 23774  | 23774  | 7       |
+| initSPOGAddress                             | 22742           | 22742 | 22742  | 22742  | 69      |
+| mint                                        | 29168           | 71234 | 64927  | 96810  | 142     |
+| resetBalanceOf                              | 2310            | 2670  | 2310   | 3392   | 3       |
+| resetSnapshotId                             | 340             | 340   | 340    | 340    | 1       |
+| totalSupply                                 | 394             | 1013  | 394    | 2394   | 84      |
+| transfer                                    | 927             | 19505 | 20200  | 36692  | 4       |
+| transferFrom                                | 5119            | 13032 | 5119   | 24239  | 70      |
+| valueToken                                  | 326             | 326   | 326    | 326    | 2       |
+
+
+| test/list/List.t.sol:MockSPOG contract |                 |     |        |     |         |
+|----------------------------------------|-----------------|-----|--------|-----|---------|
+| Deployment Cost                        | Deployment Size |     |        |     |         |
+| 47099                                  | 266             |     |        |     |         |
+| Function Name                          | min             | avg | median | max | # calls |
+| supportsInterface                      | 365             | 390 | 403    | 403 | 6       |
+
+
+

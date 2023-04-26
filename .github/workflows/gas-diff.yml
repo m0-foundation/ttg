@@ -1,4 +1,4 @@
-name: Report gas diff
+name: Forge report gas differences
 
 on:
   push:
