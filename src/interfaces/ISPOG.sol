@@ -65,4 +65,7 @@ interface ISPOG {
     ) external returns (uint256);
 
     function inflateTokenSupply() external;
+
+    // List accessor functions
+    function isListInMasterList(address list) external view returns (bool);
 }
