@@ -87,15 +87,10 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     function test_Revert_turnOnAndOffEmergencyVoting_WhenCalledNotBySPOG() public {
-        // revert when called not by SPOG, most methods are closed to the public
         vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.turnOnEmergencyVoting();
 
         vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
-        voteGovernor.turnOffEmergencyVoting();
-
-        vm.startPrank(address(spog));
-        voteGovernor.turnOnEmergencyVoting();
         voteGovernor.turnOffEmergencyVoting();
     }
 
@@ -570,9 +565,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     function test_turnOnAndOffEmergencyVoting() public {
         uint256 governorVotingDelay = voteGovernor.votingDelay();
         vm.startPrank(address(spog));
+
         // turn on emergency voting and check that voting delay is minimum now
         voteGovernor.turnOnEmergencyVoting();
         assertEq(voteGovernor.votingDelay(), voteGovernor.MINIMUM_VOTING_DELAY(), "emergency voting should be on");
+
         // turn off emergency voting and check that voting delay is reset back
         voteGovernor.turnOffEmergencyVoting();
         assertEq(voteGovernor.votingDelay(), governorVotingDelay, "emergency voting should be off");
