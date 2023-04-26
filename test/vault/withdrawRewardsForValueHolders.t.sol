@@ -14,9 +14,6 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         for (uint256 i = 0; i < numberOfEpochs; i++) {
             // advance to next epoch
             vm.roll(block.number + voteGovernor.votingDelay() + 1);
-            // update
-            voteGovernor.updateStartOfNextVotingPeriod();
-            valueGovernor.updateStartOfNextVotingPeriod();
 
             for (uint256 j = 0; j < numberOfProposalsPerEpoch; j++) {
                 // update vote governor
@@ -43,7 +40,7 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
 
         uint256 vaultBalanceOfCash = cash.balanceOf(address(vault));
         // get spog tax from spog data
-        (uint256 tax,,,,,,) = spog.spogData();
+        (uint256 tax,,,,,) = spog.spogData();
 
         uint256 epochCashRewards = tax * numberOfProposalsPerEpoch * numberOfEpochs;
         assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");
@@ -59,8 +56,6 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
 
         // advance to next epoch so msg.sender can take rewards from previous epoch
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
 
         // rewards is divvied up equally among value holders (alice, bob, carol, and address(this))
         uint256 rewardAmountToReceive = epochCashRewards / 4;

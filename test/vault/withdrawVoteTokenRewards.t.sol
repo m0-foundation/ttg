@@ -30,7 +30,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
                                  TESTS
     //////////////////////////////////////////////////////////////*/
 
-    function test_UsersGetsVoteTokenInflationAfterVotingOnInAllProposals() public {
+    function test_UsersGetsVoteTokenInflationAfterVotingOnAllProposals() public {
         // set up proposals
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
@@ -184,8 +184,6 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
 
         // voting epoch 1 finished, epoch 2 started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        voteGovernor.updateStartOfNextVotingPeriod();
 
         // carol remains with the same balance
         assertEq(spogVote.balanceOf(carol), amountToMint, "Carol should have same spogVote balance");

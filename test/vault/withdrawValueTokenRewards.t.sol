@@ -40,22 +40,13 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // balance of spogValue for vault should be 0
         uint256 spogValueBalanceForVaultForEpochZero = spogValue.balanceOf(address(vault));
-        assertEq(spogValueBalanceForVaultForEpochZero, 0, "vault should have 0 spogVote balance");
+        assertEq(spogValueBalanceForVaultForEpochZero, 0, "vault should have 0 spogValue balance");
 
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
 
         vm.prank(address(valueGovernor));
         uint256 epochInflation = spog.tokenInflationCalculation();
-
-        uint256 spogValueBalanceForVaultForEpochOne = spogValue.balanceOf(address(vault));
-        assertGt(
-            spogValueBalanceForVaultForEpochOne,
-            spogValueBalanceForVaultForEpochZero,
-            "vault should have more spogVote balance"
-        );
 
         // alice votes on proposal 1, 2 and 3
         vm.startPrank(alice);
@@ -63,6 +54,13 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         voteGovernor.castVote(proposalId2, yesVote);
         voteGovernor.castVote(proposalId3, noVote);
         vm.stopPrank();
+
+        uint256 spogValueBalanceForVaultForEpochOne = spogValue.balanceOf(address(vault));
+        assertGt(
+            spogValueBalanceForVaultForEpochOne,
+            spogValueBalanceForVaultForEpochZero,
+            "vault should have more spogValue balance"
+        );
 
         // bob votes on proposal 1, 2 and 3
         vm.startPrank(bob);
@@ -78,8 +76,6 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // start epoch 2
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
 
         uint256 aliceValueBalanceBefore = spogValue.balanceOf(alice);
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);
@@ -134,7 +130,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         uint256 carolValueBalanceBefore = spogValue.balanceOf(carol);
 
-        // carol fails to withdraw vote rewards because she has not voted in all proposals
+        // carol fails to withdraw value token rewards because she has not voted in all proposals
         vm.expectRevert("Vault: unable to withdraw due to not voting on all proposals");
         vault.withdrawValueTokenRewards();
         vm.stopPrank();
@@ -142,11 +138,20 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         // carol remains with the same balance
         assertEq(spogValue.balanceOf(carol), carolValueBalanceBefore, "Carol should have same spogValue balance");
 
-        // vault should have received the remaining inflationary rewards from epoch 1
-        assertGt(
+        // vault should have zero remaining inflationary rewards from epoch 1
+        assertEq(
             spogValue.balanceOf(address(vault)),
             spogValueBalanceForVaultForEpochZero,
-            "vault should have received the remaining inflationary rewards"
+            "vault should not have any remaining tokens"
+        );
+
+        // alice and bobs combined balance minus what they had before should be the entire reward
+        uint256 aliceAndBobReceivedValueTokenRewards =
+            spogValue.balanceOf(alice) + spogValue.balanceOf(bob) - aliceValueBalanceBefore - bobValueBalanceBefore;
+        assertEq(
+            aliceAndBobReceivedValueTokenRewards,
+            spogValueBalanceForVaultForEpochOne,
+            "rewards were not distrubuted evenly"
         );
     }
 }
