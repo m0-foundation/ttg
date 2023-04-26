@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IVault} from "src/interfaces/IVault.sol";
 
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
@@ -19,13 +20,12 @@ contract Vault is IVault {
     ISPOGGovernor public immutable valueGovernor;
     IERC20PricelessAuction public immutable auctionContract;
 
-    // address => voting epoch => bool
-    mapping(address => mapping(uint256 => bool)) public hasClaimedVoteTokenRewardsForEpoch;
-    mapping(address => mapping(uint256 => bool)) public hasClaimedValueTokenRewardsForEpoch;
+    // address => epoch => token => bool
+    mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
 
     // token address => epoch => amount
-    mapping(address => mapping(uint256 => uint256)) public epochVotingTokenDeposit;
-    mapping(address => mapping(uint256 => uint256)) public epochVotingTokenTotalWithdrawn;
+    mapping(address => mapping(uint256 => uint256)) public epochTokenDeposit;
+    mapping(address => mapping(uint256 => uint256)) public epochTokenTotalWithdrawn;
 
     constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor, IERC20PricelessAuction _auctionContract) {
         voteGovernor = _voteGovernor;
@@ -33,8 +33,12 @@ contract Vault is IVault {
         auctionContract = _auctionContract;
     }
 
-    modifier onlyGovernor() {
-        require(msg.sender == address(voteGovernor) || msg.sender == address(valueGovernor), "Vault: Only governor");
+    modifier onlyAllowed() {
+        require(
+            msg.sender == address(voteGovernor.spogAddress()) || msg.sender == address(voteGovernor)
+                || msg.sender == address(valueGovernor),
+            "Vault: Only allowed"
+        );
 
         _;
     }
@@ -49,8 +53,8 @@ contract Vault is IVault {
     /// @param epoch Epoch to deposit tokens for
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
-    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlyGovernor {
-        epochVotingTokenDeposit[token][epoch] += amount;
+    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlyAllowed {
+        epochTokenDeposit[token][epoch] += amount;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         emit EpochRewardsDeposit(epoch, token, amount);
@@ -60,7 +64,7 @@ contract Vault is IVault {
     /// @param epoch Epoch to view unclaimed tokens
     function unclaimedVoteTokensForEpoch(uint256 epoch) public view returns (uint256) {
         address token = address(voteGovernor.votingToken());
-        return epochVotingTokenDeposit[token][epoch] - epochVotingTokenTotalWithdrawn[token][epoch];
+        return epochTokenDeposit[token][epoch] - epochTokenTotalWithdrawn[token][epoch];
     }
 
     /// @notice Sell unclaimed vote tokens
@@ -89,10 +93,10 @@ contract Vault is IVault {
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
         require(
-            !hasClaimedVoteTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch],
+            !hasClaimedTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch][token],
             "Vault: vote rewards already withdrawn"
         );
-        hasClaimedVoteTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch] = true;
+        hasClaimedTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch][token] = true;
 
         uint256 numOfProposalsVotedOnEpoch =
             voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, currentVotingPeriodEpoch);
@@ -106,8 +110,8 @@ contract Vault is IVault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
 
-        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in inflateVotingTokens()
-        uint256 amountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][currentVotingPeriodEpoch];
+        // get inflation amount for current epoch
+        uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][currentVotingPeriodEpoch];
 
         uint256 totalVotingTokenSupplyApplicable =
             voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
@@ -116,21 +120,22 @@ contract Vault is IVault {
 
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
-        epochVotingTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;
+        epochTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
-        emit VoteTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
+    /// @dev Withdraw Value Token Rewards
     function withdrawValueTokenRewards() external {
         address token = address(valueGovernor.votingToken());
 
         uint256 relevantEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         require(
-            !hasClaimedValueTokenRewardsForEpoch[msg.sender][relevantEpoch], "Vault: value rewards already withdrawn"
+            !hasClaimedTokenRewardsForEpoch[msg.sender][relevantEpoch][token], "Vault: value rewards already withdrawn"
         );
-        hasClaimedValueTokenRewardsForEpoch[msg.sender][relevantEpoch] = true;
+        hasClaimedTokenRewardsForEpoch[msg.sender][relevantEpoch][token] = true;
 
         uint256 numOfProposalsVotedOnRelevantEpoch =
             voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, relevantEpoch);
@@ -144,7 +149,7 @@ contract Vault is IVault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, relevantEpoch);
 
-        uint256 valueTokenAmountToBeSharedOnProRataBasis = epochVotingTokenDeposit[token][relevantEpoch];
+        uint256 valueTokenAmountToBeSharedOnProRataBasis = epochTokenDeposit[token][relevantEpoch];
 
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantEpoch);
 
@@ -154,7 +159,49 @@ contract Vault is IVault {
 
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
-        emit ValueTokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+    }
+
+    /// @dev Withdraw rewards for multiple epochs for a token
+    /// @param epochs Epochs to withdraw rewards for
+    /// @param token Token to withdraw rewards for
+    function withdrawRewardsForValueHolders(uint256[] memory epochs, address token) external {
+        uint256 length = epochs.length;
+        for (uint256 i; i < length;) {
+            withdrawRewardsForValueHolders(epochs[i], token);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /// @dev Withdraw rewards for a single epoch for a token
+    /// @param epoch Epoch to withdraw rewards for
+    /// @param token Token to withdraw rewards for
+    function withdrawRewardsForValueHolders(uint256 epoch, address token) public {
+        require(epoch < valueGovernor.currentVotingPeriodEpoch(), "Vault: epoch is not in the past");
+        require(epochTokenDeposit[token][epoch] > 0, "Vault: no rewards to withdraw");
+        require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
+
+        hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token] = true;
+
+        uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
+
+        uint256 epochStartBlockNumber = valueGovernor.epochStartBlockNumber(epoch);
+
+        uint256 totalValueTokenSupplyApplicable =
+            ISPOGVotes(valueGovernor.votingToken()).getPastTotalSupply(epochStartBlockNumber);
+
+        uint256 accountBalanceAtEpochStart = valueGovernor.getVotes(msg.sender, epochStartBlockNumber);
+
+        uint256 percentageOfTotalSupply = accountBalanceAtEpochStart * 100 / totalValueTokenSupplyApplicable;
+
+        uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
+
+        IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
+
+        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
     // @notice Update vote governor after `RESET` was executed

@@ -68,7 +68,9 @@ contract SPOG is SPOGStorage, ERC165 {
         return masterlist.contains(list);
     }
 
-    // ********** CRUD Masterlist FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            MASTERLIST FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
@@ -134,6 +136,10 @@ contract SPOG is SPOGStorage, ERC165 {
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            GOVERNANCE INTERFACE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
     function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
@@ -157,9 +163,6 @@ contract SPOG is SPOGStorage, ERC165 {
 
         emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
     }
-
-    // ********** SPOG Governance interface FUNCTIONS ********** //
-    // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
 
     /// @notice Create a new proposal.
     // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
@@ -283,14 +286,28 @@ contract SPOG is SPOGStorage, ERC165 {
         return proposalId;
     }
 
-    // ********** Public Functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            PUBLIC FUNCTION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Inflate token supplies
+    /// @dev calls inflateTokenSupply on both governors
+    function inflateTokenSupply() external onlyGovernor {
+        if (msg.sender == address(voteGovernor)) {
+            voteGovernor.inflateTokenSupply();
+            valueGovernor.inflateTokenSupply();
+        }
+    }
+
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), spogData.sellTime);
     }
 
-    // ********** Utility FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            UTILITY FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     function tokenInflationCalculation() public view returns (uint256) {
         if (msg.sender == address(voteGovernor)) {
             uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
@@ -310,7 +327,9 @@ contract SPOG is SPOGStorage, ERC165 {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    // ********** Private FUNCTIONS ********** //
+    /*//////////////////////////////////////////////////////////////
+                            PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function initGovernedMethods() private {
         // TODO: review if there is better, more efficient way to do it
@@ -338,8 +357,14 @@ contract SPOG is SPOGStorage, ERC165 {
             fee = spogData.tax;
         }
 
-        // transfer the fee amount from the caller to the SPOG's vault
-        spogData.cash.safeTransferFrom(msg.sender, address(vault), fee);
+        // transfer the amount from the caller to the SPOG
+        spogData.cash.safeTransferFrom(msg.sender, address(this), fee);
+        // approve amount to be sent to the vault
+        spogData.cash.approve(address(vault), fee);
+
+        // deposit the amount to the vault
+        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+        IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), fee);
     }
 
     function _removeFromList(address _address, IList _list) private {

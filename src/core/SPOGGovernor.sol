@@ -43,6 +43,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     mapping(uint256 => bool) public emergencyProposals;
     mapping(uint256 => ProposalVote) private _proposalVotes;
+    // epoch => start block number
+    mapping(uint256 => uint256) public epochStartBlockNumber;
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
@@ -74,6 +76,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
+
+        // set epoch 0 start block number
+        epochStartBlockNumber[0] = block.number;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -101,9 +106,12 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
-    function inflateVotingTokens() public {
+    function inflateTokenSupply() external onlySPOG {
         uint256 currentEpoch = currentVotingPeriodEpoch();
         if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
+            // update epochStartBlockNumber
+            epochStartBlockNumber[currentEpoch] = startOfNextVotingPeriod() - _votingPeriod;
+
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
 
             // mint tokens
@@ -142,7 +150,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return results;
     }
 
-    // ********** Setters ********** //
+    /*//////////////////////////////////////////////////////////////
+                            SETTERS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
@@ -172,16 +182,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emergencyVotingIsOn = false;
     }
 
-    // ********** Override functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            OVERRIDE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
-    /// @notice override to use inflateVotingTokens
+    /// @notice override to use inflateTokenSupply
     function propose(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
     ) public virtual override onlySPOG returns (uint256) {
-        inflateVotingTokens();
+        ISPOG(spogAddress).inflateTokenSupply();
 
         // update epochProposalsCount. Proposals are voted on in the next epoch
         epochProposalsCount[currentVotingPeriodEpoch() + 1]++;
@@ -189,7 +201,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return super.propose(targets, values, calldatas, description);
     }
 
-    /// @notice override to use inflateVotingTokens and check that caller is SPOG
+    /// @notice override to use inflateTokenSupply and check that caller is SPOG
     /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
@@ -200,18 +212,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal virtual override onlySPOG {
-        inflateVotingTokens();
+        ISPOG(spogAddress).inflateTokenSupply();
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    /// @notice override to use inflateVotingTokens
+    /// @notice override to use inflateTokenSupply
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual
         override
         returns (uint256)
     {
-        inflateVotingTokens();
+        ISPOG(spogAddress).inflateTokenSupply();
 
         // TODO: hiding error in original governor, tests are incorrectly relying on it, fix is needed!
         if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active");
@@ -266,7 +278,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriod;
     }
 
-    // ********** Counting module functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            COUNTING MODULE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase

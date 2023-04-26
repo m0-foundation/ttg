@@ -27,9 +27,10 @@ contract SPOG_reset is SPOG_Base {
         governorFactory = new SPOGGovernorFactory();
     }
 
-    /**
-     * Helpers *******
-     */
+    /*//////////////////////////////////////////////////////////////
+                            HELPERS
+    //////////////////////////////////////////////////////////////*/
+
     function createNewVoteGovernor(address valueToken) private returns (address) {
         // deploy vote governor from factory
         VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", valueToken);

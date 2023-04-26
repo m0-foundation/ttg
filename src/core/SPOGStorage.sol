@@ -66,6 +66,12 @@ abstract contract SPOGStorage is ISPOG {
         _;
     }
 
+    modifier onlyGovernor() {
+        require(msg.sender == address(voteGovernor) || msg.sender == address(valueGovernor), "SPOG: Only governor");
+
+        _;
+    }
+
     /// @param _initSPOGData The data used to initialize spogData
     function initSPOGData(bytes memory _initSPOGData) internal {
         // _cash The currency accepted for tax payment in the SPOG (must be ERC20)
