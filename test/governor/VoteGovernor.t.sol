@@ -12,7 +12,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     uint8 noVote = 0;
     uint8 yesVote = 1;
 
-    event NewSingleQuorumProposal(uint256 indexed proposalId);
+    event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
@@ -41,7 +41,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // create new proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         expectEmit();
-        emit NewSingleQuorumProposal(proposalId);
+        emit NewVoteQuorumProposal(proposalId);
         spog.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
@@ -131,7 +131,6 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-            voteGovernor.updateStartOfNextVotingPeriod();
             currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
 
             assertEq(currentVotingPeriodEpoch, i + 1);
@@ -335,5 +334,32 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             spogVoteSupplyAfterFirstPeriod + amountAddedByInflation2,
             "Vote token supply didn't inflate correctly in the second period"
         );
+    }
+
+    function test_ProposalsShouldBeAllowedAfterInactiveEpoch() public {
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingNewListToSpog("new list to spog");
+
+        // fast forward to an active voting period. Inflate vote token supply
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        voteGovernor.castVote(proposalId, yesVote);
+
+        // fast forward to end of voting period
+        vm.roll(block.number + deployScript.voteTime() + 1);
+
+        // execute proposal
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        // fast forward 5 epochs
+        vm.roll(block.number + 5 * voteGovernor.votingDelay() + 1);
+
+        // should not revert
+        proposeAddingNewListToSpog("new list to spog 2");
     }
 }

@@ -5,18 +5,20 @@ pragma solidity 0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IVault} from "src/interfaces/IVault.sol";
 
-import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
 contract Vault is IVault {
     using SafeERC20 for IERC20;
 
-    ISPOGGovernor public immutable voteGovernor;
+    ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
+    IERC20PricelessAuction public immutable auctionContract;
 
     // address => epoch => token => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
@@ -25,9 +27,10 @@ contract Vault is IVault {
     mapping(address => mapping(uint256 => uint256)) public epochTokenDeposit;
     mapping(address => mapping(uint256 => uint256)) public epochTokenTotalWithdrawn;
 
-    constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor) {
+    constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor, IERC20PricelessAuction _auctionContract) {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
+        auctionContract = _auctionContract;
     }
 
     modifier onlyAllowed() {
@@ -73,12 +76,12 @@ contract Vault is IVault {
         require(epoch < currentVotingPeriodEpoch, "Vault: epoch is not in the past");
 
         address token = address(voteGovernor.votingToken());
-        address auction = address(new ERC20PricelessAuction(token, paymentToken, duration, address(this)));
+        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
         uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
         IERC20(token).approve(auction, unclaimed);
 
-        ERC20PricelessAuction(auction).init(unclaimed);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
@@ -107,10 +110,11 @@ contract Vault is IVault {
 
         uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
 
-        // get inflation amount for current epoch plus any coins that were stuck in the governor and deposited in updateStartOfNextVotingPeriod()
+        // get inflation amount for current epoch
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][currentVotingPeriodEpoch];
 
-        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochVotingTokenSupply(currentVotingPeriodEpoch);
+        uint256 totalVotingTokenSupplyApplicable =
+            voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
 
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
 
@@ -198,6 +202,14 @@ contract Vault is IVault {
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+    }
+
+    // @notice Update vote governor after `RESET` was executed
+    // @param newVoteGovernor New vote governor
+    function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySpog {
+        voteGovernor = newVoteGovernor;
+
+        emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
     }
 
     fallback() external {

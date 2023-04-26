@@ -27,14 +27,13 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-            valueGovernor.updateStartOfNextVotingPeriod();
             currentVotingPeriodEpoch = valueGovernor.currentVotingPeriodEpoch();
 
             assertEq(currentVotingPeriodEpoch, i + 1);
         }
     }
 
-    function test_ValueTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
+    function test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() public {
         uint256 spogValueSupplyBefore = spogValue.totalSupply();
 
         uint256 vaultVoteTokenBalanceBefore = spogValue.balanceOf(address(vault));
@@ -42,38 +41,27 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        // update voting epoch
-        valueGovernor.updateStartOfNextVotingPeriod();
-
         uint256 spogValueSupplyAfterFirstPeriod = spogValue.totalSupply();
 
-        uint256 amountAddedByInflation = deployScript.valueFixedInflationAmount();
-
-        assertEq(
-            spogValueSupplyAfterFirstPeriod,
-            spogValueSupplyBefore + amountAddedByInflation,
-            "Vote token supply didn't inflate correctly"
-        );
+        assertEq(spogValueSupplyAfterFirstPeriod, spogValueSupplyBefore, "Vote token supply inflated incorrectly");
 
         // check that vault has received the vote inflationary supply
         uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogValue.balanceOf(address(vault));
         assertEq(
             vaultVoteTokenBalanceAfterFirstPeriod,
-            vaultVoteTokenBalanceBefore + amountAddedByInflation,
-            "Vault did not receive the accurate vote inflationary supply"
+            vaultVoteTokenBalanceBefore,
+            "Vault received an inaccurate vote inflationary supply"
         );
 
         // start of new epoch inflation is triggered
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        valueGovernor.updateStartOfNextVotingPeriod();
-
         uint256 spogValueSupplyAfterSecondPeriod = spogValue.totalSupply();
 
         assertEq(
             spogValueSupplyAfterSecondPeriod,
-            spogValueSupplyAfterFirstPeriod + amountAddedByInflation,
-            "Vote token supply didn't inflate correctly in the second period"
+            spogValueSupplyAfterFirstPeriod,
+            "Vote token supply inflated incorrectly in the second period"
         );
     }
 }

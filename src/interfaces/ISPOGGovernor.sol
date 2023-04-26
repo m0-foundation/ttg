@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GLP-3.0
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 interface ISPOGGovernor {
     function currentVotingPeriodEpoch() external view returns (uint256);
@@ -11,8 +12,6 @@ interface ISPOGGovernor {
     function epochProposalsCount(uint256 epoch) external view returns (uint256);
 
     function epochStartBlockNumber(uint256 epoch) external view returns (uint256);
-    
-    function epochVotingTokenSupply(uint256 epoch) external view returns (uint256);
 
     function accountEpochVoteWeight(address account, uint256 epoch) external view returns (uint256);
 
@@ -24,13 +23,15 @@ interface ISPOGGovernor {
 
     function voteTime() external view returns (uint256);
 
-    function votingToken() external view returns (address);
+    function votingToken() external view returns (ISPOGVotes);
 
     function proposalVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
 
     function updateQuorumNumerator(uint256 newQuorumNumerator) external;
 
     function updateVotingTime(uint256 newVotingTime) external;
+
+    function inflateTokenSupply() external;
 
     enum ProposalState {
         Pending,
@@ -169,6 +170,8 @@ interface ISPOGGovernor {
      * duration compared to the voting delay.
      */
     function votingPeriod() external view returns (uint256);
+
+    function quorumNumerator() external view returns (uint256);
 
     /**
      * @notice module:user-config

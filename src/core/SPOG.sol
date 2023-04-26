@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
-import {SPOGStorage, ISPOGGovernor, IERC20, ISPOG} from "src/core/SPOGStorage.sol";
-import {IList} from "src/interfaces/IList.sol";
-import {IVault} from "src/interfaces/IVault.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import {IList} from "src/interfaces/IList.sol";
+import {IVault} from "src/interfaces/IVault.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
+
+import {SPOGStorage} from "src/core/SPOGStorage.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -23,6 +30,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
+    uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
     // List of addresses that are part of the masterlist
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
@@ -132,7 +140,29 @@ contract SPOG is SPOGStorage, ERC165 {
                             GOVERNANCE INTERFACE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    // functions for the Governance proposal lifecycle including propose, execute and potentially batch vote
+    // reset current vote governance, only value governor can do it
+    // @param newVoteGovernor The address of the new vote governance
+    function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
+        // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
+
+        IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));
+        IValueToken valueToken = IValueToken(address(valueGovernor.votingToken()));
+        if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
+
+        // Update vote governance in the vault
+        IVault(vault).updateVoteGovernor(newVoteGovernor);
+
+        voteGovernor = newVoteGovernor;
+        // Important: initialize SPOG address in the new vote governor
+        voteGovernor.initSPOGAddress(address(this));
+
+        // Take snapshot of value token balances at the moment of reset
+        // Update reset snapshot id for the voting token
+        uint256 resetSnapshotId = valueToken.snapshot();
+        newVoteToken.initReset(resetSnapshotId);
+
+        emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
+    }
 
     /// @notice Create a new proposal.
     // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
@@ -174,31 +204,40 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = callData;
 
-        // For all the operations pay flat fee, except for emergency remove pay 12 * fee
-        uint256 fee = executableFuncSelector == this.emergencyRemove.selector
-            ? EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax
-            : spogData.tax;
-        _pay(fee);
+        _payFee(executableFuncSelector);
 
+        // Only $VALUE governance proposals
+        if (executableFuncSelector == this.reset.selector) {
+            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+            emit NewValueQuorumProposal(valueProposalId);
+            return valueProposalId;
+        }
+
+        // $VALUE and $VOTE governance proposals
+        // If we request to change config parameter, value governance should vote too
+        if (executableFuncSelector == this.change.selector) {
+            uint256 voteProposalId = voteGovernor.propose(targets, values, calldatas, description);
+            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+            // proposal ids should match
+            if (valueProposalId != voteProposalId) {
+                revert ValueVoteProposalIdsMistmatch(voteProposalId, valueProposalId);
+            }
+
+            emit NewDoubleQuorumProposal(voteProposalId);
+            return voteProposalId;
+        }
+
+        // Only $VOTE governance proposals
         uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
         // Register emergency proposal with vote governor
         if (executableFuncSelector == this.emergencyRemove.selector) {
             voteGovernor.registerEmergencyProposal(proposalId);
 
             emit NewEmergencyProposal(proposalId);
-        }
-        // If we request to change config parameter, value governance should vote too
-        else if (executableFuncSelector == this.change.selector) {
-            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-
-            // proposal ids should match
-            if (valueProposalId != proposalId) {
-                revert ValueVoteProposalIdsMistmatch(proposalId, valueProposalId);
-            }
-
-            emit NewDoubleQuorumProposal(proposalId);
         } else {
-            emit NewSingleQuorumProposal(proposalId);
+            emit NewVoteQuorumProposal(proposalId);
         }
 
         return proposalId;
@@ -218,8 +257,16 @@ contract SPOG is SPOGStorage, ERC165 {
         bytes32 descriptionHash
     ) external override returns (uint256) {
         bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
 
+        // $VALUE governance proposals
+        if (executableFuncSelector == this.reset.selector) {
+            uint256 valueProposalId = valueGovernor.hashProposal(targets, values, calldatas, descriptionHash);
+            valueGovernor.execute(targets, values, calldatas, descriptionHash);
+            return valueProposalId;
+        }
+
+        // $VOTE governance proposals
+        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
         // Check that both value and vote governance approved parameter change
         if (executableFuncSelector == this.change.selector) {
             if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {
@@ -234,6 +281,16 @@ contract SPOG is SPOGStorage, ERC165 {
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Inflate token supplies
+    /// @dev calls inflateTokenSupply on both governors
+    function inflateTokenSupply() external onlyGovernor {
+        if (msg.sender == address(voteGovernor)) {
+            voteGovernor.inflateTokenSupply();
+            valueGovernor.inflateTokenSupply();
+        }
+    }
+
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
@@ -275,19 +332,31 @@ contract SPOG is SPOGStorage, ERC165 {
         governedMethods[this.addNewList.selector] = true;
         governedMethods[this.change.selector] = true;
         governedMethods[this.emergencyRemove.selector] = true;
+        governedMethods[this.reset.selector] = true;
     }
 
     /// @notice pay tax from the caller to the SPOG
-    /// @param _amount The amount to be transferred
-    function _pay(uint256 _amount) private {
+    /// @param funcSelector The executable function selector
+    function _payFee(bytes4 funcSelector) private {
+        uint256 fee;
+
+        // Pay flat fee for all the operations except emergency remove and reset
+        if (funcSelector == this.emergencyRemove.selector) {
+            fee = EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax;
+        } else if (funcSelector == this.reset.selector) {
+            fee = RESET_TAX_MULTIPLIER * spogData.tax;
+        } else {
+            fee = spogData.tax;
+        }
+
         // transfer the amount from the caller to the SPOG
-        spogData.cash.safeTransferFrom(msg.sender, address(this), _amount);
+        spogData.cash.safeTransferFrom(msg.sender, address(this), fee);
         // approve amount to be sent to the vault
-        spogData.cash.approve(address(vault), _amount);
+        spogData.cash.approve(address(vault), fee);
 
         // deposit the amount to the vault
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
-        IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), _amount);
+        IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), fee);
     }
 
     function _removeFromList(address _address, IList _list) private {

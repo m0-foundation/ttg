@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 /// @title SPOGGovernorFactory
 /// @notice Factory contract for SPOGGovernor

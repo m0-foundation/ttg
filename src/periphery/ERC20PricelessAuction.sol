@@ -4,10 +4,13 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 
 /// @title ERC20PricelessAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
-contract ERC20PricelessAuction {
+contract ERC20PricelessAuction is IERC20PricelessAuction, Initializable {
     using SafeERC20 for IERC20;
 
     error AlreadyInitialized();
@@ -15,24 +18,21 @@ contract ERC20PricelessAuction {
     error AuctionNotEnded();
     error AuctionBalanceInsufficient();
 
-    address public immutable auctionToken;
-    address public immutable paymentToken;
-    address public immutable vault;
-    uint256 public immutable auctionDuration;
-    uint256 public immutable auctionEndTime;
-    uint256 public immutable floorPrice;
+    address public auctionToken;
+    address public paymentToken;
+    address public vault;
 
-    uint256 public auctionTokenAmount;
     uint256 public amountSold;
+    uint256 public auctionDuration;
+    uint256 public auctionEndTime;
+    uint256 public auctionTokenAmount;
     uint256 public ceilingPrice;
+    uint256 public floorPrice;
     uint256 public lastBuyPrice;
 
     bool initialized;
 
     uint256 CURVE_STEPS = 20;
-
-    event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
-    event AuctionWithdrawal(address indexed taker, uint256 amount);
 
     modifier onlyVault() {
         require(msg.sender == vault, "ERC20PricelessAuction: Only vault");
@@ -40,17 +40,24 @@ contract ERC20PricelessAuction {
         _;
     }
 
+    /// @dev disable constructor for implementation contract. See Vault
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice Initializes the auction contract
     /// @param _auctionToken The address of the ERC20 token being auctioned
     /// @param _paymentToken The address of the ERC20 token used as payment
     /// @param _auctionDuration The duration of the auction in seconds
     /// @param _vault The address where the payment tokens will be sent
-    constructor(
+    /// @param _auctionTokenAmount The amount of tokens to be auctioned
+    function initialize(
         address _auctionToken,
         address _paymentToken,
         uint256 _auctionDuration,
-        address _vault
-    ) {
+        address _vault,
+        uint256 _auctionTokenAmount
+    ) public initializer {
         auctionToken = _auctionToken;
         paymentToken = _paymentToken;
         auctionDuration = _auctionDuration;
@@ -58,23 +65,18 @@ contract ERC20PricelessAuction {
         ceilingPrice = IERC20(paymentToken).totalSupply();
         floorPrice = 1;
         vault = _vault;
-    }
-
-    /// @notice Initializes the auction with the token amount to be auctioned
-    /// @param _auctionTokenAmount The amount of tokens to be auctioned
-    /// @dev called after deploy and approve of the auctionToken to the auction contract
-    function init(uint256 _auctionTokenAmount) public {
-        if(initialized) revert AlreadyInitialized();
+        if (initialized) revert AlreadyInitialized();
         initialized = true;
         IERC20(auctionToken).safeTransferFrom(vault, address(this), _auctionTokenAmount);
         auctionTokenAmount = _auctionTokenAmount;
-        ceilingPrice = IERC20(paymentToken).totalSupply() / (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
+        ceilingPrice =
+            IERC20(paymentToken).totalSupply() / (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
     }
 
     /// @notice Returns the current price of the auction
     /// @return The current price per token in payment tokens
     function getCurrentPrice() public view returns (uint256) {
-        if(auctionTokenAmount - amountSold == 0) {
+        if (auctionTokenAmount - amountSold == 0) {
             return lastBuyPrice;
         }
 
@@ -95,7 +97,9 @@ contract ERC20PricelessAuction {
         uint256 i;
         for (i; i < CURVE_STEPS;) {
             price = price * percentIncomplete / 1e18;
-            unchecked { ++i;}
+            unchecked {
+                ++i;
+            }
         }
 
         return price;
@@ -111,7 +115,7 @@ contract ERC20PricelessAuction {
         uint256 currentPrice = getCurrentPrice();
         uint256 amountToPay = amountToBuy * currentPrice / 10 ** IERC20Metadata(auctionToken).decimals();
 
-        if(auctionTokenAmount - amountSold < amountToBuy) {
+        if (auctionTokenAmount - amountSold < amountToBuy) {
             revert AuctionBalanceInsufficient();
         }
 

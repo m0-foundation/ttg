@@ -7,6 +7,8 @@ import {Vault} from "src/periphery/Vault.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
+import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 
 contract MockSPOGGovernor is StdCheats {
     address public immutable spogAddress;
@@ -23,6 +25,7 @@ contract MockSPOGGovernor is StdCheats {
 }
 
 contract VaultTest is BaseTest {
+    IERC20PricelessAuction public auctionImplementation;
     Vault public vault;
 
     // events to test
@@ -30,13 +33,24 @@ contract VaultTest is BaseTest {
 
     ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
 
+    event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
+
     function setUp() public {
-        ISPOGGovernor voteGovernorAddress = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
-        ISPOGGovernor valueGovernorAddress = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
-        vault = new Vault(voteGovernorAddress, valueGovernorAddress);
+        ISPOGGovernor voteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        ISPOGGovernor valueGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        auctionImplementation = new ERC20PricelessAuction();
+        vault = new Vault(voteGovernor, valueGovernor, auctionImplementation);
 
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
+    }
+
+    function test_Revert_UpdateVoteGovernor_WhenCalledNoBySPOG() public {
+        changePrank({who: users.alice});
+
+        ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        vm.expectRevert("Vault: Only spog");
+        vault.updateVoteGovernor(newVoteGovernor);
     }
 
     function test_depositEpochRewardTokens() public {
@@ -87,5 +101,16 @@ contract VaultTest is BaseTest {
         vault.sellUnclaimedVoteTokens(epoch, address(usdc), 30 days);
 
         assertEq(voteToken.balanceOf(address(vault)), 0);
+    }
+
+    function test_UpdateVoteGovernor() public {
+        vm.startPrank(vault.voteGovernor().spogAddress());
+
+        ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        expectEmit();
+        emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
+        vault.updateVoteGovernor(newVoteGovernor);
+
+        assertEq(address(vault.voteGovernor()), address(newVoteGovernor), "Governor was not updated");
     }
 }
