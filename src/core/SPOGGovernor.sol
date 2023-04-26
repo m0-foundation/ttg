@@ -94,7 +94,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
-    function inflateVotingTokens() public {
+    function inflateTokenSupply() external onlySPOG {
         uint256 currentEpoch = currentVotingPeriodEpoch();
         if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
@@ -159,14 +159,14 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     // ********** Override functions ********** //
 
-    /// @notice override to use inflateVotingTokens
+    /// @notice override to use inflateTokenSupply
     function propose(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
     ) public virtual override onlySPOG returns (uint256) {
-        inflateVotingTokens();
+        ISPOG(spogAddress).inflateTokenSupply();
 
         // update epochProposalsCount. Proposals are voted on in the next epoch
         epochProposalsCount[currentVotingPeriodEpoch() + 1]++;
@@ -174,7 +174,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return super.propose(targets, values, calldatas, description);
     }
 
-    /// @notice override to use inflateVotingTokens and check that caller is SPOG
+    /// @notice override to use inflateTokenSupply and check that caller is SPOG
     /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
@@ -185,18 +185,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal virtual override onlySPOG {
-        inflateVotingTokens();
+        ISPOG(spogAddress).inflateTokenSupply();
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    /// @notice override to use inflateVotingTokens
+    /// @notice override to use inflateTokenSupply
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual
         override
         returns (uint256)
     {
-        inflateVotingTokens();
+        ISPOG(spogAddress).inflateTokenSupply();
 
         if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
 

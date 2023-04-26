@@ -63,4 +63,6 @@ interface ISPOG {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) external returns (uint256);
+
+    function inflateTokenSupply() external;
 }

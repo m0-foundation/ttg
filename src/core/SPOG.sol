@@ -275,6 +275,15 @@ contract SPOG is SPOGStorage, ERC165 {
         return proposalId;
     }
 
+    /// @notice Inflate token supplies
+    /// @dev calls inflateTokenSupply on both governors
+    function inflateTokenSupply() external onlyGovernor {
+        if (msg.sender == address(voteGovernor)) {
+            voteGovernor.inflateTokenSupply();
+            valueGovernor.inflateTokenSupply();
+        }
+    }
+
     // ********** Public Functions ********** //
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
