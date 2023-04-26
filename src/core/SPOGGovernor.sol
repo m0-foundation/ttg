@@ -16,11 +16,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     error AlreadyVoted(uint256 proposalId, address account);
     error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
 
+    // @note minimum voting delay in blocks
+    uint256 public constant MINIMUM_VOTING_DELAY = 1;
+
     ISPOGVotes public immutable votingToken;
+    address public spogAddress;
+
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
     uint256 private _votingPeriodChangedEpoch;
-    address public spogAddress;
+
+    // @note voting with no delay is required for certain proposals
+    bool private emergencyVotingIsOn;
 
     /// @dev Supported vote types.
     enum VoteType {
@@ -157,6 +164,14 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emergencyProposals[proposalId] = true;
     }
 
+    function turnOnEmergencyVoting() external onlySPOG {
+        emergencyVotingIsOn = true;
+    }
+
+    function turnOffEmergencyVoting() external onlySPOG {
+        emergencyVotingIsOn = false;
+    }
+
     // ********** Override functions ********** //
 
     /// @notice override to use inflateVotingTokens
@@ -243,8 +258,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        uint256 startOfNext = startOfNextVotingPeriod();
-        return startOfNext - block.number;
+        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextVotingPeriod() - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {
