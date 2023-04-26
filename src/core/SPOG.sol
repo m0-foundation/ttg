@@ -302,7 +302,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
-        IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), spogData.sellTime);
+        IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -27,8 +27,6 @@ contract SPOGDeployScript is BaseScript {
     uint256 public inflator;
     uint256 public reward;
     uint256 public voteTime;
-    uint256 public inflatorTime;
-    uint256 public sellTime;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     uint256 public valueFixedInflationAmount;
@@ -50,8 +48,6 @@ contract SPOGDeployScript is BaseScript {
         inflator = 5;
         reward = 5;
         voteTime = 10; // in blocks
-        inflatorTime = 10; // in blocks
-        sellTime = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
         tax = 5e18;
@@ -96,7 +92,7 @@ contract SPOGDeployScript is BaseScript {
 
         spogFactory = new SPOGFactory();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, tax);
 
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
@@ -117,7 +113,7 @@ contract SPOGDeployScript is BaseScript {
     function run() public broadcaster {
         triggerSetUp();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, tax);
 
         spog = spogFactory.deploy(
             initSPOGData,

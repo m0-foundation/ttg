@@ -50,7 +50,7 @@ contract SPOG_changeTax is SPOG_Base {
         vm.expectRevert("SPOG: Tax out of range");
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (uint256 taxFirstCheck,,,,,) = spog.spogData();
+        (uint256 taxFirstCheck,,,) = spog.spogData();
 
         // assert that tax has not been modified
         assertFalse(taxFirstCheck == outOfBoundsTaxValue, "Tax should not have been changed");
@@ -84,7 +84,7 @@ contract SPOG_changeTax is SPOG_Base {
 
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (uint256 taxFirstCheck,,,,,) = spog.spogData();
+        (uint256 taxFirstCheck,,,) = spog.spogData();
 
         // assert that tax was modified
         assertTrue(taxFirstCheck == newTaxValue, "Tax wasn't changed");
