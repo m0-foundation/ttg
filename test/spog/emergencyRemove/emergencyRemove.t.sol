@@ -22,9 +22,10 @@ contract SPOG_emergencyRemove is SPOG_Base {
         addressToRemove = address(0x1234);
     }
 
-    /**
-     * Helpers *******
-     */
+    /*//////////////////////////////////////////////////////////////
+                                HELPERS
+    //////////////////////////////////////////////////////////////*/
+
     function createEmergencyProposal()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)

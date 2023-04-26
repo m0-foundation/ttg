@@ -36,6 +36,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     mapping(uint256 => bool) public emergencyProposals;
     mapping(uint256 => ProposalVote) private _proposalVotes;
+    // epoch => start block number
+    mapping(uint256 => uint256) public epochStartBlockNumber;
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
@@ -67,6 +69,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
+
+        // set epoch 0 start block number
+        epochStartBlockNumber[0] = block.number;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -97,6 +102,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     function inflateTokenSupply() external onlySPOG {
         uint256 currentEpoch = currentVotingPeriodEpoch();
         if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
+            // update epochStartBlockNumber
+            epochStartBlockNumber[currentEpoch] = startOfNextVotingPeriod() - _votingPeriod;
+
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
 
             // mint tokens
@@ -135,7 +143,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return results;
     }
 
-    // ********** Setters ********** //
+    /*//////////////////////////////////////////////////////////////
+                            SETTERS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
@@ -157,7 +167,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         emergencyProposals[proposalId] = true;
     }
 
-    // ********** Override functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            OVERRIDE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice override to use inflateTokenSupply
     function propose(
@@ -251,7 +263,9 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriod;
     }
 
-    // ********** Counting module functions ********** //
+    /*//////////////////////////////////////////////////////////////
+                            COUNTING MODULE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev See {IGovernor-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase
