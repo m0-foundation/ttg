@@ -213,7 +213,8 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     {
         inflateVotingTokens();
 
-        if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active"); // no voting in epoch 0
+        // TODO: hiding error in original governor, tests are incorrectly relying on it, fix is needed!
+        if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active");
 
         _updateAccountEpochVotes();
         _updateAccountEpochVoteWeight(proposalId);
