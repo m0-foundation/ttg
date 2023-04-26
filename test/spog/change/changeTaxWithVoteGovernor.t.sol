@@ -45,7 +45,7 @@ contract SPOG_changeTax is SPOG_Base {
         // cast vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         vm.expectRevert("SPOG: Tax out of range");
         spog.execute(targets, values, calldatas, hashedDescription);
@@ -80,7 +80,7 @@ contract SPOG_changeTax is SPOG_Base {
         // cast vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         spog.execute(targets, values, calldatas, hashedDescription);
 

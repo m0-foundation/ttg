@@ -27,7 +27,7 @@ abstract contract SPOGStorage is ISPOG {
     constructor(
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor,
-        uint256 _voteTime,
+        uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount
@@ -42,14 +42,14 @@ abstract contract SPOGStorage is ISPOG {
 
         // set quorum and voting period for vote governor
         voteGovernor.updateQuorumNumerator(_voteQuorum);
-        voteGovernor.updateVotingTime(_voteTime);
+        voteGovernor.updateVotingTime(_time);
 
         // set SPOG address in value governor
         valueGovernor.initSPOGAddress(address(this));
 
         // set quorum and voting period for value governor
         valueGovernor.updateQuorumNumerator(_valueQuorum);
-        valueGovernor.updateVotingTime(_voteTime);
+        valueGovernor.updateVotingTime(_time);
     }
 
     modifier onlyVoteGovernor() {
@@ -108,7 +108,7 @@ abstract contract SPOGStorage is ISPOG {
         emit TaxChanged(_tax);
     }
 
-    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, voteTime, voteQuorum, and valueQuorum.
+    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, time, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
     function change(bytes32 what, bytes calldata value) external onlyVoteGovernor {
@@ -132,10 +132,10 @@ abstract contract SPOGStorage is ISPOG {
             spogData.inflator = abi.decode(value, (uint256));
         } else if (what == "reward") {
             spogData.reward = abi.decode(value, (uint256));
-        } else if (what == "voteTime") {
-            uint256 decodedVoteTime = abi.decode(value, (uint256));
-            voteGovernor.updateVotingTime(decodedVoteTime);
-            valueGovernor.updateVotingTime(decodedVoteTime);
+        } else if (what == "time") {
+            uint256 decodedTime = abi.decode(value, (uint256));
+            voteGovernor.updateVotingTime(decodedTime);
+            valueGovernor.updateVotingTime(decodedTime);
         } else if (what == "voteQuorum") {
             uint256 decodedVoteQuorum = abi.decode(value, (uint256));
             voteGovernor.updateQuorumNumerator(decodedVoteQuorum);

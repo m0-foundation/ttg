@@ -11,7 +11,7 @@ contract SPOG_InitialState is SPOG_Base {
         assertEq(address(cash), address(deployScript.cash()), "cash not set correctly");
         assertEq(inflator, deployScript.inflator(), "inflator not set correctly");
         assertEq(reward, deployScript.reward(), "reward not set correctly");
-        assertEq(voteGovernor.votingPeriod(), deployScript.voteTime(), "voteTime not set correctly");
+        assertEq(voteGovernor.votingPeriod(), deployScript.time(), "time not set correctly");
         assertEq(voteGovernor.quorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
         assertEq(valueGovernor.quorumNumerator(), deployScript.valueQuorum(), "valueQuorum not set correctly");
         assertEq(tax, deployScript.tax(), "tax not set correctly");

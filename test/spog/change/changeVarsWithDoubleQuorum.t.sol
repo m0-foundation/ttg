@@ -92,7 +92,7 @@ contract SPOG_change is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // another way to get custom error selector:
         vm.expectRevert(abi.encodeWithSelector(ISPOG.InvalidParameter.selector, incorrectParams));
@@ -120,7 +120,7 @@ contract SPOG_change is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // Check that execute function is reverted if value quorum is not reached
         vm.expectRevert(abi.encodeWithSelector(ISPOG.ValueGovernorDidNotApprove.selector, proposalId));
@@ -150,7 +150,7 @@ contract SPOG_change is SPOG_Base {
         voteGovernor.castVote(proposalId, noVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         assertFalse(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded);
 
@@ -182,7 +182,7 @@ contract SPOG_change is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(reward, elevenAsCalldataValue));
         // check that DoubleQuorumFinalized event was triggered
@@ -231,7 +231,7 @@ contract SPOG_change is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(cash, newCash));
         // check that DoubleQuorumFinalized event was triggered

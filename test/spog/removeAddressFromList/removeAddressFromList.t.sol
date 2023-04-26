@@ -50,7 +50,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         uint8 yesVote = 1;
         voteGovernor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
