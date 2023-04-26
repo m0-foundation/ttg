@@ -25,9 +25,10 @@ contract SPOG_change is SPOG_Base {
         super.setUp();
     }
 
-    /**
-     * Helpers *******
-     */
+    /*//////////////////////////////////////////////////////////////
+                                HELPERS
+    //////////////////////////////////////////////////////////////*/
+
     function proposeRewardChange(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)

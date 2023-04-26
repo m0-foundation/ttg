@@ -6,8 +6,7 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 
 interface IVault {
     event EpochRewardsDeposit(uint256 indexed epoch, address token, uint256 amount);
-    event VoteTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
-    event ValueTokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
+    event TokenRewardsWithdrawn(address indexed account, address token, uint256 amount);
     event VoteTokenAuction(address indexed token, uint256 indexed epoch, address auction, uint256 amount);
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
