@@ -8,10 +8,26 @@ import {IList} from "src/interfaces/IList.sol";
 import "forge-std/console.sol";
 
 contract TestContract is SPOGGoverned {
-    IList public collateralManagersList;
+    address public collateralManagersListAddress;
 
     constructor(address _spog, address _collateralManagers) SPOGGoverned(_spog) {
-        collateralManagersList = super.getListByAddress(_collateralManagers);
+        // check spog approved on deploy
+        collateralManagersListAddress = address(super.getListByAddress(_collateralManagers));
+    }
+
+    modifier onlyCollateralManagers() {
+        require(collateralManagersList().contains(msg.sender), "SPOGGoverned: only collateral managers");
+
+        _;
+    }
+
+    // check spog approved on each use
+    function collateralManagersList() public view returns (IList) {
+        return super.getListByAddress(collateralManagersListAddress);
+    }
+
+    function doAThing() public onlyCollateralManagers returns (bool) {
+        return true;
     }
 }
 
@@ -86,5 +102,12 @@ contract SPOGGovernedTest is SPOG_Base {
         TestContract testGovernedContract = new TestContract(address(spog), address(list));
 
         assertTrue(testGovernedContract.collateralManagersList().contains(alice));
+
+        vm.expectRevert();
+        testGovernedContract.doAThing();
+
+        // only collateral mgr can doAThing()
+        vm.prank(alice);
+        assertTrue(testGovernedContract.doAThing());
     }
 }
