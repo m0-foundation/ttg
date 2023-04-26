@@ -110,6 +110,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
 
     function test_EmergencyRemove_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
+        uint256 votingPeriodBeforeER = voteGovernor.votingPeriod();
         uint256 balanceBeforeProposal = deployScript.cash().balanceOf(address(vault));
         (
             uint256 proposalId,
@@ -130,11 +131,15 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // Emergency proposal is in the governor list
         assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
 
+        assertEq(voteGovernor.proposalSnapshot(proposalId), block.number + 1);
+
         // check proposal is pending
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + 2);
+
+        assertTrue(voteGovernor.votingPeriod() == votingPeriodBeforeER, "Governor voting period was messed up");
 
         // check proposal is active
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");

@@ -52,6 +52,8 @@ contract SPOG_reset is SPOG_Base {
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
+        vm.roll(deployScript.voteTime() * 2);
+
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -73,7 +75,11 @@ contract SPOG_reset is SPOG_Base {
         emit NewValueQuorumProposal(proposalId);
 
         uint256 spogProposalId = spog.propose(callData, description);
-        assertTrue(spogProposalId == proposalId, "spog proposal id does not match vote governor proposal id");
+
+        // Make sure the proposal is immediately (+1 block) votable
+        assertEq(valueGovernor.proposalSnapshot(proposalId), block.number + 1);
+
+        assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -129,8 +135,11 @@ contract SPOG_reset is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeGovernanceReset("Propose reset of vote governance", address(spogValue));
 
+        assertTrue(valueGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
+
         // fast forward to an active voting period
-        vm.roll(block.number + valueGovernor.votingDelay() + 1);
+        vm.roll(block.number + 2);
+        assertTrue(valueGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // value holders vote on proposal
         valueGovernor.castVote(proposalId, yesVote);
