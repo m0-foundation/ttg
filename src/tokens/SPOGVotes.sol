@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: GLP-3.0
+// SPDX-License-Identifier: GPL-3.0
 
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
@@ -13,11 +13,16 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;
 
+    // Errors
+    error CallerIsNotSPOG();
+
     /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
     constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        // TODO: I think we miss it, revisit later ?
+        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     /// @dev sets the spog address. Can only be called once.

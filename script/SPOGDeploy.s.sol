@@ -7,12 +7,16 @@ import {SPOG} from "src/factories/SPOGFactory.sol";
 import {SPOGFactory} from "src/factories/SPOGFactory.sol";
 import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
-import {ISPOGVotes} from "src/interfaces/ISPOGVotes.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {Vault} from "src/periphery/Vault.sol";
+import {VoteToken} from "src/tokens/VoteToken.sol";
+import {ValueToken} from "src/tokens/ValueToken.sol";
 
 contract SPOGDeployScript is BaseScript {
     SPOGFactory public spogFactory;
@@ -25,15 +29,15 @@ contract SPOGDeployScript is BaseScript {
     uint256 public voteTime;
     uint256 public inflatorTime;
     uint256 public sellTime;
-    uint256 public forkTime;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     uint256 public valueFixedInflationAmount;
     uint256 public tax;
     SPOGGovernor public voteGovernor;
     SPOGGovernor public valueGovernor;
-    ISPOGVotes public vote;
-    ISPOGVotes public value;
+    ERC20PricelessAuction public auctionImplementation;
+    VoteToken public vote;
+    ValueToken public value;
     Vault public vault;
 
     uint256 public spogCreationSalt = createSalt("Simple Participatory Onchain Governance");
@@ -48,13 +52,12 @@ contract SPOGDeployScript is BaseScript {
         voteTime = 10; // in blocks
         inflatorTime = 10; // in blocks
         sellTime = 10; // in blocks
-        forkTime = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
         tax = 5;
 
-        vote = new SPOGVotes("SPOGVote", "vote");
-        value = new SPOGVotes("SPOGValue", "value");
+        value = new ValueToken("SPOGValue", "value");
+        vote = new VoteToken("SPOGVote", "vote", address(value));
 
         valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
 
@@ -66,12 +69,14 @@ contract SPOGDeployScript is BaseScript {
         address voteGovernorAddress = governorFactory.predictSPOGGovernorAddress(voteGovernorBytecode, voteGovernorSalt);
 
         // predict value governor address
-        bytes memory valueGovernorBytecode = governorFactory.getBytecode(value, valueQuorum, forkTime, "ValueGovernor");
+        bytes memory valueGovernorBytecode = governorFactory.getBytecode(value, valueQuorum, voteTime, "ValueGovernor");
         uint256 valueGovernorSalt = createSalt("ValueGovernor");
         address valueGovernorAddress =
             governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
 
-        vault = new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress));
+        auctionImplementation = new ERC20PricelessAuction();
+        vault =
+        new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress), IERC20PricelessAuction(auctionImplementation));
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
@@ -91,8 +96,7 @@ contract SPOGDeployScript is BaseScript {
 
         spogFactory = new SPOGFactory();
 
-        bytes memory initSPOGData =
-            abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, forkTime, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
 
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
@@ -113,8 +117,7 @@ contract SPOGDeployScript is BaseScript {
     function run() public broadcaster {
         triggerSetUp();
 
-        bytes memory initSPOGData =
-            abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, forkTime, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
 
         spog = spogFactory.deploy(
             initSPOGData,
@@ -138,11 +141,7 @@ contract SPOGDeployScript is BaseScript {
         console.log("Vault address: ", address(vault));
     }
 
-    /**
-     * Private Function *******
-     */
-
-    function createSalt(string memory saltValue) private view returns (uint256) {
+    function createSalt(string memory saltValue) public view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(saltValue, address(this), block.timestamp, block.number)));
     }
 }

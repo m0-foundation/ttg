@@ -5,24 +5,15 @@ import "test/shared/SPOG_Base.t.sol";
 
 contract SPOG_InitialState is SPOG_Base {
     function test_SPOGHasSetInitialValuesCorrectly() public {
-        (
-            uint256 tax,
-            uint256 inflatorTime,
-            uint256 sellTime,
-            uint256 forkTime,
-            uint256 inflator,
-            uint256 reward,
-            IERC20 cash
-        ) = spog.spogData();
+        (uint256 tax, uint256 inflatorTime, uint256 sellTime, uint256 inflator, uint256 reward, IERC20 cash) =
+            spog.spogData();
 
         assertEq(address(cash), address(deployScript.cash()), "cash not set correctly");
         assertEq(inflator, deployScript.inflator(), "inflator not set correctly");
         assertEq(reward, deployScript.reward(), "reward not set correctly");
         assertEq(voteGovernor.votingPeriod(), deployScript.voteTime(), "voteTime not set correctly");
-        assertEq(valueGovernor.votingPeriod(), deployScript.forkTime(), "forkTime not set correctly");
         assertEq(inflatorTime, deployScript.inflatorTime(), "inflatorTime not set correctly");
         assertEq(sellTime, deployScript.sellTime(), "sellTime not set correctly");
-        assertEq(forkTime, deployScript.forkTime(), "forkTime not set correctly");
         assertEq(voteGovernor.quorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
         assertEq(valueGovernor.quorumNumerator(), deployScript.valueQuorum(), "valueQuorum not set correctly");
         assertEq(tax, deployScript.tax(), "tax not set correctly");

@@ -46,11 +46,11 @@ contract ValueSPOGGovernorTest is SPOG_Base {
     }
 
     // calculate value token inflation rewards for voter
-    function calculateValueTokenInflationRewardsForVoter(address voter, uint256 proposalId, uint256 amountToBeSharedOnProRataBasis)
-        private
-        view
-        returns (uint256)
-    {
+    function calculateValueTokenInflationRewardsForVoter(
+        address voter,
+        uint256 proposalId,
+        uint256 amountToBeSharedOnProRataBasis
+    ) private view returns (uint256) {
         uint256 relevantVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
 
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
@@ -84,14 +84,13 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-            valueGovernor.updateStartOfNextVotingPeriod();
             currentVotingPeriodEpoch = valueGovernor.currentVotingPeriodEpoch();
 
             assertEq(currentVotingPeriodEpoch, i + 1);
         }
     }
 
-    function test_ValueTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
+    function test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() public {
         uint256 spogValueSupplyBefore = spogValue.totalSupply();
 
         uint256 vaultVoteTokenBalanceBefore = spogValue.balanceOf(address(vault));
@@ -99,42 +98,31 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        // update voting epoch
-        valueGovernor.updateStartOfNextVotingPeriod();
-
         uint256 spogValueSupplyAfterFirstPeriod = spogValue.totalSupply();
 
-        uint256 amountAddedByInflation = deployScript.valueFixedInflationAmount();
-
-        assertEq(
-            spogValueSupplyAfterFirstPeriod,
-            spogValueSupplyBefore + amountAddedByInflation,
-            "Vote token supply didn't inflate correctly"
-        );
+        assertEq(spogValueSupplyAfterFirstPeriod, spogValueSupplyBefore, "Vote token supply inflated incorrectly");
 
         // check that vault has received the vote inflationary supply
         uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogValue.balanceOf(address(vault));
         assertEq(
             vaultVoteTokenBalanceAfterFirstPeriod,
-            vaultVoteTokenBalanceBefore + amountAddedByInflation,
-            "Vault did not receive the accurate vote inflationary supply"
+            vaultVoteTokenBalanceBefore,
+            "Vault received an inaccurate vote inflationary supply"
         );
 
         // start of new epoch inflation is triggered
         vm.roll(block.number + deployScript.voteTime() + 1);
 
-        valueGovernor.updateStartOfNextVotingPeriod();
-
         uint256 spogValueSupplyAfterSecondPeriod = spogValue.totalSupply();
 
         assertEq(
             spogValueSupplyAfterSecondPeriod,
-            spogValueSupplyAfterFirstPeriod + amountAddedByInflation,
-            "Vote token supply didn't inflate correctly in the second period"
+            spogValueSupplyAfterFirstPeriod,
+            "Vote token supply inflated incorrectly in the second period"
         );
     }
 
-    function test_UsersCanClaimValueTokenInflationAfterVotingOnInAllProposals() public {
+    function test_UsersCanClaimValueTokenInflationAfterVotingOnAllProposals() public {
         // set up proposals
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
@@ -161,22 +149,13 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
         // balance of spogValue for vault should be 0
         uint256 spogValueBalanceForVaultForEpochZero = spogValue.balanceOf(address(vault));
-        assertEq(spogValueBalanceForVaultForEpochZero, 0, "vault should have 0 spogVote balance");
+        assertEq(spogValueBalanceForVaultForEpochZero, 0, "vault should have 0 spogValue balance");
 
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
 
         vm.prank(address(valueGovernor));
         uint256 epochInflation = spog.tokenInflationCalculation();
-
-        uint256 spogValueBalanceForVaultForEpochOne = spogValue.balanceOf(address(vault));
-        assertGt(
-            spogValueBalanceForVaultForEpochOne,
-            spogValueBalanceForVaultForEpochZero,
-            "vault should have more spogVote balance"
-        );
 
         // alice votes on proposal 1, 2 and 3
         vm.startPrank(alice);
@@ -184,6 +163,13 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         voteGovernor.castVote(proposalId2, yesVote);
         voteGovernor.castVote(proposalId3, noVote);
         vm.stopPrank();
+
+        uint256 spogValueBalanceForVaultForEpochOne = spogValue.balanceOf(address(vault));
+        assertGt(
+            spogValueBalanceForVaultForEpochOne,
+            spogValueBalanceForVaultForEpochZero,
+            "vault should have more spogValue balance"
+        );
 
         // bob votes on proposal 1, 2 and 3
         vm.startPrank(bob);
@@ -199,8 +185,6 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
         // start epoch 2
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-        voteGovernor.updateStartOfNextVotingPeriod();
-        valueGovernor.updateStartOfNextVotingPeriod();
 
         uint256 aliceValueBalanceBefore = spogValue.balanceOf(alice);
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);
@@ -262,11 +246,18 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         // carol remains with the same balance
         assertEq(spogValue.balanceOf(carol), carolValueBalanceBefore, "Carol should have same spogValue balance");
 
-        // vault should have received the remaining inflationary rewards from epoch 1
-        assertGt(
+        // vault should have zero remaining inflationary rewards from epoch 1
+        assertEq(
             spogValue.balanceOf(address(vault)),
             spogValueBalanceForVaultForEpochZero,
-            "vault should have received the remaining inflationary rewards"
+            "vault should not have any remaining tokens"
+        );
+
+        // alice and bobs combined balance should be the entire reward
+        assertEq(
+            spogValue.balanceOf(alice) + spogValue.balanceOf(bob),
+            spogValueBalanceForVaultForEpochOne,
+            "rewards were not distrubuted evenly"
         );
     }
 }
