@@ -7,7 +7,7 @@ import {List} from "src/periphery/List.sol";
 import {IList} from "src/interfaces/IList.sol";
 import "forge-std/console.sol";
 
-contract TestContract is SPOGGoverned {
+contract MockGovernedContract is SPOGGoverned {
     address public collateralManagersListAddress;
 
     constructor(address _spog, address _collateralManagers) SPOGGoverned(_spog) {
@@ -99,7 +99,7 @@ contract SPOGGovernedTest is SPOG_Base {
         // execute vote
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        TestContract testGovernedContract = new TestContract(address(spog), address(list));
+        MockGovernedContract testGovernedContract = new MockGovernedContract(address(spog), address(list));
 
         assertTrue(testGovernedContract.collateralManagersList().contains(alice));
 
