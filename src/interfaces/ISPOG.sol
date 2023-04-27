@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 
 import {IList} from "src/interfaces/IList.sol";
 
@@ -65,4 +65,7 @@ interface ISPOG {
     ) external returns (uint256);
 
     function inflateTokenSupply() external;
+
+    // List accessor functions
+    function isListInMasterList(address list) external view returns (bool);
 }
