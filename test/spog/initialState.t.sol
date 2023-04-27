@@ -120,4 +120,9 @@ contract SPOG_InitialState is SPOG_Base {
         vm.expectRevert("SPOG: Vault address cannot be 0");
         new SPOG(initSPOGData, vault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, ISPOGGovernor(address(_voteGovernor)), ISPOGGovernor(address(_valueGovernor)));
     }
+
+    function test_tokenInflationCalculation_IsZeroByDefault() public {
+        uint256 epochInflation = spog.tokenInflationCalculation();
+        assertTrue(epochInflation == 0, "tokenInflationCalculation should be zero by default");
+    }
 }

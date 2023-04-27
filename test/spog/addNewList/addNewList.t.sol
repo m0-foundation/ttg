@@ -10,6 +10,19 @@ contract SPOG_AddNewList is SPOG_Base {
         spog.addNewList(IList(address(list)));
     }
 
+    function test_Revert_WhenListAdminIsNotSPOG() external {
+        // set list admin to different spog
+        SPOG spog2 = deployScript.createSpog();
+        vm.prank(address(spog));
+        list.changeAdmin(address(spog2));
+
+        bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
+
+        vm.expectRevert(expectedError);
+        vm.prank(address(voteGovernor));
+        spog.addNewList(IList(address(list)));
+    }
+
     function test_SPOGProposalToAddNewList() public {
         // create proposal
         address[] memory targets = new address[](1);

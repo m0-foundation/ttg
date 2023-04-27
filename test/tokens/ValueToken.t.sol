@@ -44,4 +44,32 @@ contract ValueTokenTest is SPOG_Base {
         uint256 aliceSnapshotBalance = ERC20Snapshot(valueToken).balanceOfAt(address(alice), snapshotId);
         assertEq(aliceSnapshotBalance, aliceStartBalance, "Alice snapshot balance is incorrect");
     }
+
+    function test_MintAndBurn() public {
+        ValueToken valToken = new ValueToken("SPOGVotes", "SPOGVotes");
+
+        address user = createUser("user");
+
+        // test mint
+        valToken.mint(user, 100);
+
+        assertEq(valToken.balanceOf(user), 100);
+
+        // test burn
+        vm.prank(user);
+        valToken.burn(50);
+
+        assertEq(valToken.balanceOf(user), 50);
+
+        // test burnFrom
+        address user2 = createUser("user2");
+
+        vm.prank(user);
+        valToken.approve(user2, 25);
+
+        vm.prank(user2);
+        valToken.burnFrom(user, 25);
+
+        assertEq(valToken.balanceOf(user), 25);
+    }
 }
