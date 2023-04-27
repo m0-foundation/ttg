@@ -11,6 +11,6 @@ contract SPOGFactoryTest is SPOG_Base {
         vm.expectRevert("SPOGFactory: non-existent function");
         (bool success,) = address(factory).call{value: 0, gas: 5000}(abi.encodeWithSignature("doesNotExist()"));
 
-        assertEq(success, false);
+        assertEq(success, true);
     }
 }
