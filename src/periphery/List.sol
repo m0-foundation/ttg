@@ -18,6 +18,9 @@ contract List is ERC165CheckerSPOG {
     event AddressRemoved(address indexed _address);
     event AdminChanged(address indexed _newAdmin);
 
+    error AddressIsAlreadyInList();
+    error AddressIsNotInList();
+
     // constructor sets the admin address
     constructor(string memory name_) {
         _name = name_;
@@ -40,6 +43,11 @@ contract List is ERC165CheckerSPOG {
     function add(address _address) external {
         if (msg.sender != _admin) revert NotAdmin();
 
+        // require that the address is not already on the list
+        if (this.contains(_address)) {
+            revert AddressIsAlreadyInList();
+        }
+
         // add the address to the list
         list[_address] = true;
         emit AddressAdded(_address);
@@ -49,6 +57,11 @@ contract List is ERC165CheckerSPOG {
     /// @param _address The address to remove
     function remove(address _address) external {
         if (msg.sender != _admin) revert NotAdmin();
+
+        // require that the address is on the list
+        if (!this.contains(_address)) {
+            revert AddressIsNotInList();
+        }
 
         // remove the address from the list
         list[_address] = false;

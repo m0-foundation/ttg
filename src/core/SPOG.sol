@@ -115,11 +115,6 @@ contract SPOG is SPOGStorage, ERC165 {
             revert ListIsNotInMasterList();
         }
 
-        // require that the address is not already on the list
-        if (_list.contains(_address)) {
-            revert AddressIsAlreadyInList();
-        }
-
         // append the address to the list
         _list.add(_address);
         emit AddressAppendedToList(address(_list), _address);
@@ -380,11 +375,6 @@ contract SPOG is SPOGStorage, ERC165 {
         // require that the list is on the master list
         if (!masterlist.contains(address(_list))) {
             revert ListIsNotInMasterList();
-        }
-
-        // require that the address is on the list
-        if (!_list.contains(_address)) {
-            revert AddressIsNotInList();
         }
 
         // remove the address from the list

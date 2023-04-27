@@ -135,6 +135,26 @@ contract SPOGDeployScript is BaseScript {
         console.log("Vault address: ", address(vault));
     }
 
+    function createSpog() public broadcaster returns (SPOG) {
+        triggerSetUp();
+
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
+
+        SPOG newSpog = spogFactory.deploy(
+            initSPOGData,
+            address(vault),
+            time,
+            voteQuorum,
+            valueQuorum,
+            valueFixedInflationAmount,
+            ISPOGGovernor(address(voteGovernor)),
+            ISPOGGovernor(address(valueGovernor)),
+            spogCreationSalt
+        );
+
+        return newSpog;
+    }
+
     function createSalt(string memory saltValue) public view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(saltValue, address(this), block.timestamp, block.number)));
     }

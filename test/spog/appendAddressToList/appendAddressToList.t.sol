@@ -20,6 +20,16 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         spog.append(addressToAdd, IList(listToAddAddressTo));
     }
 
+    function test_Revert_WhenListNotInMasterList() external {
+        listToAddAddressTo = address(new List("New List"));
+
+        bytes memory expectedError = abi.encodeWithSignature("ListIsNotInMasterList()");
+
+        vm.expectRevert(expectedError);
+        vm.prank(address(voteGovernor));
+        spog.append(addressToAdd, IList(listToAddAddressTo));
+    }
+
     function test_SPOGProposalToAppedToAList() public {
         // create proposal to append address to list
         address[] memory targets = new address[](1);

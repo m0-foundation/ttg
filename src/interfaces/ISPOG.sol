@@ -23,8 +23,6 @@ interface ISPOG {
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
     error ListIsAlreadyInMasterList();
-    error AddressIsAlreadyInList();
-    error AddressIsNotInList();
     error InvalidProposal();
     error NotGovernedMethod(bytes4 funcSelector);
     error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
