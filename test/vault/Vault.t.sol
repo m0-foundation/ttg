@@ -46,11 +46,13 @@ contract VaultTest is BaseTest {
     }
 
     function test_Revert_UpdateVoteGovernor_WhenCalledNoBySPOG() public {
-        changePrank({who: users.alice});
+        vm.startPrank(users.alice);
 
         ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
         vm.expectRevert("Vault: Only spog");
         vault.updateVoteGovernor(newVoteGovernor);
+
+        vm.stopPrank();
     }
 
     function test_depositEpochRewardTokens() public {
