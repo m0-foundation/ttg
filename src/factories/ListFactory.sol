@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.17;
 
+import {IList} from "src/interfaces/IList.sol";
 import {List} from "src/periphery/List.sol";
 
 /// @title ListFactory
@@ -12,9 +13,9 @@ contract ListFactory {
     /// @dev creates a list with the given name, adds the addresses to it, and sets admin
     function deploy(address _spog, string memory _name, address[] memory addresses, uint256 _salt)
         public
-        returns (List)
+        returns (IList)
     {
-        List list = new List{salt: bytes32(_salt)}(_name);
+        IList list = IList(address(new List{salt: bytes32(_salt)}(_name)));
 
         uint256 i;
         for (i; i < addresses.length;) {
