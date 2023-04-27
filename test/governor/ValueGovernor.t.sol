@@ -64,4 +64,15 @@ contract ValueSPOGGovernorTest is SPOG_Base {
             "Vote token supply inflated incorrectly in the second period"
         );
     }
+
+    function test_fallback() public {
+        vm.expectRevert("SPOGGovernor: non-existent function");
+        (bool success,) = address(valueGovernor).call{value: 0, gas: 5000}(abi.encodeWithSignature("doesNotExist()"));
+
+        assertEq(success, true);
+    }
+
+    function test_COUNTING_MODE() public {
+        assertEq(valueGovernor.COUNTING_MODE(), "support=alpha&quorum=alpha");
+    }
 }

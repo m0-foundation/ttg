@@ -134,4 +134,13 @@ contract ListTest is BaseTest {
         vm.expectRevert(NotAdmin.selector);
         list.remove(users.alice);
     }
+
+    function test_Revert_addWhenAlreadyInList() public {
+        list.add(users.alice);
+
+        bytes memory expectedError = abi.encodeWithSignature("AddressIsAlreadyInList()");
+
+        vm.expectRevert(expectedError);
+        list.add(users.alice);
+    }
 }
