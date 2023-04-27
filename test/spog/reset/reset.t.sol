@@ -39,10 +39,10 @@ contract SPOG_reset is SPOG_Base {
         newVoteToken.delegate(address(this));
 
         uint256 voteGovernorSalt = deployScript.createSalt("new VoteGovernor");
-        uint256 voteTime = 15; // in blocks
+        uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
         SPOGGovernor newVoteGovernor =
-            governorFactory.deploy(newVoteToken, voteQuorum, voteTime, "new VoteGovernor", voteGovernorSalt);
+            governorFactory.deploy(newVoteToken, voteQuorum, time, "new VoteGovernor", voteGovernorSalt);
 
         IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(newVoteGovernor));
         return address(newVoteGovernor);
@@ -52,7 +52,7 @@ contract SPOG_reset is SPOG_Base {
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
-        vm.roll(deployScript.voteTime() * 2);
+        vm.roll(deployScript.time() * 2);
 
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -145,7 +145,7 @@ contract SPOG_reset is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         address voteGovernorBeforeFork = address(spog.voteGovernor());
 

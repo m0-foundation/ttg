@@ -54,7 +54,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         );
 
         // start of new epoch inflation is triggered
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         uint256 spogValueSupplyAfterSecondPeriod = spogValue.totalSupply();
 

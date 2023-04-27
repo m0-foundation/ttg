@@ -96,7 +96,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         vm.expectRevert("Governor: proposal not successful");
         spog.execute(targets, values, calldatas, hashedDescription);
@@ -179,7 +179,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         spog.execute(targets, values, calldatas, hashedDescription);
 

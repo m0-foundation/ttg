@@ -25,10 +25,7 @@ contract SPOGDeployScript is BaseScript {
     ERC20Mock public cash;
     uint256[2] public taxRange;
     uint256 public inflator;
-    uint256 public reward;
-    uint256 public voteTime;
-    uint256 public inflatorTime;
-    uint256 public sellTime;
+    uint256 public time;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     uint256 public valueFixedInflationAmount;
@@ -46,12 +43,9 @@ contract SPOGDeployScript is BaseScript {
         // for the actual deployment, we will use an ERC20 token for cash
         cash = new ERC20Mock("CashToken", "cash", msg.sender, 100e18); // mint 10 tokens to msg.sender
 
-        taxRange = [uint256(0), uint256(5)];
+        taxRange = [uint256(0), 6e18];
         inflator = 5;
-        reward = 5;
-        voteTime = 10; // in blocks
-        inflatorTime = 10; // in blocks
-        sellTime = 10; // in blocks
+        time = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
         tax = 5e18;
@@ -64,12 +58,12 @@ contract SPOGDeployScript is BaseScript {
         governorFactory = new SPOGGovernorFactory();
 
         // predict vote governor address
-        bytes memory voteGovernorBytecode = governorFactory.getBytecode(vote, voteQuorum, voteTime, "VoteGovernor");
+        bytes memory voteGovernorBytecode = governorFactory.getBytecode(vote, voteQuorum, time, "VoteGovernor");
         uint256 voteGovernorSalt = createSalt("VoteGovernor");
         address voteGovernorAddress = governorFactory.predictSPOGGovernorAddress(voteGovernorBytecode, voteGovernorSalt);
 
         // predict value governor address
-        bytes memory valueGovernorBytecode = governorFactory.getBytecode(value, valueQuorum, voteTime, "ValueGovernor");
+        bytes memory valueGovernorBytecode = governorFactory.getBytecode(value, valueQuorum, time, "ValueGovernor");
         uint256 valueGovernorSalt = createSalt("ValueGovernor");
         address valueGovernorAddress =
             governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
@@ -79,8 +73,8 @@ contract SPOGDeployScript is BaseScript {
         new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress), IERC20PricelessAuction(auctionImplementation));
 
         // deploy vote and value governors from factory
-        voteGovernor = governorFactory.deploy(vote, voteQuorum, voteTime, "VoteGovernor", voteGovernorSalt);
-        valueGovernor = governorFactory.deploy(value, valueQuorum, voteTime, "ValueGovernor", valueGovernorSalt);
+        voteGovernor = governorFactory.deploy(vote, voteQuorum, time, "VoteGovernor", voteGovernorSalt);
+        valueGovernor = governorFactory.deploy(value, valueQuorum, time, "ValueGovernor", valueGovernorSalt);
 
         // sanity check
         assert(address(voteGovernor) == voteGovernorAddress); // SPOG vote governor address mismatch
@@ -96,13 +90,13 @@ contract SPOGDeployScript is BaseScript {
 
         spogFactory = new SPOGFactory();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
             initSPOGData,
             address(vault),
-            voteTime,
+            time,
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
@@ -117,12 +111,12 @@ contract SPOGDeployScript is BaseScript {
     function run() public broadcaster {
         triggerSetUp();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, inflatorTime, sellTime, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
         spog = spogFactory.deploy(
             initSPOGData,
             address(vault),
-            voteTime,
+            time,
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,

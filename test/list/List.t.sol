@@ -22,6 +22,7 @@ contract ListTest is BaseTest {
     event AdminChanged(address indexed _newAdmin);
 
     function setUp() public {
+        vm.startPrank(msg.sender);
         createUsers();
         list = new List("SPOG Collateral Managers List");
     }

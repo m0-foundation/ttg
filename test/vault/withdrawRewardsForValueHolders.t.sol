@@ -40,7 +40,7 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
 
         uint256 vaultBalanceOfCash = cash.balanceOf(address(vault));
         // get spog tax from spog data
-        (uint256 tax,,,,,) = spog.spogData();
+        (uint256 tax,,) = spog.spogData();
 
         uint256 epochCashRewards = tax * numberOfProposalsPerEpoch * numberOfEpochs;
         assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");

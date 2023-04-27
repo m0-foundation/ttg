@@ -21,8 +21,6 @@ interface ISPOGGovernor {
 
     function initSPOGAddress(address) external;
 
-    function voteTime() external view returns (uint256);
-
     function votingToken() external view returns (ISPOGVotes);
 
     function proposalVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
@@ -32,7 +30,7 @@ interface ISPOGGovernor {
     function updateVotingTime(uint256 newVotingTime) external;
 
     function inflateTokenSupply() external;
-    
+
     function turnOnEmergencyVoting() external;
 
     function turnOffEmergencyVoting() external;
