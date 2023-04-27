@@ -25,7 +25,6 @@ contract SPOGDeployScript is BaseScript {
     ERC20Mock public cash;
     uint256[2] public taxRange;
     uint256 public inflator;
-    uint256 public reward;
     uint256 public time;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
@@ -44,9 +43,8 @@ contract SPOGDeployScript is BaseScript {
         // for the actual deployment, we will use an ERC20 token for cash
         cash = new ERC20Mock("CashToken", "cash", msg.sender, 100e18); // mint 10 tokens to msg.sender
 
-        taxRange = [uint256(0), uint256(5)];
+        taxRange = [uint256(0), 6e18];
         inflator = 5;
-        reward = 5;
         time = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
@@ -92,7 +90,7 @@ contract SPOGDeployScript is BaseScript {
 
         spogFactory = new SPOGFactory();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
@@ -113,7 +111,7 @@ contract SPOGDeployScript is BaseScript {
     function run() public broadcaster {
         triggerSetUp();
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, reward, tax);
+        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
         spog = spogFactory.deploy(
             initSPOGData,

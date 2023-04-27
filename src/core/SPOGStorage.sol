@@ -10,7 +10,6 @@ abstract contract SPOGStorage is ISPOG {
     struct SPOGData {
         uint256 tax;
         uint256 inflator;
-        uint256 reward;
         uint256[2] taxRange;
         IERC20 cash;
     }
@@ -22,9 +21,8 @@ abstract contract SPOGStorage is ISPOG {
     ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 
-    // TODO: variable packing for SPOGData: https://dev.to/javier123454321/solidity-gas-optimizations-pt-3-packing-structs-23f4
-
     constructor(
+        bytes memory _initSPOGData,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor,
         uint256 _time,
@@ -32,6 +30,18 @@ abstract contract SPOGStorage is ISPOG {
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount
     ) {
+        initSPOGData(_initSPOGData);
+
+        require(_voteGovernor != _valueGovernor, "SPOGStorage: vote and value governor cannot be the same");
+        require(
+            _voteGovernor != ISPOGGovernor(address(0)) && _valueGovernor != ISPOGGovernor(address(0)),
+            "SPOGStorage: zero address"
+        );
+        require(
+            _time > 0 && _voteQuorum > 0 && _valueQuorum > 0 && _valueFixedInflationAmount > 0,
+            "SPOGStorage: zero values"
+        );
+
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
 
@@ -77,21 +87,13 @@ abstract contract SPOGStorage is ISPOG {
         // _inflator The percentage supply increase in $VOTE for each voting epoch
         // _reward The number of $VALUE to be distributed in each voting epoch
         // _tax The cost (in `cash`) to call various functions
-        (
-            address _cash,
-            uint256[2] memory _taxRange,
-            uint256 _inflator,
-            uint256 _reward,
-            uint256 _tax
-        ) = abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256, uint256));
+        (address _cash, uint256[2] memory _taxRange, uint256 _inflator, uint256 _tax) =
+            abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256));
 
-        spogData = SPOGData({
-            cash: IERC20(_cash),
-            taxRange: _taxRange,
-            inflator: _inflator,
-            reward: _reward,
-            tax: _tax
-        });
+        require(_tax >= _taxRange[0] && _tax <= _taxRange[1], "SPOGStorage: init tax is out of range");
+        require(_cash != address(0) && _inflator > 0, "SPOGStorage: init cash and inflator cannot be zero");
+
+        spogData = SPOGData({cash: IERC20(_cash), taxRange: _taxRange, inflator: _inflator, tax: _tax});
     }
 
     /// @dev Getter for taxRange. It returns the minimum and maximum value of `tax`
@@ -108,7 +110,7 @@ abstract contract SPOGStorage is ISPOG {
         emit TaxChanged(_tax);
     }
 
-    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, reward, time, voteQuorum, and valueQuorum.
+    /// @dev file double quorum function to change the following values: cash, taxRange, inflator, time, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
     function change(bytes32 what, bytes calldata value) external onlyVoteGovernor {
@@ -130,8 +132,6 @@ abstract contract SPOGStorage is ISPOG {
             spogData.taxRange = abi.decode(value, (uint256[2]));
         } else if (what == "inflator") {
             spogData.inflator = abi.decode(value, (uint256));
-        } else if (what == "reward") {
-            spogData.reward = abi.decode(value, (uint256));
         } else if (what == "time") {
             uint256 decodedTime = abi.decode(value, (uint256));
             voteGovernor.updateVotingTime(decodedTime);
