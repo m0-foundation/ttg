@@ -23,7 +23,7 @@ contract DataStore is Ownable {
     /// Variables ///
 
     // variable name => variable value
-    mapping(string => TypedValue) public variables;
+    mapping(bytes32 => TypedValue) public variables;
 
     /// Depth 1 Maps ///
 
@@ -33,8 +33,8 @@ contract DataStore is Ownable {
     }
 
     // map name => (key => value)
-    mapping(string => TypedKVPair) public depth1MapsTypes;
-    mapping(string => mapping(bytes => bytes)) public depth1MapsValues;
+    mapping(bytes32 => TypedKVPair) public depth1MapsTypes;
+    mapping(bytes32 => mapping(bytes => bytes)) public depth1MapsValues;
 
     /// Depth 2 Maps ///
 
@@ -45,8 +45,8 @@ contract DataStore is Ownable {
     }
 
     // map name => (key => (key => value))
-    mapping(string => TypedKKVTuple) public depth2MapsTypes;
-    mapping(string => mapping(bytes => mapping(bytes => bytes))) public depth2MapsValues;
+    mapping(bytes32 => TypedKKVTuple) public depth2MapsTypes;
+    mapping(bytes32 => mapping(bytes => mapping(bytes => bytes))) public depth2MapsValues;
 
     constructor() Ownable() {}
 
@@ -62,55 +62,55 @@ contract DataStore is Ownable {
 
     /// individual variables
 
-    function setAddressVariable(string memory _name, address _address) public onlyOwnerOrWriter {
+    function setAddressVariable(bytes32 _name, address _address) public onlyOwnerOrWriter {
         variables[_name] = _address.toTypedValue();
     }
 
-    function getAddressVariable(string memory _name) public view returns (address) {
+    function getAddressVariable(bytes32 _name) public view returns (address) {
         if (variables[_name].valueType == Type.NIL) {
             return address(0);
         }
         return variables[_name].unwrapAsAddress();
     }
 
-    function setBoolVariable(string calldata _name, bool _bool) public onlyOwnerOrWriter {
+    function setBoolVariable(bytes32 _name, bool _bool) public onlyOwnerOrWriter {
         variables[_name] = _bool.toTypedValue();
     }
 
-    function getBoolVariable(string calldata _name) public view returns (bool) {
+    function getBoolVariable(bytes32 _name) public view returns (bool) {
         if (variables[_name].valueType == Type.NIL) {
             return false;
         }
         return variables[_name].unwrapAsBool();
     }
 
-    function setBytesVariable(string memory _name, bytes memory _bytes) public onlyOwnerOrWriter {
+    function setBytesVariable(bytes32 _name, bytes memory _bytes) public onlyOwnerOrWriter {
         variables[_name] = _bytes.toTypedValue();
     }
 
-    function getBytesVariable(string memory _name) public view returns (bytes memory) {
+    function getBytesVariable(bytes32 _name) public view returns (bytes memory) {
         if (variables[_name].valueType == Type.NIL) {
             return bytes("");
         }
         return variables[_name].unwrapAsBytes();
     }
 
-    function setStringVariable(string calldata _name, string calldata _string) public onlyOwnerOrWriter {
+    function setStringVariable(bytes32 _name, string calldata _string) public onlyOwnerOrWriter {
         variables[_name] = _string.toTypedValue();
     }
 
-    function getStringVariable(string calldata _name) public view returns (string memory) {
+    function getStringVariable(bytes32 _name) public view returns (string memory) {
         if (variables[_name].valueType == Type.NIL) {
             return "";
         }
         return variables[_name].unwrapAsString();
     }
 
-    function setUint256Variable(string calldata _name, uint256 _uint256) public onlyOwnerOrWriter {
+    function setUint256Variable(bytes32 _name, uint256 _uint256) public onlyOwnerOrWriter {
         variables[_name] = _uint256.toTypedValue();
     }
 
-    function getUint256Variable(string calldata _name) public view returns (uint256) {
+    function getUint256Variable(bytes32 _name) public view returns (uint256) {
         if (variables[_name].valueType == Type.NIL) {
             return 0;
         }
@@ -119,7 +119,7 @@ contract DataStore is Ownable {
 
     /// depth 1 maps
 
-    function createMap(string calldata _mapName, Type _key, Type _value) public onlyOwnerOrWriter {
+    function createMap(bytes32 _mapName, Type _key, Type _value) public onlyOwnerOrWriter {
         if (_key == Type.NIL) {
             revert KeyIsNil();
         }
@@ -132,11 +132,11 @@ contract DataStore is Ownable {
         depth1MapsTypes[_mapName] = TypedKVPair({key: _key, value: _value});
     }
 
-    function mapExists(string calldata _mapName) public view returns (bool) {
+    function mapExists(bytes32 _mapName) public view returns (bool) {
         return depth1MapsTypes[_mapName].key != Type.NIL;
     }
 
-    function setKeyValuePair(string calldata _mapName, TypedValue calldata _key, TypedValue calldata _value)
+    function setKeyValuePair(bytes32 _mapName, TypedValue calldata _key, TypedValue calldata _value)
         public
         onlyOwnerOrWriter
     {
@@ -152,11 +152,7 @@ contract DataStore is Ownable {
         depth1MapsValues[_mapName][_key.value] = _value.value;
     }
 
-    function getKeyValuePair(string calldata _mapName, TypedValue calldata _key)
-        public
-        view
-        returns (TypedValue memory)
-    {
+    function getKeyValuePair(bytes32 _mapName, TypedValue calldata _key) public view returns (TypedValue memory) {
         if (_key.valueType != depth1MapsTypes[_mapName].key) {
             revert UnexpectedType(_key.valueType.toInt(), depth1MapsTypes[_mapName].key.toInt());
         }
@@ -166,7 +162,7 @@ contract DataStore is Ownable {
 
     /// depth 2 maps
 
-    function createDepth2Map(string calldata _mapName, Type _key1, Type _key2, Type _value) public onlyOwnerOrWriter {
+    function createDepth2Map(bytes32 _mapName, Type _key1, Type _key2, Type _value) public onlyOwnerOrWriter {
         if (_key1 == Type.NIL || _key2 == Type.NIL) {
             revert KeyIsNil();
         }
@@ -179,12 +175,12 @@ contract DataStore is Ownable {
         depth2MapsTypes[_mapName] = TypedKKVTuple({key1: _key1, key2: _key2, value: _value});
     }
 
-    function depth2MapExists(string calldata _mapName) public view returns (bool) {
+    function depth2MapExists(bytes32 _mapName) public view returns (bool) {
         return depth2MapsTypes[_mapName].key1 != Type.NIL;
     }
 
     function setKeyKeyValueTuple(
-        string calldata _mapName,
+        bytes32 _mapName,
         TypedValue calldata _key1,
         TypedValue calldata _key2,
         TypedValue calldata _value
@@ -201,7 +197,7 @@ contract DataStore is Ownable {
         depth2MapsValues[_mapName][_key1.value][_key2.value] = _value.value;
     }
 
-    function getKeyKeyValueTuple(string calldata _mapName, TypedValue calldata _key1, TypedValue calldata _key2)
+    function getKeyKeyValueTuple(bytes32 _mapName, TypedValue calldata _key1, TypedValue calldata _key2)
         public
         view
         returns (TypedValue memory)

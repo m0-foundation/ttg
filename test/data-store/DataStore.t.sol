@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {DataStore} from "src/data-store/DataStore.sol";
 import {TypedValue, TypedValueLib} from "src/data-store/TypedValue.sol";
 import {Type, TypeLib} from "src/data-store/Type.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+// import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ContractWithDataStore is DataStore {
     constructor() DataStore() {}
@@ -37,7 +37,7 @@ contract DataStoreTest is Test {
     /// Variable tests
 
     function test_GetAndSetAddress() public {
-        string memory _name = "myAddress";
+        bytes32 _name = keccak256("myAddress");
         address _address = address(0x123);
         contractWithDataStore.setAddressVariable(_name, _address);
         address _retreivedAddress = contractWithDataStore.getAddressVariable(_name);
@@ -65,13 +65,13 @@ contract DataStoreTest is Test {
         vm.stopPrank();
 
         // get unset address
-        string memory _unsetAddrName = "unset address";
+        bytes32 _unsetAddrName = keccak256("unset address");
         address _unsetAddress = contractWithDataStore.getAddressVariable(_unsetAddrName);
         assert(_unsetAddress == address(0));
     }
 
     function test_GetAndSetBoolAttribute() public {
-        string memory _name = "myBool";
+        bytes32 _name = keccak256("myBool");
         bool _bool = true;
         contractWithDataStore.setBoolVariable(_name, _bool);
         bool _retreivedBool = contractWithDataStore.getBoolVariable(_name);
@@ -99,13 +99,13 @@ contract DataStoreTest is Test {
         vm.stopPrank();
 
         // get unset bool
-        string memory _unsetName = "unset bool";
+        bytes32 _unsetName = keccak256("unset bool");
         bool _unsetBool = contractWithDataStore.getBoolVariable(_unsetName);
         assert(_unsetBool == false);
     }
 
     function test_GetAndSetBytesAttribute() public {
-        string memory _name = "myBytes";
+        bytes32 _name = keccak256("myBytes");
         bytes memory _bytes = bytes("bytes");
         contractWithDataStore.setBytesVariable(_name, _bytes);
         bytes memory _retreivedBytes = contractWithDataStore.getBytesVariable(_name);
@@ -133,13 +133,13 @@ contract DataStoreTest is Test {
         vm.stopPrank();
 
         // get unset bytes
-        string memory _unsetName = "unset bytes";
+        bytes32 _unsetName = keccak256("unset bytes");
         bytes memory _unsetBytes = contractWithDataStore.getBytesVariable(_unsetName);
         assert(keccak256(_unsetBytes) == keccak256(bytes("")));
     }
 
     function test_GetAndSetStringAttribute() public {
-        string memory _name = "myString";
+        bytes32 _name = keccak256("myString");
         string memory _string = "string";
         contractWithDataStore.setStringVariable(_name, _string);
         string memory _retreivedString = contractWithDataStore.getStringVariable(_name);
@@ -167,13 +167,13 @@ contract DataStoreTest is Test {
         vm.stopPrank();
 
         // get unset string
-        string memory _unsetName = "unset string";
+        bytes32 _unsetName = keccak256("unset string");
         string memory _unsetString = contractWithDataStore.getStringVariable(_unsetName);
         assert(keccak256(abi.encode(_unsetString)) == keccak256(abi.encode("")));
     }
 
     function test_GetAndSetUint256Attribute() public {
-        string memory _name = "myUint256";
+        bytes32 _name = keccak256("myUint256");
         uint256 _uint256 = 123;
         contractWithDataStore.setUint256Variable(_name, _uint256);
         uint256 _retreivedUint256 = contractWithDataStore.getUint256Variable(_name);
@@ -201,15 +201,15 @@ contract DataStoreTest is Test {
         vm.stopPrank();
 
         // get unset uint256
-        string memory _unsetName = "unset uint256";
+        bytes32 _unsetName = keccak256("unset uint256");
         uint256 _unsetUint256 = contractWithDataStore.getUint256Variable(_unsetName);
         assert(_unsetUint256 == 0);
     }
 
     /// Map (key-value pair) tests
     function test_NonWritersCannotCreateMap() public {
-        string memory _name = "myMap";
-        string memory _name2 = "myMap2";
+        bytes32 _name = keccak256("myMap");
+        bytes32 _name2 = keccak256("myMap2");
 
         // only owner can create map
         vm.startPrank(nonOwner);
@@ -231,7 +231,7 @@ contract DataStoreTest is Test {
     }
 
     function test_RevertCreateMapWithNilKeyValue() public {
-        string memory _name = "myMap";
+        bytes32 _name = keccak256("myMap");
         vm.expectRevert(abi.encodeWithSignature("KeyIsNil()"));
         contractWithDataStore.createMap(_name, Type.NIL, Type.STRING);
         vm.expectRevert(abi.encodeWithSignature("ValueIsNil()"));
@@ -239,7 +239,7 @@ contract DataStoreTest is Test {
     }
 
     function test_RevertCreateMapTwice() public {
-        string memory _name = "myMap";
+        bytes32 _name = keccak256("myMap");
         contractWithDataStore.createMap(_name, Type.ADDRESS, Type.STRING);
         vm.expectRevert(abi.encodeWithSignature("MapAlreadyExists()"));
         // even if you try to create a map with the same name but diff types it should fail
@@ -247,7 +247,7 @@ contract DataStoreTest is Test {
     }
 
     function test_RevertTestSetKeyValuePairOnNonexistentMap() public {
-        string memory _mapName = "myMap";
+        bytes32 _mapName = keccak256("myMap");
         TypedValue memory _key = string("myKey").toTypedValue();
         TypedValue memory _value = string("myValue").toTypedValue();
 
@@ -257,8 +257,8 @@ contract DataStoreTest is Test {
     }
 
     function test_SetAndGetKeyValuePair() public {
-        string memory _mapName = "myMap";
-        // create a mapping(string=>string)
+        bytes32 _mapName = keccak256("myMap");
+        // create a mapping(bytes32=>string)
         contractWithDataStore.createMap(_mapName, Type.STRING, Type.STRING);
 
         // set key-value pair
@@ -274,8 +274,8 @@ contract DataStoreTest is Test {
     }
 
     function test_RevertSetKeyValuePairWithIncorrectKeyType() public {
-        // create a mapping(string=>string) but try to set with another key-value type pair
-        string memory _mapName = "myMap";
+        // create a mapping(bytes32=>string) but try to set with another key-value type pair
+        bytes32 _mapName = keccak256("myMap");
         contractWithDataStore.createMap(_mapName, Type.STRING, Type.STRING);
 
         // set key-value pair with invalid key type
@@ -298,8 +298,8 @@ contract DataStoreTest is Test {
     /// Depth 2 Map tests
 
     function test_NonWritersCannotCreateDepth2Maps() public {
-        string memory _name = "myMap";
-        string memory _name2 = "myMap2";
+        bytes32 _name = keccak256("myMap");
+        bytes32 _name2 = keccak256("myMap2");
 
         // only owner can create map
         vm.startPrank(nonOwner);
@@ -321,7 +321,7 @@ contract DataStoreTest is Test {
     }
 
     function test_CannotCreateDepth2MapsWithNilKKV() public {
-        string memory _name = "myMap";
+        bytes32 _name = keccak256("myMap");
         vm.expectRevert(abi.encodeWithSignature("KeyIsNil()"));
         contractWithDataStore.createDepth2Map(_name, Type.NIL, Type.STRING, Type.STRING);
         vm.expectRevert(abi.encodeWithSignature("KeyIsNil()"));
@@ -331,7 +331,7 @@ contract DataStoreTest is Test {
     }
 
     function test_RevertCreateDepth2MapTwice() public {
-        string memory _name = "myDepth2Map";
+        bytes32 _name = keccak256("myDepth2Map");
         contractWithDataStore.createDepth2Map(_name, Type.ADDRESS, Type.STRING, Type.BOOL);
         vm.expectRevert(abi.encodeWithSignature("MapAlreadyExists()"));
         // even if you try to create a map with the same name but diff types it should fail
@@ -339,7 +339,7 @@ contract DataStoreTest is Test {
     }
 
     function test_RevertTestAndSetKeyKeyValueTupleNonexistentMap() public {
-        string memory _mapName = "myMap";
+        bytes32 _mapName = keccak256("myMap");
         TypedValue memory _key = string("myKey").toTypedValue();
         TypedValue memory _key2 = string("myKey2").toTypedValue();
         TypedValue memory _value = string("myValue").toTypedValue();
@@ -350,8 +350,8 @@ contract DataStoreTest is Test {
     }
 
     function test_SetAndGetKeyValuePairOnDepth2Map() public {
-        string memory _mapName = "myMap";
-        // create a mapping(string=>mapping(string=>string))
+        bytes32 _mapName = keccak256("myMap");
+        // create a mapping(bytes32=>mapping(bytes32=>bytes32))
         contractWithDataStore.createDepth2Map(_mapName, Type.STRING, Type.STRING, Type.STRING);
 
         // set key-value pair
