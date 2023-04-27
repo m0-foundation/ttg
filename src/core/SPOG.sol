@@ -54,11 +54,20 @@ contract SPOG is SPOGStorage, ERC165 {
         uint256 _valueFixedInflationAmount,
         ISPOGGovernor _voteGovernor,
         ISPOGGovernor _valueGovernor
-    ) SPOGStorage(_voteGovernor, _valueGovernor, _time, _voteQuorum, _valueQuorum, _valueFixedInflationAmount) {
-        // TODO: add require statements for variables
+    )
+        SPOGStorage(
+            _initSPOGData,
+            _voteGovernor,
+            _valueGovernor,
+            _time,
+            _voteQuorum,
+            _valueQuorum,
+            _valueFixedInflationAmount
+        )
+    {
+        require(_vault != address(0), "SPOG: Vault address cannot be 0");
         vault = _vault;
 
-        initSPOGData(_initSPOGData);
         initGovernedMethods();
     }
 

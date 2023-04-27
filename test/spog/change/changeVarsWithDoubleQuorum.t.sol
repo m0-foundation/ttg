@@ -8,7 +8,7 @@ import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 contract SPOG_change is SPOG_Base {
-    bytes32 internal reward;
+    bytes32 internal inflator;
     bytes internal elevenAsCalldataValue;
     uint8 internal yesVote;
     uint8 internal noVote;
@@ -17,7 +17,7 @@ contract SPOG_change is SPOG_Base {
     event DoubleQuorumFinalized(bytes32 indexed identifier);
 
     function setUp() public override {
-        reward = "reward";
+        inflator = "inflator";
         elevenAsCalldataValue = abi.encode(11);
         yesVote = 1;
         noVote = 0;
@@ -29,7 +29,7 @@ contract SPOG_change is SPOG_Base {
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    function proposeRewardChange(string memory proposalDescription)
+    function proposeInflatorChange(string memory proposalDescription)
         private
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -38,7 +38,7 @@ contract SPOG_change is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        bytes memory callData = abi.encodeWithSignature("change(bytes32,bytes)", reward, elevenAsCalldataValue);
+        bytes memory callData = abi.encodeWithSignature("change(bytes32,bytes)", inflator, elevenAsCalldataValue);
         string memory description = proposalDescription;
         calldatas[0] = callData;
 
@@ -60,7 +60,7 @@ contract SPOG_change is SPOG_Base {
 
     function test_Revert_Change_WhenNotCalledFromGovernance() public {
         vm.expectRevert("SPOG: Only vote governor");
-        spog.change(reward, elevenAsCalldataValue);
+        spog.change(inflator, elevenAsCalldataValue);
     }
 
     function test_Revert_Change_WhenPassingAnIncorrectParamsToChange() public {
@@ -99,7 +99,7 @@ contract SPOG_change is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax was not modified
-        (uint256 tax,,,) = spog.spogData();
+        (uint256 tax,,) = spog.spogData();
         assertFalse(tax == 11, "Tax should not have been changed");
     }
 
@@ -110,7 +110,7 @@ contract SPOG_change is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeRewardChange("Change reward variable in spog");
+        ) = proposeInflatorChange("Change inflator variable in spog");
 
         assertTrue(voteGovernor.votingDelay() == valueGovernor.votingDelay(), "voting delay should be 1");
         // fast forward to an active voting period
@@ -126,10 +126,10 @@ contract SPOG_change is SPOG_Base {
         vm.expectRevert(abi.encodeWithSelector(ISPOG.ValueGovernorDidNotApprove.selector, proposalId));
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,, uint256 rewardFirstCheck,) = spog.spogData();
+        (, uint256 inflatorFirstCheck,) = spog.spogData();
 
-        // assert that reward has not been changed
-        assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
+        // assert that inflator has not been changed
+        assertFalse(inflatorFirstCheck == 11, "Reward should not have been changed");
     }
 
     function test_Revert_Change_WhenVoteHoldersDoNotAgree() public {
@@ -139,7 +139,7 @@ contract SPOG_change is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeRewardChange("Change reward variable in spog");
+        ) = proposeInflatorChange("Change inflator variable in spog");
 
         assertTrue(voteGovernor.votingDelay() == valueGovernor.votingDelay(), "voting delay should be 1");
         // fast forward to an active voting period
@@ -158,10 +158,10 @@ contract SPOG_change is SPOG_Base {
         vm.expectRevert("Governor: proposal not successful");
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,, uint256 rewardFirstCheck,) = spog.spogData();
+        (, uint256 inflatorFirstCheck,) = spog.spogData();
 
-        // assert that reward has not been changed
-        assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
+        // assert that inflator has not been changed
+        assertFalse(inflatorFirstCheck == 11, "Reward should not have been changed");
     }
 
     function test_Change_SPOGProposalToChangeVariableInSpog() public {
@@ -171,7 +171,7 @@ contract SPOG_change is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeRewardChange("Change reward variable in spog");
+        ) = proposeInflatorChange("Change inflator variable in spog");
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -184,16 +184,16 @@ contract SPOG_change is SPOG_Base {
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
-        bytes32 identifier = keccak256(abi.encodePacked(reward, elevenAsCalldataValue));
+        bytes32 identifier = keccak256(abi.encodePacked(inflator, elevenAsCalldataValue));
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,, uint256 rewardFirstCheck,) = spog.spogData();
+        (, uint256 inflatorFirstCheck,) = spog.spogData();
 
-        // assert that reward been changed
-        assertTrue(rewardFirstCheck == 11, "Reward should have been changed");
+        // assert that inflator been changed
+        assertTrue(inflatorFirstCheck == 11, "Reward should have been changed");
     }
 
     function test_Change_ChangeCashToken_SPOGProposalToChangeVariableInSpog() public {
@@ -239,7 +239,7 @@ contract SPOG_change is SPOG_Base {
         emit DoubleQuorumFinalized(identifier);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,, IERC20 cashFirstCheck) = spog.spogData();
+        (,, IERC20 cashFirstCheck) = spog.spogData();
 
         // assert that cash has been changed
         assertTrue(address(cashFirstCheck) == address(newCashInstance), "Cash token was not changed");
