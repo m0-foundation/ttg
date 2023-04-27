@@ -26,7 +26,7 @@ contract TestContract is SPOGGoverned {
         return super.getListByAddress(collateralManagersListAddress);
     }
 
-    function doAThing() public onlyCollateralManagers returns (bool) {
+    function doAThing() public view onlyCollateralManagers returns (bool) {
         return true;
     }
 }
@@ -104,7 +104,7 @@ contract SPOGGovernedTest is SPOG_Base {
         assertTrue(testGovernedContract.collateralManagersList().contains(alice));
 
         vm.expectRevert();
-        testGovernedContract.doAThing();
+        testGovernedContract.getListByAddress(address(0));
 
         // only collateral mgr can doAThing()
         vm.prank(alice);
