@@ -32,6 +32,10 @@ interface ISPOGGovernor {
     function updateVotingTime(uint256 newVotingTime) external;
 
     function inflateTokenSupply() external;
+    
+    function turnOnEmergencyVoting() external;
+
+    function turnOffEmergencyVoting() external;
 
     enum ProposalState {
         Pending,

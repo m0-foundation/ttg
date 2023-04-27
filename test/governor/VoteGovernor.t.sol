@@ -85,6 +85,14 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         voteGovernor.propose(targets, values, calldatas, description);
     }
 
+    function test_Revert_turnOnAndOffEmergencyVoting_WhenCalledNotBySPOG() public {
+        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        voteGovernor.turnOnEmergencyVoting();
+
+        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        voteGovernor.turnOffEmergencyVoting();
+    }
+
     function test_Revert_Execute_WhenCalledNotBySPOG() public {
         // propose adding a new list to spog
         (
@@ -361,5 +369,18 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         // should not revert
         proposeAddingNewListToSpog("new list to spog 2");
+    }
+
+    function test_turnOnAndOffEmergencyVoting() public {
+        uint256 governorVotingDelay = voteGovernor.votingDelay();
+        vm.startPrank(address(spog));
+
+        // turn on emergency voting and check that voting delay is minimum now
+        voteGovernor.turnOnEmergencyVoting();
+        assertEq(voteGovernor.votingDelay(), voteGovernor.MINIMUM_VOTING_DELAY(), "emergency voting should be on");
+
+        // turn off emergency voting and check that voting delay is reset back
+        voteGovernor.turnOffEmergencyVoting();
+        assertEq(voteGovernor.votingDelay(), governorVotingDelay, "emergency voting should be off");
     }
 }

@@ -208,7 +208,9 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Only $VALUE governance proposals
         if (executableFuncSelector == this.reset.selector) {
+            valueGovernor.turnOnEmergencyVoting();
             uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+            valueGovernor.turnOffEmergencyVoting();
 
             emit NewValueQuorumProposal(valueProposalId);
             return valueProposalId;
@@ -230,13 +232,19 @@ contract SPOG is SPOGStorage, ERC165 {
         }
 
         // Only $VOTE governance proposals
-        uint256 proposalId = voteGovernor.propose(targets, values, calldatas, description);
+        uint256 proposalId;
         // Register emergency proposal with vote governor
         if (executableFuncSelector == this.emergencyRemove.selector) {
+            voteGovernor.turnOnEmergencyVoting();
+
+            proposalId = voteGovernor.propose(targets, values, calldatas, description);
             voteGovernor.registerEmergencyProposal(proposalId);
+
+            voteGovernor.turnOffEmergencyVoting();
 
             emit NewEmergencyProposal(proposalId);
         } else {
+            proposalId = voteGovernor.propose(targets, values, calldatas, description);
             emit NewVoteQuorumProposal(proposalId);
         }
 
