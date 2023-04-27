@@ -92,14 +92,14 @@ contract SPOG_change is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // another way to get custom error selector:
         vm.expectRevert(abi.encodeWithSelector(ISPOG.InvalidParameter.selector, incorrectParams));
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax was not modified
-        (uint256 tax,,,,,) = spog.spogData();
+        (uint256 tax,,,) = spog.spogData();
         assertFalse(tax == 11, "Tax should not have been changed");
     }
 
@@ -120,13 +120,13 @@ contract SPOG_change is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // Check that execute function is reverted if value quorum is not reached
         vm.expectRevert(abi.encodeWithSelector(ISPOG.ValueGovernorDidNotApprove.selector, proposalId));
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,, uint256 rewardFirstCheck,) = spog.spogData();
+        (,, uint256 rewardFirstCheck,) = spog.spogData();
 
         // assert that reward has not been changed
         assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
@@ -150,7 +150,7 @@ contract SPOG_change is SPOG_Base {
         voteGovernor.castVote(proposalId, noVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         assertFalse(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded);
 
@@ -158,7 +158,7 @@ contract SPOG_change is SPOG_Base {
         vm.expectRevert("Governor: proposal not successful");
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,, uint256 rewardFirstCheck,) = spog.spogData();
+        (,, uint256 rewardFirstCheck,) = spog.spogData();
 
         // assert that reward has not been changed
         assertFalse(rewardFirstCheck == 11, "Reward should not have been changed");
@@ -182,7 +182,7 @@ contract SPOG_change is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(reward, elevenAsCalldataValue));
         // check that DoubleQuorumFinalized event was triggered
@@ -190,7 +190,7 @@ contract SPOG_change is SPOG_Base {
         emit DoubleQuorumFinalized(identifier);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,, uint256 rewardFirstCheck,) = spog.spogData();
+        (,, uint256 rewardFirstCheck,) = spog.spogData();
 
         // assert that reward been changed
         assertTrue(rewardFirstCheck == 11, "Reward should have been changed");
@@ -231,7 +231,7 @@ contract SPOG_change is SPOG_Base {
         valueGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         bytes32 identifier = keccak256(abi.encodePacked(cash, newCash));
         // check that DoubleQuorumFinalized event was triggered
@@ -239,7 +239,7 @@ contract SPOG_change is SPOG_Base {
         emit DoubleQuorumFinalized(identifier);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        (,,,,, IERC20 cashFirstCheck) = spog.spogData();
+        (,,, IERC20 cashFirstCheck) = spog.spogData();
 
         // assert that cash has been changed
         assertTrue(address(cashFirstCheck) == address(newCashInstance), "Cash token was not changed");

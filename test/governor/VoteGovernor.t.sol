@@ -110,7 +110,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
         // revert when called not by SPOG, execute methods are closed to the public
@@ -329,7 +329,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         );
 
         // start of new wpoch inflation is triggered
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
@@ -359,7 +359,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         voteGovernor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.voteTime() + 1);
+        vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
