@@ -154,14 +154,16 @@ contract SPOG is SPOGStorage, ERC165 {
     //////////////////////////////////////////////////////////////*/
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) external onlyVoteGovernor {
+        // check that the contract supports the interfaceId provided
+        if (!ERC165(configAddress).supportsInterface(interfaceId)) {
+            revert ConfigERC165Unsupported();
+        }
+
         //check if named config already set
         if (config[configName].contractAddress != address(0)) {
             //if set, make sure new contract interface matches
             if (config[configName].interfaceId != interfaceId) {
                 revert ConfigInterfaceIdMismatch(config[configName].interfaceId);
-            }
-            if (!ERC165(configAddress).supportsInterface(interfaceId)) {
-                revert ConfigERC165Unsupported();
             }
         }
         config[configName] = ConfigContract(configAddress, interfaceId);
