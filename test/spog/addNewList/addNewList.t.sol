@@ -3,11 +3,47 @@ pragma solidity 0.8.17;
 
 import "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {List} from "src/periphery/List.sol";
 
 contract SPOG_AddNewList is SPOG_Base {
     function test_Revert_WhenAddingNewList_NotCallingFromGovernance() external {
         vm.expectRevert("SPOG: Only vote governor");
         spog.addNewList(IList(address(list)));
+    }
+
+    function test_Revert_WhenListAdminIsNotSPOG() external {
+        // set list admin to different spog
+        SPOG spog2 = deployScript.createSpog();
+        vm.prank(address(spog));
+        list.changeAdmin(address(spog2));
+
+        bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
+
+        vm.expectRevert(expectedError);
+        vm.prank(address(voteGovernor));
+        spog.addNewList(IList(address(list)));
+    }
+
+    function test_Revert_DuringProposal_WhenListAdminIsNotSPOG() public {
+        address user = createUser("someUser");
+        vm.prank(user);
+        List newList = new List("Blah");
+
+        // create proposal
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("addNewList(address)", newList);
+        string memory description = "Add new list";
+
+        deployScript.cash().approve(address(spog), deployScript.tax());
+
+        bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
+
+        vm.expectRevert(expectedError);
+        spog.propose(targets, values, calldatas, description);
     }
 
     function test_SPOGProposalToAddNewList() public {

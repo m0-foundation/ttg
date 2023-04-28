@@ -115,11 +115,6 @@ contract SPOG is SPOGStorage, ERC165 {
             revert ListIsNotInMasterList();
         }
 
-        // require that the address is not already on the list
-        if (_list.contains(_address)) {
-            revert AddressIsAlreadyInList();
-        }
-
         // append the address to the list
         _list.add(_address);
         emit AddressAppendedToList(address(_list), _address);
@@ -247,6 +242,15 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Only $VOTE governance proposals
         uint256 proposalId;
+
+        // prevent proposing a list that can be changed before execution
+        if (executableFuncSelector == this.addNewList.selector) {
+            address listParams = _extractAddressTypeParamsFromCalldata(callData);
+            if (IList(listParams).admin() != address(this)) {
+                revert ListAdminIsNotSPOG();
+            }
+        }
+
         // Register emergency proposal with vote governor
         if (executableFuncSelector == this.emergencyRemove.selector) {
             voteGovernor.turnOnEmergencyVoting();
@@ -378,13 +382,26 @@ contract SPOG is SPOGStorage, ERC165 {
             revert ListIsNotInMasterList();
         }
 
-        // require that the address is on the list
-        if (!_list.contains(_address)) {
-            revert AddressIsNotInList();
-        }
-
         // remove the address from the list
         _list.remove(_address);
+    }
+
+    /// @notice extract address params from the call data
+    /// @param callData The call data with selector in first 4 bytes
+    /// @dev used to inspect params before allowing proposal
+    function _extractAddressTypeParamsFromCalldata(bytes memory callData)
+        internal
+        view
+        returns (address targetParams)
+    {
+        assembly {
+            // byte offset to represent function call data. 4 bytes funcSelector plus address 32 bytes
+            let offset := 36
+            // add offset so we pick from start of address params
+            let addressPosition := add(callData, offset)
+            // load the address params
+            targetParams := mload(addressPosition)
+        }
     }
 
     fallback() external {

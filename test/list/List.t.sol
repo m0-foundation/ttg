@@ -80,21 +80,9 @@ contract ListTest is BaseTest {
         // list is empty
         assertFalse(list.contains(users.charlie), "Charlie is in the list");
 
-        // remove Charlie and check that event `AddressRemoved` is emitted
-        expectEmit();
-        emit AddressRemoved(address(users.charlie));
-        list.remove(users.charlie);
+        bytes memory expectedError = abi.encodeWithSignature("AddressIsNotInList()");
 
-        // add Alice
-        list.add(users.alice);
-
-        // list contains only Alice
-        assertTrue(list.contains(users.alice), "Alice is not in the list");
-        assertFalse(list.contains(users.charlie), "Charlie is in the list");
-
-        // remove Charlie and check that event `AddressRemoved` is emitted
-        expectEmit();
-        emit AddressRemoved(address(users.charlie));
+        vm.expectRevert(expectedError);
         list.remove(users.charlie);
     }
 
@@ -145,5 +133,14 @@ contract ListTest is BaseTest {
         // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
         list.remove(users.alice);
+    }
+
+    function test_Revert_addWhenAlreadyInList() public {
+        list.add(users.alice);
+
+        bytes memory expectedError = abi.encodeWithSignature("AddressIsAlreadyInList()");
+
+        vm.expectRevert(expectedError);
+        list.add(users.alice);
     }
 }
