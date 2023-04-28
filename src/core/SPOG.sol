@@ -68,7 +68,7 @@ contract SPOG is SPOGStorage, ERC165 {
         require(_vault != address(0), "SPOG: Vault address cannot be 0");
         vault = _vault;
 
-        initGovernedMethods();
+        _initGovernedMethods();
     }
 
     /// @dev Getter for finding whether a list is in a masterlist
@@ -215,8 +215,10 @@ contract SPOG is SPOGStorage, ERC165 {
 
         _payFee(executableFuncSelector);
 
-        // TODO: Move down later
-        inflateTokenSupply();
+        // Inflate Vote and Value token supply unless method is reset or emergencyRemove
+        if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergencyRemove.selector) {
+            _inflateTokenSupply();
+        }
 
         // Only $VALUE governance proposals
         if (executableFuncSelector == this.reset.selector) {
@@ -322,19 +324,7 @@ contract SPOG is SPOGStorage, ERC165 {
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Inflate token supplies
-    /// @dev calls inflateTokenSupply on both governors
-    function inflateTokenSupply() private {
-        // Inflate Vote token supply
-        uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
-        uint256 amount = (votingTokenTotalSupply * spogData.inflator) / 100;
-        voteGovernor.inflateTokenSupply(amount);
-
-        // Inflate Value token supply
-        valueGovernor.inflateTokenSupply(valueFixedInflationAmount);
-    }
-
-    function initGovernedMethods() private {
+    function _initGovernedMethods() private {
         // TODO: review if there is better, more efficient way to do it
         governedMethods[this.append.selector] = true;
         governedMethods[this.changeTax.selector] = true;
@@ -368,6 +358,18 @@ contract SPOG is SPOGStorage, ERC165 {
         // deposit the amount to the vault
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
         IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), fee);
+    }
+
+    /// @notice Inflate Vote and Value token supplies
+    /// @dev calls inflateTokenSupply on both governors
+    function _inflateTokenSupply() private {
+        // Inflate Vote token supply
+        uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
+        uint256 amount = (votingTokenTotalSupply * spogData.inflator) / 100;
+        voteGovernor.inflateTokenSupply(amount);
+
+        // Inflate Value token supply
+        valueGovernor.inflateTokenSupply(valueFixedInflationAmount);
     }
 
     function _removeFromList(address _address, IList _list) private {

@@ -182,7 +182,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
                             OVERRIDE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice override to use inflateTokenSupply
     function propose(
         address[] memory targets,
         uint256[] memory values,
@@ -195,10 +194,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return super.propose(targets, values, calldatas, description);
     }
 
-    /// @notice override to use inflateTokenSupply and check that caller is SPOG
-    /**
-     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
-     */
+    /// @notice override to check that caller is SPOG
     function _execute(
         uint256 proposalId,
         address[] memory targets,
@@ -209,7 +205,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    /// @notice override to use inflateTokenSupply
+    /// @notice override to count user activity in epochs
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual
