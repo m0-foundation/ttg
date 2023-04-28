@@ -23,10 +23,19 @@ contract SPOG is SPOGStorage, ERC165 {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
+    struct ConfigContract {
+        address contractAddress;
+        bytes4 interfaceId;
+    }
+
     address public immutable vault;
 
     // List of methods that can be executed by SPOG governance
     mapping(bytes4 => bool) public governedMethods;
+
+    // List of named config contracts managed by SPOG governance
+    // hashed name => ConfigContract
+    mapping(bytes32 => ConfigContract) public config;
 
     uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
@@ -138,6 +147,25 @@ contract SPOG is SPOGStorage, ERC165 {
     function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
         _removeFromList(_address, _list);
         emit EmergencyAddressRemovedFromList(address(_list), _address);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            CONFIG GOVERNANCE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) external onlyVoteGovernor {
+        //check if named config already set
+        if (config[configName].contractAddress != address(0)) {
+            //if set, make sure new contract interface matches
+            if (config[configName].interfaceId != interfaceId) {
+                revert ConfigInterfaceIdMismatch(config[configName].interfaceId);
+            }
+            if (!ERC165(configAddress).supportsInterface(interfaceId)) {
+                revert ConfigERC165Unsupported();
+            }
+        }
+        config[configName] = ConfigContract(configAddress, interfaceId);
+        emit ConfigChange(configName, configAddress, interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -299,10 +327,6 @@ contract SPOG is SPOGStorage, ERC165 {
         return proposalId;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            PUBLIC FUNCTION
-    //////////////////////////////////////////////////////////////*/
-
     /// @notice Inflate token supplies
     /// @dev calls inflateTokenSupply on both governors
     function inflateTokenSupply() external onlyGovernor {
@@ -311,6 +335,10 @@ contract SPOG is SPOGStorage, ERC165 {
             valueGovernor.inflateTokenSupply();
         }
     }
+
+    /*//////////////////////////////////////////////////////////////
+                            PUBLIC FUNCTION
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
@@ -354,6 +382,7 @@ contract SPOG is SPOGStorage, ERC165 {
         governedMethods[this.change.selector] = true;
         governedMethods[this.emergencyRemove.selector] = true;
         governedMethods[this.reset.selector] = true;
+        governedMethods[this.changeConfig.selector] = true;
     }
 
     /// @notice pay tax from the caller to the SPOG
