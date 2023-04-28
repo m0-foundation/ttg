@@ -115,4 +115,11 @@ contract VaultTest is BaseTest {
 
         assertEq(address(vault.voteGovernor()), address(newVoteGovernor), "Governor was not updated");
     }
+
+    function test_fallback() public {
+        vm.expectRevert("Vault: non-existent function");
+        (bool success,) = address(vault).call(abi.encodeWithSignature("doesNotExist()"));
+
+        assertEq(success, true);
+    }
 }

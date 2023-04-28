@@ -135,7 +135,7 @@ contract SPOGDeployScript is BaseScript {
         console.log("Vault address: ", address(vault));
     }
 
-    function createSpog() public broadcaster returns (SPOG) {
+    function createSpog() public returns (SPOG) {
         triggerSetUp();
 
         bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);

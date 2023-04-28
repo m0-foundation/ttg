@@ -37,4 +37,13 @@ contract ListFactoryTest is SPOG_Base {
         assertTrue(listAddress != address(0), "listAddress should not be 0x0");
         assertTrue(listAddress == address(list), "listAddress should be the same as the list address");
     }
+
+    function test_fallback() public {
+        ListFactory factory = new ListFactory();
+
+        vm.expectRevert("ListFactory: non-existent function");
+        (bool success,) = address(factory).call(abi.encodeWithSignature("doesNotExist()"));
+
+        assertEq(success, true);
+    }
 }
