@@ -240,9 +240,8 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // prevent proposing a list that can be changed before execution
         if (executableFuncSelector == this.addNewList.selector) {
-            bytes memory params = _removeSelector(callData);
-            (IList list) = abi.decode(params, (IList));
-            if (list.admin() != address(this)) {
+            address listParams = _extractAddressTypeParamsFromCalldata(callData);
+            if (IList(listParams).admin() != address(this)) {
                 revert ListAdminIsNotSPOG();
             }
         }
@@ -391,22 +390,22 @@ contract SPOG is SPOGStorage, ERC165 {
         _list.remove(_address);
     }
 
-    /// @notice remove selector from the call data
+    /// @notice extract address params from the call data
     /// @param callData The call data with selector in first 4 bytes
     /// @dev used to inspect params before allowing proposal
-    function _removeSelector(bytes memory callData) internal pure returns (bytes memory) {
-        uint256 length = callData.length - 4;
-        bytes memory params = new bytes(length);
-
-        uint256 i;
-        for (i; i < length;) {
-            params[i] = callData[i + 4];
-            unchecked {
-                ++i;
-            }
+    function _extractAddressTypeParamsFromCalldata(bytes memory callData)
+        internal
+        view
+        returns (address targetParams)
+    {
+        assembly {
+            // byte offset to represent function call data. 4 bytes funcSelector plus address 32 bytes
+            let offset := 36
+            // add offset so we pick from start of address params
+            let addressPosition := add(callData, offset)
+            // load the address params
+            targetParams := mload(addressPosition)
         }
-
-        return params;
     }
 
     fallback() external {
