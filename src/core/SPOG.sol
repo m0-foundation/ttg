@@ -373,7 +373,7 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     /// @notice Inflate Vote and Value token supplies
-    /// @dev calls inflateTokenSupply on both governors
+    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
     function _inflateTokenSupply() private {
         uint256 nextEpoch = voteGovernor.currentVotingPeriodEpoch() + 1;
 
@@ -383,14 +383,14 @@ contract SPOG is SPOGStorage, ERC165 {
         epochRewardsMinted[nextEpoch] = true;
 
         // Mint and deposit Vote and Value rewards to vault
-        _mintAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
-        _mintAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueFixedInflationAmount);
+        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueFixedInflationAmount);
     }
 
-    function _mintAndDepositToVault(uint256 epoch, ISPOGVotes votingToken, uint256 amount) private {
-        votingToken.mint(address(this), amount);
-        votingToken.approve(vault, amount);
-        IVault(vault).depositEpochRewardTokens(epoch, address(votingToken), amount);
+    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
+        token.mint(address(this), amount);
+        token.approve(vault, amount);
+        IVault(vault).depositEpochRewardTokens(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {

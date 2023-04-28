@@ -104,27 +104,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
     }
 
-    /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
-    // function inflateTokenSupply(uint256 inflationAmount) external onlySPOG {
-    //     uint256 nextEpoch = currentVotingPeriodEpoch() + 1;
-    //     if (!votingTokensMinted[nextEpoch]) {
-    //         // mint tokens
-    //         votingTokensMinted[nextEpoch] = true;
-    //         // votingToken.mint(address(this), inflationAmount);
-
-    //         uint256 balance = votingToken.balanceOf(address(this));
-    //         address vault = ISPOG(spogAddress).vault();
-
-    //         // pull new tokens and any previous balance to vault
-    //         votingToken.mint(address(this), inflationAmount);
-    //         votingToken.approve(vault, inflationAmount);
-    //         IVault(vault).depositEpochRewardTokens(nextEpoch, address(votingToken), inflationAmount);
-
-    //         // emit event for new tokens minted (not balance)
-    //         emit VotingTokenInflation(nextEpoch, inflationAmount);
-    //     }
-    // }
-
     /// @dev Allows batch voting
     /// @notice Uses same params as castVote, but in arrays.
     /// @param proposalIds an array of proposalIds
