@@ -20,7 +20,7 @@ interface ISPOG {
     event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
-    error ConfigInterfaceIdMismatch(bytes4 expected);
+    error ConfigInterfaceIdMismatch();
     error ConfigERC165Unsupported();
     error InvalidParameter(bytes32 what);
     error ListAdminIsNotSPOG();
@@ -69,4 +69,7 @@ interface ISPOG {
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
+
+    // Config accessor functions
+    function getConfig(bytes32 name) external view returns (address, bytes4);
 }

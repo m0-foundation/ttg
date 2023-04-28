@@ -68,11 +68,36 @@ contract SPOGGovernedTest is SPOG_Base {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
+    function proposeAddingConfigToSpog(
+        string memory proposalDescription,
+        bytes32 name,
+        address contractAddress,
+        bytes4 interfaceId
+    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] =
+            abi.encodeWithSignature("changeConfig(bytes32,address,bytes4)", name, contractAddress, interfaceId);
+        string memory description = proposalDescription;
+
+        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
+        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+
+        // create new proposal
+        deployScript.cash().approve(address(spog), deployScript.tax());
+        spog.propose(targets, values, calldatas, description);
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
+    }
+
     /*//////////////////////////////////////////////////////////////
                                  TESTS
     //////////////////////////////////////////////////////////////*/
 
-    function test_abstractSpogGoverned() public {
+    function test_abstractSpogGoverned_UsesLists() public {
         // create new list
         // list has to have spog as admin
         List list = new List("Collateral Managers");
@@ -110,4 +135,6 @@ contract SPOGGovernedTest is SPOG_Base {
         vm.prank(alice);
         assertTrue(testGovernedContract.doAThing());
     }
+
+    function test_abstractSpogGoverned_UsesConfig() public {}
 }

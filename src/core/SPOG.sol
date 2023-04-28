@@ -35,7 +35,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
     // List of named config contracts managed by SPOG governance
     // hashed name => ConfigContract
-    mapping(bytes32 => ConfigContract) public config;
+    mapping(bytes32 => ConfigContract) private config;
 
     uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
@@ -159,14 +159,16 @@ contract SPOG is SPOGStorage, ERC165 {
             revert ConfigERC165Unsupported();
         }
 
-        //check if named config already set
+        //check if named config already exists
         if (config[configName].contractAddress != address(0)) {
-            //if set, make sure new contract interface matches
-            if (config[configName].interfaceId != interfaceId) {
-                revert ConfigInterfaceIdMismatch(config[configName].interfaceId);
+            //if it exists, make sure the new contract interface support the previous one
+            if (!ERC165(configAddress).supportsInterface(config[configName].interfaceId)) {
+                revert ConfigInterfaceIdMismatch();
             }
         }
+
         config[configName] = ConfigContract(configAddress, interfaceId);
+
         emit ConfigChange(configName, configAddress, interfaceId);
     }
 
@@ -348,6 +350,10 @@ contract SPOG is SPOGStorage, ERC165 {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
+    function getConfig(bytes32 name) public view returns (address, bytes4) {
+        return (config[name].contractAddress, config[name].interfaceId);
+    }
+
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -426,7 +432,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @dev used to inspect params before allowing proposal
     function _extractAddressTypeParamsFromCalldata(bytes memory callData)
         internal
-        view
+        pure
         returns (address targetParams)
     {
         assembly {
