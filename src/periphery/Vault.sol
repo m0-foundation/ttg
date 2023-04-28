@@ -33,7 +33,7 @@ contract Vault is IVault {
         auctionContract = _auctionContract;
     }
 
-    modifier onlySpog() {
+    modifier onlySPOG() {
         require(msg.sender == address(voteGovernor.spogAddress()), "Vault: Only spog");
 
         _;
@@ -43,7 +43,7 @@ contract Vault is IVault {
     /// @param epoch Epoch to deposit tokens for
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
-    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlySpog {
+    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlySPOG {
         epochTokenDeposit[token][epoch] += amount;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
@@ -61,7 +61,7 @@ contract Vault is IVault {
     /// @param epoch Epoch to sell tokens from
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySpog {
+    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
         uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
         require(epoch < currentVotingPeriodEpoch, "Vault: epoch is not in the past");
 
@@ -196,7 +196,7 @@ contract Vault is IVault {
 
     // @notice Update vote governor after `RESET` was executed
     // @param newVoteGovernor New vote governor
-    function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySpog {
+    function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySPOG {
         voteGovernor = newVoteGovernor;
 
         emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
