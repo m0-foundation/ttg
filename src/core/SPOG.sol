@@ -237,6 +237,16 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Only $VOTE governance proposals
         uint256 proposalId;
+
+        // prevent proposing a list that can be changed before execution
+        if (executableFuncSelector == this.addNewList.selector) {
+            bytes memory params = _removeSelector(callData);
+            (IList list) = abi.decode(params, (IList));
+            if (list.admin() != address(this)) {
+                revert ListAdminIsNotSPOG();
+            }
+        }
+
         // Register emergency proposal with vote governor
         if (executableFuncSelector == this.emergencyRemove.selector) {
             voteGovernor.turnOnEmergencyVoting();
@@ -379,6 +389,24 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // remove the address from the list
         _list.remove(_address);
+    }
+
+    /// @notice remove selector from the call data
+    /// @param callData The call data with selector in first 4 bytes
+    /// @dev used to inspect params before allowing proposal
+    function _removeSelector(bytes memory callData) internal pure returns (bytes memory) {
+        uint256 length = callData.length - 4;
+        bytes memory params = new bytes(length);
+
+        uint256 i;
+        for (i; i < length;) {
+            params[i] = callData[i + 4];
+            unchecked {
+                ++i;
+            }
+        }
+
+        return params;
     }
 
     fallback() external {
