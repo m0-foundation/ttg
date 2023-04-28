@@ -161,8 +161,8 @@ contract SPOG is SPOGStorage, ERC165 {
 
         //check if named config already exists
         if (config[configName].contractAddress != address(0)) {
-            //if it exists, make sure the new contract interface support the previous one
-            if (!ERC165(configAddress).supportsInterface(config[configName].interfaceId)) {
+            //if it exists, make sure the new contract interface matches
+            if (config[configName].interfaceId != interfaceId) {
                 revert ConfigInterfaceIdMismatch();
             }
         }
