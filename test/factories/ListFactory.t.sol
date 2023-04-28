@@ -42,7 +42,7 @@ contract ListFactoryTest is SPOG_Base {
         ListFactory factory = new ListFactory();
 
         vm.expectRevert("ListFactory: non-existent function");
-        (bool success,) = address(factory).call{value: 0, gas: 5000}(abi.encodeWithSignature("doesNotExist()"));
+        (bool success,) = address(factory).call(abi.encodeWithSignature("doesNotExist()"));
 
         assertEq(success, true);
     }

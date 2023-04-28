@@ -67,7 +67,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
     function test_fallback() public {
         vm.expectRevert("SPOGGovernor: non-existent function");
-        (bool success,) = address(valueGovernor).call{value: 0, gas: 5000}(abi.encodeWithSignature("doesNotExist()"));
+        (bool success,) = address(valueGovernor).call(abi.encodeWithSignature("doesNotExist()"));
 
         assertEq(success, true);
     }

@@ -118,7 +118,7 @@ contract VaultTest is BaseTest {
 
     function test_fallback() public {
         vm.expectRevert("Vault: non-existent function");
-        (bool success,) = address(vault).call{value: 0, gas: 5000}(abi.encodeWithSignature("doesNotExist()"));
+        (bool success,) = address(vault).call(abi.encodeWithSignature("doesNotExist()"));
 
         assertEq(success, true);
     }
