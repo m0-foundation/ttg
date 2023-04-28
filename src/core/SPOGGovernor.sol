@@ -43,8 +43,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     mapping(uint256 => bool) public emergencyProposals;
     mapping(uint256 => ProposalVote) private _proposalVotes;
-    // epoch => start block number
-    mapping(uint256 => uint256) public epochStartBlockNumber;
     // epoch => proposalCount
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
@@ -76,9 +74,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
-
-        // set epoch 0 start block number
-        epochStartBlockNumber[0] = block.number;
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -100,22 +95,25 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function startOfNextVotingPeriod() public view returns (uint256) {
-        uint256 epochsSinceVotingPeriodChange = currentVotingPeriodEpoch() - _votingPeriodChangedEpoch;
+        uint256 nextEpoch = currentVotingPeriodEpoch() + 1;
 
-        return _votingPeriodChangedBlockNumber + (epochsSinceVotingPeriodChange + 1) * _votingPeriod;
+        return epochStartBlockNumber(nextEpoch);
+    }
+
+    function epochStartBlockNumber(uint256 epoch) public view returns (uint256) {
+        uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
+
+        return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
     }
 
     /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
     function inflateTokenSupply() external onlySPOG {
-        uint256 currentEpoch = currentVotingPeriodEpoch();
-        if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
-            // update epochStartBlockNumber
-            epochStartBlockNumber[currentEpoch] = startOfNextVotingPeriod() - _votingPeriod;
-
+        uint256 nextEpoch = currentVotingPeriodEpoch() + 1;
+        if (!votingTokensMinted[nextEpoch]) {
             uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
 
             // mint tokens
-            votingTokensMinted[currentEpoch] = true;
+            votingTokensMinted[nextEpoch] = true;
             votingToken.mint(address(this), amountToIncreaseSupplyBy);
 
             uint256 balance = votingToken.balanceOf(address(this));
@@ -123,10 +121,10 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
             // pull new tokens and any previous balance to vault
             votingToken.approve(vault, balance);
-            IVault(vault).depositEpochRewardTokens(currentEpoch, address(votingToken), balance);
+            IVault(vault).depositEpochRewardTokens(nextEpoch, address(votingToken), balance);
 
             // emit event for new tokens minted (not balance)
-            emit VotingTokenInflation(currentEpoch, amountToIncreaseSupplyBy);
+            emit VotingTokenInflation(nextEpoch, amountToIncreaseSupplyBy);
         }
     }
 
@@ -193,8 +191,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         string memory description
     ) public virtual override onlySPOG returns (uint256) {
-        ISPOG(spogAddress).inflateTokenSupply();
-
         // update epochProposalsCount. Proposals are voted on in the next epoch
         epochProposalsCount[currentVotingPeriodEpoch() + 1]++;
 
@@ -212,7 +208,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal virtual override onlySPOG {
-        ISPOG(spogAddress).inflateTokenSupply();
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
@@ -223,8 +218,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         override
         returns (uint256)
     {
-        ISPOG(spogAddress).inflateTokenSupply();
-
         // TODO: hiding error in original governor, tests are incorrectly relying on it, fix is needed!
         if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active");
 

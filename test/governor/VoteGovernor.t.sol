@@ -294,6 +294,9 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
+        // epoch 0
+        uint256 spogVoteSupplyBefore = spogVote.totalSupply();
+        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -302,45 +305,52 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeAddingNewListToSpog("new list to spog");
 
-        uint256 spogVoteSupplyBefore = spogVote.totalSupply();
-
-        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
-
-        // fast forward to an active voting period. Inflate vote token supply
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        voteGovernor.castVote(proposalId, yesVote);
-
-        uint256 spogVoteSupplyAfterFirstPeriod = spogVote.totalSupply();
+        uint256 spogVoteSupplyAfterInflation1 = spogVote.totalSupply();
         uint256 amountAddedByInflation = (spogVoteSupplyBefore * deployScript.inflator()) / 100;
 
         assertEq(
-            spogVoteSupplyAfterFirstPeriod,
+            spogVoteSupplyAfterInflation1,
             spogVoteSupplyBefore + amountAddedByInflation,
             "Vote token supply didn't inflate correctly"
         );
 
         // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogVote.balanceOf(address(vault));
+        uint256 vaultVoteTokenBalanceAfterInflation1 = spogVote.balanceOf(address(vault));
         assertEq(
-            vaultVoteTokenBalanceAfterFirstPeriod,
+            vaultVoteTokenBalanceAfterInflation1,
             vaultVoteTokenBalanceBefore + amountAddedByInflation,
             "Vault did not receive the accurate vote inflationary supply"
         );
 
-        // start of new wpoch inflation is triggered
+        // fast forward to an active voting period. epoch 1
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        voteGovernor.castVote(proposalId, yesVote);
+
+        uint256 spogVoteSupplyAfterVoting = spogVote.totalSupply();
+
+        assertEq(spogVoteSupplyAfterInflation1, spogVoteSupplyAfterVoting, "Vote token supply got inflated by voting");
+
+        // start of new epoch 2
         vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
-
-        uint256 spogVoteSupplyAfterSecondPeriod = spogVote.totalSupply();
-        uint256 amountAddedByInflation2 = (spogVoteSupplyAfterFirstPeriod * deployScript.inflator()) / 100;
+        uint256 spogVoteSupplyAfterExecution = spogVote.totalSupply();
 
         assertEq(
-            spogVoteSupplyAfterSecondPeriod,
-            spogVoteSupplyAfterFirstPeriod + amountAddedByInflation2,
-            "Vote token supply didn't inflate correctly in the second period"
+            spogVoteSupplyAfterInflation1, spogVoteSupplyAfterExecution, "Vote token supply got inflated by execution"
+        );
+
+        // new proposal, inflate supply
+        proposeAddingNewListToSpog("new list to spog, again");
+
+        uint256 spogVoteSupplyAfterInflation2 = spogVote.totalSupply();
+        uint256 amountAddedByInflation2 = (spogVoteSupplyAfterInflation1 * deployScript.inflator()) / 100;
+
+        assertEq(
+            spogVoteSupplyAfterInflation2,
+            spogVoteSupplyAfterInflation1 + amountAddedByInflation2,
+            "Vote token supply didn't inflate correctly during the second inflation"
         );
     }
 

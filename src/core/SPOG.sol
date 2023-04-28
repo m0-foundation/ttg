@@ -15,6 +15,8 @@ import {SPOGStorage} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
+import "forge-std/console.sol";
+
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -215,6 +217,9 @@ contract SPOG is SPOGStorage, ERC165 {
 
         _payFee(executableFuncSelector);
 
+        // TODO: Move down later
+        inflateTokenSupply();
+
         // Only $VALUE governance proposals
         if (executableFuncSelector == this.reset.selector) {
             valueGovernor.turnOnEmergencyVoting();
@@ -299,15 +304,6 @@ contract SPOG is SPOGStorage, ERC165 {
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Inflate token supplies
-    /// @dev calls inflateTokenSupply on both governors
-    function inflateTokenSupply() external onlyGovernor {
-        if (msg.sender == address(voteGovernor)) {
-            voteGovernor.inflateTokenSupply();
-            valueGovernor.inflateTokenSupply();
-        }
-    }
-
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
@@ -339,6 +335,13 @@ contract SPOG is SPOGStorage, ERC165 {
     /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Inflate token supplies
+    /// @dev calls inflateTokenSupply on both governors
+    function inflateTokenSupply() private {
+        voteGovernor.inflateTokenSupply();
+        valueGovernor.inflateTokenSupply();
+    }
 
     function initGovernedMethods() private {
         // TODO: review if there is better, more efficient way to do it
