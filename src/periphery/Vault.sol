@@ -33,16 +33,6 @@ contract Vault is IVault {
         auctionContract = _auctionContract;
     }
 
-    modifier onlyAllowed() {
-        require(
-            msg.sender == address(voteGovernor.spogAddress()) || msg.sender == address(voteGovernor)
-                || msg.sender == address(valueGovernor),
-            "Vault: Only allowed"
-        );
-
-        _;
-    }
-
     modifier onlySpog() {
         require(msg.sender == address(voteGovernor.spogAddress()), "Vault: Only spog");
 
@@ -53,7 +43,7 @@ contract Vault is IVault {
     /// @param epoch Epoch to deposit tokens for
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
-    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlyAllowed {
+    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlySpog {
         epochTokenDeposit[token][epoch] += amount;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 

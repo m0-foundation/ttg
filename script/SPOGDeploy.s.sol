@@ -80,10 +80,6 @@ contract SPOGDeployScript is BaseScript {
         assert(address(voteGovernor) == voteGovernorAddress); // SPOG vote governor address mismatch
         assert(address(valueGovernor) == valueGovernorAddress); // SPOG value governor address mismatch
 
-        // grant minter role to vote and value governors
-        IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), address(voteGovernor));
-        IAccessControl(address(value)).grantRole(value.MINTER_ROLE(), address(valueGovernor));
-
         // grant minter role for test runner
         IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), msg.sender);
         IAccessControl(address(value)).grantRole(value.MINTER_ROLE(), msg.sender);
