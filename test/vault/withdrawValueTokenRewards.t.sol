@@ -52,8 +52,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        vm.prank(address(valueGovernor));
-        uint256 epochInflation = spog.tokenInflationCalculation();
+        uint256 epochInflation = spog.valueFixedInflationAmount();
 
         // alice votes on proposal 1, 2 and 3
         vm.startPrank(alice);

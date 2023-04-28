@@ -107,14 +107,12 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
-    function inflateTokenSupply() external onlySPOG {
+    function inflateTokenSupply(uint256 inflationAmount) external onlySPOG {
         uint256 nextEpoch = currentVotingPeriodEpoch() + 1;
         if (!votingTokensMinted[nextEpoch]) {
-            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
-
             // mint tokens
             votingTokensMinted[nextEpoch] = true;
-            votingToken.mint(address(this), amountToIncreaseSupplyBy);
+            votingToken.mint(address(this), inflationAmount);
 
             uint256 balance = votingToken.balanceOf(address(this));
             address vault = ISPOG(spogAddress).vault();
@@ -124,7 +122,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
             IVault(vault).depositEpochRewardTokens(nextEpoch, address(votingToken), balance);
 
             // emit event for new tokens minted (not balance)
-            emit VotingTokenInflation(nextEpoch, amountToIncreaseSupplyBy);
+            emit VotingTokenInflation(nextEpoch, inflationAmount);
         }
     }
 

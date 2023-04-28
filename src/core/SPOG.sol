@@ -311,18 +311,6 @@ contract SPOG is SPOGStorage, ERC165 {
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    function tokenInflationCalculation() public view returns (uint256) {
-        if (msg.sender == address(voteGovernor)) {
-            uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
-            uint256 inflator = spogData.inflator;
-
-            return (votingTokenTotalSupply * inflator) / 100;
-        } else if (msg.sender == address(valueGovernor)) {
-            return valueFixedInflationAmount;
-        }
-
-        return 0;
-    }
 
     /// @dev check SPOG interface support
     /// @param interfaceId The interface ID to check
@@ -337,8 +325,13 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @notice Inflate token supplies
     /// @dev calls inflateTokenSupply on both governors
     function inflateTokenSupply() private {
-        voteGovernor.inflateTokenSupply();
-        valueGovernor.inflateTokenSupply();
+        // Inflate Vote token supply
+        uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
+        uint256 amount = (votingTokenTotalSupply * spogData.inflator) / 100;
+        voteGovernor.inflateTokenSupply(amount);
+
+        // Inflate Value token supply
+        valueGovernor.inflateTokenSupply(valueFixedInflationAmount);
     }
 
     function initGovernedMethods() private {

@@ -44,9 +44,6 @@ interface ISPOG {
 
     function emergencyRemove(address _address, IList _list) external;
 
-    // Utility functions
-    function tokenInflationCalculation() external view returns (uint256);
-
     // Governance process functions
     function propose(
         address[] memory targets,

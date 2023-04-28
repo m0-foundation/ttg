@@ -29,7 +29,7 @@ interface ISPOGGovernor {
 
     function updateVotingTime(uint256 newVotingTime) external;
 
-    function inflateTokenSupply() external;
+    function inflateTokenSupply(uint256 inflationAmount) external;
 
     function turnOnEmergencyVoting() external;
 
