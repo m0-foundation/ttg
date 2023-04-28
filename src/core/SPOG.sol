@@ -10,6 +10,7 @@ import {IList} from "src/interfaces/IList.sol";
 import {IVault} from "src/interfaces/IVault.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 import {SPOGStorage} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
@@ -35,6 +36,9 @@ contract SPOG is SPOGStorage, ERC165 {
     // List of addresses that are part of the masterlist
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
+
+    // epoch => bool
+    mapping(uint256 => bool) private epochRewardsMinted;
 
     /// @notice Create a new SPOG
     /// @param _initSPOGData The data used to initialize spogData
@@ -314,6 +318,10 @@ contract SPOG is SPOGStorage, ERC165 {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
+    function voteTokenInflationPerEpoch() public view returns (uint256) {
+        return (voteGovernor.votingToken().totalSupply() * spogData.inflator) / 100;
+    }
+
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -365,15 +373,24 @@ contract SPOG is SPOGStorage, ERC165 {
     }
 
     /// @notice Inflate Vote and Value token supplies
-    /// @dev calls inflateTokenSupply on both governors
+    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
     function _inflateTokenSupply() private {
-        // Inflate Vote token supply
-        uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
-        uint256 amount = (votingTokenTotalSupply * spogData.inflator) / 100;
-        voteGovernor.inflateTokenSupply(amount);
+        uint256 nextEpoch = voteGovernor.currentVotingPeriodEpoch() + 1;
 
-        // Inflate Value token supply
-        valueGovernor.inflateTokenSupply(valueFixedInflationAmount);
+        // Epoch reward tokens already minted, silently return
+        if (epochRewardsMinted[nextEpoch]) return;
+
+        epochRewardsMinted[nextEpoch] = true;
+
+        // Mint and deposit Vote and Value rewards to vault
+        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueFixedInflationAmount);
+    }
+
+    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
+        token.mint(address(this), amount);
+        token.approve(vault, amount);
+        IVault(vault).depositEpochRewardTokens(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {
@@ -391,7 +408,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @dev used to inspect params before allowing proposal
     function _extractAddressTypeParamsFromCalldata(bytes memory callData)
         internal
-        view
+        pure
         returns (address targetParams)
     {
         assembly {

@@ -47,8 +47,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     mapping(uint256 => uint256) public epochProposalsCount;
     // address => epoch => number of proposals voted on
     mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
-    // epoch => bool
-    mapping(uint256 => bool) public votingTokensMinted;
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
     // address => epoch => epoch vote weight
@@ -104,26 +102,6 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
-    }
-
-    /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
-    function inflateTokenSupply(uint256 inflationAmount) external onlySPOG {
-        uint256 nextEpoch = currentVotingPeriodEpoch() + 1;
-        if (!votingTokensMinted[nextEpoch]) {
-            // mint tokens
-            votingTokensMinted[nextEpoch] = true;
-            votingToken.mint(address(this), inflationAmount);
-
-            uint256 balance = votingToken.balanceOf(address(this));
-            address vault = ISPOG(spogAddress).vault();
-
-            // pull new tokens and any previous balance to vault
-            votingToken.approve(vault, balance);
-            IVault(vault).depositEpochRewardTokens(nextEpoch, address(votingToken), balance);
-
-            // emit event for new tokens minted (not balance)
-            emit VotingTokenInflation(nextEpoch, inflationAmount);
-        }
     }
 
     /// @dev Allows batch voting
