@@ -1,11 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {SPOGGoverned} from "src/external/SPOGGoverned.sol";
 import {List} from "src/periphery/List.sol";
 import {IList} from "src/interfaces/IList.sol";
 import "forge-std/console.sol";
+
+interface IMockConfig {
+    function someValue() external view returns (uint256);
+}
+
+contract MockConfig is IMockConfig, ERC165 {
+    uint256 public immutable someValue = 1;
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IMockConfig).interfaceId || super.supportsInterface(interfaceId);
+    }
+}
 
 contract MockGovernedContract is SPOGGoverned {
     address public collateralManagersListAddress;
@@ -28,6 +41,16 @@ contract MockGovernedContract is SPOGGoverned {
 
     function doAThing() public view onlyCollateralManagers returns (bool) {
         return true;
+    }
+}
+
+contract MockGovernedContract2 is SPOGGoverned {
+    constructor(address _spog) SPOGGoverned(_spog) {}
+
+    function getValueFromConfig(bytes32 name) public view returns (uint256) {
+        (address configAddress,) = super.getConfigByName(name);
+        IMockConfig config = IMockConfig(configAddress);
+        return config.someValue();
     }
 }
 
@@ -136,5 +159,35 @@ contract SPOGGovernedTest is SPOG_Base {
         assertTrue(testGovernedContract.doAThing());
     }
 
-    function test_abstractSpogGoverned_UsesConfig() public {}
+    function test_abstractSpogGoverned_UsesConfig() public {
+        MockConfig config = new MockConfig();
+
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingConfigToSpog(
+            "Add MockConfig", keccak256("MockConfig"), address(config), type(IMockConfig).interfaceId
+        );
+
+        // fast forward one epoch to propose
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // cast vote on proposal
+        voteGovernor.castVote(proposalId, yesVote);
+
+        // fast forward one epoch to execute
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // execute vote
+        spog.execute(targets, values, calldatas, hashedDescription);
+
+        MockGovernedContract2 testGovernedContract = new MockGovernedContract2(address(spog));
+
+        uint256 someValue = testGovernedContract.getValueFromConfig(keccak256("MockConfig"));
+
+        assertTrue(someValue == 1);
+    }
 }
