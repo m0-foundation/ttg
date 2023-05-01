@@ -85,20 +85,22 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
-    /// @dev get current epoch
-    function currentVotingPeriodEpoch() public view returns (uint256) {
+    /// @dev get current epoch number - 1, 2, 3, .. etc
+    function currentEpoch() public view returns (uint256) {
         uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 
         return _votingPeriodChangedEpoch + blocksSinceVotingPeriodChange / _votingPeriod;
     }
 
-    function startOfNextVotingPeriod() public view returns (uint256) {
-        uint256 nextEpoch = currentVotingPeriodEpoch() + 1;
+    /// @dev get `block.number` of the start of the next epoch
+    function startOfNextEpoch() public view returns (uint256) {
+        uint256 nextEpoch = currentEpoch() + 1;
 
-        return epochStartBlockNumber(nextEpoch);
+        return startOfEpoch(nextEpoch);
     }
 
-    function epochStartBlockNumber(uint256 epoch) public view returns (uint256) {
+    /// @dev get `block.number` of the start of the given epoch
+    function startOfEpoch(uint256 epoch) public view returns (uint256) {
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
@@ -141,7 +143,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
         _votingPeriod = newVotingTime;
         _votingPeriodChangedBlockNumber = block.number;
-        _votingPeriodChangedEpoch = currentVotingPeriodEpoch();
+        _votingPeriodChangedEpoch = currentEpoch();
     }
 
     function registerEmergencyProposal(uint256 proposalId) external onlySPOG {
@@ -167,7 +169,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         string memory description
     ) public virtual override onlySPOG returns (uint256) {
         // update epochProposalsCount. Proposals are voted on in the next epoch
-        epochProposalsCount[currentVotingPeriodEpoch() + 1]++;
+        epochProposalsCount[currentEpoch() + 1]++;
 
         return super.propose(targets, values, calldatas, description);
     }
@@ -191,7 +193,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         returns (uint256)
     {
         // TODO: hiding error in original governor, tests are incorrectly relying on it, fix is needed!
-        if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active");
+        if (currentEpoch() == 0) revert("Governor: vote not currently active");
 
         _updateAccountEpochVotes();
         _updateAccountEpochVoteWeight(proposalId);
@@ -201,22 +203,22 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev update epoch votes for address
     function _updateAccountEpochVotes() private {
-        accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch()]++;
+        accountEpochNumProposalsVotedOn[msg.sender][currentEpoch()]++;
     }
 
     /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
     function _updateAccountEpochVoteWeight(uint256 proposalId) private {
         uint256 voteWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
-        uint256 currentEpoch = currentVotingPeriodEpoch();
+        uint256 epoch = currentEpoch();
 
         // update address vote weight for epoch
-        if (accountEpochVoteWeight[msg.sender][currentEpoch] == 0) {
-            accountEpochVoteWeight[msg.sender][currentEpoch] = voteWeight;
+        if (accountEpochVoteWeight[msg.sender][epoch] == 0) {
+            accountEpochVoteWeight[msg.sender][epoch] = voteWeight;
         }
 
         // update cumulative vote weight for epoch if user voted in all proposals
-        if (accountEpochNumProposalsVotedOn[msg.sender][currentEpoch] == epochProposalsCount[currentEpoch]) {
-            epochSumOfVoteWeight[currentEpoch] = epochSumOfVoteWeight[currentEpoch] + voteWeight;
+        if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
+            epochSumOfVoteWeight[epoch] = epochSumOfVoteWeight[epoch] + voteWeight;
         }
     }
 
@@ -236,7 +238,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextVotingPeriod() - block.number;
+        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {

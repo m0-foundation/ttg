@@ -62,8 +62,8 @@ contract Vault is IVault {
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
     function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
-        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
-        require(epoch < currentVotingPeriodEpoch, "Vault: epoch is not in the past");
+        uint256 currentEpoch = voteGovernor.currentEpoch();
+        require(epoch < currentEpoch, "Vault: epoch is not in the past");
 
         address token = address(voteGovernor.votingToken());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
@@ -80,28 +80,26 @@ contract Vault is IVault {
     function withdrawVoteTokenRewards() external {
         address token = address(voteGovernor.votingToken());
 
-        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+        uint256 currentEpoch = voteGovernor.currentEpoch();
 
         require(
-            !hasClaimedTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch][token],
-            "Vault: vote rewards already withdrawn"
+            !hasClaimedTokenRewardsForEpoch[msg.sender][currentEpoch][token], "Vault: vote rewards already withdrawn"
         );
-        hasClaimedTokenRewardsForEpoch[msg.sender][currentVotingPeriodEpoch][token] = true;
+        hasClaimedTokenRewardsForEpoch[msg.sender][currentEpoch][token] = true;
 
-        uint256 numOfProposalsVotedOnEpoch =
-            voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, currentVotingPeriodEpoch);
+        uint256 numOfProposalsVotedOnEpoch = voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, currentEpoch);
 
-        uint256 totalProposalsEpoch = voteGovernor.epochProposalsCount(currentVotingPeriodEpoch);
+        uint256 totalProposalsEpoch = voteGovernor.epochProposalsCount(currentEpoch);
 
         require(
             numOfProposalsVotedOnEpoch == totalProposalsEpoch,
             "Vault: unable to withdraw due to not voting on all proposals"
         );
 
-        uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentVotingPeriodEpoch);
+        uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentEpoch);
 
         // get inflation amount for current epoch
-        uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][currentVotingPeriodEpoch];
+        uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][currentEpoch];
 
         uint256 totalVotingTokenSupplyApplicable =
             voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
@@ -110,7 +108,7 @@ contract Vault is IVault {
 
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
-        epochTokenTotalWithdrawn[token][currentVotingPeriodEpoch] += amountToWithdraw;
+        epochTokenTotalWithdrawn[token][currentEpoch] += amountToWithdraw;
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
@@ -120,7 +118,7 @@ contract Vault is IVault {
     function withdrawValueTokenRewards() external {
         address token = address(valueGovernor.votingToken());
 
-        uint256 relevantEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
+        uint256 relevantEpoch = voteGovernor.currentEpoch() - 1;
 
         require(
             !hasClaimedTokenRewardsForEpoch[msg.sender][relevantEpoch][token], "Vault: value rewards already withdrawn"
@@ -170,7 +168,7 @@ contract Vault is IVault {
     /// @param epoch Epoch to withdraw rewards for
     /// @param token Token to withdraw rewards for
     function withdrawRewardsForValueHolders(uint256 epoch, address token) public {
-        require(epoch < valueGovernor.currentVotingPeriodEpoch(), "Vault: epoch is not in the past");
+        require(epoch < valueGovernor.currentEpoch(), "Vault: epoch is not in the past");
         require(epochTokenDeposit[token][epoch] > 0, "Vault: no rewards to withdraw");
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
 
@@ -178,7 +176,7 @@ contract Vault is IVault {
 
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
 
-        uint256 epochStartBlockNumber = valueGovernor.epochStartBlockNumber(epoch);
+        uint256 epochStartBlockNumber = valueGovernor.startOfEpoch(epoch);
 
         uint256 totalValueTokenSupplyApplicable =
             ISPOGVotes(valueGovernor.votingToken()).getPastTotalSupply(epochStartBlockNumber);

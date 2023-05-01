@@ -50,7 +50,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
             "vault should have more spogVote balance"
         );
 
-        uint256 relevantEpochProposals = voteGovernor.currentVotingPeriodEpoch() + 1;
+        uint256 relevantEpochProposals = voteGovernor.currentEpoch() + 1;
 
         // epochProposalsCount for epoch 0 should be 3
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");

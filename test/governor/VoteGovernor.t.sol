@@ -125,23 +125,23 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
     function test_StartOfNextVotingPeriod() public {
         uint256 votingPeriod = voteGovernor.votingPeriod();
-        uint256 startOfNextVotingPeriod = voteGovernor.startOfNextVotingPeriod();
+        uint256 startOfNextEpoch = voteGovernor.startOfNextEpoch();
 
-        assertTrue(startOfNextVotingPeriod > block.number);
-        assertEq(startOfNextVotingPeriod, block.number + votingPeriod);
+        assertTrue(startOfNextEpoch > block.number);
+        assertEq(startOfNextEpoch, block.number + votingPeriod);
     }
 
     function test_AccurateIncrementOfCurrentVotingPeriodEpoch() public {
-        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+        uint256 currentEpoch = voteGovernor.currentEpoch();
 
-        assertEq(currentVotingPeriodEpoch, 0); // initial value
+        assertEq(currentEpoch, 0); // initial value
 
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-            currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+            currentEpoch = voteGovernor.currentEpoch();
 
-            assertEq(currentVotingPeriodEpoch, i + 1);
+            assertEq(currentEpoch, i + 1);
         }
     }
 

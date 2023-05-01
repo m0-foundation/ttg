@@ -5,13 +5,15 @@ import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 interface ISPOGGovernor {
-    function currentVotingPeriodEpoch() external view returns (uint256);
+    function currentEpoch() external view returns (uint256);
 
     function accountEpochNumProposalsVotedOn(address account, uint256 epoch) external view returns (uint256);
 
     function epochProposalsCount(uint256 epoch) external view returns (uint256);
 
-    function epochStartBlockNumber(uint256 epoch) external view returns (uint256);
+    function startOfNextEpoch() external view returns (uint256);
+
+    function startOfEpoch(uint256 epoch) external view returns (uint256);
 
     function accountEpochVoteWeight(address account, uint256 epoch) external view returns (uint256);
 
