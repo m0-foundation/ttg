@@ -15,18 +15,15 @@ import {SPOGStorage} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
+import {SPOGConfig} from "src/config/SPOGConfig.sol";
+
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
 /// @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
-contract SPOG is SPOGStorage, ERC165 {
+contract SPOG is SPOGConfig, SPOGStorage, ERC165 {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-
-    struct ConfigContract {
-        address contractAddress;
-        bytes4 interfaceId;
-    }
 
     address public immutable vault;
 
@@ -153,27 +150,12 @@ contract SPOG is SPOGStorage, ERC165 {
                             CONFIG GOVERNANCE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) external onlyVoteGovernor {
-        // check that the contract supports the interfaceId provided
-        if (!ERC165(configAddress).supportsInterface(interfaceId)) {
-            revert ConfigERC165Unsupported();
-        }
-
-        if (configName == bytes32(0)) {
-            revert ConfigNameCannotBeZero();
-        }
-
-        //check if named config already exists
-        if (config[configName].contractAddress != address(0)) {
-            //if it exists, make sure the new contract interface matches
-            if (config[configName].interfaceId != interfaceId) {
-                revert ConfigInterfaceIdMismatch();
-            }
-        }
-
-        config[configName] = ConfigContract(configAddress, interfaceId);
-
-        emit ConfigChange(configName, configAddress, interfaceId);
+    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
+        public
+        override
+        onlyVoteGovernor
+    {
+        return super.changeConfig(configName, configAddress, interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -352,10 +334,6 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
-    }
-
-    function getConfig(bytes32 name) public view returns (address, bytes4) {
-        return (config[name].contractAddress, config[name].interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////

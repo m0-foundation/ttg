@@ -5,7 +5,6 @@ import {IList} from "src/interfaces/IList.sol";
 
 interface ISPOG {
     // Events
-    event ConfigChange(bytes32 indexed configName, address contractAddress, bytes4 interfaceId);
     event NewListAdded(address indexed _list);
     event ListRemoved(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
@@ -20,9 +19,6 @@ interface ISPOG {
     event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
-    error ConfigInterfaceIdMismatch();
-    error ConfigERC165Unsupported();
-    error ConfigNameCannotBeZero();
     error InvalidParameter(bytes32 what);
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
@@ -70,7 +66,4 @@ interface ISPOG {
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
-
-    // Config accessor functions
-    function getConfig(bytes32 name) external view returns (address, bytes4);
 }
