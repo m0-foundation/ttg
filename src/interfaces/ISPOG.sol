@@ -66,4 +66,7 @@ interface ISPOG {
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
+
+    //Config accessor functions
+    function getConfig(bytes32 name) external view returns (address, bytes4);
 }
