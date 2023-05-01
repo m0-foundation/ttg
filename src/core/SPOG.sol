@@ -37,7 +37,7 @@ contract SPOG is SPOGStorage, ERC165 {
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
 
-    // epoch => bool
+    // Idicator that token rewards were already minted for an epoch, epoch number => bool
     mapping(uint256 => bool) private epochRewardsMinted;
 
     /// @notice Create a new SPOG
@@ -216,7 +216,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Inflate Vote and Value token supply unless method is reset or emergencyRemove
         if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergencyRemove.selector) {
-            _inflateTokenSupply();
+            _inflateRewardTokens();
         }
 
         // Only $VALUE governance proposals
@@ -376,9 +376,9 @@ contract SPOG is SPOGStorage, ERC165 {
         IVault(vault).depositEpochRewardTokens(currentEpoch, address(spogData.cash), fee);
     }
 
-    /// @notice Inflate Vote and Value token supplies
+    /// @notice inflate Vote and Value token supplies
     /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
-    function _inflateTokenSupply() private {
+    function _inflateRewardTokens() private {
         uint256 nextEpoch = voteGovernor.currentEpoch() + 1;
 
         // Epoch reward tokens already minted, silently return
@@ -391,6 +391,10 @@ contract SPOG is SPOGStorage, ERC165 {
         _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueTokenInflationPerEpoch());
     }
 
+    /// @notice mint reward token into the vault
+    /// @param epoch The epoch for which rewards become claimable
+    /// @param token The reward token, only vote or value tokens
+    /// @param amount The amount to mint and deposit into the vault
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
         token.approve(vault, amount);
