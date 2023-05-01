@@ -22,6 +22,7 @@ interface ISPOG {
     // Errors
     error ConfigInterfaceIdMismatch();
     error ConfigERC165Unsupported();
+    error ConfigNameCannotBeZero();
     error InvalidParameter(bytes32 what);
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();

@@ -159,6 +159,10 @@ contract SPOG is SPOGStorage, ERC165 {
             revert ConfigERC165Unsupported();
         }
 
+        if (configName == bytes32(0)) {
+            revert ConfigNameCannotBeZero();
+        }
+
         //check if named config already exists
         if (config[configName].contractAddress != address(0)) {
             //if it exists, make sure the new contract interface matches
