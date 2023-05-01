@@ -305,19 +305,19 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeAddingNewListToSpog("new list to spog");
 
-        uint256 spogVoteSupplyAfterInflation1 = spogVote.totalSupply();
+        uint256 spogVoteSupplyAfterFirstInflation = spogVote.totalSupply();
         uint256 amountAddedByInflation = (spogVoteSupplyBefore * deployScript.inflator()) / 100;
 
         assertEq(
-            spogVoteSupplyAfterInflation1,
+            spogVoteSupplyAfterFirstInflation,
             spogVoteSupplyBefore + amountAddedByInflation,
             "Vote token supply didn't inflate correctly"
         );
 
         // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterInflation1 = spogVote.balanceOf(address(vault));
+        uint256 vaultVoteTokenBalanceAfterFirstInflation = spogVote.balanceOf(address(vault));
         assertEq(
-            vaultVoteTokenBalanceAfterInflation1,
+            vaultVoteTokenBalanceAfterFirstInflation,
             vaultVoteTokenBalanceBefore + amountAddedByInflation,
             "Vault did not receive the accurate vote inflationary supply"
         );
@@ -328,7 +328,9 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         uint256 spogVoteSupplyAfterVoting = spogVote.totalSupply();
 
-        assertEq(spogVoteSupplyAfterInflation1, spogVoteSupplyAfterVoting, "Vote token supply got inflated by voting");
+        assertEq(
+            spogVoteSupplyAfterFirstInflation, spogVoteSupplyAfterVoting, "Vote token supply got inflated by voting"
+        );
 
         // start of new epoch 2
         vm.roll(block.number + deployScript.time() + 1);
@@ -338,18 +340,20 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256 spogVoteSupplyAfterExecution = spogVote.totalSupply();
 
         assertEq(
-            spogVoteSupplyAfterInflation1, spogVoteSupplyAfterExecution, "Vote token supply got inflated by execution"
+            spogVoteSupplyAfterFirstInflation,
+            spogVoteSupplyAfterExecution,
+            "Vote token supply got inflated by execution"
         );
 
         // new proposal, inflate supply
         proposeAddingNewListToSpog("new list to spog, again");
 
-        uint256 spogVoteSupplyAfterInflation2 = spogVote.totalSupply();
-        uint256 amountAddedByInflation2 = (spogVoteSupplyAfterInflation1 * deployScript.inflator()) / 100;
+        uint256 spogVoteSupplyAfterSecondInflation = spogVote.totalSupply();
+        uint256 amountAddedBySecondInflation = (spogVoteSupplyAfterFirstInflation * deployScript.inflator()) / 100;
 
         assertEq(
-            spogVoteSupplyAfterInflation2,
-            spogVoteSupplyAfterInflation1 + amountAddedByInflation2,
+            spogVoteSupplyAfterSecondInflation,
+            spogVoteSupplyAfterFirstInflation + amountAddedBySecondInflation,
             "Vote token supply didn't inflate correctly during the second inflation"
         );
     }
