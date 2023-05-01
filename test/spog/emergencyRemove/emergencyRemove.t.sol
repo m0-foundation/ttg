@@ -189,4 +189,24 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // assert that address is in the list
         assertFalse(list.contains(addressToRemove), "Address is still in the list");
     }
+
+    function test_VoteAndValueTokensAreNotInflatedByEmergencyRemoveProposal() public {
+        uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(vault));
+        uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(vault));
+
+        createEmergencyProposal();
+
+        uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(vault));
+        uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(vault));
+        assertEq(
+            voteTokenInitialBalanceForVault,
+            voteTokenBalanceAfterProposal,
+            "vault should have the same balance of vote tokens after emergency remove proposal"
+        );
+        assertEq(
+            valueTokenInitialBalanceForVault,
+            valueTokenBalanceAfterProposal,
+            "vault should have the same balance of value tokens after emergency remove proposal"
+        );
+    }
 }
