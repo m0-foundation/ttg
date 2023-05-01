@@ -30,10 +30,6 @@ contract SPOG is SPOGConfig, SPOGStorage, ERC165 {
     // List of methods that can be executed by SPOG governance
     mapping(bytes4 => bool) public governedMethods;
 
-    // List of named config contracts managed by SPOG governance
-    // hashed name => ConfigContract
-    mapping(bytes32 => ConfigContract) private config;
-
     uint256 private constant inMasterList = 1;
     uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
