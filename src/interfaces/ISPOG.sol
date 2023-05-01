@@ -42,7 +42,9 @@ interface ISPOG {
 
     function emergencyRemove(address _address, IList _list) external;
 
+    // Token rewards functions
     function voteTokenInflationPerEpoch() external view returns (uint256);
+    function valueTokenInflationPerEpoch() external view returns (uint256);
 
     // Governance process functions
     function propose(

@@ -322,6 +322,10 @@ contract SPOG is SPOGStorage, ERC165 {
         return (voteGovernor.votingToken().totalSupply() * spogData.inflator) / 100;
     }
 
+    function valueTokenInflationPerEpoch() public view returns (uint256) {
+        return valueFixedInflationAmount;
+    }
+
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -384,7 +388,7 @@ contract SPOG is SPOGStorage, ERC165 {
 
         // Mint and deposit Vote and Value rewards to vault
         _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
-        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueFixedInflationAmount);
+        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueTokenInflationPerEpoch());
     }
 
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
