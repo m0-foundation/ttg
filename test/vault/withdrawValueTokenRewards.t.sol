@@ -36,6 +36,11 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         // start balance of spogValue for vault should be 0
         uint256 spogValueInitialBalanceForVault = spogValue.balanceOf(address(vault));
         assertEq(spogValueInitialBalanceForVault, 0, "vault should have 0 spogValue balance");
+        assertEq(
+            spog.valueTokenInflationPerEpoch(),
+            spog.valueFixedInflationAmount(),
+            "inflation should be equal to fixed value reward"
+        );
 
         // set up proposals and inflate supply
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
@@ -45,14 +50,14 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 spogValueBalanceForVaultAfterProposals = spogValue.balanceOf(address(vault));
         assertEq(
             spogValueBalanceForVaultAfterProposals,
-            spog.valueFixedInflationAmount(),
+            spog.valueTokenInflationPerEpoch(),
             "vault should have value inflation rewards balance"
         );
 
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-        uint256 epochInflation = spog.valueFixedInflationAmount();
+        uint256 epochInflation = spog.valueTokenInflationPerEpoch();
 
         // alice votes on proposal 1, 2 and 3
         vm.startPrank(alice);

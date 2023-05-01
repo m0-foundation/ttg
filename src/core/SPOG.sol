@@ -318,10 +318,12 @@ contract SPOG is SPOGStorage, ERC165 {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
+    /// @notice returns number of vote token rewards for an epoch with active proposals
     function voteTokenInflationPerEpoch() public view returns (uint256) {
         return (voteGovernor.votingToken().totalSupply() * spogData.inflator) / 100;
     }
 
+    /// @notice returns number of value token rewards for an epoch with active proposals
     function valueTokenInflationPerEpoch() public view returns (uint256) {
         return valueFixedInflationAmount;
     }

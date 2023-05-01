@@ -36,6 +36,9 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         assertEq(spogVoteInitialBalanceForVault, 0, "vault should have 0 spogVote balance");
 
         uint256 epochInflation = spogVote.totalSupply() * deployScript.inflator() / 100;
+        assertEq(
+            spog.voteTokenInflationPerEpoch(), epochInflation, "inflation should be equal to totalSupply * inflator"
+        );
 
         // set up proposals
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
