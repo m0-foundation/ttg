@@ -19,7 +19,7 @@ contract MockSPOGGovernor is StdCheats {
         votingToken = _votingToken;
     }
 
-    function currentVotingPeriodEpoch() public pure returns (uint256) {
+    function currentEpoch() public pure returns (uint256) {
         return 2;
     }
 }

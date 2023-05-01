@@ -372,14 +372,14 @@ contract SPOG is SPOGStorage, ERC165 {
         spogData.cash.approve(address(vault), fee);
 
         // deposit the amount to the vault
-        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
-        IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), fee);
+        uint256 currentEpoch = voteGovernor.currentEpoch();
+        IVault(vault).depositEpochRewardTokens(currentEpoch, address(spogData.cash), fee);
     }
 
     /// @notice Inflate Vote and Value token supplies
     /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
     function _inflateTokenSupply() private {
-        uint256 nextEpoch = voteGovernor.currentVotingPeriodEpoch() + 1;
+        uint256 nextEpoch = voteGovernor.currentEpoch() + 1;
 
         // Epoch reward tokens already minted, silently return
         if (epochRewardsMinted[nextEpoch]) return;

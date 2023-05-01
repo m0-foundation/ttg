@@ -15,7 +15,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 proposalId,
         uint256 amountToBeSharedOnProRataBasis
     ) private view returns (uint256) {
-        uint256 relevantVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch() - 1;
+        uint256 relevantVotingPeriodEpoch = voteGovernor.currentEpoch() - 1;
 
         uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
 
@@ -86,7 +86,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 aliceValueBalanceBefore = spogValue.balanceOf(alice);
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);
 
-        uint256 relevantEpoch = valueGovernor.currentVotingPeriodEpoch() - 1;
+        uint256 relevantEpoch = valueGovernor.currentEpoch() - 1;
 
         assertFalse(
             vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpoch, address(spogValue)),
