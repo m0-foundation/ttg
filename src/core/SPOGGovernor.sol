@@ -21,22 +21,14 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
     uint256 private _votingPeriodChangedEpoch;
-
     // @note voting with no delay is required for certain proposals
-    bool private emergencyVotingIsOn;
-
-    /// @dev Supported vote types.
-    enum VoteType {
-        No,
-        Yes
-    }
+    bool private _emergencyVotingIsOn;
 
     // private mappings
     mapping(uint256 => ProposalVote) private _proposalVotes;
 
     // public mappings
     mapping(uint256 => bool) public override emergencyProposals;
-
     // epoch => proposalCount
     mapping(uint256 => uint256) public override epochProposalsCount;
     // address => epoch => number of proposals voted on
@@ -176,11 +168,11 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     function turnOnEmergencyVoting() external override onlySPOG {
-        emergencyVotingIsOn = true;
+        _emergencyVotingIsOn = true;
     }
 
     function turnOffEmergencyVoting() external override onlySPOG {
-        emergencyVotingIsOn = false;
+        _emergencyVotingIsOn = false;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -253,7 +245,7 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {

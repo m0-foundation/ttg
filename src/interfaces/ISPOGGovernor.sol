@@ -25,6 +25,12 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
         mapping(address => bool) hasVoted;
     }
 
+    /// @dev Supported vote types.
+    enum VoteType {
+        No,
+        Yes
+    }
+
     // public variables
     function spogAddress() external view virtual returns (address);
 
