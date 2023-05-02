@@ -43,8 +43,6 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     mapping(address => mapping(uint256 => uint256)) public override accountEpochNumProposalsVotedOn;
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public override epochSumOfVoteWeight;
-    // address => epoch => epoch vote weight
-    mapping(address => mapping(uint256 => uint256)) public override accountEpochVoteWeight;
 
     modifier onlySPOG() {
         if (msg.sender != spogAddress) revert CallerIsNotSPOG(msg.sender);
@@ -235,11 +233,6 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
     function _updateAccountEpochVoteWeight(uint256 weight) private {
         uint256 epoch = currentEpoch();
-
-        // update address vote weight for epoch
-        if (accountEpochVoteWeight[msg.sender][epoch] == 0) {
-            accountEpochVoteWeight[msg.sender][epoch] = weight;
-        }
 
         // update cumulative vote weight for epoch if user voted in all proposals
         if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {

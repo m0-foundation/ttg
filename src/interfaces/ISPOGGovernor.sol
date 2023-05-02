@@ -39,8 +39,6 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
 
     function epochSumOfVoteWeight(uint256 epoch) external view virtual returns (uint256);
 
-    function accountEpochVoteWeight(address account, uint256 epoch) external view virtual returns (uint256);
-
     // public functions
 
     function currentEpoch() external view virtual returns (uint256);

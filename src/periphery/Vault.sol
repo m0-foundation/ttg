@@ -96,7 +96,7 @@ contract Vault is IVault {
             "Vault: unable to withdraw due to not voting on all proposals"
         );
 
-        uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, currentEpoch);
+        uint256 accountVotesWeight = voteGovernor.getVotes(msg.sender, voteGovernor.startOfEpoch(currentEpoch));
 
         // get inflation amount for current epoch
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][currentEpoch];
@@ -135,7 +135,7 @@ contract Vault is IVault {
             "Vault: unable to withdraw due to not voting on all proposals"
         );
 
-        uint256 accountVotesWeight = voteGovernor.accountEpochVoteWeight(msg.sender, relevantEpoch);
+        uint256 accountVotesWeight = voteGovernor.getVotes(msg.sender, voteGovernor.startOfEpoch(relevantEpoch));
 
         uint256 valueTokenAmountToBeSharedOnProRataBasis = epochTokenDeposit[token][relevantEpoch];
 
