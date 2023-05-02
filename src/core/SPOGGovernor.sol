@@ -219,20 +219,17 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     {
         uint256 weight = super._castVote(proposalId, account, support, reason, params);
 
-        _updateAccountEpochVotes();
-        _updateAccountEpochVoteWeight(weight);
+        _updateAccountEpochVotes(weight);
 
         return weight;
     }
 
-    /// @dev update epoch votes for address
-    function _updateAccountEpochVotes() private {
-        accountEpochNumProposalsVotedOn[msg.sender][currentEpoch()]++;
-    }
-
-    /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
-    function _updateAccountEpochVoteWeight(uint256 weight) private {
+    /// @dev update number of proposals account voted for and cumulative vote weight casted in epoch
+    function _updateAccountEpochVotes(uint256 weight) private {
         uint256 epoch = currentEpoch();
+
+        // update number of proposals account voted for in current epoch
+        accountEpochNumProposalsVotedOn[msg.sender][epoch]++;
 
         // update cumulative vote weight for epoch if user voted in all proposals
         if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
