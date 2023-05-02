@@ -193,11 +193,15 @@ contract SPOG_emergencyRemove is SPOG_Base {
     function test_EmergencyRemove_VoteAndValueTokensAreNotInflated() public {
         uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(vault));
         uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(vault));
+        uint256 voteTotalBalance = spogVote.totalSupply();
+        uint256 valueTotalBalance = spogValue.totalSupply();
 
         createEmergencyProposal();
 
         uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(vault));
         uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(vault));
+        uint256 voteTotalBalanceAfterProposal = spogVote.totalSupply();
+        uint256 valueTotalBalanceAfterProposal = spogValue.totalSupply();
         assertEq(
             voteTokenInitialBalanceForVault,
             voteTokenBalanceAfterProposal,
@@ -207,6 +211,16 @@ contract SPOG_emergencyRemove is SPOG_Base {
             valueTokenInitialBalanceForVault,
             valueTokenBalanceAfterProposal,
             "vault should have the same balance of value tokens after emergency remove proposal"
+        );
+        assertEq(
+            voteTotalBalance,
+            voteTotalBalanceAfterProposal,
+            "total supply of vote tokens should not change after emergency remove proposal"
+        );
+        assertEq(
+            valueTotalBalance,
+            valueTotalBalanceAfterProposal,
+            "total supply of value tokens should not change after emergency remove proposal"
         );
     }
 }

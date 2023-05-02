@@ -37,7 +37,7 @@ contract SPOG is SPOGStorage, ERC165 {
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
 
-    // Idicator that token rewards were already minted for an epoch, epoch number => bool
+    // Indicator that token rewards were already minted for an epoch, epoch number => bool
     mapping(uint256 => bool) private epochRewardsMinted;
 
     /// @notice Create a new SPOG
