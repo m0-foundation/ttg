@@ -33,13 +33,9 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     // public mappings
     function emergencyProposals(uint256 proposalId) external view virtual returns (bool);
 
-    function epochStartBlockNumber(uint256 epoch) external view virtual returns (uint256);
-
     function epochProposalsCount(uint256 epoch) external view virtual returns (uint256);
 
     function accountEpochNumProposalsVotedOn(address account, uint256 epoch) external view virtual returns (uint256);
-
-    function votingTokensMinted(uint256 epoch) external view virtual returns (bool);
 
     function epochSumOfVoteWeight(uint256 epoch) external view virtual returns (uint256);
 

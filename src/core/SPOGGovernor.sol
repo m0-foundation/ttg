@@ -36,14 +36,11 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
 
     // public mappings
     mapping(uint256 => bool) public override emergencyProposals;
-    // epoch => start block number
-    mapping(uint256 => uint256) public override epochStartBlockNumber;
+
     // epoch => proposalCount
     mapping(uint256 => uint256) public override epochProposalsCount;
     // address => epoch => number of proposals voted on
     mapping(address => mapping(uint256 => uint256)) public override accountEpochNumProposalsVotedOn;
-    // epoch => bool
-    mapping(uint256 => bool) public override votingTokensMinted;
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public override epochSumOfVoteWeight;
     // address => epoch => epoch vote weight
