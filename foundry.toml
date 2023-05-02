@@ -2,7 +2,7 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
-solc-version = "0.8.17"
+solc-version = "0.8.19"
 gas_reports_ignore = ["SPOGDeployScript", "ERC20GodMode"]
 
 [rpc_endpoints]
