@@ -6,9 +6,9 @@ import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 
 /**
  * @title ProtocolConfigurator
- * @dev An abstract contract to provide config contracts for the SPOG
+ * @dev Provide governed config contracts for the SPOG
  */
-abstract contract ProtocolConfigurator is IProtocolConfigurator {
+contract ProtocolConfigurator is IProtocolConfigurator {
     // List of named config contracts managed by SPOG governance
     // hashed name => ConfigContract
     mapping(bytes32 => ConfigContract) private config;
