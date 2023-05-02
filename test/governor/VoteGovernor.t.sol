@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import "forge-std/console.sol";
 
@@ -81,15 +82,15 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_turnOnAndOffEmergencyVoting_WhenCalledNotBySPOG() public {
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.turnOnEmergencyVoting();
 
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.turnOffEmergencyVoting();
     }
 
@@ -114,12 +115,12 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         // execute proposal
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.registerEmergencyProposal(1);
     }
 
