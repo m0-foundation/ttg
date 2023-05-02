@@ -30,6 +30,7 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     function initSPOGAddress(address _spogAddress) external {
         require(spogAddress == address(0), "SPOGVote: spogAddress already set");
         spogAddress = _spogAddress;
+        _setupRole(MINTER_ROLE, _spogAddress);
     }
 
     /// @dev Restricts minting to address with MINTER_ROLE
