@@ -66,7 +66,7 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     function registerEmergencyProposal(uint256 proposalId) external virtual;
 
     function castVotes(uint256[] calldata proposalIds, uint8[] calldata support)
-        public
+        external
         virtual
         returns (uint256[] memory);
 }
