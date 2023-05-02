@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {IList} from "src/interfaces/IList.sol";
 import {ListFactory} from "src/factories/ListFactory.sol";

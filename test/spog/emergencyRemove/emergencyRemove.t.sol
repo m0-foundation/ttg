@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
