@@ -222,13 +222,12 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
         override
         returns (uint256)
     {
-        // TODO: hiding error in original governor, tests are incorrectly relying on it, fix is needed!
-        if (currentEpoch() == 0) revert("Governor: vote not currently active");
+        uint256 weight = super._castVote(proposalId, account, support, reason, params);
 
         _updateAccountEpochVotes();
-        _updateAccountEpochVoteWeight(proposalId);
+        _updateAccountEpochVoteWeight(weight);
 
-        return super._castVote(proposalId, account, support, reason, params);
+        return weight;
     }
 
     /// @dev update epoch votes for address
@@ -237,18 +236,17 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
-    function _updateAccountEpochVoteWeight(uint256 proposalId) private {
-        uint256 voteWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
+    function _updateAccountEpochVoteWeight(uint256 weight) private {
         uint256 epoch = currentEpoch();
 
         // update address vote weight for epoch
         if (accountEpochVoteWeight[msg.sender][epoch] == 0) {
-            accountEpochVoteWeight[msg.sender][epoch] = voteWeight;
+            accountEpochVoteWeight[msg.sender][epoch] = weight;
         }
 
         // update cumulative vote weight for epoch if user voted in all proposals
         if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
-            epochSumOfVoteWeight[epoch] = epochSumOfVoteWeight[epoch] + voteWeight;
+            epochSumOfVoteWeight[epoch] += weight;
         }
     }
 
