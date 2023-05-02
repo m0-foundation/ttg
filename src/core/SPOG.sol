@@ -8,6 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IList} from "src/interfaces/IList.sol";
 import {IVault} from "src/interfaces/IVault.sol";
+import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
@@ -290,7 +291,7 @@ contract SPOG is SPOGStorage, ERC165 {
         uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
         // Check that both value and vote governance approved parameter change
         if (executableFuncSelector == this.change.selector) {
-            if (valueGovernor.state(proposalId) != ISPOGGovernor.ProposalState.Succeeded) {
+            if (valueGovernor.state(proposalId) != IGovernor.ProposalState.Succeeded) {
                 revert ValueGovernorDidNotApprove(proposalId);
             }
         }
