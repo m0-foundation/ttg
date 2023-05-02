@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 /**
  * @title ERC165CheckerSPOG
- * 
+ *
  * Utility to verify whether an address implements ISPOG.
  */
 

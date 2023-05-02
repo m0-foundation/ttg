@@ -12,8 +12,6 @@ out/
 
 notes.md
 
-.vscode
-
 coverage/
 lcov.info
 
