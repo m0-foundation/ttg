@@ -2,13 +2,13 @@
 pragma solidity 0.8.17;
 
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {ISPOGConfig} from "src/interfaces/ISPOGConfig.sol";
+import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 
 /**
- * @title SPOGConfig
+ * @title ProtocolConfigurator
  * @dev An abstract contract to provide config contracts for the SPOG
  */
-abstract contract SPOGConfig is ISPOGConfig {
+abstract contract ProtocolConfigurator is IProtocolConfigurator {
     // List of named config contracts managed by SPOG governance
     // hashed name => ConfigContract
     mapping(bytes32 => ConfigContract) private config;

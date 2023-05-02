@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -17,13 +18,14 @@ import {SPOGStorage} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
-import {SPOGConfig} from "src/config/SPOGConfig.sol";
+import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
+import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
 /// @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
-contract SPOG is SPOGConfig, SPOGStorage, ERC165 {
+contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -153,7 +155,7 @@ contract SPOG is SPOGConfig, SPOGStorage, ERC165 {
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
         public
-        override
+        override(IProtocolConfigurator, ProtocolConfigurator)
         onlyVoteGovernor
     {
         return super.changeConfig(configName, configAddress, interfaceId);
@@ -349,7 +351,7 @@ contract SPOG is SPOGConfig, SPOGStorage, ERC165 {
 
     /// @dev check SPOG interface support
     /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 

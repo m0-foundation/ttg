@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 import {IList} from "src/interfaces/IList.sol";
+import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-interface ISPOG {
+interface ISPOG is IProtocolConfigurator, IERC165 {
     // Events
     event NewListAdded(address indexed _list);
     event ListRemoved(address indexed _list);
@@ -65,7 +67,4 @@ interface ISPOG {
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
-
-    //Config accessor functions
-    function getConfig(bytes32 name) external view returns (address, bytes4);
 }
