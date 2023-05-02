@@ -7,6 +7,7 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IVault} from "src/interfaces/IVault.sol";
+import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
 
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
@@ -76,6 +77,36 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
+    function quorumNumerator()
+        public
+        view
+        virtual
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return GovernorVotesQuorumFraction.quorumNumerator();
+    }
+
+    function quorumNumerator(uint256 blockNumber)
+        public
+        view
+        virtual
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return GovernorVotesQuorumFraction.quorumNumerator(blockNumber);
+    }
+
+    function quorumDenominator()
+        public
+        view
+        virtual
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return GovernorVotesQuorumFraction.quorumDenominator();
+    }
+
     /// @dev get current epoch number - 1, 2, 3, .. etc
     function currentEpoch() public view override returns (uint256) {
         uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
@@ -91,7 +122,7 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     /// @dev get `block.number` of the start of the given epoch
-    function startOfEpoch(uint256 epoch) public view returns (uint256) {
+    function startOfEpoch(uint256 epoch) public view override returns (uint256) {
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
@@ -129,7 +160,7 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     /// @param newQuorumNumerator New quorum numerator
     function updateQuorumNumerator(uint256 newQuorumNumerator)
         external
-        override(ISPOGGovernor, GovernorVotesQuorumFraction)
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
         onlySPOG
     {
         _updateQuorumNumerator(newQuorumNumerator);

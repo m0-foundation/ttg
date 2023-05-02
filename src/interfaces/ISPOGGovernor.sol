@@ -3,9 +3,10 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
+import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
-abstract contract ISPOGGovernor is IGovernor {
+abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     // Errors
     error CallerIsNotSPOG(address caller);
     error SPOGAddressAlreadySet(address spog);
@@ -48,7 +49,9 @@ abstract contract ISPOGGovernor is IGovernor {
 
     function currentEpoch() external view virtual returns (uint256);
 
-    function startOfNextEpoch() public view virtual returns (uint256);
+    function startOfEpoch(uint256 epoch) external view virtual returns (uint256);
+
+    function startOfNextEpoch() external view virtual returns (uint256);
 
     function initSPOGAddress(address) external virtual;
 
@@ -66,6 +69,4 @@ abstract contract ISPOGGovernor is IGovernor {
         public
         virtual
         returns (uint256[] memory);
-
-    function updateQuorumNumerator(uint256 newQuorumNumerator) external virtual;
 }
