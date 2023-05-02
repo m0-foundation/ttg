@@ -42,8 +42,9 @@ interface ISPOG {
 
     function emergencyRemove(address _address, IList _list) external;
 
-    // Utility functions
-    function tokenInflationCalculation() external view returns (uint256);
+    // Token rewards functions
+    function voteTokenInflationPerEpoch() external view returns (uint256);
+    function valueTokenInflationPerEpoch() external view returns (uint256);
 
     // Governance process functions
     function propose(
@@ -61,8 +62,6 @@ interface ISPOG {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) external returns (uint256);
-
-    function inflateTokenSupply() external;
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);

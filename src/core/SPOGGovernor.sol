@@ -3,24 +3,20 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {IVault} from "src/interfaces/IVault.sol";
+import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
 
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.
-contract SPOGGovernor is GovernorVotesQuorumFraction {
-    // Errors
-    error CallerIsNotSPOG(address caller);
-    error SPOGAddressAlreadySet(address spog);
-    error AlreadyVoted(uint256 proposalId, address account);
-    error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
-
+contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
-    ISPOGVotes public immutable votingToken;
-    address public spogAddress;
+    ISPOGVotes public immutable override votingToken;
+    address public override spogAddress;
 
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
@@ -35,31 +31,23 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         Yes
     }
 
-    struct ProposalVote {
-        uint256 noVotes;
-        uint256 yesVotes;
-        mapping(address => bool) hasVoted;
-    }
-
-    mapping(uint256 => bool) public emergencyProposals;
+    // private mappings
     mapping(uint256 => ProposalVote) private _proposalVotes;
-    // epoch => start block number
-    mapping(uint256 => uint256) public epochStartBlockNumber;
-    // epoch => proposalCount
-    mapping(uint256 => uint256) public epochProposalsCount;
-    // address => epoch => number of proposals voted on
-    mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
-    // epoch => bool
-    mapping(uint256 => bool) public votingTokensMinted;
-    // epoch => cumulative epoch vote weight casted
-    mapping(uint256 => uint256) public epochSumOfVoteWeight;
-    // address => epoch => epoch vote weight
-    mapping(address => mapping(uint256 => uint256)) public accountEpochVoteWeight;
 
-    event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
-    event VotingTokenInflation(uint256 indexed epoch, uint256 amount);
-    event VotingTokenInflationWithdrawn(address indexed voter, uint256 amount);
-    event EpochVotingTokenSupplySet(uint256 indexed epoch, uint256 amount);
+    // public mappings
+    mapping(uint256 => bool) public override emergencyProposals;
+    // epoch => start block number
+    mapping(uint256 => uint256) public override epochStartBlockNumber;
+    // epoch => proposalCount
+    mapping(uint256 => uint256) public override epochProposalsCount;
+    // address => epoch => number of proposals voted on
+    mapping(address => mapping(uint256 => uint256)) public override accountEpochNumProposalsVotedOn;
+    // epoch => bool
+    mapping(uint256 => bool) public override votingTokensMinted;
+    // epoch => cumulative epoch vote weight casted
+    mapping(uint256 => uint256) public override epochSumOfVoteWeight;
+    // address => epoch => epoch vote weight
+    mapping(address => mapping(uint256 => uint256)) public override accountEpochVoteWeight;
 
     modifier onlySPOG() {
         if (msg.sender != spogAddress) revert CallerIsNotSPOG(msg.sender);
@@ -76,14 +64,11 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
-
-        // set epoch 0 start block number
-        epochStartBlockNumber[0] = block.number;
     }
 
     /// @dev sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
-    function initSPOGAddress(address _spogAddress) external {
+    function initSPOGAddress(address _spogAddress) external override {
         if (spogAddress != address(0)) {
             revert SPOGAddressAlreadySet(spogAddress);
         }
@@ -92,49 +77,66 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         spogAddress = _spogAddress;
     }
 
-    /// @dev get current epoch
-    function currentVotingPeriodEpoch() public view returns (uint256) {
+    function quorumNumerator()
+        public
+        view
+        virtual
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return GovernorVotesQuorumFraction.quorumNumerator();
+    }
+
+    function quorumNumerator(uint256 blockNumber)
+        public
+        view
+        virtual
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return GovernorVotesQuorumFraction.quorumNumerator(blockNumber);
+    }
+
+    function quorumDenominator()
+        public
+        view
+        virtual
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        returns (uint256)
+    {
+        return GovernorVotesQuorumFraction.quorumDenominator();
+    }
+
+    /// @dev get current epoch number - 1, 2, 3, .. etc
+    function currentEpoch() public view override returns (uint256) {
         uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
 
         return _votingPeriodChangedEpoch + blocksSinceVotingPeriodChange / _votingPeriod;
     }
 
-    function startOfNextVotingPeriod() public view returns (uint256) {
-        uint256 epochsSinceVotingPeriodChange = currentVotingPeriodEpoch() - _votingPeriodChangedEpoch;
+    /// @dev get `block.number` of the start of the next epoch
+    function startOfNextEpoch() public view override returns (uint256) {
+        uint256 nextEpoch = currentEpoch() + 1;
 
-        return _votingPeriodChangedBlockNumber + (epochsSinceVotingPeriodChange + 1) * _votingPeriod;
+        return startOfEpoch(nextEpoch);
     }
 
-    /// @dev it mints voting tokens if needed. Used in propose, execute and castVote calls
-    function inflateTokenSupply() external onlySPOG {
-        uint256 currentEpoch = currentVotingPeriodEpoch();
-        if (!votingTokensMinted[currentEpoch] && currentEpoch != 0) {
-            // update epochStartBlockNumber
-            epochStartBlockNumber[currentEpoch] = startOfNextVotingPeriod() - _votingPeriod;
+    /// @dev get `block.number` of the start of the given epoch
+    function startOfEpoch(uint256 epoch) public view override returns (uint256) {
+        uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
-            uint256 amountToIncreaseSupplyBy = ISPOG(spogAddress).tokenInflationCalculation();
-
-            // mint tokens
-            votingTokensMinted[currentEpoch] = true;
-            votingToken.mint(address(this), amountToIncreaseSupplyBy);
-
-            uint256 balance = votingToken.balanceOf(address(this));
-            address vault = ISPOG(spogAddress).vault();
-
-            // pull new tokens and any previous balance to vault
-            votingToken.approve(vault, balance);
-            IVault(vault).depositEpochRewardTokens(currentEpoch, address(votingToken), balance);
-
-            // emit event for new tokens minted (not balance)
-            emit VotingTokenInflation(currentEpoch, amountToIncreaseSupplyBy);
-        }
+        return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
     }
 
     /// @dev Allows batch voting
     /// @notice Uses same params as castVote, but in arrays.
     /// @param proposalIds an array of proposalIds
     /// @param support an array of vote values for each proposal
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) public returns (uint256[] memory) {
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support)
+        public
+        override
+        returns (uint256[] memory)
+    {
         uint256 propLength = proposalIds.length;
         uint256 supLength = support.length;
         if (propLength != supLength) {
@@ -156,29 +158,33 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev Update quorum numerator only by SPOG
     /// @param newQuorumNumerator New quorum numerator
-    function updateQuorumNumerator(uint256 newQuorumNumerator) external override onlySPOG {
+    function updateQuorumNumerator(uint256 newQuorumNumerator)
+        external
+        override(GovernorVotesQuorumFraction, IGovernorVotesQuorumFraction)
+        onlySPOG
+    {
         _updateQuorumNumerator(newQuorumNumerator);
     }
 
     /// @dev Update voting time only by SPOG
     /// @param newVotingTime New voting time
-    function updateVotingTime(uint256 newVotingTime) external onlySPOG {
+    function updateVotingTime(uint256 newVotingTime) external override onlySPOG {
         emit VotingPeriodUpdated(_votingPeriod, newVotingTime);
 
         _votingPeriod = newVotingTime;
         _votingPeriodChangedBlockNumber = block.number;
-        _votingPeriodChangedEpoch = currentVotingPeriodEpoch();
+        _votingPeriodChangedEpoch = currentEpoch();
     }
 
-    function registerEmergencyProposal(uint256 proposalId) external onlySPOG {
+    function registerEmergencyProposal(uint256 proposalId) external override onlySPOG {
         emergencyProposals[proposalId] = true;
     }
 
-    function turnOnEmergencyVoting() external onlySPOG {
+    function turnOnEmergencyVoting() external override onlySPOG {
         emergencyVotingIsOn = true;
     }
 
-    function turnOffEmergencyVoting() external onlySPOG {
+    function turnOffEmergencyVoting() external override onlySPOG {
         emergencyVotingIsOn = false;
     }
 
@@ -186,25 +192,19 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
                             OVERRIDE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice override to use inflateTokenSupply
     function propose(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public virtual override onlySPOG returns (uint256) {
-        ISPOG(spogAddress).inflateTokenSupply();
-
+    ) public virtual override(Governor, IGovernor) onlySPOG returns (uint256) {
         // update epochProposalsCount. Proposals are voted on in the next epoch
-        epochProposalsCount[currentVotingPeriodEpoch() + 1]++;
+        epochProposalsCount[currentEpoch() + 1]++;
 
         return super.propose(targets, values, calldatas, description);
     }
 
-    /// @notice override to use inflateTokenSupply and check that caller is SPOG
-    /**
-     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
-     */
+    /// @notice override to check that caller is SPOG
     function _execute(
         uint256 proposalId,
         address[] memory targets,
@@ -212,21 +212,18 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) internal virtual override onlySPOG {
-        ISPOG(spogAddress).inflateTokenSupply();
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    /// @notice override to use inflateTokenSupply
+    /// @notice override to count user activity in epochs
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual
         override
         returns (uint256)
     {
-        ISPOG(spogAddress).inflateTokenSupply();
-
         // TODO: hiding error in original governor, tests are incorrectly relying on it, fix is needed!
-        if (currentVotingPeriodEpoch() == 0) revert("Governor: vote not currently active");
+        if (currentEpoch() == 0) revert("Governor: vote not currently active");
 
         _updateAccountEpochVotes();
         _updateAccountEpochVoteWeight(proposalId);
@@ -236,29 +233,29 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
 
     /// @dev update epoch votes for address
     function _updateAccountEpochVotes() private {
-        accountEpochNumProposalsVotedOn[msg.sender][currentVotingPeriodEpoch()]++;
+        accountEpochNumProposalsVotedOn[msg.sender][currentEpoch()]++;
     }
 
     /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
     function _updateAccountEpochVoteWeight(uint256 proposalId) private {
         uint256 voteWeight = _getVotes(msg.sender, proposalSnapshot(proposalId), "");
-        uint256 currentEpoch = currentVotingPeriodEpoch();
+        uint256 epoch = currentEpoch();
 
         // update address vote weight for epoch
-        if (accountEpochVoteWeight[msg.sender][currentEpoch] == 0) {
-            accountEpochVoteWeight[msg.sender][currentEpoch] = voteWeight;
+        if (accountEpochVoteWeight[msg.sender][epoch] == 0) {
+            accountEpochVoteWeight[msg.sender][epoch] = voteWeight;
         }
 
         // update cumulative vote weight for epoch if user voted in all proposals
-        if (accountEpochNumProposalsVotedOn[msg.sender][currentEpoch] == epochProposalsCount[currentEpoch]) {
-            epochSumOfVoteWeight[currentEpoch] = epochSumOfVoteWeight[currentEpoch] + voteWeight;
+        if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
+            epochSumOfVoteWeight[epoch] = epochSumOfVoteWeight[epoch] + voteWeight;
         }
     }
 
     /**
      * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
      */
-    function state(uint256 proposalId) public view virtual override returns (ProposalState) {
+    function state(uint256 proposalId) public view virtual override(Governor, IGovernor) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
@@ -271,7 +268,7 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextVotingPeriod() - block.number;
+        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {
@@ -294,7 +291,13 @@ contract SPOGGovernor is GovernorVotesQuorumFraction {
     }
 
     /// @dev Accessor to the internal vote counts.
-    function proposalVotes(uint256 proposalId) public view virtual returns (uint256 noVotes, uint256 yesVotes) {
+    function proposalVotes(uint256 proposalId)
+        public
+        view
+        virtual
+        override
+        returns (uint256 noVotes, uint256 yesVotes)
+    {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.noVotes, proposalVote.yesVotes);
     }
