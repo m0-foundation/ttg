@@ -19,7 +19,7 @@ contract MockSPOGGovernor is StdCheats {
         votingToken = _votingToken;
     }
 
-    function currentVotingPeriodEpoch() public pure returns (uint256) {
+    function currentEpoch() public pure returns (uint256) {
         return 2;
     }
 }
@@ -27,6 +27,7 @@ contract MockSPOGGovernor is StdCheats {
 contract VaultTest is BaseTest {
     IERC20PricelessAuction public auctionImplementation;
     Vault public vault;
+    address spogAddress;
 
     // events to test
     event EpochRewardsDeposit(uint256 indexed epoch, address token, uint256 amount);
@@ -40,6 +41,7 @@ contract VaultTest is BaseTest {
         ISPOGGovernor valueGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
         auctionImplementation = new ERC20PricelessAuction();
         vault = new Vault(voteGovernor, valueGovernor, auctionImplementation);
+        spogAddress = vault.voteGovernor().spogAddress();
 
         // mint tokens to vault
         deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
@@ -60,8 +62,8 @@ contract VaultTest is BaseTest {
 
         // deposit rewards for previous epoch
         uint256 epoch = 1;
-        voteToken.mint(address(vault.voteGovernor()), 1000e18);
-        vm.startPrank(address(vault.voteGovernor()));
+        voteToken.mint(spogAddress, 1000e18);
+        vm.startPrank(spogAddress);
         voteToken.approve(address(vault), 1000e18);
 
         expectEmit();
@@ -77,8 +79,8 @@ contract VaultTest is BaseTest {
 
         // deposit rewards for previous epoch
         uint256 epoch = 1;
-        voteToken.mint(address(vault.voteGovernor()), 1000e18);
-        vm.startPrank(address(vault.voteGovernor()));
+        voteToken.mint(spogAddress, 1000e18);
+        vm.startPrank(spogAddress);
         voteToken.approve(address(vault), 1000e18);
         vault.depositEpochRewardTokens(epoch, address(voteToken), 1000e18);
         vm.stopPrank();
@@ -88,25 +90,24 @@ contract VaultTest is BaseTest {
         assertEq(unclaimed, 1000e18);
     }
 
-    function test_sellUnclaimedVoteTokens() public {
+    function test_sellUnclaimedVoteTokens_Vault() public {
         setUp();
 
         // deposit rewards for previous epoch
         uint256 epoch = 1;
-        voteToken.mint(address(vault.voteGovernor()), 1000e18);
-        vm.startPrank(address(vault.voteGovernor()));
+        voteToken.mint(spogAddress, 1000e18);
+        vm.startPrank(spogAddress);
         voteToken.approve(address(vault), 1000e18);
         vault.depositEpochRewardTokens(epoch, address(voteToken), 1000e18);
-        vm.stopPrank();
 
-        vm.prank(vault.voteGovernor().spogAddress());
         vault.sellUnclaimedVoteTokens(epoch, address(usdc), 30 days);
 
         assertEq(voteToken.balanceOf(address(vault)), 0);
+        vm.stopPrank();
     }
 
     function test_UpdateVoteGovernor() public {
-        vm.startPrank(vault.voteGovernor().spogAddress());
+        vm.startPrank(spogAddress);
 
         ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
         expectEmit();

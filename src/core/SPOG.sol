@@ -11,6 +11,7 @@ import {IVault} from "src/interfaces/IVault.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 import {SPOGStorage} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
@@ -36,6 +37,9 @@ contract SPOG is SPOGStorage, ERC165 {
     // List of addresses that are part of the masterlist
     // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private masterlist;
+
+    // Indicator that token rewards were already minted for an epoch, epoch number => bool
+    mapping(uint256 => bool) private epochRewardsMinted;
 
     /// @notice Create a new SPOG
     /// @param _initSPOGData The data used to initialize spogData
@@ -69,7 +73,7 @@ contract SPOG is SPOGStorage, ERC165 {
         require(_vault != address(0), "SPOG: Vault address cannot be 0");
         vault = _vault;
 
-        initGovernedMethods();
+        _initGovernedMethods();
     }
 
     /// @dev Getter for finding whether a list is in a masterlist
@@ -211,6 +215,11 @@ contract SPOG is SPOGStorage, ERC165 {
 
         _payFee(executableFuncSelector);
 
+        // Inflate Vote and Value token supply unless method is reset or emergencyRemove
+        if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergencyRemove.selector) {
+            _inflateRewardTokens();
+        }
+
         // Only $VALUE governance proposals
         if (executableFuncSelector == this.reset.selector) {
             valueGovernor.turnOnEmergencyVoting();
@@ -304,36 +313,25 @@ contract SPOG is SPOGStorage, ERC165 {
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Inflate token supplies
-    /// @dev calls inflateTokenSupply on both governors
-    function inflateTokenSupply() external onlyGovernor {
-        if (msg.sender == address(voteGovernor)) {
-            voteGovernor.inflateTokenSupply();
-            valueGovernor.inflateTokenSupply();
-        }
-    }
-
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
         IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
+    /// @notice returns number of vote token rewards for an epoch with active proposals
+    function voteTokenInflationPerEpoch() public view returns (uint256) {
+        return (voteGovernor.votingToken().totalSupply() * spogData.inflator) / 100;
+    }
+
+    /// @notice returns number of value token rewards for an epoch with active proposals
+    function valueTokenInflationPerEpoch() public view returns (uint256) {
+        return valueFixedInflationAmount;
+    }
+
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    function tokenInflationCalculation() public view returns (uint256) {
-        if (msg.sender == address(voteGovernor)) {
-            uint256 votingTokenTotalSupply = IERC20(voteGovernor.votingToken()).totalSupply();
-            uint256 inflator = spogData.inflator;
-
-            return (votingTokenTotalSupply * inflator) / 100;
-        } else if (msg.sender == address(valueGovernor)) {
-            return valueFixedInflationAmount;
-        }
-
-        return 0;
-    }
 
     /// @dev check SPOG interface support
     /// @param interfaceId The interface ID to check
@@ -345,7 +343,7 @@ contract SPOG is SPOGStorage, ERC165 {
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function initGovernedMethods() private {
+    function _initGovernedMethods() private {
         // TODO: review if there is better, more efficient way to do it
         governedMethods[this.append.selector] = true;
         governedMethods[this.changeTax.selector] = true;
@@ -377,8 +375,33 @@ contract SPOG is SPOGStorage, ERC165 {
         spogData.cash.approve(address(vault), fee);
 
         // deposit the amount to the vault
-        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
-        IVault(vault).depositEpochRewardTokens(currentVotingPeriodEpoch, address(spogData.cash), fee);
+        uint256 currentEpoch = voteGovernor.currentEpoch();
+        IVault(vault).depositEpochRewardTokens(currentEpoch, address(spogData.cash), fee);
+    }
+
+    /// @notice inflate Vote and Value token supplies
+    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
+    function _inflateRewardTokens() private {
+        uint256 nextEpoch = voteGovernor.currentEpoch() + 1;
+
+        // Epoch reward tokens already minted, silently return
+        if (epochRewardsMinted[nextEpoch]) return;
+
+        epochRewardsMinted[nextEpoch] = true;
+
+        // Mint and deposit Vote and Value rewards to vault
+        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueTokenInflationPerEpoch());
+    }
+
+    /// @notice mint reward token into the vault
+    /// @param epoch The epoch for which rewards become claimable
+    /// @param token The reward token, only vote or value tokens
+    /// @param amount The amount to mint and deposit into the vault
+    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
+        token.mint(address(this), amount);
+        token.approve(vault, amount);
+        IVault(vault).depositEpochRewardTokens(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {
@@ -396,7 +419,7 @@ contract SPOG is SPOGStorage, ERC165 {
     /// @dev used to inspect params before allowing proposal
     function _extractAddressTypeParamsFromCalldata(bytes memory callData)
         internal
-        view
+        pure
         returns (address targetParams)
     {
         assembly {

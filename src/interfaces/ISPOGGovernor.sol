@@ -46,17 +46,15 @@ abstract contract ISPOGGovernor is IGovernor {
 
     // public functions
 
-    function currentVotingPeriodEpoch() external view virtual returns (uint256);
+    function currentEpoch() external view virtual returns (uint256);
 
-    function startOfNextVotingPeriod() public view virtual returns (uint256);
+    function startOfNextEpoch() public view virtual returns (uint256);
 
     function initSPOGAddress(address) external virtual;
 
     function proposalVotes(uint256 proposalId) external view virtual returns (uint256 noVotes, uint256 yesVotes);
 
     function updateVotingTime(uint256 newVotingTime) external virtual;
-
-    function inflateTokenSupply() external virtual;
 
     function turnOnEmergencyVoting() external virtual;
 

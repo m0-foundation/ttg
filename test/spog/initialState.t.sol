@@ -121,11 +121,6 @@ contract SPOG_InitialState is SPOG_Base {
         new SPOG(initSPOGData, vault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, ISPOGGovernor(address(_voteGovernor)), ISPOGGovernor(address(_valueGovernor)));
     }
 
-    function test_tokenInflationCalculation_IsZeroByDefault() public {
-        uint256 epochInflation = spog.tokenInflationCalculation();
-        assertTrue(epochInflation == 0, "tokenInflationCalculation should be zero by default");
-    }
-
     function test_fallback() public {
         vm.expectRevert("SPOG: non-existent function");
         (bool success,) = address(spog).call(abi.encodeWithSignature("doesNotExist()"));
