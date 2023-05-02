@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
@@ -22,7 +22,7 @@ contract SPOG_SellUnclaimedVoteTokens is Vault_IntegratedWithSPOG {
         vm.roll(block.number + voteGovernor.votingPeriod() + 1);
 
         // anyone can call
-        spog.sellUnclaimedVoteTokens(voteGovernor.currentVotingPeriodEpoch() - 1);
+        spog.sellUnclaimedVoteTokens(voteGovernor.currentEpoch() - 1);
 
         assertEq(voteToken.balanceOf(address(vault)), 0);
     }

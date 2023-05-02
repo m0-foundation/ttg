@@ -33,4 +33,8 @@ abstract contract SPOGGoverned {
 
         return IList(listAddress);
     }
+
+    function getConfigByName(bytes32 name) public view returns (address, bytes4) {
+        return spog.getConfig(name);
+    }
 }

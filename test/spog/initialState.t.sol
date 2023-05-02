@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
@@ -119,11 +119,6 @@ contract SPOG_InitialState is SPOG_Base {
 
         vm.expectRevert("SPOG: Vault address cannot be 0");
         new SPOG(initSPOGData, vault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, ISPOGGovernor(address(_voteGovernor)), ISPOGGovernor(address(_valueGovernor)));
-    }
-
-    function test_tokenInflationCalculation_IsZeroByDefault() public {
-        uint256 epochInflation = spog.tokenInflationCalculation();
-        assertTrue(epochInflation == 0, "tokenInflationCalculation should be zero by default");
     }
 
     function test_fallback() public {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
 
@@ -31,12 +31,29 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
     //////////////////////////////////////////////////////////////*/
 
     function test_UsersGetsVoteTokenInflationAfterVotingOnAllProposals() public {
+        // balance of spogVote for vault should be 0 before proposals
+        uint256 spogVoteInitialBalanceForVault = spogVote.balanceOf(address(vault));
+        assertEq(spogVoteInitialBalanceForVault, 0, "vault should have 0 spogVote balance");
+
+        uint256 epochInflation = spogVote.totalSupply() * deployScript.inflator() / 100;
+        assertEq(
+            spog.voteTokenInflationPerEpoch(), epochInflation, "inflation should be equal to totalSupply * inflator"
+        );
+
         // set up proposals
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
-        uint256 relevantEpochProposals = voteGovernor.currentVotingPeriodEpoch() + 1;
+        uint256 spogVoteBalanceForVaultForEpochOne = spogVote.balanceOf(address(vault));
+        // TODO: make sure calculations are really correct here
+        assertEq(
+            spogVoteInitialBalanceForVault + epochInflation,
+            spogVoteBalanceForVaultForEpochOne,
+            "vault should have more spogVote balance"
+        );
+
+        uint256 relevantEpochProposals = voteGovernor.currentEpoch() + 1;
 
         // epochProposalsCount for epoch 0 should be 3
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
@@ -45,27 +62,13 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         vm.expectRevert("Governor: vote not currently active");
         voteGovernor.castVote(proposalId, yesVote);
 
-        // balance of spogVote for vault should be 0
-        uint256 spogVoteBalanceForVaultForEpochZero = spogVote.balanceOf(address(vault));
-        assertEq(spogVoteBalanceForVaultForEpochZero, 0, "vault should have 0 spogVote balance");
-
         // voting period started
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        vm.prank(address(voteGovernor));
-        uint256 epochInflation = spog.tokenInflationCalculation();
 
         // alice votes on proposal 1
         vm.startPrank(alice);
         voteGovernor.castVote(proposalId, yesVote);
         vm.stopPrank();
-
-        uint256 spogVoteBalanceForVaultForEpochOne = spogVote.balanceOf(address(vault));
-        assertGt(
-            spogVoteBalanceForVaultForEpochOne,
-            spogVoteBalanceForVaultForEpochZero,
-            "vault should have more spogVote balance"
-        );
 
         // bob votes on proposal 1
         vm.startPrank(bob);
@@ -191,7 +194,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         // vault should have received the remaining inflationary rewards from epoch 1
         assertGt(
             spogVote.balanceOf(address(vault)),
-            spogVoteBalanceForVaultForEpochZero,
+            spogVoteInitialBalanceForVault,
             "vault should have received the remaining inflationary rewards from epoch 1"
         );
     }

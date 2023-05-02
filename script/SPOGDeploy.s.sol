@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
@@ -79,10 +79,6 @@ contract SPOGDeployScript is BaseScript {
         // sanity check
         assert(address(voteGovernor) == voteGovernorAddress); // SPOG vote governor address mismatch
         assert(address(valueGovernor) == valueGovernorAddress); // SPOG value governor address mismatch
-
-        // grant minter role to vote and value governors
-        IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), address(voteGovernor));
-        IAccessControl(address(value)).grantRole(value.MINTER_ROLE(), address(valueGovernor));
 
         // grant minter role for test runner
         IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), msg.sender);

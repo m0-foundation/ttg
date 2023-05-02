@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
@@ -13,23 +13,23 @@ contract ValueSPOGGovernorTest is SPOG_Base {
 
     function test_valueGov_StartOfNextVotingPeriod() public {
         uint256 votingPeriod = valueGovernor.votingPeriod();
-        uint256 startOfNextVotingPeriod = valueGovernor.startOfNextVotingPeriod();
+        uint256 startOfNextEpoch = valueGovernor.startOfNextEpoch();
 
-        assertTrue(startOfNextVotingPeriod > block.number);
-        assertEq(startOfNextVotingPeriod, block.number + votingPeriod);
+        assertTrue(startOfNextEpoch > block.number);
+        assertEq(startOfNextEpoch, block.number + votingPeriod);
     }
 
     function test_value_gov_AccurateIncrementOfCurrentVotingPeriodEpoch() public {
-        uint256 currentVotingPeriodEpoch = valueGovernor.currentVotingPeriodEpoch();
+        uint256 currentEpoch = valueGovernor.currentEpoch();
 
-        assertEq(currentVotingPeriodEpoch, 0); // initial value
+        assertEq(currentEpoch, 0); // initial value
 
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + valueGovernor.votingDelay() + 1);
 
-            currentVotingPeriodEpoch = valueGovernor.currentVotingPeriodEpoch();
+            currentEpoch = valueGovernor.currentEpoch();
 
-            assertEq(currentVotingPeriodEpoch, i + 1);
+            assertEq(currentEpoch, i + 1);
         }
     }
 

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import "forge-std/console.sol";
 
@@ -81,15 +82,15 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_turnOnAndOffEmergencyVoting_WhenCalledNotBySPOG() public {
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.turnOnEmergencyVoting();
 
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.turnOffEmergencyVoting();
     }
 
@@ -114,34 +115,34 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         // execute proposal
         // revert when called not by SPOG, execute methods are closed to the public
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_registerEmergencyProposal_WhenCalledNotBySPOG() public {
-        vm.expectRevert(abi.encodeWithSelector(SPOGGovernor.CallerIsNotSPOG.selector, address(this)));
+        vm.expectRevert(abi.encodeWithSelector(ISPOGGovernor.CallerIsNotSPOG.selector, address(this)));
         voteGovernor.registerEmergencyProposal(1);
     }
 
     function test_StartOfNextVotingPeriod() public {
         uint256 votingPeriod = voteGovernor.votingPeriod();
-        uint256 startOfNextVotingPeriod = voteGovernor.startOfNextVotingPeriod();
+        uint256 startOfNextEpoch = voteGovernor.startOfNextEpoch();
 
-        assertTrue(startOfNextVotingPeriod > block.number);
-        assertEq(startOfNextVotingPeriod, block.number + votingPeriod);
+        assertTrue(startOfNextEpoch > block.number);
+        assertEq(startOfNextEpoch, block.number + votingPeriod);
     }
 
     function test_AccurateIncrementOfCurrentVotingPeriodEpoch() public {
-        uint256 currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+        uint256 currentEpoch = voteGovernor.currentEpoch();
 
-        assertEq(currentVotingPeriodEpoch, 0); // initial value
+        assertEq(currentEpoch, 0); // initial value
 
         for (uint256 i = 0; i < 6; i++) {
             vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
-            currentVotingPeriodEpoch = voteGovernor.currentVotingPeriodEpoch();
+            currentEpoch = voteGovernor.currentEpoch();
 
-            assertEq(currentVotingPeriodEpoch, i + 1);
+            assertEq(currentEpoch, i + 1);
         }
     }
 
@@ -294,6 +295,9 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     }
 
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
+        // epoch 0
+        uint256 spogVoteSupplyBefore = spogVote.totalSupply();
+        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -302,45 +306,56 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeAddingNewListToSpog("new list to spog");
 
-        uint256 spogVoteSupplyBefore = spogVote.totalSupply();
-
-        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
-
-        // fast forward to an active voting period. Inflate vote token supply
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
-
-        voteGovernor.castVote(proposalId, yesVote);
-
-        uint256 spogVoteSupplyAfterFirstPeriod = spogVote.totalSupply();
+        uint256 spogVoteSupplyAfterFirstInflation = spogVote.totalSupply();
         uint256 amountAddedByInflation = (spogVoteSupplyBefore * deployScript.inflator()) / 100;
 
         assertEq(
-            spogVoteSupplyAfterFirstPeriod,
+            spogVoteSupplyAfterFirstInflation,
             spogVoteSupplyBefore + amountAddedByInflation,
             "Vote token supply didn't inflate correctly"
         );
 
         // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogVote.balanceOf(address(vault));
+        uint256 vaultVoteTokenBalanceAfterFirstInflation = spogVote.balanceOf(address(vault));
         assertEq(
-            vaultVoteTokenBalanceAfterFirstPeriod,
+            vaultVoteTokenBalanceAfterFirstInflation,
             vaultVoteTokenBalanceBefore + amountAddedByInflation,
             "Vault did not receive the accurate vote inflationary supply"
         );
 
-        // start of new wpoch inflation is triggered
+        // fast forward to an active voting period. epoch 1
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        voteGovernor.castVote(proposalId, yesVote);
+
+        uint256 spogVoteSupplyAfterVoting = spogVote.totalSupply();
+
+        assertEq(
+            spogVoteSupplyAfterFirstInflation, spogVoteSupplyAfterVoting, "Vote token supply got inflated by voting"
+        );
+
+        // start of new epoch 2
         vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
-
-        uint256 spogVoteSupplyAfterSecondPeriod = spogVote.totalSupply();
-        uint256 amountAddedByInflation2 = (spogVoteSupplyAfterFirstPeriod * deployScript.inflator()) / 100;
+        uint256 spogVoteSupplyAfterExecution = spogVote.totalSupply();
 
         assertEq(
-            spogVoteSupplyAfterSecondPeriod,
-            spogVoteSupplyAfterFirstPeriod + amountAddedByInflation2,
-            "Vote token supply didn't inflate correctly in the second period"
+            spogVoteSupplyAfterFirstInflation,
+            spogVoteSupplyAfterExecution,
+            "Vote token supply got inflated by execution"
+        );
+
+        // new proposal, inflate supply
+        proposeAddingNewListToSpog("new list to spog, again");
+
+        uint256 spogVoteSupplyAfterSecondInflation = spogVote.totalSupply();
+        uint256 amountAddedBySecondInflation = (spogVoteSupplyAfterFirstInflation * deployScript.inflator()) / 100;
+
+        assertEq(
+            spogVoteSupplyAfterSecondInflation,
+            spogVoteSupplyAfterFirstInflation + amountAddedBySecondInflation,
+            "Vote token supply didn't inflate correctly during the second inflation"
         );
     }
 
