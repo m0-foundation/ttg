@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IERC20PricelessAuction {
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
