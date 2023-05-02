@@ -14,13 +14,14 @@ abstract contract ProtocolConfigurator is IProtocolConfigurator {
     mapping(bytes32 => ConfigContract) private config;
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public virtual {
-        // check that the contract supports the interfaceId provided
-        if (!ERC165(configAddress).supportsInterface(interfaceId)) {
-            revert ConfigERC165Unsupported();
-        }
-
         if (configName == bytes32(0)) {
             revert ConfigNameCannotBeZero();
+        }
+
+        // check that the contract supports the interfaceId provided
+        // Note: This also protect against adddress(0)
+        if (!ERC165(configAddress).supportsInterface(interfaceId)) {
+            revert ConfigERC165Unsupported();
         }
 
         //check if named config already exists
