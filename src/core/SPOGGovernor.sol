@@ -222,12 +222,12 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
         override
         returns (uint256)
     {
-        uint256 voteWeight = super._castVote(proposalId, account, support, reason, params);
+        uint256 weight = super._castVote(proposalId, account, support, reason, params);
 
         _updateAccountEpochVotes();
-        _updateAccountEpochVoteWeight(proposalId, weight);
+        _updateAccountEpochVoteWeight(weight);
 
-        return voteWeight;
+        return weight;
     }
 
     /// @dev update epoch votes for address
@@ -236,17 +236,17 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
-    function _updateAccountEpochVoteWeight(uint256 proposalId, uint256 voteWeight) private {
+    function _updateAccountEpochVoteWeight(uint256 weight) private {
         uint256 epoch = currentEpoch();
 
         // update address vote weight for epoch
         if (accountEpochVoteWeight[msg.sender][epoch] == 0) {
-            accountEpochVoteWeight[msg.sender][epoch] = voteWeight;
+            accountEpochVoteWeight[msg.sender][epoch] = weight;
         }
 
         // update cumulative vote weight for epoch if user voted in all proposals
         if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
-            epochSumOfVoteWeight[epoch] = epochSumOfVoteWeight[epoch] + voteWeight;
+            epochSumOfVoteWeight[epoch] += weight;
         }
     }
 
