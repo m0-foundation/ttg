@@ -79,75 +79,18 @@ contract Vault is IVault {
     /// @dev Withdraw Vote Token Rewards
     function withdrawVoteTokenRewards() external {
         address token = address(voteGovernor.votingToken());
-
         uint256 currentEpoch = voteGovernor.currentEpoch();
-
-        require(
-            !hasClaimedTokenRewardsForEpoch[msg.sender][currentEpoch][token], "Vault: vote rewards already withdrawn"
-        );
-        hasClaimedTokenRewardsForEpoch[msg.sender][currentEpoch][token] = true;
-
-        uint256 numOfProposalsVotedOnEpoch = voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, currentEpoch);
-
-        uint256 totalProposalsEpoch = voteGovernor.epochProposalsCount(currentEpoch);
-
-        require(
-            numOfProposalsVotedOnEpoch == totalProposalsEpoch,
-            "Vault: unable to withdraw due to not voting on all proposals"
-        );
-
-        uint256 accountVotesWeight = voteGovernor.getVotes(msg.sender, voteGovernor.startOfEpoch(currentEpoch));
-
-        // get inflation amount for current epoch
-        uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][currentEpoch];
-
-        uint256 totalVotingTokenSupplyApplicable =
-            voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
-
-        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
-
-        uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
-
-        epochTokenTotalWithdrawn[token][currentEpoch] += amountToWithdraw;
-        IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
-
-        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+        uint256 epochRewards = epochTokenDeposit[token][currentEpoch];
+        uint256 totalVotingTokenSupplyApplicable = voteGovernor.votingToken().totalSupply() - epochRewards;
+        _withdrawTokenRewards(token, currentEpoch, totalVotingTokenSupplyApplicable);
     }
 
     /// @dev Withdraw Value Token Rewards
     function withdrawValueTokenRewards() external {
         address token = address(valueGovernor.votingToken());
-
-        uint256 relevantEpoch = voteGovernor.currentEpoch() - 1;
-
-        require(
-            !hasClaimedTokenRewardsForEpoch[msg.sender][relevantEpoch][token], "Vault: value rewards already withdrawn"
-        );
-        hasClaimedTokenRewardsForEpoch[msg.sender][relevantEpoch][token] = true;
-
-        uint256 numOfProposalsVotedOnRelevantEpoch =
-            voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, relevantEpoch);
-
-        uint256 totalProposalsRelevantEpoch = voteGovernor.epochProposalsCount(relevantEpoch);
-
-        require(
-            numOfProposalsVotedOnRelevantEpoch == totalProposalsRelevantEpoch,
-            "Vault: unable to withdraw due to not voting on all proposals"
-        );
-
-        uint256 accountVotesWeight = voteGovernor.getVotes(msg.sender, voteGovernor.startOfEpoch(relevantEpoch));
-
-        uint256 valueTokenAmountToBeSharedOnProRataBasis = epochTokenDeposit[token][relevantEpoch];
-
-        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantEpoch);
-
-        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
-
-        uint256 amountToWithdraw = percentageOfTotalSupply * valueTokenAmountToBeSharedOnProRataBasis / 100;
-
-        IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
-
-        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+        uint256 previousEpoch = voteGovernor.currentEpoch() - 1;
+        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(previousEpoch);
+        _withdrawTokenRewards(token, previousEpoch, totalVotingTokenSupplyApplicable);
     }
 
     /// @dev Withdraw rewards for multiple epochs for a token
@@ -198,6 +141,33 @@ contract Vault is IVault {
         voteGovernor = newVoteGovernor;
 
         emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
+    }
+
+    function _withdrawTokenRewards(address token, uint256 epoch, uint256 totalVotingTokenSupplyApplicable) private {
+        require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
+        hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token] = true;
+
+        // withdraw rewards only if voted on all proposals in epoch
+        uint256 numOfProposalsVotedOnEpoch = voteGovernor.accountEpochNumProposalsVotedOn(msg.sender, epoch);
+        uint256 totalProposalsEpoch = voteGovernor.epochProposalsCount(epoch);
+        require(
+            numOfProposalsVotedOnEpoch == totalProposalsEpoch,
+            "Vault: unable to withdraw due to not voting on all proposals"
+        );
+
+        // get inflation amount user is eligible to withdraw for the epoch
+        uint256 accountVotesWeight = voteGovernor.getVotes(msg.sender, voteGovernor.startOfEpoch(epoch));
+        uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
+        // uint256 totalVotingTokenSupplyApplicable =
+        //     voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
+        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
+        uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
+
+        // withdraw rewards
+        epochTokenTotalWithdrawn[token][epoch] += amountToWithdraw;
+        IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
+
+        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
     }
 
     fallback() external {
