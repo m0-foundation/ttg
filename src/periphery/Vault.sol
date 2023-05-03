@@ -76,8 +76,8 @@ contract Vault is IVault {
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
 
-    /// @dev Withdraw Vote Token Rewards
-    function withdrawVoteTokenRewards() external {
+    /// @dev Claim Vote Token Rewards
+    function claimVoteTokenRewards() external {
         address token = address(voteGovernor.votingToken());
         uint256 currentEpoch = voteGovernor.currentEpoch();
         uint256 epochRewards = epochTokenDeposit[token][currentEpoch];
@@ -86,8 +86,8 @@ contract Vault is IVault {
         _withdrawTokenRewards(token, currentEpoch, totalVotingTokenSupplyApplicable);
     }
 
-    /// @dev Withdraw Value Token Rewards
-    function withdrawValueTokenRewards() external {
+    /// @dev Claim Value Token Rewards
+    function claimValueTokenRewards() external {
         address token = address(valueGovernor.votingToken());
         uint256 previousEpoch = voteGovernor.currentEpoch() - 1;
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(previousEpoch);

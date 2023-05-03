@@ -30,7 +30,7 @@ contract VaultTest is BaseTest {
     address spogAddress;
 
     // events to test
-    event EpochRewardsDeposit(uint256 indexed epoch, address token, uint256 amount);
+    event EpochRewardsDeposit(uint256 indexed epoch, address indexed token, uint256 amount);
 
     ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
 
