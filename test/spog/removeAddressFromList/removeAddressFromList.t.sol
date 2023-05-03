@@ -23,13 +23,9 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
     function test_Revert_WhenListNotInMasterList() external {
         bytes memory expectedError = abi.encodeWithSignature("ListIsNotInMasterList()");
 
-        // remove list from master list
-        vm.prank(address(voteGovernor));
-        spog.removeList(IList(listToRemoveAddressFrom));
-
         vm.expectRevert(expectedError);
         vm.prank(address(voteGovernor));
-        spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
+        spog.remove(addressToRemove, IList(address(0x1234)));
     }
 
     function test_SPOGProposalToRemoveAddressFromAList() public {
