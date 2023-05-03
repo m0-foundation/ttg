@@ -36,8 +36,6 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     function addNewList(IList list) external;
 
-    function removeList(IList list) external;
-
     function append(address _address, IList _list) external;
 
     function remove(address _address, IList _list) external;

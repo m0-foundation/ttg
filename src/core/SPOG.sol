@@ -102,19 +102,6 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         emit NewListAdded(address(list));
     }
 
-    /// @notice Remove a list from the master list of the SPOG
-    /// @param list  The list address of the list to be removed
-    function removeList(IList list) external onlyVoteGovernor {
-        // require that the list is on the master list
-        if (!masterlist.contains(address(list))) {
-            revert ListIsNotInMasterList();
-        }
-
-        // remove the list from the master list
-        masterlist.remove(address(list));
-        emit ListRemoved(address(list));
-    }
-
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
@@ -364,7 +351,6 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         governedMethods[this.append.selector] = true;
         governedMethods[this.changeTax.selector] = true;
         governedMethods[this.remove.selector] = true;
-        governedMethods[this.removeList.selector] = true;
         governedMethods[this.addNewList.selector] = true;
         governedMethods[this.change.selector] = true;
         governedMethods[this.emergencyRemove.selector] = true;
