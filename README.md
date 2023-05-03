@@ -8,7 +8,23 @@ A SPOG, "Simple Participation Optimized Governance," is a governance mechanism t
 
 ![](assets/spog-arch-2nd-version.png)
 
-## Setup
+## Using the NPM Package
+
+```bash
+npm i @mzero-labs/spog
+```
+
+This installs the contract artifacts as a node module for use in Javascript projects.
+
+Example:
+
+```
+const ListABI = require("@mzero-labs/spog").List;
+```
+
+For Typescript bindings, consider adding [TypeChain](https://github.com/dethcrypto/TypeChain) to your project. It can parse the artifacts found in `node_modules/@mzero-labs/spog/out` as a `postinstall` step.
+
+## Dev Setup
 
 Clone the repo and install dependencies
 
@@ -55,7 +71,7 @@ To view test coverage
 Note: On Linux, install genhtml. On MacOS, `brew install lcov`
 
 ```bash
- make coverage
+ make -B coverage
 ```
 
 You can then view the file coverage/index.html to view the report. This can also be integrated into vs code with various extentions
