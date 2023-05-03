@@ -81,6 +81,7 @@ contract Vault is IVault {
         address token = address(voteGovernor.votingToken());
         uint256 currentEpoch = voteGovernor.currentEpoch();
         uint256 epochRewards = epochTokenDeposit[token][currentEpoch];
+        // TODO: make sure the use of `totalSupply` is valid here
         uint256 totalVotingTokenSupplyApplicable = voteGovernor.votingToken().totalSupply() - epochRewards;
         _withdrawTokenRewards(token, currentEpoch, totalVotingTokenSupplyApplicable);
     }
@@ -121,8 +122,7 @@ contract Vault is IVault {
 
         uint256 epochStartBlockNumber = valueGovernor.startOfEpoch(epoch);
 
-        uint256 totalValueTokenSupplyApplicable =
-            ISPOGVotes(valueGovernor.votingToken()).getPastTotalSupply(epochStartBlockNumber);
+        uint256 totalValueTokenSupplyApplicable = valueGovernor.votingToken().getPastTotalSupply(epochStartBlockNumber);
 
         uint256 accountBalanceAtEpochStart = valueGovernor.getVotes(msg.sender, epochStartBlockNumber);
 
@@ -143,6 +143,7 @@ contract Vault is IVault {
         emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
     }
 
+    /// @dev Withdraw Vote and Value Token Rewards
     function _withdrawTokenRewards(address token, uint256 epoch, uint256 totalVotingTokenSupplyApplicable) private {
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token] = true;
@@ -158,8 +159,6 @@ contract Vault is IVault {
         // get inflation amount user is eligible to withdraw for the epoch
         uint256 accountVotesWeight = voteGovernor.getVotes(msg.sender, voteGovernor.startOfEpoch(epoch));
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
-        // uint256 totalVotingTokenSupplyApplicable =
-        //     voteGovernor.votingToken().totalSupply() - amountToBeSharedOnProRataBasis;
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotingTokenSupplyApplicable;
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
