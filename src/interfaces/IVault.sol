@@ -15,7 +15,7 @@ interface IVault {
     function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
     function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external;
 
-    // Functions for claiming governance rewards and withdrawing assets
+    // Functions for claiming governance rewards by vote holders
     function claimVoteTokenRewards() external;
     function claimValueTokenRewards() external;
     function unclaimedVoteTokensForEpoch(uint256 epoch) external view returns (uint256);
