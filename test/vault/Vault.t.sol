@@ -22,6 +22,10 @@ contract MockSPOGGovernor is StdCheats {
     function currentEpoch() public pure returns (uint256) {
         return 2;
     }
+
+    function startOfEpoch(uint256 epoch) public pure returns (uint256) {
+        return epoch * 5;
+    }
 }
 
 contract VaultTest is BaseTest {
@@ -68,7 +72,8 @@ contract VaultTest is BaseTest {
 
         expectEmit();
         emit EpochRewardsDeposit(epoch, address(voteToken), 1000e18);
-        vault.depositEpochRewardTokens(epoch, address(voteToken), 1000e18);
+        uint256 epochStart = vault.voteGovernor().startOfEpoch(epoch);
+        vault.depositEpochRewardTokens(epoch, epochStart, address(voteToken), 1000e18);
         vm.stopPrank();
 
         assertEq(voteToken.balanceOf(address(vault)), 1000e18);
@@ -82,7 +87,8 @@ contract VaultTest is BaseTest {
         voteToken.mint(spogAddress, 1000e18);
         vm.startPrank(spogAddress);
         voteToken.approve(address(vault), 1000e18);
-        vault.depositEpochRewardTokens(epoch, address(voteToken), 1000e18);
+        uint256 epochStart = vault.voteGovernor().startOfEpoch(epoch);
+        vault.depositEpochRewardTokens(epoch, epochStart, address(voteToken), 1000e18);
         vm.stopPrank();
 
         uint256 unclaimed = vault.unclaimedVoteTokensForEpoch(epoch);
@@ -98,7 +104,8 @@ contract VaultTest is BaseTest {
         voteToken.mint(spogAddress, 1000e18);
         vm.startPrank(spogAddress);
         voteToken.approve(address(vault), 1000e18);
-        vault.depositEpochRewardTokens(epoch, address(voteToken), 1000e18);
+        uint256 epochStart = vault.voteGovernor().startOfEpoch(epoch);
+        vault.depositEpochRewardTokens(epoch, epochStart, address(voteToken), 1000e18);
 
         vault.sellUnclaimedVoteTokens(epoch, address(usdc), 30 days);
 

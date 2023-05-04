@@ -27,6 +27,9 @@ contract Vault is IVault {
     mapping(address => mapping(uint256 => uint256)) public epochTokenDeposit;
     mapping(address => mapping(uint256 => uint256)) public epochTokenTotalWithdrawn;
 
+    // start block numbers for epochs with rewards
+    mapping(uint256 => uint256) public epochStartBlockNumber;
+
     constructor(ISPOGGovernor _voteGovernor, ISPOGGovernor _valueGovernor, IERC20PricelessAuction _auctionContract) {
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
@@ -41,10 +44,15 @@ contract Vault is IVault {
 
     /// @notice Deposit voting (vote and value) reward tokens for epoch
     /// @param epoch Epoch to deposit tokens for
+    /// @param epochStart Start block number of epoch
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
-    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external onlySPOG {
+    function depositEpochRewardTokens(uint256 epoch, uint256 epochStart, address token, uint256 amount)
+        external
+        onlySPOG
+    {
         epochTokenDeposit[token][epoch] += amount;
+        epochStartBlockNumber[epoch] = epochStart;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         emit EpochRewardsDeposit(epoch, token, amount);
@@ -146,7 +154,7 @@ contract Vault is IVault {
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][rewardToken], "Vault: rewards already withdrawn");
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][rewardToken] = true;
 
-        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
+        uint256 epochStart = epochStartBlockNumber[epoch];
         // if vote holders claim value inflation, use special case - total votes weight of only active participants
         // otherwise use standard total supply votes weight
         uint256 totalVotesWeight;

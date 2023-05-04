@@ -11,7 +11,7 @@ interface IVault {
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     // SPOG-triggered functions
-    function depositEpochRewardTokens(uint256 epoch, address token, uint256 amount) external;
+    function depositEpochRewardTokens(uint256 epoch, uint256 epochStart, address token, uint256 amount) external;
     function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
     function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external;
 
