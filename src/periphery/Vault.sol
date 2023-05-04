@@ -121,6 +121,14 @@ contract Vault is IVault {
         _withdrawTokenRewards(epoch, valueGovernor.votingToken(), token);
     }
 
+    // @notice Update vote governor after `RESET` was executed
+    // @param newVoteGovernor New vote governor
+    function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySPOG {
+        voteGovernor = newVoteGovernor;
+
+        emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
+    }
+
     function _getTotalSupplyForBasicProRata(uint256 epoch, ISPOGVotes votingToken) private view returns (uint256) {
         uint256 inflation = epochTokenDeposit[address(votingToken)][epoch];
         // vote and value epochs are in sync
@@ -170,14 +178,6 @@ contract Vault is IVault {
         IERC20(rewardToken).safeTransfer(msg.sender, amountToWithdraw);
 
         emit TokenRewardsWithdrawn(msg.sender, rewardToken, amountToWithdraw);
-    }
-
-    // @notice Update vote governor after `RESET` was executed
-    // @param newVoteGovernor New vote governor
-    function updateVoteGovernor(ISPOGGovernor newVoteGovernor) external onlySPOG {
-        voteGovernor = newVoteGovernor;
-
-        emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
     }
 
     fallback() external {
