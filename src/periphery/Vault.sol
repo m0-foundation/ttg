@@ -146,26 +146,26 @@ contract Vault is IVault {
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][rewardToken], "Vault: rewards already withdrawn");
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][rewardToken] = true;
 
-        // get reward amount user is eligible to withdraw for the epoch
         uint256 epochStart = voteGovernor.startOfEpoch(epoch);
-
-        // if vote holders claim value inflation, use special case - total supply calculations for only active participants
-        // otherwise use standard total supply calculations
+        // if vote holders claim value inflation, use special case - total votes weight of only active participants
+        // otherwise use standard total supply votes weight
         uint256 totalVotesWeight;
         if (votingToken == address(voteGovernor.votingToken()) && rewardToken == address(valueGovernor.votingToken())) {
             totalVotesWeight = voteGovernor.epochSumOfVoteWeight(epoch);
         } else {
+            // do not take into account rewards inflation for current epoch
             uint256 inflation = epochTokenDeposit[votingToken][epoch];
             totalVotesWeight = ISPOGVotes(votingToken).getPastTotalSupply(epochStart) - inflation;
         }
 
+        // account reward = (account votes weight * shared rewards) / total votes weight
         uint256 accountVotesWeight = ISPOGVotes(votingToken).getPastVotes(msg.sender, epochStart);
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[rewardToken][epoch];
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotesWeight;
         // TODO: simplification: amountToWithdraw = accountVotesWeight * amountToBeSharedOnProRataBasis / totalVotesWeight; ?
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
-        // withdraw rewards
+        // withdraw rewards from vault
         epochTokenTotalWithdrawn[rewardToken][epoch] += amountToWithdraw;
         IERC20(rewardToken).safeTransfer(msg.sender, amountToWithdraw);
 
