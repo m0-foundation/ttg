@@ -8,7 +8,6 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 interface ISPOG is IProtocolConfigurator, IERC165 {
     // Events
     event NewListAdded(address indexed _list);
-    event ListRemoved(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
     event AddressRemovedFromList(address indexed _list, address indexed _address);
     event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
