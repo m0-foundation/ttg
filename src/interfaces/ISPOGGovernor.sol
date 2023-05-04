@@ -12,6 +12,7 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     error SPOGAddressAlreadySet(address spog);
     error AlreadyVoted(uint256 proposalId, address account);
     error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
+    error EpochInThePast(uint256 epoch, uint256 currentEpoch);
 
     // Events
     event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
@@ -25,6 +26,12 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
         mapping(address => bool) hasVoted;
     }
 
+    /// @dev Supported vote types.
+    enum VoteType {
+        No,
+        Yes
+    }
+
     // public variables
     function spogAddress() external view virtual returns (address);
 
@@ -33,17 +40,11 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     // public mappings
     function emergencyProposals(uint256 proposalId) external view virtual returns (bool);
 
-    function epochStartBlockNumber(uint256 epoch) external view virtual returns (uint256);
-
     function epochProposalsCount(uint256 epoch) external view virtual returns (uint256);
 
     function accountEpochNumProposalsVotedOn(address account, uint256 epoch) external view virtual returns (uint256);
 
-    function votingTokensMinted(uint256 epoch) external view virtual returns (bool);
-
     function epochSumOfVoteWeight(uint256 epoch) external view virtual returns (uint256);
-
-    function accountEpochVoteWeight(address account, uint256 epoch) external view virtual returns (uint256);
 
     // public functions
 

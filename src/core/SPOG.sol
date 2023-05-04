@@ -378,8 +378,9 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         spogData.cash.approve(address(vault), fee);
 
         // deposit the amount to the vault
-        uint256 currentEpoch = voteGovernor.currentEpoch();
-        IVault(vault).depositEpochRewardTokens(currentEpoch, address(spogData.cash), fee);
+        uint256 epoch = voteGovernor.currentEpoch();
+        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
+        IVault(vault).depositEpochRewardTokens(epoch, epochStart, address(spogData.cash), fee);
     }
 
     /// @notice inflate Vote and Value token supplies
@@ -404,7 +405,9 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
         token.approve(vault, amount);
-        IVault(vault).depositEpochRewardTokens(epoch, address(token), amount);
+        // calculate start block number of the epoch when rewards are minted
+        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
+        IVault(vault).depositEpochRewardTokens(epoch, epochStart, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {

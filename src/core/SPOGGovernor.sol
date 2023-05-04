@@ -21,33 +21,20 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
     uint256 private _votingPeriodChangedEpoch;
-
     // @note voting with no delay is required for certain proposals
-    bool private emergencyVotingIsOn;
-
-    /// @dev Supported vote types.
-    enum VoteType {
-        No,
-        Yes
-    }
+    bool private _emergencyVotingIsOn;
 
     // private mappings
     mapping(uint256 => ProposalVote) private _proposalVotes;
 
     // public mappings
     mapping(uint256 => bool) public override emergencyProposals;
-    // epoch => start block number
-    mapping(uint256 => uint256) public override epochStartBlockNumber;
     // epoch => proposalCount
     mapping(uint256 => uint256) public override epochProposalsCount;
     // address => epoch => number of proposals voted on
     mapping(address => mapping(uint256 => uint256)) public override accountEpochNumProposalsVotedOn;
-    // epoch => bool
-    mapping(uint256 => bool) public override votingTokensMinted;
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public override epochSumOfVoteWeight;
-    // address => epoch => epoch vote weight
-    mapping(address => mapping(uint256 => uint256)) public override accountEpochVoteWeight;
 
     modifier onlySPOG() {
         if (msg.sender != spogAddress) revert CallerIsNotSPOG(msg.sender);
@@ -122,7 +109,10 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     /// @dev get `block.number` of the start of the given epoch
+    /// we can correctly calculate start of epochs only for current and future epochs
+    /// it happens because epoch voting time can be changed more that once
     function startOfEpoch(uint256 epoch) public view override returns (uint256) {
+        if (epoch < currentEpoch()) revert EpochInThePast(epoch, currentEpoch());
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
@@ -181,11 +171,11 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     function turnOnEmergencyVoting() external override onlySPOG {
-        emergencyVotingIsOn = true;
+        _emergencyVotingIsOn = true;
     }
 
     function turnOffEmergencyVoting() external override onlySPOG {
-        emergencyVotingIsOn = false;
+        _emergencyVotingIsOn = false;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -224,25 +214,17 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     {
         uint256 weight = super._castVote(proposalId, account, support, reason, params);
 
-        _updateAccountEpochVotes();
-        _updateAccountEpochVoteWeight(weight);
+        _updateAccountEpochVotes(weight);
 
         return weight;
     }
 
-    /// @dev update epoch votes for address
-    function _updateAccountEpochVotes() private {
-        accountEpochNumProposalsVotedOn[msg.sender][currentEpoch()]++;
-    }
-
-    /// @dev update epoch vote weight for address and cumulative vote weight casted in epoch
-    function _updateAccountEpochVoteWeight(uint256 weight) private {
+    /// @dev update number of proposals account voted for and cumulative vote weight casted in epoch
+    function _updateAccountEpochVotes(uint256 weight) private {
         uint256 epoch = currentEpoch();
 
-        // update address vote weight for epoch
-        if (accountEpochVoteWeight[msg.sender][epoch] == 0) {
-            accountEpochVoteWeight[msg.sender][epoch] = weight;
-        }
+        // update number of proposals account voted for in current epoch
+        accountEpochNumProposalsVotedOn[msg.sender][epoch]++;
 
         // update cumulative vote weight for epoch if user voted in all proposals
         if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
@@ -266,7 +248,7 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     function votingDelay() public view override returns (uint256) {
-        return emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {
