@@ -12,6 +12,7 @@ abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     error SPOGAddressAlreadySet(address spog);
     error AlreadyVoted(uint256 proposalId, address account);
     error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
+    error EpochInThePast(uint256 epoch, uint256 currentEpoch);
 
     // Events
     event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);

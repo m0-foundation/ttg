@@ -112,7 +112,7 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     /// we can correctly calculate start of epochs only for current and future epochs
     /// it happens because epoch voting time can be changed more that once
     function startOfEpoch(uint256 epoch) public view override returns (uint256) {
-        require(epoch >= currentEpoch(), "SPOGGovernor: only for current or future epochs");
+        if (epoch < currentEpoch()) revert EpochInThePast(epoch, currentEpoch());
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;

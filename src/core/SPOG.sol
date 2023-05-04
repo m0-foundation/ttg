@@ -405,7 +405,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
         token.approve(vault, amount);
-        // calculate start block numberof the epoch when rewards are minted
+        // calculate start block number of the epoch when rewards are minted
         uint256 epochStart = voteGovernor.startOfEpoch(epoch);
         IVault(vault).depositEpochRewardTokens(epoch, epochStart, address(token), amount);
     }
