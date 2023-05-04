@@ -129,17 +129,6 @@ contract Vault is IVault {
         emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
     }
 
-    function _getTotalSupplyForBasicProRata(uint256 epoch, address votingToken) private view returns (uint256) {
-        uint256 inflation = epochTokenDeposit[votingToken][epoch];
-        // vote and value epochs are in sync
-        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
-        return ISPOGVotes(votingToken).getPastTotalSupply(epochStart) - inflation;
-    }
-
-    function _getTotalSupplyForOnlyActiveProRata(uint256 epoch) private view returns (uint256) {
-        return voteGovernor.epochSumOfVoteWeight(epoch);
-    }
-
     // TODO potentially modifier ?
     function _checkParticipation(uint256 epoch) private view {
         // withdraw rewards only if voted on all proposals in epoch
@@ -157,20 +146,23 @@ contract Vault is IVault {
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][rewardToken], "Vault: rewards already withdrawn");
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][rewardToken] = true;
 
-        uint256 votingTokenTotalApplicableSupply;
+        // get reward amount user is eligible to withdraw for the epoch
+        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
+
         // if vote holders claim value inflation, use special case - total supply calculations for only active participants
         // otherwise use standard total supply calculations
+        uint256 totalVotesWeight;
         if (votingToken == address(voteGovernor.votingToken()) && rewardToken == address(valueGovernor.votingToken())) {
-            votingTokenTotalApplicableSupply = _getTotalSupplyForOnlyActiveProRata(epoch);
+            totalVotesWeight = voteGovernor.epochSumOfVoteWeight(epoch);
         } else {
-            votingTokenTotalApplicableSupply = _getTotalSupplyForBasicProRata(epoch, votingToken);
+            uint256 inflation = epochTokenDeposit[votingToken][epoch];
+            totalVotesWeight = ISPOGVotes(votingToken).getPastTotalSupply(epochStart) - inflation;
         }
 
-        // get reward amount user is eligible to withdraw for the epoch
-        uint256 epochStartBlockNumber = voteGovernor.startOfEpoch(epoch);
-        uint256 accountVotesWeight = ISPOGVotes(votingToken).getPastVotes(msg.sender, epochStartBlockNumber);
+        uint256 accountVotesWeight = ISPOGVotes(votingToken).getPastVotes(msg.sender, epochStart);
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[rewardToken][epoch];
-        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / votingTokenTotalApplicableSupply;
+        uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotesWeight;
+        // TODO: simplification: amountToWithdraw = accountVotesWeight * amountToBeSharedOnProRataBasis / totalVotesWeight; ?
         uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
 
         // withdraw rewards
