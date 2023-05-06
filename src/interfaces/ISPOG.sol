@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import {IList} from "src/interfaces/IList.sol";
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
+import {IList} from "../interfaces/IList.sol";
+import {IProtocolConfigurator} from "../interfaces/IProtocolConfigurator.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {

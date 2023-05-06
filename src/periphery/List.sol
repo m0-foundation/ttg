@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ERC165CheckerSPOG} from "src/periphery/ERC165CheckerSPOG.sol";
+import {ERC165CheckerSPOG} from "../periphery/ERC165CheckerSPOG.sol";
 
 error NotAdmin();
 

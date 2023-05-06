@@ -4,11 +4,11 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IVault} from "src/interfaces/IVault.sol";
+import {ISPOGGovernor} from "../interfaces/ISPOGGovernor.sol";
+import {ISPOGVotes} from "../interfaces/tokens/ISPOGVotes.sol";
+import {IVault} from "../interfaces/IVault.sol";
 
-import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
+import {IERC20PricelessAuction} from "../interfaces/IERC20PricelessAuction.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /// @title Vault

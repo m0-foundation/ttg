@@ -3,8 +3,8 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
-import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import {IGovernorVotesQuorumFraction} from "../interfaces/IGovernorVotesQuorumFraction.sol";
+import {ISPOGVotes} from "../interfaces/tokens/ISPOGVotes.sol";
 
 abstract contract ISPOGGovernor is IGovernor, IGovernorVotesQuorumFraction {
     // Errors

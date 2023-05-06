@@ -7,7 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Votes} from "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 import {SPOGVotes} from "./SPOGVotes.sol";
-import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
+import {IValueToken} from "../interfaces/tokens/IValueToken.sol";
 
 /// @title ValueToken
 /// @dev Main token of value governance, has a built-in snapshot functionality.

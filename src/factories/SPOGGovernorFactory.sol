@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import {SPOGGovernor} from "../core/SPOGGovernor.sol";
+import {ISPOGVotes} from "../interfaces/tokens/ISPOGVotes.sol";
 
 /// @title SPOGGovernorFactory
 /// @notice Factory contract for SPOGGovernor

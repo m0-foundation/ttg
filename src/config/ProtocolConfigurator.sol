@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
+import {IProtocolConfigurator} from "../interfaces/IProtocolConfigurator.sol";
 
 /**
  * @title ProtocolConfigurator

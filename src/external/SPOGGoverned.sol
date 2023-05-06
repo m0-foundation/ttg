@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import {IList} from "src/interfaces/IList.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
+import {IList} from "../interfaces/IList.sol";
+import {ISPOG} from "../interfaces/ISPOG.sol";
 
 /**
  * @title SPOGGoverned

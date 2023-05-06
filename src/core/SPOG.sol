@@ -7,19 +7,19 @@ import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {IList} from "src/interfaces/IList.sol";
-import {IVault} from "src/interfaces/IVault.sol";
+import {IList} from "../interfaces/IList.sol";
+import {IVault} from "../interfaces/IVault.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import {ISPOGGovernor} from "../interfaces/ISPOGGovernor.sol";
+import {ISPOG} from "../interfaces/ISPOG.sol";
+import {ISPOGVotes} from "../interfaces/tokens/ISPOGVotes.sol";
 
-import {SPOGStorage} from "src/core/SPOGStorage.sol";
-import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
-import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
+import {SPOGStorage} from "../core/SPOGStorage.sol";
+import {IVoteToken} from "../interfaces/tokens/IVoteToken.sol";
+import {IValueToken} from "../interfaces/tokens/IValueToken.sol";
 
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
-import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
+import {IProtocolConfigurator} from "../interfaces/IProtocolConfigurator.sol";
+import {ProtocolConfigurator} from "../config/ProtocolConfigurator.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {ISPOGGovernor} from "../interfaces/ISPOGGovernor.sol";
 
 interface IVault {
     event EpochRewardsDeposit(uint256 indexed epoch, address indexed token, uint256 amount);

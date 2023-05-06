@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOG} from "src/core/SPOG.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOG} from "../core/SPOG.sol";
+import {ISPOGGovernor} from "../interfaces/ISPOGGovernor.sol";
 
 /// @title SPOGFactory
 /// @notice This contract is used to deploy SPOG contracts

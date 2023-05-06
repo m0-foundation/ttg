@@ -3,11 +3,11 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {IVault} from "src/interfaces/IVault.sol";
-import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
+import {ISPOGGovernor} from "../interfaces/ISPOGGovernor.sol";
+import {ISPOGVotes} from "../interfaces/tokens/ISPOGVotes.sol";
+import {ISPOG} from "../interfaces/ISPOG.sol";
+import {IVault} from "../interfaces/IVault.sol";
+import {IGovernorVotesQuorumFraction} from "../interfaces/IGovernorVotesQuorumFraction.sol";
 
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin. It uses the GovernorVotesQuorumFraction contract and its inherited contracts to implement quorum and voting power. The goal is to create a modular Governance contract which SPOG can replace if needed.

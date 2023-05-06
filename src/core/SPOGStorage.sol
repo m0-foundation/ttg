@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import {ISPOGGovernor} from "../interfaces/ISPOGGovernor.sol";
+import {ISPOGVotes} from "../interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
+import {ISPOG} from "../interfaces/ISPOG.sol";
 
 abstract contract SPOGStorage is ISPOG {
     struct SPOGData {
