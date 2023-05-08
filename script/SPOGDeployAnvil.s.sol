@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {console} from "forge-std/Script.sol";
-import {BaseScript} from "script/shared/Base.s.sol";
 import {SPOG} from "src/factories/SPOGFactory.sol";
 import {SPOGFactory} from "src/factories/SPOGFactory.sol";
 import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
@@ -17,6 +16,24 @@ import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol"
 import {Vault} from "src/periphery/Vault.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
+
+import {Script} from "forge-std/Script.sol";
+
+abstract contract BaseScript is Script {
+    address deployer = vm.addr(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80);
+
+    function setUp() public virtual {
+        // if using mnemonic, this is how it can be set up
+        // string mnemonic = vm.envString("MNEMONIC");
+        // (deployer, ) = deriveRememberKey(mnemonic, 0);
+    }
+
+    modifier broadcaster() {
+        vm.startBroadcast(deployer);
+        _;
+        vm.stopBroadcast();
+    }
+}
 
 contract SPOGDeployScript is BaseScript {
     SPOGFactory public spogFactory;
@@ -50,7 +67,7 @@ contract SPOGDeployScript is BaseScript {
     address user9 = vm.addr(0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97);
     address user10 = vm.addr(0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6);
 
-    address[] public users = [user1, user2, user3, user4, user5, user6, user7, user8, user9, user10];
+    address[10] public users = [user1, user2, user3, user4, user5, user6, user7, user8, user9, user10];
 
     function triggerSetUp() public {
         // for the actual deployment, we will use an ERC20 token for cash
