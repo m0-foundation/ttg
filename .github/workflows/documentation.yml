@@ -11,6 +11,9 @@ on:
 env:
   FOUNDRY_PROFILE: ci
 
+permissions:
+  contents: write
+
 jobs:
   build-documentation:
     runs-on: ubuntu-latest
@@ -18,7 +21,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: MZero-Labs/SPOG
-          token: ${{ secrets.SPOG_DOC_GENERATION }}
           submodules: recursive
 
       - name: Install Foundry
