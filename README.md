@@ -59,3 +59,19 @@ Note: On Linux, install genhtml. On MacOS, `brew install lcov`
 ```
 
 You can then view the file coverage/index.html to view the report. This can also be integrated into vs code with various extentions
+
+## Local dApp Development using Anvil
+
+Start the local anvil node
+
+```bash
+anvil
+```
+
+In another terminal, run the deployment script for Anvil
+
+```bash
+forge script script/SPOGDeployAnvil.s.sol:SPOGDeployScript --rpc-url http://localhost:8545
+```
+
+You can now do local development and testing against the RPC endpoint http://localhost:8545
