@@ -53,12 +53,12 @@ contract VoteVault is BasicVault {
     /// @dev Claim Vote token inflation rewards by vote holders
     function claimVoteTokenRewards(uint256 epoch) external {
         require(epoch <= governor.currentEpoch(), "Vault: epoch is not in the past");
-        address votingToken = address(governor.votingToken());
+        address rewardToken = address(governor.votingToken());
 
         _checkParticipation(epoch);
 
         // vote holders claim their epoch vote rewards
-        _withdrawTokenRewards(epoch, votingToken, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+        _withdrawTokenRewards(epoch, rewardToken, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
     }
 
     /// @dev Claim Value token inflation rewards by vote holders
@@ -77,7 +77,7 @@ contract VoteVault is BasicVault {
     function updateGovernor(ISPOGGovernor newGovernor) external onlySPOG {
         governor = newGovernor;
 
-        //emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
+        // emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
     }
 
     // TODO potentially modifier ?
