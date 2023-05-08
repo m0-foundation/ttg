@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          repository: MZero-Labs/SPOG
+          token: ${{ secrets.SPOG_DOC_GENERATION }}
           submodules: recursive
 
       - name: Install Foundry
