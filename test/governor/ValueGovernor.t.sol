@@ -36,7 +36,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
     function test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() public {
         uint256 spogValueSupplyBefore = spogValue.totalSupply();
 
-        uint256 vaultVoteTokenBalanceBefore = spogValue.balanceOf(address(vault));
+        uint256 vaultVoteTokenBalanceBefore = spogValue.balanceOf(address(voteVault));
 
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -46,7 +46,8 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         assertEq(spogValueSupplyAfterFirstPeriod, spogValueSupplyBefore, "Vote token supply inflated incorrectly");
 
         // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogValue.balanceOf(address(vault));
+        // TDO: clean up names here
+        uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogValue.balanceOf(address(voteVault));
         assertEq(
             vaultVoteTokenBalanceAfterFirstPeriod,
             vaultVoteTokenBalanceBefore,

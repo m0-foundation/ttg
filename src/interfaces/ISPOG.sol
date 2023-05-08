@@ -36,7 +36,8 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function voteGovernor() external view returns (ISPOGGovernor);
 
     // Logic functions
-    function vault() external view returns (address);
+    function valueVault() external view returns (address);
+    function voteVault() external view returns (address);
 
     function addNewList(IList list) external;
 

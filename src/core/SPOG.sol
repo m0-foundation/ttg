@@ -8,7 +8,6 @@ import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IList} from "src/interfaces/IList.sol";
-import {IVault} from "src/interfaces/IVault.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -21,6 +20,9 @@ import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
+import {IVault} from "src/periphery/vaults/IVault.sol";
+import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
+
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -29,7 +31,10 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    address public immutable vault;
+    // vault for vote holders voting inflation rewards
+    address public immutable voteVault;
+    // vault for value holders assets rewards
+    address public immutable valueVault;
 
     // List of methods that can be executed by SPOG governance
     mapping(bytes4 => bool) public governedMethods;
@@ -47,7 +52,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     /// @notice Create a new SPOG
     /// @param _initSPOGData The data used to initialize spogData
-    /// @param _vault The address of the `Vault` contract
+    /// @param _voteVault The address of the `Vault` contract for vote holders
+    /// @param _valueVault The address of the `Vault` contract for value holders
     /// @param _time The duration of a voting epochs for governors and auctions in blocks
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
@@ -56,7 +62,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param _valueGovernor The address of the `SPOGGovernor` which $VALUE token is used for voting
     constructor(
         bytes memory _initSPOGData,
-        address _vault,
+        address _voteVault,
+        address _valueVault,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -74,8 +81,9 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
             _valueFixedInflationAmount
         )
     {
-        require(_vault != address(0), "SPOG: Vault address cannot be 0");
-        vault = _vault;
+        require(_voteVault != address(0) && _valueVault != address(0), "SPOG: Vault address cannot be 0");
+        voteVault = _voteVault;
+        valueVault = _valueVault;
 
         _initGovernedMethods();
     }
@@ -162,7 +170,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         // Update vote governance in the vault
-        IVault(vault).updateVoteGovernor(newVoteGovernor);
+        VoteVault(voteVault).updateGovernor(newVoteGovernor);
 
         voteGovernor = newVoteGovernor;
         // Important: initialize SPOG address in the new vote governor
@@ -319,7 +327,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
-        IVault(vault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
+        VoteVault(voteVault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
@@ -375,12 +383,11 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         // transfer the amount from the caller to the SPOG
         spogData.cash.safeTransferFrom(msg.sender, address(this), fee);
         // approve amount to be sent to the vault
-        spogData.cash.approve(address(vault), fee);
+        spogData.cash.approve(valueVault, fee);
 
         // deposit the amount to the vault
-        uint256 epoch = voteGovernor.currentEpoch();
-        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
-        IVault(vault).depositEpochRewardTokens(epoch, epochStart, address(spogData.cash), fee);
+        uint256 epoch = valueGovernor.currentEpoch();
+        IVault(valueVault).depositRewards(epoch, address(spogData.cash), fee);
     }
 
     /// @notice inflate Vote and Value token supplies
@@ -404,10 +411,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param amount The amount to mint and deposit into the vault
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
-        token.approve(vault, amount);
-        // calculate start block number of the epoch when rewards are minted
-        uint256 epochStart = voteGovernor.startOfEpoch(epoch);
-        IVault(vault).depositEpochRewardTokens(epoch, epochStart, address(token), amount);
+        token.approve(voteVault, amount);
+        IVault(voteVault).depositRewards(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {

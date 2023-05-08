@@ -9,7 +9,8 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {List} from "src/periphery/List.sol";
-import {Vault} from "src/periphery/Vault.sol";
+import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
+import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
 
 contract SPOG_Base is BaseTest {
     SPOG public spog;
@@ -19,7 +20,8 @@ contract SPOG_Base is BaseTest {
     SPOGGovernor public valueGovernor;
     SPOGDeployScript public deployScript;
     List public list;
-    Vault public vault;
+    VoteVault public voteVault;
+    ValueVault public valueVault;
     IERC20 public cash;
 
     enum VoteType {
@@ -49,7 +51,8 @@ contract SPOG_Base is BaseTest {
         list = new List("My List");
         list.changeAdmin(address(spog));
 
-        vault = deployScript.vault();
+        voteVault = deployScript.voteVault();
+        valueVault = deployScript.valueVault();
 
         cash = IERC20(address(deployScript.cash()));
     }

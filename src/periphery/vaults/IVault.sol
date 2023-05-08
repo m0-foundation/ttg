@@ -6,14 +6,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IVault} from "src/interfaces/IVault.sol";
-
-import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /// @title Vault
-/// @notice contract that will hold the SPOG assets.
-abstract contract BasicVault {
+/// @notice contract that will hold inflation rewards and the SPOG assets.
+abstract contract IVault {
     using SafeERC20 for IERC20;
 
     enum RewardsSharingStrategy
@@ -37,7 +33,7 @@ abstract contract BasicVault {
     mapping(uint256 => uint256) public epochStartBlockNumber;
 
     constructor(ISPOGGovernor _governor) {
-        _governor = governor;
+        governor = _governor;
     }
 
     modifier onlySPOG() {
@@ -51,13 +47,12 @@ abstract contract BasicVault {
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
     function depositRewards(uint256 epoch, address token, uint256 amount) external onlySPOG {
-        // TODO: should we allow to deposit only for next epoch ? or it should be connected to block number ?
-        require(epoch >= governor.currentEpoch(), "Epoch should be in future");
-        // save it, over governance model allows to change voting period
-        uint256 epochStart = governor.startOfEpoch(epoch);
+        // TODO: should we allow to deposit only for next epoch ? or current and next epoch is good ?
+        require(epoch >= governor.currentEpoch(), "Vault: epoch is not in the future");
 
+        // save start block of epoch, our governance allows to change voting period
+        epochStartBlockNumber[epoch] = governor.startOfEpoch(epoch);
         epochTokenDeposit[token][epoch] += amount;
-        epochStartBlockNumber[epoch] = epochStart;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         // emit EpochRewardsDeposit(epoch, token, amount);
@@ -65,7 +60,6 @@ abstract contract BasicVault {
 
     /// @dev Withdraw Vote and Value token rewards
     function _withdrawTokenRewards(uint256 epoch, address token, RewardsSharingStrategy strategy) internal virtual {
-        require(epoch < governor.currentEpoch(), "Vault: epoch is not in the past");
         require(epochTokenDeposit[token][epoch] > 0, "Vault: no rewards to withdraw");
         require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token] = true;

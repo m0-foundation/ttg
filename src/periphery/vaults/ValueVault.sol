@@ -6,16 +6,15 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IVault} from "src/interfaces/IVault.sol";
 
-import {BasicVault} from "src/periphery/BasicVault.sol";
+import {IVault} from "src/periphery/vaults/IVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract ValueVault is BasicVault {
+contract ValueVault is IVault {
     using SafeERC20 for IERC20;
 
-    constructor(ISPOGGovernor _valueGovernor) BasicVault(_valueGovernor) {}
+    constructor(ISPOGGovernor _governor) IVault(_governor) {}
 
     /// @dev Withdraw rewards for multiple epochs for a token
     /// @param epochs Epochs to withdraw rewards for

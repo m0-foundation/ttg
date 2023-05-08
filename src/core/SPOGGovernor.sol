@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {IVault} from "src/interfaces/IVault.sol";
 import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
 
 /// @title SPOG Governor Contract

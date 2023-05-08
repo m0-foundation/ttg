@@ -7,20 +7,19 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IVault} from "src/interfaces/IVault.sol";
 
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {BasicVault} from "src/periphery/BasicVault.sol";
+import {IVault} from "src/periphery/vaults/IVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract VoteVault is BasicVault {
+contract VoteVault is IVault {
     using SafeERC20 for IERC20;
 
     IERC20PricelessAuction public immutable auctionContract;
 
-    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) BasicVault(_governor) {
+    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) IVault(_governor) {
         auctionContract = _auctionContract;
     }
 
@@ -64,12 +63,12 @@ contract VoteVault is BasicVault {
     /// @dev Claim Value token inflation rewards by vote holders
     function claimValueTokenRewards(uint256 epoch) external {
         require(epoch < governor.currentEpoch(), "Vault: epoch is not in the past");
-        address rewardToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
+        address valueToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
 
         _checkParticipation(epoch);
 
         // vote holders claim their epoch value rewards
-        _withdrawTokenRewards(epoch, rewardToken, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+        _withdrawTokenRewards(epoch, valueToken, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
     }
 
     // @notice Update vote governor after `RESET` was executed
