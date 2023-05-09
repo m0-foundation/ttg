@@ -3,10 +3,13 @@ pragma solidity 0.8.19;
 
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract TestSpogVotes is SPOG_Base {
     function test_MintAndBurn() public {
         SPOGVotes spogVotes = new SPOGVotes("SPOGVotes", "SPOGVotes");
+        // grant minter role to this contract
+        IAccessControl(address(spogVotes)).grantRole(spogVotes.MINTER_ROLE(), address(this));
 
         address user = createUser("user");
 
