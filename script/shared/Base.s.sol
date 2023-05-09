@@ -7,9 +7,9 @@ abstract contract BaseScript is Script {
     address public deployer;
 
     function setUp() public virtual {
-        // string memory mnemonic = vm.envString("MNEMONIC"); // USE ENV VAR FOR PRODUCTION
+        string memory mnemonic = vm.envString("MNEMONIC"); // USE ENV VAR FOR PRODUCTION
 
-        string memory mnemonic = "test test test test test test test test test test test junk"; // anvil accounts mnemonic
+        // string memory mnemonic = "test test test test test test test test test test test junk"; // anvil accounts mnemonic
         (deployer,) = deriveRememberKey(mnemonic, 0);
 
         console.log("deployer: %s", deployer);
