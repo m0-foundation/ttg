@@ -75,3 +75,19 @@ make deploy-spog-local
 ```
 
 You can now do local development and testing against the RPC endpoint http://localhost:8545
+
+
+## Testnet
+### Sepolia
+```
+  deployer: 0x31DCb7AE01fFfD9B6468814bA2A6A0ab9c58d8e5
+  predicted SPOG address:  0x680dBfa52bf6CA633dF837f961f50EA6456e9E00
+  SPOG address:  0x680dBfa52bf6CA633dF837f961f50EA6456e9E00
+  SPOGFactory address:  0x7BcFff5D009C0ff0492e877eEF3f75127561CE63
+  SPOGVote token address:  0xB6A1AF2595Ca04870e45150b61FCf83C8a47A252
+  SPOGValue token address:  0xF6b56E5C7fcDaeca68D8FEe374331357a48B2f90
+  SPOGGovernor for $VOTE address :  0x295Bee3C816C0f42eDaA1c822c338C0eb00bbA16
+  SPOGGovernor for $VALUE address :  0xAc3de37d4d52cf6cA8CC966c7F7Bd79720C5a1DE
+  Cash address:  0x7b7E36A667F0Dd96B617343a12fB04e52C80BC2D
+  Vault address:  0x05872592c3F8653C1291E46574b99cc7e69939a5
+```
