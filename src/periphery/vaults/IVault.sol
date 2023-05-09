@@ -9,7 +9,7 @@ import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 /// @title Vault
 /// @notice contract that will hold inflation rewards and the SPOG assets.
-abstract contract IVault {
+abstract contract VaultBase
     using SafeERC20 for IERC20;
 
     enum RewardsSharingStrategy
