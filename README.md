@@ -71,7 +71,7 @@ anvil
 In another terminal, run the deployment script for Anvil
 
 ```bash
-forge script script/SPOGDeployAnvil.s.sol:SPOGDeployScript --rpc-url http://localhost:8545
+make deploy-spog-local
 ```
 
 You can now do local development and testing against the RPC endpoint http://localhost:8545
