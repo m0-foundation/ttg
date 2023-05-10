@@ -10,16 +10,16 @@ import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {IVault} from "src/periphery/vaults/IVault.sol";
+import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract VoteVault is IVault {
+contract VoteVault is BaseVault {
     using SafeERC20 for IERC20;
 
     IERC20PricelessAuction public immutable auctionContract;
 
-    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) IVault(_governor) {
+    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) BaseVault(_governor) {
         auctionContract = _auctionContract;
     }
 

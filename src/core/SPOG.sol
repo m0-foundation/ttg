@@ -20,7 +20,7 @@ import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
-import {IVault} from "src/periphery/vaults/IVault.sol";
+import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
 
 /// @title SPOG
@@ -387,7 +387,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
         // deposit the amount to the vault
         uint256 epoch = valueGovernor.currentEpoch();
-        IVault(valueVault).depositRewards(epoch, address(spogData.cash), fee);
+        BaseVault(valueVault).depositRewards(epoch, address(spogData.cash), fee);
     }
 
     /// @notice inflate Vote and Value token supplies
@@ -412,7 +412,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
         token.approve(voteVault, amount);
-        IVault(voteVault).depositRewards(epoch, address(token), amount);
+        BaseVault(voteVault).depositRewards(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {
