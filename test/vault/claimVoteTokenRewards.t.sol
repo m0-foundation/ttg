@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import "test/Vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
 
 contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
     /*//////////////////////////////////////////////////////////////
