@@ -20,8 +20,8 @@ import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
-import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
-import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -170,7 +170,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         // Update vote governance in the vault
-        VoteVault(voteVault).updateGovernor(newVoteGovernor);
+        // TODO: how to avoid this ?
+        IVoteVault(voteVault).updateGovernor(newVoteGovernor);
 
         voteGovernor = newVoteGovernor;
         // Important: initialize SPOG address in the new vote governor
@@ -327,7 +328,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
-        VoteVault(voteVault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
+        IVoteVault(voteVault).sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
@@ -387,7 +388,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
         // deposit the amount to the vault
         uint256 epoch = valueGovernor.currentEpoch();
-        BaseVault(valueVault).depositRewards(epoch, address(spogData.cash), fee);
+        IValueVault(valueVault).depositRewards(epoch, address(spogData.cash), fee);
     }
 
     /// @notice inflate Vote and Value token supplies
@@ -412,7 +413,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
         token.approve(voteVault, amount);
-        BaseVault(voteVault).depositRewards(epoch, address(token), amount);
+        IVoteVault(voteVault).depositRewards(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {
