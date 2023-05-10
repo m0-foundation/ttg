@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
+import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
 import "forge-std/console.sol";
 
 contract VoteSPOGGovernorTest is SPOG_Base {

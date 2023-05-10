@@ -3,14 +3,13 @@ pragma solidity 0.8.19;
 
 import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
-import {SPOG} from "src/factories/SPOGFactory.sol";
+import {SPOG, SPOGGovernorAbstract} from "src/factories/SPOGFactory.sol";
 import {SPOGFactory} from "src/factories/SPOGFactory.sol";
 import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
@@ -74,7 +73,7 @@ contract SPOGDeployScript is BaseScript {
 
         auctionImplementation = new ERC20PricelessAuction();
         vault =
-        new Vault(ISPOGGovernor(voteGovernorAddress), ISPOGGovernor(valueGovernorAddress), IERC20PricelessAuction(auctionImplementation));
+        new Vault(SPOGGovernorAbstract(payable(address(voteGovernorAddress))), SPOGGovernorAbstract(payable(address(valueGovernorAddress))), IERC20PricelessAuction(auctionImplementation));
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, time, "VoteGovernor", voteGovernorSalt);
@@ -100,8 +99,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            ISPOGGovernor(address(voteGovernor)),
-            ISPOGGovernor(address(valueGovernor))
+            SPOGGovernorAbstract(payable(address(voteGovernor))),
+            SPOGGovernorAbstract(payable(address(valueGovernor)))
         );
 
         address spogAddress = spogFactory.predictSPOGAddress(bytecode, spogCreationSalt);
@@ -124,8 +123,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            ISPOGGovernor(address(voteGovernor)),
-            ISPOGGovernor(address(valueGovernor)),
+            SPOGGovernorAbstract(payable(address(voteGovernor))),
+            SPOGGovernorAbstract(payable(address(valueGovernor))),
             spogCreationSalt
         );
 
@@ -153,8 +152,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            ISPOGGovernor(address(voteGovernor)),
-            ISPOGGovernor(address(valueGovernor)),
+            SPOGGovernorAbstract(payable(address(voteGovernor))),
+            SPOGGovernorAbstract(payable(address(valueGovernor))),
             spogCreationSalt
         );
 

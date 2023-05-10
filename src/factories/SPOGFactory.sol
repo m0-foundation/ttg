@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOG} from "src/core/SPOG.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOG, SPOGGovernorAbstract} from "src/core/SPOG.sol";
 
 /// @title SPOGFactory
 /// @notice This contract is used to deploy SPOG contracts
@@ -27,8 +26,8 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        ISPOGGovernor _voteGovernor,
-        ISPOGGovernor _valueGovernor,
+        SPOGGovernorAbstract _voteGovernor,
+        SPOGGovernorAbstract _valueGovernor,
         uint256 _salt
     ) public returns (SPOG) {
         SPOG spog = new SPOG{salt: bytes32(_salt)}(
@@ -55,8 +54,8 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        ISPOGGovernor _voteGovernor,
-        ISPOGGovernor _valueGovernor
+        SPOGGovernorAbstract _voteGovernor,
+        SPOGGovernorAbstract _valueGovernor
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SPOG).creationCode;
 
