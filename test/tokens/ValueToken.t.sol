@@ -2,10 +2,10 @@
 pragma solidity 0.8.19;
 
 import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract ValueTokenTest is SPOG_Base {
     address alice = createUser("alice");
@@ -19,6 +19,9 @@ contract ValueTokenTest is SPOG_Base {
 
         valueToken = new ValueToken("SPOGValue", "value");
         valueToken.initSPOGAddress(address(spog));
+
+        // grant mint role to this contract
+        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
 
         // Alice can interact with blockchain
         vm.deal({account: alice, newBalance: 10 ether});
@@ -46,30 +49,28 @@ contract ValueTokenTest is SPOG_Base {
     }
 
     function test_MintAndBurn() public {
-        ValueToken valToken = new ValueToken("SPOGVotes", "SPOGVotes");
-
         address user = createUser("user");
 
         // test mint
-        valToken.mint(user, 100);
+        valueToken.mint(user, 100);
 
-        assertEq(valToken.balanceOf(user), 100);
+        assertEq(valueToken.balanceOf(user), 100);
 
         // test burn
         vm.prank(user);
-        valToken.burn(50);
+        valueToken.burn(50);
 
-        assertEq(valToken.balanceOf(user), 50);
+        assertEq(valueToken.balanceOf(user), 50);
 
         // test burnFrom
         address user2 = createUser("user2");
 
         vm.prank(user);
-        valToken.approve(user2, 25);
+        valueToken.approve(user2, 25);
 
         vm.prank(user2);
-        valToken.burnFrom(user, 25);
+        valueToken.burnFrom(user, 25);
 
-        assertEq(valToken.balanceOf(user), 25);
+        assertEq(valueToken.balanceOf(user), 25);
     }
 }
