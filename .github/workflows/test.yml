@@ -31,5 +31,6 @@ jobs:
 
       - name: Run Forge tests
         run: |
+          export MNEMONIC=${{ secrets.MNEMONIC_FOR_TESTS }}
           forge test -vvv
         id: test
