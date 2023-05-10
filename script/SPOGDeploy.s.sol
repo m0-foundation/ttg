@@ -46,7 +46,11 @@ contract SPOGDeployScript is BaseScript {
 
     uint256 public spogCreationSalt = createSalt("Simple Participatory Onchain Governance");
 
-    function triggerSetUp() public {
+    function setUp() public override {
+        super.setUp();
+
+        vm.startBroadcast(deployer);
+
         // for the actual deployment, we will use an ERC20 token for cash
         cash = new ERC20Mock("CashToken", "cash", msg.sender, 100e18); // mint 10 tokens to msg.sender
 
@@ -110,10 +114,14 @@ contract SPOGDeployScript is BaseScript {
 
         address spogAddress = spogFactory.predictSPOGAddress(bytecode, spogCreationSalt);
         console.log("predicted SPOG address: ", spogAddress);
+
+        vm.stopBroadcast();
     }
 
-    function run() public broadcaster {
-        triggerSetUp();
+    function run() public {
+        setUp();
+
+        vm.startBroadcast(deployer);
 
         bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
@@ -139,10 +147,12 @@ contract SPOGDeployScript is BaseScript {
         console.log("Cash address: ", address(cash));
         console.log("Vote holders vault address: ", address(voteVault));
         console.log("Value holders vault address: ", address(valueVault));
+
+        vm.stopBroadcast();
     }
 
     function createSpog() public returns (SPOG) {
-        triggerSetUp();
+        setUp();
 
         bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 

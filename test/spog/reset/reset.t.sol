@@ -34,6 +34,9 @@ contract SPOG_reset is SPOG_Base {
     function createNewVoteGovernor(address valueToken) private returns (address) {
         // deploy vote governor from factory
         VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", valueToken);
+        // grant minter role to new voteToken deployer
+        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(this));
+
         // mint new vote tokens to address(this) and self-delegate
         newVoteToken.mint(address(this), 100e18);
         newVoteToken.delegate(address(this));
@@ -44,7 +47,6 @@ contract SPOG_reset is SPOG_Base {
         SPOGGovernor newVoteGovernor =
             governorFactory.deploy(newVoteToken, voteQuorum, time, "new VoteGovernor", voteGovernorSalt);
 
-        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(newVoteGovernor));
         return address(newVoteGovernor);
     }
 
@@ -121,9 +123,24 @@ contract SPOG_reset is SPOG_Base {
     function test_Revert_Reset_WhenValueAndVoteTokensMistmatch() public {
         vm.startPrank(address(valueGovernor));
         ValueToken newValueToken = new ValueToken("new Value token", "value");
-        address governor = createNewVoteGovernor(address(newValueToken));
+
+        // deploy vote governor from factory
+        VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", address(newValueToken));
+        // grant minter role to new voteToken to valueGovernor
+        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(valueGovernor));
+
+        // mint new vote tokens to address(this) and self-delegate
+        newVoteToken.mint(address(this), 100e18);
+        newVoteToken.delegate(address(this));
+
+        uint256 voteGovernorSalt = deployScript.createSalt("new VoteGovernor");
+        uint256 time = 15; // in blocks
+        uint256 voteQuorum = 5;
+        SPOGGovernor newVoteGovernor =
+            governorFactory.deploy(newVoteToken, voteQuorum, time, "new VoteGovernor", voteGovernorSalt);
+
         vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
-        spog.reset(ISPOGGovernor(governor));
+        spog.reset(ISPOGGovernor(newVoteGovernor));
     }
 
     function test_Reset_Success() public {

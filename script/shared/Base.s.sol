@@ -1,22 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 
 abstract contract BaseScript is Script {
-    address internal deployer;
+    address public deployer;
 
     function setUp() public virtual {
-        deployer = msg.sender;
+        string memory mnemonic = vm.envString("MNEMONIC"); // USE ENV VAR FOR PRODUCTION
 
-        // if using mnemonic, this is how it can be set up
-        // string mnemonic = vm.envString("MNEMONIC");
-        // (deployer, ) = deriveRememberKey(mnemonic, 0);
-    }
+        (deployer,) = deriveRememberKey(mnemonic, 0);
 
-    modifier broadcaster() {
-        vm.startBroadcast(deployer);
-        _;
-        vm.stopBroadcast();
+        console.log("deployer: %s", deployer);
     }
 }

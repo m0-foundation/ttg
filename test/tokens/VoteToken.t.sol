@@ -6,6 +6,7 @@ import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract VoteTokenTest is SPOG_Base {
     address alice = createUser("alice");
@@ -38,6 +39,8 @@ contract VoteTokenTest is SPOG_Base {
      */
     function initTokens() private {
         valueToken = new ValueToken("SPOGValue", "value");
+        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
+
         valueToken.initSPOGAddress(address(spog));
 
         // Mint initial balances to users

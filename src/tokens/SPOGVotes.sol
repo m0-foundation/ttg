@@ -20,9 +20,8 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     /// @param name The name of the token
     /// @param symbol The symbol of the token
     constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        // TODO: I think we miss it, revisit later ?
-        _setupRole(MINTER_ROLE, _msgSender());
+        // TODO: Who will be the admin of this contract?
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @dev sets the spog address. Can only be called once.
@@ -46,7 +45,7 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
      * See {ERC20-_burn}.
      */
     function burn(uint256 amount) public virtual {
-        _burn(_msgSender(), amount);
+        _burn(msg.sender, amount);
     }
 
     /**
@@ -61,7 +60,7 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
      * `amount`.
      */
     function burnFrom(address account, uint256 amount) public virtual {
-        _spendAllowance(account, _msgSender(), amount);
+        _spendAllowance(account, msg.sender, amount);
         _burn(account, amount);
     }
 }
