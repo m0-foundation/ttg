@@ -3,6 +3,8 @@ pragma solidity 0.8.19;
 
 import {SPOG} from "src/core/SPOG.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
 /// @title SPOGFactory
 /// @notice This contract is used to deploy SPOG contracts
@@ -23,8 +25,8 @@ contract SPOGFactory {
     /// @return the address of the newly deployed contract
     function deploy(
         bytes memory _initSPOGData,
-        address _voteVault,
-        address _valueVault,
+        IVoteVault _voteVault,
+        IValueVault _valueVault,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -53,8 +55,8 @@ contract SPOGFactory {
     /// @dev This function is used to get the bytecode of the SPOG contract to be deployed
     function getBytecode(
         bytes memory _initSPOGData,
-        address _valueVault,
-        address _voteVault,
+        IVoteVault _voteVault,
+        IValueVault _valueVault,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,

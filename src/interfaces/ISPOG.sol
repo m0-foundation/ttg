@@ -5,6 +5,8 @@ import {IList} from "src/interfaces/IList.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
     // Events
@@ -36,8 +38,8 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function voteGovernor() external view returns (ISPOGGovernor);
 
     // Logic functions
-    function valueVault() external view returns (address);
-    function voteVault() external view returns (address);
+    function valueVault() external view returns (IValueVault);
+    function voteVault() external view returns (IVoteVault);
 
     function addNewList(IList list) external;
 

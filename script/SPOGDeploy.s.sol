@@ -16,8 +16,12 @@ import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
 import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
 contract SPOGDeployScript is BaseScript {
     SPOGFactory public spogFactory;
@@ -94,8 +98,8 @@ contract SPOGDeployScript is BaseScript {
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
             initSPOGData,
-            address(voteVault),
-            address(valueVault),
+            IVoteVault(voteVault),
+            IValueVault(valueVault),
             time,
             voteQuorum,
             valueQuorum,
@@ -115,8 +119,8 @@ contract SPOGDeployScript is BaseScript {
 
         spog = spogFactory.deploy(
             initSPOGData,
-            address(voteVault),
-            address(valueVault),
+            IVoteVault(voteVault),
+            IValueVault(valueVault),
             time,
             voteQuorum,
             valueQuorum,
@@ -144,8 +148,8 @@ contract SPOGDeployScript is BaseScript {
 
         SPOG newSpog = spogFactory.deploy(
             initSPOGData,
-            address(voteVault),
-            address(valueVault),
+            IVoteVault(voteVault),
+            IValueVault(valueVault),
             time,
             voteQuorum,
             valueQuorum,
