@@ -172,6 +172,8 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
     }
 
     /// @dev Allows provide EIP-712 digest for vote by sig
+    /// @param proposalId the proposal id
+    /// @param support yes or no
     function hashVote(uint256 proposalId, uint8 support) public view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId, support)));
     }
