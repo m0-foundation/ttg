@@ -331,26 +331,18 @@ contract VoteSPOGGovernorTest is SPOG_Base {
             }
         }
 
-        console.log("t1");
-
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("Governor: vote not currently active");
         voteGovernor.castVotesBySig(proposals, support, vs, rs, ss);
-
-        console.log("t2");
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(
             voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
         );
 
-        console.log("t3");
-
         assertTrue(
             voteGovernor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
         );
-
-        console.log("t4");
 
         // fast forward to an active voting period
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
@@ -365,17 +357,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // spogVote balance of voter
         uint256 spogVoteBalance = spogVote.balanceOf(signer);
 
-        console.log("t5", yesVotes, noVotes, spogVoteBalance);
-
         assertTrue(yesVotes == spogVoteBalance, "Proposal does not have expected yes vote");
         assertTrue(noVotes == 0, "Proposal does not have 0 no vote");
 
-        console.log("t6", yesVotes2, noVotes2, spogVoteBalance);
-
         assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
         assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
-
-        console.log("t7");
     }
 
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
