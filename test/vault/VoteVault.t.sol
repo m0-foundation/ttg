@@ -98,7 +98,7 @@ contract VoteVaultTest is BaseTest {
         assertEq(unclaimed, 1000e18);
     }
 
-    function test__Vault() public {
+    function test_sellUnclaimedVoteTokens_Vault() public {
         setUp();
 
         uint256 epoch = vault.governor().currentEpoch();
