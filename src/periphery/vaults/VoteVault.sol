@@ -21,12 +21,9 @@ contract VoteVault is IVoteVault, BaseVault {
     IERC20PricelessAuction public immutable auctionContract;
 
     modifier onlyActive(uint256 epoch) {
-        uint256 numOfProposalsVotedOnEpoch = governor.accountEpochNumProposalsVotedOn(msg.sender, epoch);
-        uint256 totalProposalsEpoch = governor.epochProposalsCount(epoch);
-        require(
-            numOfProposalsVotedOnEpoch == totalProposalsEpoch,
-            "Vault: unable to withdraw due to not voting on all proposals"
-        );
+        uint256 numVotedOn = governor.accountEpochNumProposalsVotedOn(msg.sender, epoch);
+        uint256 numProposals = governor.epochProposalsCount(epoch);
+        if (numVotedOn != numProposals) revert NotVotedOnAllProposals();
         _;
     }
 
@@ -70,7 +67,7 @@ contract VoteVault is IVoteVault, BaseVault {
 
     /// @dev Claim Vote token inflation rewards by vote holders
     function claimVoteTokenRewards(uint256 epoch) external override onlyActive(epoch) {
-        require(epoch <= governor.currentEpoch(), "Vault: epoch is not in the past");
+        if (epoch > governor.currentEpoch()) revert EpochIsNotInThePast();
         address rewardToken = address(governor.votingToken());
 
         // vote holders claim their epoch vote rewards
@@ -79,7 +76,7 @@ contract VoteVault is IVoteVault, BaseVault {
 
     /// @dev Claim Value token inflation rewards by vote holders
     function claimValueTokenRewards(uint256 epoch) external override onlyActive(epoch) {
-        require(epoch < governor.currentEpoch(), "Vault: epoch is not in the past");
+        if (epoch >= governor.currentEpoch()) revert EpochIsNotInThePast();
         address valueToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
 
         // vote holders claim their epoch value rewards

@@ -34,8 +34,7 @@ contract ValueVault is IValueVault, BaseVault {
     /// @param epoch Epoch to withdraw rewards for
     /// @param token Token to withdraw rewards for
     function withdrawRewards(uint256 epoch, address token) public override {
-        require(epoch < governor.currentEpoch(), "ValueVault: epoch is not in the past");
-
+        if (epoch > governor.currentEpoch()) revert EpochIsNotInThePast();
         _withdrawTokenRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
     }
 

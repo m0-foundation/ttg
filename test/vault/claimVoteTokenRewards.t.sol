@@ -3,6 +3,7 @@
 pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
     /*//////////////////////////////////////////////////////////////
@@ -172,7 +173,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         voteGovernor.castVote(proposalId3, noVote);
 
         // carol fails to withdraw vote rewards because she has not voted in all proposals
-        vm.expectRevert("Vault: unable to withdraw due to not voting on all proposals");
+        vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
         voteVault.claimVoteTokenRewards(relevantEpochProposals);
 
         vm.stopPrank();
