@@ -9,7 +9,8 @@ interface IBaseVault {
     event TokenRewardsWithdrawn(address indexed account, address indexed token, uint256 amount);
 
     error EpochIsNotInThePast();
+    error EpochWithNoRewards();
+    error AlreadyClaimed();
 
-    // SPOG-triggered functions
     function depositRewards(uint256 epoch, address token, uint256 amount) external;
 }

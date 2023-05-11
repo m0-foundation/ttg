@@ -82,7 +82,7 @@ contract VoteVaultTest is BaseTest {
         assertEq(voteToken.balanceOf(address(vault)), 1000e18);
     }
 
-    function test_unclaimedVoteTokensForEpoch() public {
+    function test_auctionableVoteRewards() public {
         setUp();
 
         // deposit rewards for previous epoch
@@ -93,7 +93,7 @@ contract VoteVaultTest is BaseTest {
         vault.depositRewards(epoch, address(voteToken), 1000e18);
         vm.stopPrank();
 
-        uint256 unclaimed = vault.unclaimedVoteTokensForEpoch(epoch);
+        uint256 unclaimed = vault.auctionableVoteRewards(epoch);
 
         assertEq(unclaimed, 1000e18);
     }

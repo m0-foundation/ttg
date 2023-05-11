@@ -11,12 +11,14 @@ interface IVoteVault is IBaseVault {
 
     error NotVotedOnAllProposals();
 
-    // SPOG-triggered functions
+    // Auction-related functions
+    function auctionableVoteRewards(uint256 epoch) external view returns (uint256);
     function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
+
+    // RESET-related functions
     function updateGovernor(ISPOGGovernor newGovernor) external;
 
     // Functions for claiming governance rewards by vote holders
-    function claimVoteTokenRewards(uint256 epoch) external;
-    function claimValueTokenRewards(uint256 epoch) external;
-    function unclaimedVoteTokensForEpoch(uint256 epoch) external view returns (uint256);
+    function claimVoteRewards(uint256 epoch) external;
+    function claimValueRewards(uint256 epoch) external;
 }
