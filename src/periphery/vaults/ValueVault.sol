@@ -19,7 +19,7 @@ contract ValueVault is IValueVault, BaseVault {
     /// @dev Withdraw rewards for multiple epochs for a token
     /// @param epochs Epochs to withdraw rewards for
     /// @param token Token to withdraw rewards for
-    function withdrawRewards(uint256[] memory epochs, address token) external {
+    function withdrawRewards(uint256[] memory epochs, address token) external override {
         uint256 length = epochs.length;
         for (uint256 i; i < length;) {
             withdrawRewards(epochs[i], token);
@@ -33,7 +33,7 @@ contract ValueVault is IValueVault, BaseVault {
     /// @dev Withdraw rewards for a single epoch for a token
     /// @param epoch Epoch to withdraw rewards for
     /// @param token Token to withdraw rewards for
-    function withdrawRewards(uint256 epoch, address token) public {
+    function withdrawRewards(uint256 epoch, address token) public override {
         require(epoch < governor.currentEpoch(), "ValueVault: epoch is not in the past");
 
         _withdrawTokenRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);

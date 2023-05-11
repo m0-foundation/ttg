@@ -33,21 +33,20 @@ abstract contract BaseVault is IBaseVault {
     // start block numbers for epochs with rewards
     mapping(uint256 => uint256) public epochStartBlockNumber;
 
-    constructor(ISPOGGovernor _governor) {
-        governor = _governor;
-    }
-
     modifier onlySPOG() {
         require(msg.sender == address(governor.spogAddress()), "Vault: Only spog");
-
         _;
+    }
+
+    constructor(ISPOGGovernor _governor) {
+        governor = _governor;
     }
 
     /// @notice Deposit voting (vote and value) reward tokens for epoch
     /// @param epoch Epoch to deposit tokens for
     /// @param token Token to deposit
     /// @param amount Amount of vote tokens to deposit
-    function depositRewards(uint256 epoch, address token, uint256 amount) external override onlySPOG {
+    function depositRewards(uint256 epoch, address token, uint256 amount) external override {
         // TODO: should we allow to deposit only for next epoch ? or current and next epoch is good ?
         require(epoch >= governor.currentEpoch(), "Vault: epoch is not in the future");
 
