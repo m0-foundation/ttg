@@ -126,19 +126,56 @@ contract SPOGGovernor is ISPOGGovernor, GovernorVotesQuorumFraction {
         override
         returns (uint256[] memory)
     {
-        uint256 propLength = proposalIds.length;
-        uint256 supLength = support.length;
-        if (propLength != supLength) {
-            revert ArrayLengthsMistmatch(propLength, supLength);
+        if (proposalIds.length != support.length) {
+            revert ArrayLengthsMismatch();
         }
-        uint256[] memory results = new uint256[](propLength);
-        for (uint256 i; i < propLength;) {
+
+        uint256[] memory results = new uint256[](proposalIds.length);
+        for (uint256 i; i < proposalIds.length;) {
             results[i] = castVote(proposalIds[i], support[i]);
             unchecked {
                 ++i;
             }
         }
         return results;
+    }
+
+    /// @dev Allows batch voting
+    /// @notice Uses same params as castVote, but in arrays.
+    /// @param proposalIds an array of proposalIds
+    /// @param support an array of vote values for each proposal
+    /// @param v an array of v values for each proposal signature
+    /// @param r an array of r values for each proposal signature
+    /// @param s an array of s values for each proposal signature
+    function castVotesBySig(
+        uint256[] calldata proposalIds,
+        uint8[] calldata support,
+        uint8[] calldata v,
+        bytes32[] calldata r,
+        bytes32[] calldata s
+    ) public virtual returns (uint256[] memory) {
+        if (
+            proposalIds.length != support.length || proposalIds.length != v.length || proposalIds.length != r.length
+                || proposalIds.length != s.length
+        ) {
+            revert ArrayLengthsMismatch();
+        }
+
+        uint256[] memory results = new uint256[](proposalIds.length);
+        for (uint256 i; i < proposalIds.length;) {
+            results[i] = castVoteBySig(proposalIds[i], support[i], v[i], r[i], s[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        return results;
+    }
+
+    /// @dev Allows provide EIP-712 digest for vote by sig
+    /// @param proposalId the proposal id
+    /// @param support yes or no
+    function hashVote(uint256 proposalId, uint8 support) public view returns (bytes32) {
+        return _hashTypedDataV4(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId, support)));
     }
 
     /*//////////////////////////////////////////////////////////////
