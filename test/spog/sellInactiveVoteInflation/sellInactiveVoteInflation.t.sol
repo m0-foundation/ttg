@@ -6,7 +6,7 @@ import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 
 contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
-    function test_() public {
+    function test_sellUnclaimedVoteTokens() public {
         setUp();
 
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
