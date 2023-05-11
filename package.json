@@ -1,0 +1,8 @@
+{
+  "name": "@mzero-labs/spog",
+  "version": "1.0.0",
+  "description": "SPOG contract ABIs",
+  "main": "index.js",
+  "author": "mZero Labs <contact@m0.xyz>",
+  "license": "GPL-3.0"
+}
