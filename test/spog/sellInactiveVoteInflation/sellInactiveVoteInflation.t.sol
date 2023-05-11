@@ -5,25 +5,30 @@ import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 
-contract SPOG_SellUnclaimedVoteTokens is Vault_IntegratedWithSPOG {
-    function test_sellUnclaimedVoteTokens() public {
+contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
+    function test_() public {
         setUp();
-
-        ValueToken valueToken = new ValueToken("SPOGValue", "value");
-        VoteToken voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
 
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
 
         // deposit rewards for previous epoch
         vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
+        vm.startPrank(alice);
         voteGovernor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        voteGovernor.castVote(proposalId, noVote);
+        vm.stopPrank();
 
         vm.roll(block.number + voteGovernor.votingPeriod() + 1);
 
-        // anyone can call
-        spog.sellUnclaimedVoteTokens(voteGovernor.currentEpoch() - 1);
+        assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), 20000000000000000000);
 
-        assertEq(voteToken.balanceOf(address(voteVault)), 0);
+        // anyone can call
+        spog.sellInactiveVoteInflation(voteGovernor.currentEpoch() - 1);
+
+        assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), 11200000000000000000);
     }
 }

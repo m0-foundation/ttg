@@ -31,27 +31,34 @@ contract VoteVault is IVoteVault, BaseVault {
         return epochTokenDeposit[token][epoch] - epochTokenTotalWithdrawn[token][epoch];
     }
 
-    /// @notice Sell unclaimed vote tokens
+    /// @notice Sell inactitve voters inflation rewards
     /// @param epoch Epoch to sell tokens from
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
+    function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
         uint256 currentEpoch = governor.currentEpoch();
         require(epoch < currentEpoch, "Vault: epoch is not in the past");
 
         address token = address(governor.votingToken());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
-        uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
+        uint256 totalCoinsAtEpoch = governor.votingToken().getPastTotalSupply(epoch);
+        uint256 activeCoinsPerEpoch = governor.epochSumOfVoteWeight(epoch);
+        uint256 passiveCoinsPerEpoch = totalCoinsAtEpoch - activeCoinsPerEpoch;
+
+        uint256 totalInflation = epochTokenDeposit[address(governor.votingToken())][epoch];
+
+        uint256 inactiveCoinsInflation = (totalInflation * 100) / totalCoinsAtEpoch * passiveCoinsPerEpoch / 100;
+
         // TODO: introduce error
-        if (unclaimed == 0) {
-            return;
+        if (inactiveCoinsInflation == 0) {
+            revert();
         }
-        IERC20(token).approve(auction, unclaimed);
+        IERC20(token).approve(auction, inactiveCoinsInflation);
 
-        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), inactiveCoinsInflation);
 
-        emit VoteTokenAuction(token, epoch, auction, unclaimed);
+        emit VoteTokenAuction(token, epoch, auction, inactiveCoinsInflation);
     }
 
     /// @dev Claim Vote token inflation rewards by vote holders

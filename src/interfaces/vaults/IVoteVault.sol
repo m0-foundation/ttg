@@ -10,7 +10,7 @@ interface IVoteVault is IBaseVault {
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     // SPOG-triggered functions
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
+    function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration) external;
     function updateGovernor(ISPOGGovernor newGovernor) external;
 
     // Functions for claiming governance rewards by vote holders

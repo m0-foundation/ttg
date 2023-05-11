@@ -11,6 +11,8 @@ import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
 
+import "forge-std/console.sol";
+
 contract MockSPOGGovernor is StdCheats {
     address public immutable spogAddress;
     address public immutable votingToken;
@@ -98,7 +100,7 @@ contract VoteVaultTest is BaseTest {
         assertEq(unclaimed, 1000e18);
     }
 
-    function test_sellUnclaimedVoteTokens_Vault() public {
+    function test__Vault() public {
         setUp();
 
         uint256 epoch = vault.governor().currentEpoch();
@@ -107,11 +109,8 @@ contract VoteVaultTest is BaseTest {
         voteToken.approve(address(vault), 1000e18);
         vault.depositRewards(epoch + 1, address(voteToken), 1000e18);
 
-        vm.roll(block.number + 2 * vault.governor().votingPeriod() + 1);
+        assertEq(voteToken.balanceOf(address(vault)), 1000e18);
 
-        vault.sellUnclaimedVoteTokens(epoch + 1, address(usdc), 30 days);
-
-        assertEq(voteToken.balanceOf(address(vault)), 0);
         vm.stopPrank();
     }
 

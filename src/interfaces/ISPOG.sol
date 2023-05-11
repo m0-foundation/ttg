@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IList} from "src/interfaces/IList.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
