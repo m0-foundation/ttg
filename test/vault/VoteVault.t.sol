@@ -74,8 +74,8 @@ contract VoteVaultTest is BaseTest {
         vm.startPrank(spogAddress);
         voteToken.approve(address(vault), 1000e18);
 
-        // expectEmit();
-        // emit EpochRewardsDeposit(epoch, address(voteToken), 1000e18);
+        expectEmit();
+        emit EpochRewardsDeposit(epoch, address(voteToken), 1000e18);
         vault.depositRewards(epoch, address(voteToken), 1000e18);
         vm.stopPrank();
 
@@ -119,8 +119,8 @@ contract VoteVaultTest is BaseTest {
         vm.startPrank(spogAddress);
 
         ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
-        // expectEmit();
-        // emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
+        expectEmit();
+        emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
         vault.updateGovernor(newVoteGovernor);
 
         assertEq(address(vault.governor()), address(newVoteGovernor), "Governor was not updated");

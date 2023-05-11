@@ -51,7 +51,7 @@ contract VoteVault is IVoteVault, BaseVault {
 
         IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
 
-        // emit VoteTokenAuction(token, epoch, auction, unclaimed);
+        emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
 
     /// @dev Claim Vote token inflation rewards by vote holders
@@ -77,11 +77,11 @@ contract VoteVault is IVoteVault, BaseVault {
     }
 
     // @notice Update vote governor after `RESET` was executed
-    // @param newVoteGovernor New vote governor
+    // @param newGovernor New vote governor
     function updateGovernor(ISPOGGovernor newGovernor) external onlySPOG {
-        governor = newGovernor;
+        emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.votingToken()));
 
-        // emit VoteGovernorUpdated(address(newVoteGovernor), address(newVoteGovernor.votingToken()));
+        governor = newGovernor;
     }
 
     // TODO potentially modifier ?
