@@ -11,8 +11,6 @@ import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
 
-import "forge-std/console.sol";
-
 contract MockSPOGGovernor is StdCheats {
     address public immutable spogAddress;
     address public immutable votingToken;

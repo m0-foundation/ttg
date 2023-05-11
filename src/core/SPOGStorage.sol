@@ -115,10 +115,6 @@ abstract contract SPOGStorage is ISPOG {
         emit DoubleQuorumFinalized(identifier);
     }
 
-    function getSpogData() external view returns (SPOGData memory) {
-        return spogData;
-    }
-
     /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
