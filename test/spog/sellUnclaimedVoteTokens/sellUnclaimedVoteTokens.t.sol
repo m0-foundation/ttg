@@ -24,6 +24,6 @@ contract SPOG_SellUnclaimedVoteTokens is Vault_IntegratedWithSPOG {
         // anyone can call
         spog.sellUnclaimedVoteTokens(voteGovernor.currentEpoch() - 1);
 
-        assertEq(voteToken.balanceOf(address(vault)), 0);
+        assertEq(voteToken.balanceOf(address(voteVault)), 0);
     }
 }

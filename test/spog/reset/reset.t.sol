@@ -180,15 +180,15 @@ contract SPOG_reset is SPOG_Base {
     }
 
     function test_Reset_VoteAndValueTokensAreNotInflated() public {
-        uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(vault));
-        uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(vault));
+        uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(voteVault));
+        uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(voteVault));
         uint256 voteTotalBalance = spogVote.totalSupply();
         uint256 valueTotalBalance = spogValue.totalSupply();
 
         proposeGovernanceReset("Propose reset of vote governance", address(spogValue));
 
-        uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(vault));
-        uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(vault));
+        uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(voteVault));
+        uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(voteVault));
         uint256 voteTotalBalanceAfterProposal = spogVote.totalSupply();
         uint256 valueTotalBalanceAfterProposal = spogValue.totalSupply();
         assertEq(

@@ -297,7 +297,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
         // epoch 0
         uint256 spogVoteSupplyBefore = spogVote.totalSupply();
-        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(vault));
+        uint256 vaultVoteTokenBalanceBefore = spogVote.balanceOf(address(voteVault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -316,7 +316,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         );
 
         // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstInflation = spogVote.balanceOf(address(vault));
+        uint256 vaultVoteTokenBalanceAfterFirstInflation = spogVote.balanceOf(address(voteVault));
         assertEq(
             vaultVoteTokenBalanceAfterFirstInflation,
             vaultVoteTokenBalanceBefore + amountAddedByInflation,

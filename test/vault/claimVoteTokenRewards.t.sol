@@ -31,9 +31,9 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
     //////////////////////////////////////////////////////////////*/
 
     function test_UsersGetsVoteTokenInflationAfterVotingOnAllProposals() public {
-        // balance of spogVote for vault should be 0 before proposals
-        uint256 spogVoteInitialBalanceForVault = spogVote.balanceOf(address(vault));
-        assertEq(spogVoteInitialBalanceForVault, 0, "vault should have 0 spogVote balance");
+        // balance of spogVote for voteVault should be 0 before proposals
+        uint256 spogVoteInitialBalanceForVault = spogVote.balanceOf(address(voteVault));
+        assertEq(spogVoteInitialBalanceForVault, 0, "voteVault should have 0 spogVote balance");
 
         uint256 epochInflation = spogVote.totalSupply() * deployScript.inflator() / 100;
         assertEq(
@@ -45,12 +45,11 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
-        uint256 spogVoteBalanceForVaultForEpochOne = spogVote.balanceOf(address(vault));
-        // TODO: make sure calculations are really correct here
+        uint256 spogVoteBalanceForVaultForEpochOne = spogVote.balanceOf(address(voteVault));
         assertEq(
             spogVoteInitialBalanceForVault + epochInflation,
             spogVoteBalanceForVaultForEpochOne,
-            "vault should have more spogVote balance"
+            "voteVault should have more spogVote balance"
         );
 
         uint256 relevantEpochProposals = voteGovernor.currentEpoch() + 1;
@@ -125,29 +124,29 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
 
         assertFalse(
-            vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
             "Alice should not have claimed vote token rewards"
         );
         assertFalse(
-            vault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
             "Bob should not have claimed vote token rewards"
         );
 
         // alice and bob claim their vote token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
-        vault.claimVoteTokenRewards();
+        voteVault.claimVoteTokenRewards(relevantEpochProposals);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        vault.claimVoteTokenRewards();
+        voteVault.claimVoteTokenRewards(relevantEpochProposals);
         vm.stopPrank();
 
         assertTrue(
-            vault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
             "Alice should have claimed vote token rewards"
         );
         assertTrue(
-            vault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
             "Bob should have claimed vote token rewards"
         );
 
@@ -174,7 +173,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
 
         // carol fails to withdraw vote rewards because she has not voted in all proposals
         vm.expectRevert("Vault: unable to withdraw due to not voting on all proposals");
-        vault.claimVoteTokenRewards();
+        voteVault.claimVoteTokenRewards(relevantEpochProposals);
 
         vm.stopPrank();
 
@@ -191,11 +190,11 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         // carol remains with the same balance
         assertEq(spogVote.balanceOf(carol), amountToMint, "Carol should have same spogVote balance");
 
-        // vault should have received the remaining inflationary rewards from epoch 1
+        // voteVault should have received the remaining inflationary rewards from epoch 1
         assertGt(
-            spogVote.balanceOf(address(vault)),
+            spogVote.balanceOf(address(voteVault)),
             spogVoteInitialBalanceForVault,
-            "vault should have received the remaining inflationary rewards from epoch 1"
+            "voteVault should have received the remaining inflationary rewards from epoch 1"
         );
     }
 }

@@ -111,7 +111,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
     function test_EmergencyRemove_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
         uint256 votingPeriodBeforeER = voteGovernor.votingPeriod();
-        uint256 balanceBeforeProposal = deployScript.cash().balanceOf(address(vault));
+        uint256 balanceBeforeProposal = deployScript.cash().balanceOf(address(valueVault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -121,7 +121,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         ) = createEmergencyProposal();
 
         // Check that tax was paid
-        uint256 balanceAfterProposal = deployScript.cash().balanceOf(address(vault));
+        uint256 balanceAfterProposal = deployScript.cash().balanceOf(address(valueVault));
         assertEq(
             balanceAfterProposal - balanceBeforeProposal,
             spog.EMERGENCY_REMOVE_TAX_MULTIPLIER() * deployScript.tax(),
@@ -191,15 +191,15 @@ contract SPOG_emergencyRemove is SPOG_Base {
     }
 
     function test_EmergencyRemove_VoteAndValueTokensAreNotInflated() public {
-        uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(vault));
-        uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(vault));
+        uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(voteVault));
+        uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(voteVault));
         uint256 voteTotalBalance = spogVote.totalSupply();
         uint256 valueTotalBalance = spogValue.totalSupply();
 
         createEmergencyProposal();
 
-        uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(vault));
-        uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(vault));
+        uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(voteVault));
+        uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(voteVault));
         uint256 voteTotalBalanceAfterProposal = spogVote.totalSupply();
         uint256 valueTotalBalanceAfterProposal = spogValue.totalSupply();
         assertEq(
