@@ -51,16 +51,16 @@ contract VoteVault is IVoteVault, BaseVault {
         for (i; i < epochs.length;) {
             require(epochs[i] < currentEpoch, "Vault: epoch is not in the past");
 
-            totalUnclaimed += unclaimedVoteTokensForEpoch(epochs[i]);
+            uint256 unclaimed = unclaimedVoteTokensForEpoch(epochs[i]);
+
+            require(unclaimed > 0, "Vault: epoch has no unclaimed tokens");
+
+            totalUnclaimed += unclaimed;
             epochTokenAuction[epochs[i]] = auction;
 
             unchecked {
                 ++i;
             }
-        }
-
-        if (totalUnclaimed == 0) {
-            revert BalanceIsZero();
         }
 
         IERC20(token).approve(auction, totalUnclaimed);

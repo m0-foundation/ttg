@@ -9,8 +9,6 @@ interface IVoteVault is IBaseVault {
     event VoteTokenAuction(uint256[] indexed epochs, address indexed auction, uint256 amount);
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
-    error BalanceIsZero();
-
     // SPOG-triggered functions
     function sellUnclaimedVoteTokens(uint256[] calldata epochs, address paymentToken, uint256 duration) external;
     function updateGovernor(ISPOGGovernor newGovernor) external;
