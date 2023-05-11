@@ -4,11 +4,12 @@ pragma solidity 0.8.19;
 import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {SPOGGovernor} from "src/core/SPOGGovernor.sol";
 import "forge-std/console.sol";
 
 contract VoteSPOGGovernorTest is SPOG_Base {
     address alice = createUser("alice");
+    uint256 signerPrivateKey = 0xA11CE;
+    address signer = vm.addr(signerPrivateKey);
 
     uint8 noVote = 0;
     uint8 yesVote = 1;
@@ -292,6 +293,89 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
         assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
+    }
+
+    function test_CanBatchVoteOnMultipleProposalsWithSignatureAfterItsVotingDelay() public {
+        // mint spogVote to signer and self-delegate
+        spogVote.mint(signer, 100e18);
+        spogVote.delegate(signer);
+
+        // propose adding a new list to spog
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+
+        uint256[] memory proposals = new uint256[](2);
+        proposals[0] = proposalId;
+        proposals[1] = proposalId2;
+
+        uint8[] memory support = new uint8[](2);
+        support[0] = yesVote;
+        support[1] = noVote;
+
+        // bytes32 BALLOT_TYPEHASH = keccak256("Ballot(uint256 proposalId,uint8 support)");
+
+        uint8[] memory vs = new uint8[](proposals.length);
+        bytes32[] memory rs = new bytes32[](proposals.length);
+        bytes32[] memory ss = new bytes32[](proposals.length);
+
+        for (uint256 i; i < proposals.length;) {
+            bytes32 digest = voteGovernor.hashVote(proposals[i], support[i]);
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
+            vs[i] = v;
+            rs[i] = r;
+            ss[i] = s;
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        console.log("t1");
+
+        // revert happens when voting on proposal before voting period has started
+        vm.expectRevert("Governor: vote not currently active");
+        voteGovernor.castVotesBySig(proposals, support, vs, rs, ss);
+
+        console.log("t2");
+
+        // check proposal is pending. Note voting is not active until voteDelay is reached
+        assertTrue(
+            voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
+        );
+
+        console.log("t3");
+
+        assertTrue(
+            voteGovernor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
+        );
+
+        console.log("t4");
+
+        // fast forward to an active voting period
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // cast vote on proposals
+        voteGovernor.castVotesBySig(proposals, support, vs, rs, ss);
+
+        // check that proposal has 1 vote
+        (uint256 noVotes, uint256 yesVotes) = voteGovernor.proposalVotes(proposalId);
+        (uint256 noVotes2, uint256 yesVotes2) = voteGovernor.proposalVotes(proposalId2);
+
+        // spogVote balance of voter
+        uint256 spogVoteBalance = spogVote.balanceOf(signer);
+
+        console.log("t5", yesVotes, noVotes, spogVoteBalance);
+
+        assertTrue(yesVotes == spogVoteBalance, "Proposal does not have expected yes vote");
+        assertTrue(noVotes == 0, "Proposal does not have 0 no vote");
+
+        console.log("t6", yesVotes2, noVotes2, spogVoteBalance);
+
+        assertTrue(noVotes2 == spogVoteBalance, "Proposal2 does not have expected no vote");
+        assertTrue(yesVotes2 == 0, "Proposal2 does not have 0 yes vote");
+
+        console.log("t7");
     }
 
     function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
