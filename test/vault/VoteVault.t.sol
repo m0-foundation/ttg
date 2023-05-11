@@ -109,7 +109,10 @@ contract VoteVaultTest is BaseTest {
 
         vm.roll(block.number + 2 * vault.governor().votingPeriod() + 1);
 
-        vault.sellUnclaimedVoteTokens(epoch + 1, address(usdc), 30 days);
+        uint256[] memory epochs = new uint256[](1);
+        epochs[0] = epoch + 1;
+
+        vault.sellUnclaimedVoteTokens(epochs, address(usdc), 30 days);
 
         assertEq(voteToken.balanceOf(address(vault)), 0);
         vm.stopPrank();

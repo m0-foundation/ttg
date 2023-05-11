@@ -6,11 +6,13 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {IBaseVault} from "src/interfaces/vaults/IBaseVault.sol";
 
 interface IVoteVault is IBaseVault {
-    event VoteTokenAuction(address indexed token, uint256 indexed epoch, address indexed auction, uint256 amount);
+    event VoteTokenAuction(uint256[] indexed epochs, address indexed auction, uint256 amount);
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
+    error BalanceIsZero();
+
     // SPOG-triggered functions
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
+    function sellUnclaimedVoteTokens(uint256[] calldata epochs, address paymentToken, uint256 duration) external;
     function updateGovernor(ISPOGGovernor newGovernor) external;
 
     // Functions for claiming governance rewards by vote holders

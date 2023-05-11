@@ -329,9 +329,9 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice sell unclaimed $vote tokens
-    /// @param epoch The epoch for which to sell unclaimed $vote tokens
-    function sellUnclaimedVoteTokens(uint256 epoch) public {
-        voteVault.sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
+    /// @param epochs The epoch for which to sell unclaimed $vote tokens
+    function sellUnclaimedVoteTokens(uint256[] memory epochs) public {
+        voteVault.sellUnclaimedVoteTokens(epochs, address(spogData.cash), voteGovernor.votingPeriod());
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals

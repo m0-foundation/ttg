@@ -20,6 +20,8 @@ contract VoteVault is IVoteVault, BaseVault {
 
     IERC20PricelessAuction public immutable auctionContract;
 
+    mapping(uint256 => address) public epochTokenAuction;
+
     constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) BaseVault(_governor) {
         auctionContract = _auctionContract;
     }
@@ -32,26 +34,40 @@ contract VoteVault is IVoteVault, BaseVault {
     }
 
     /// @notice Sell unclaimed vote tokens
-    /// @param epoch Epoch to sell tokens from
+    /// @param epochs Epochs to sell tokens from
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
+    function sellUnclaimedVoteTokens(uint256[] memory epochs, address paymentToken, uint256 duration)
+        external
+        onlySPOG
+    {
         uint256 currentEpoch = governor.currentEpoch();
-        require(epoch < currentEpoch, "Vault: epoch is not in the past");
-
         address token = address(governor.votingToken());
-        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
+        address auction = Clones.cloneDeterministic(address(auctionContract), keccak256(abi.encodePacked(epochs)));
 
-        uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
-        // TODO: introduce error
-        if (unclaimed == 0) {
-            return;
+        uint256 totalUnclaimed;
+
+        uint256 i;
+        for (i; i < epochs.length;) {
+            require(epochs[i] < currentEpoch, "Vault: epoch is not in the past");
+
+            totalUnclaimed += unclaimedVoteTokensForEpoch(epochs[i]);
+            epochTokenAuction[epochs[i]] = auction;
+
+            unchecked {
+                ++i;
+            }
         }
-        IERC20(token).approve(auction, unclaimed);
 
-        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
+        if (totalUnclaimed == 0) {
+            revert BalanceIsZero();
+        }
 
-        emit VoteTokenAuction(token, epoch, auction, unclaimed);
+        IERC20(token).approve(auction, totalUnclaimed);
+
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), totalUnclaimed);
+
+        emit VoteTokenAuction(epochs, auction, totalUnclaimed);
     }
 
     /// @dev Claim Vote token inflation rewards by vote holders
