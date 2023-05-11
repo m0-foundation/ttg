@@ -93,7 +93,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     /// @dev Getter for finding whether a list is in a masterlist
     /// @return Whether the list is in the masterlist
-    function isListInMasterList(address list) external view returns (bool) {
+    function isListInMasterList(address list) external view override returns (bool) {
         return masterlist.contains(list);
     }
 
@@ -104,7 +104,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(IList list) external onlyVoteGovernor {
+    function addNewList(IList list) external override onlyVoteGovernor {
         if (list.admin() != address(this)) {
             revert ListAdminIsNotSPOG();
         }
@@ -116,7 +116,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external onlyVoteGovernor {
+    function append(address _address, IList _list) external override onlyVoteGovernor {
         // require that the list is on the master list
         if (!masterlist.contains(address(_list))) {
             revert ListIsNotInMasterList();
@@ -131,7 +131,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice Remove an address from a list
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external onlyVoteGovernor {
+    function remove(address _address, IList _list) external override onlyVoteGovernor {
         _removeFromList(_address, _list);
         emit AddressRemovedFromList(address(_list), _address);
     }
@@ -142,7 +142,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param _list The list from which the address will be removed
     // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
     // TODO: IMPORTANT: implement immediate remove
-    function emergencyRemove(address _address, IList _list) external onlyVoteGovernor {
+    function emergencyRemove(address _address, IList _list) external override onlyVoteGovernor {
         _removeFromList(_address, _list);
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
@@ -165,7 +165,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
+    function reset(ISPOGGovernor newVoteGovernor) external override onlyValueGovernor {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));

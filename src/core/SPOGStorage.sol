@@ -21,6 +21,18 @@ abstract contract SPOGStorage is ISPOG {
     ISPOGGovernor public voteGovernor;
     ISPOGGovernor public immutable valueGovernor;
 
+    modifier onlyVoteGovernor() {
+        require(msg.sender == address(voteGovernor), "SPOG: Only vote governor");
+
+        _;
+    }
+
+    modifier onlyValueGovernor() {
+        require(msg.sender == address(valueGovernor), "SPOG: Only value governor");
+
+        _;
+    }
+
     constructor(
         bytes memory _initSPOGData,
         ISPOGGovernor _voteGovernor,
@@ -62,18 +74,6 @@ abstract contract SPOGStorage is ISPOG {
         valueGovernor.updateVotingTime(_time);
     }
 
-    modifier onlyVoteGovernor() {
-        require(msg.sender == address(voteGovernor), "SPOG: Only vote governor");
-
-        _;
-    }
-
-    modifier onlyValueGovernor() {
-        require(msg.sender == address(valueGovernor), "SPOG: Only value governor");
-
-        _;
-    }
-
     /// @param _initSPOGData The data used to initialize spogData
     function initSPOGData(bytes memory _initSPOGData) internal {
         // _cash The currency accepted for tax payment in the SPOG (must be ERC20)
@@ -92,11 +92,11 @@ abstract contract SPOGStorage is ISPOG {
 
     /// @dev Getter for taxRange. It returns the minimum and maximum value of `tax`
     /// @return The minimum and maximum value of `tax`
-    function taxRange() external view returns (uint256, uint256) {
+    function taxRange() external view override returns (uint256, uint256) {
         return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
-    function changeTax(uint256 _tax) external onlyVoteGovernor {
+    function changeTax(uint256 _tax) external override onlyVoteGovernor {
         require(_tax >= spogData.taxRange[0] && _tax <= spogData.taxRange[1], "SPOG: Tax out of range");
 
         spogData.tax = _tax;
@@ -107,7 +107,7 @@ abstract contract SPOGStorage is ISPOG {
     /// @dev file double quorum function to change the following values: cash, taxRange, inflator, time, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
-    function change(bytes32 what, bytes calldata value) external onlyVoteGovernor {
+    function change(bytes32 what, bytes calldata value) external override onlyVoteGovernor {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
 
         _changeWithDoubleQuorum(what, value);

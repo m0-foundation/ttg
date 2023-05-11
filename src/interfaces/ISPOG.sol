@@ -33,21 +33,21 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ValueGovernorDidNotApprove(uint256 proposalId);
     error ValueTokenMistmatch();
 
-    // double-governance
+    // Info functions about double governance and SPOG parameters
     function valueGovernor() external view returns (ISPOGGovernor);
     function voteGovernor() external view returns (ISPOGGovernor);
-
-    // Logic functions
     function valueVault() external view returns (IValueVault);
     function voteVault() external view returns (IVoteVault);
+    function taxRange() external view returns (uint256, uint256);
 
+    // Accepted `proposal` functions
     function addNewList(IList list) external;
-
     function append(address _address, IList _list) external;
-
     function remove(address _address, IList _list) external;
-
     function emergencyRemove(address _address, IList _list) external;
+    function reset(ISPOGGovernor newVoteGovernor) external;
+    function change(bytes32 what, bytes calldata value) external;
+    function changeTax(uint256 _tax) external;
 
     // Token rewards functions
     function voteTokenInflationPerEpoch() external view returns (uint256);
