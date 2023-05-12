@@ -13,6 +13,9 @@ import {IBaseVault} from "src/interfaces/vaults/IBaseVault.sol";
 abstract contract BaseVault is IBaseVault {
     using SafeERC20 for IERC20;
 
+    // errors
+    error InvalidEpoch(uint256 invalidEpoch, uint256 currentEpoch);
+
     enum RewardsSharingStrategy
     // default strategy, share rewards between all governance participants
     {

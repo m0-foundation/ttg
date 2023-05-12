@@ -14,7 +14,7 @@ interface IVoteVault is IBaseVault {
     function updateGovernor(SPOGGovernorBase newGovernor) external;
 
     // Functions for claiming governance rewards by vote holders
-    function claimVoteTokenRewards(uint256 epoch) external;
-    function claimValueTokenRewards(uint256 epoch) external;
+    function claimVoteTokenRewards(uint256[] memory epochs) external;
+    function claimValueTokenRewards(uint256[] memory epochs) external;
     function unclaimedVoteTokensForEpoch(uint256 epoch) external view returns (uint256);
 }

@@ -55,25 +55,49 @@ contract VoteVault is IVoteVault, BaseVault {
     }
 
     /// @dev Claim Vote token inflation rewards by vote holders
-    function claimVoteTokenRewards(uint256 epoch) external {
-        require(epoch <= governor.currentEpoch(), "Vault: epoch is not in the past");
+    /// @param epochs Epochs to claim rewards for
+    function claimVoteTokenRewards(uint256[] memory epochs) external {
+        uint256 currentEpoch = governor.currentEpoch();
+        uint256 length = epochs.length;
         address rewardToken = address(governor.votingToken());
 
-        _checkParticipation(epoch);
+        for (uint256 i; i < length;) {
+            if (epochs[i] > currentEpoch) {
+                revert InvalidEpoch(epochs[i], currentEpoch);
+            }
 
-        // vote holders claim their epoch vote rewards
-        _withdrawTokenRewards(epoch, rewardToken, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+            _checkParticipation(epochs[i]);
+
+            // vote holders claim their epoch vote rewards
+            _withdrawTokenRewards(epochs[i], rewardToken, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @dev Claim Value token inflation rewards by vote holders
-    function claimValueTokenRewards(uint256 epoch) external {
-        require(epoch < governor.currentEpoch(), "Vault: epoch is not in the past");
-        address valueToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
+    /// @param epochs Epochs to claim value rewards for
+    function claimValueTokenRewards(uint256[] memory epochs) external {
+        uint256 currentEpoch = governor.currentEpoch();
+        uint256 length = epochs.length;
+        address rewardToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
 
-        _checkParticipation(epoch);
+        for (uint256 i; i < length;) {
+            if (epochs[i] >= currentEpoch) {
+                revert InvalidEpoch(epochs[i], currentEpoch);
+            }
 
-        // vote holders claim their epoch value rewards
-        _withdrawTokenRewards(epoch, valueToken, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+            _checkParticipation(epochs[i]);
+
+            // vote holders claim their epoch value rewards
+            _withdrawTokenRewards(epochs[i], rewardToken, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     // @notice Update vote governor after `RESET` was executed
