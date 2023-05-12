@@ -2,13 +2,11 @@
 
 pragma solidity 0.8.19;
 
-import {
-    SPOGGovernorAbstract, ISPOGVotes, Governor, GovernorAbstract
-} from "src/core/governance/SPOGGovernorAbstract.sol";
+import {SPOGGovernorBase, ISPOGVotes, Governor, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin.
-contract SPOGGovernor is SPOGGovernorAbstract {
+contract SPOGGovernor is SPOGGovernorBase {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
@@ -37,13 +35,13 @@ contract SPOGGovernor is SPOGGovernorAbstract {
         uint256 quorumNumeratorValue,
         uint256 votingPeriod_,
         string memory name_
-    ) SPOGGovernorAbstract(votingTokenContract, quorumNumeratorValue, name_) {
+    ) SPOGGovernorBase(votingTokenContract, quorumNumeratorValue, name_) {
         votingToken = votingTokenContract;
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
     }
 
-    /// @inheritdoc SPOGGovernorAbstract
+    /// @inheritdoc SPOGGovernorBase
     function initSPOGAddress(address _spogAddress) external override {
         if (spogAddress != address(0)) {
             revert SPOGAddressAlreadySet(spogAddress);
@@ -173,7 +171,7 @@ contract SPOGGovernor is SPOGGovernorAbstract {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override(Governor, GovernorAbstract) onlySPOG returns (uint256) {
+    ) public override(Governor, GovernorBase) onlySPOG returns (uint256) {
         // update epochProposalsCount. Proposals are voted on in the next epoch
         epochProposalsCount[currentEpoch() + 1]++;
 
@@ -220,7 +218,7 @@ contract SPOGGovernor is SPOGGovernorAbstract {
     /**
      * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
      */
-    function state(uint256 proposalId) public view override(Governor, GovernorAbstract) returns (ProposalState) {
+    function state(uint256 proposalId) public view override(Governor, GovernorBase) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
@@ -244,13 +242,13 @@ contract SPOGGovernor is SPOGGovernorAbstract {
                             COUNTING MODULE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See {GovernorAbstract-COUNTING_MODE}.
+    /// @dev See {GovernorBase-COUNTING_MODE}.
     // solhint-disable-next-line func-name-mixedcase
     function COUNTING_MODE() public pure override returns (string memory) {
         return "support=alpha&quorum=alpha";
     }
 
-    /// @dev See {GovernorAbstract-hasVoted}.
+    /// @dev See {GovernorBase-hasVoted}.
     function hasVoted(uint256 proposalId, address account) public view override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
     }

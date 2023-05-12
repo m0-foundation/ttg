@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {SPOGGovernorAbstract} from "src/core/governance/SPOGGovernorAbstract.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
@@ -20,7 +20,7 @@ contract VoteVault is IVoteVault, BaseVault {
 
     IERC20PricelessAuction public immutable auctionContract;
 
-    constructor(SPOGGovernorAbstract _governor, IERC20PricelessAuction _auctionContract) BaseVault(_governor) {
+    constructor(SPOGGovernorBase _governor, IERC20PricelessAuction _auctionContract) BaseVault(_governor) {
         auctionContract = _auctionContract;
     }
 
@@ -78,7 +78,7 @@ contract VoteVault is IVoteVault, BaseVault {
 
     // @notice Update vote governor after `RESET` was executed
     // @param newGovernor New vote governor
-    function updateGovernor(SPOGGovernorAbstract newGovernor) external onlySPOG {
+    function updateGovernor(SPOGGovernorBase newGovernor) external onlySPOG {
         emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.votingToken()));
 
         governor = newGovernor;

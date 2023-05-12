@@ -117,7 +117,7 @@ contract SPOG_reset is SPOG_Base {
 
     function test_Revert_Reset_WhenNotCalledFromValueGovernance() public {
         vm.expectRevert("SPOG: Only value governor");
-        spog.reset(SPOGGovernorAbstract(payable(address(voteGovernor))));
+        spog.reset(SPOGGovernorBase(payable(address(voteGovernor))));
     }
 
     function test_Revert_Reset_WhenValueAndVoteTokensMistmatch() public {
@@ -140,7 +140,7 @@ contract SPOG_reset is SPOG_Base {
             governorFactory.deploy(newVoteToken, voteQuorum, time, "new VoteGovernor", voteGovernorSalt);
 
         vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
-        spog.reset(SPOGGovernorAbstract(payable(address(newVoteGovernor))));
+        spog.reset(SPOGGovernorBase(payable(address(newVoteGovernor))));
     }
 
     function test_Reset_Success() public {

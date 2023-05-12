@@ -5,12 +5,12 @@ import {
     GovernorVotesQuorumFraction,
     GovernorVotes,
     Governor,
-    IGovernor as GovernorAbstract
+    IGovernor as GovernorBase
 } from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {ISPOGGovernor, IGovernorVotesQuorumFraction, ISPOGVotes} from "src/interfaces/ISPOGGovernor.sol";
 
 /// @dev SPOG governor abstract contract. It sets up the OZ Governor contracts for SPOGGovernor.
-abstract contract SPOGGovernorAbstract is ISPOGGovernor, GovernorAbstract, GovernorVotesQuorumFraction {
+abstract contract SPOGGovernorBase is ISPOGGovernor, GovernorBase, GovernorVotesQuorumFraction {
     address public spogAddress;
 
     constructor(ISPOGVotes votingTokenContract, uint256 quorumNumeratorValue, string memory name_)

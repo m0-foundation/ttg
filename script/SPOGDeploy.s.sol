@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
-import {SPOG, SPOGGovernorAbstract} from "src/factories/SPOGFactory.sol";
+import {SPOG, SPOGGovernorBase} from "src/factories/SPOGFactory.sol";
 import {SPOGFactory} from "src/factories/SPOGFactory.sol";
 import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
@@ -80,8 +80,9 @@ contract SPOGDeployScript is BaseScript {
 
         auctionImplementation = new ERC20PricelessAuction();
 
-        voteVault = new VoteVault(SPOGGovernorAbstract(payable(address(voteGovernorAddress))), IERC20PricelessAuction(auctionImplementation));
-        valueVault = new ValueVault(SPOGGovernorAbstract(payable(address(valueGovernorAddress))));
+        voteVault =
+        new VoteVault(SPOGGovernorBase(payable(address(voteGovernorAddress))), IERC20PricelessAuction(auctionImplementation));
+        valueVault = new ValueVault(SPOGGovernorBase(payable(address(valueGovernorAddress))));
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, time, "VoteGovernor", voteGovernorSalt);
@@ -108,8 +109,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            SPOGGovernorAbstract(payable(address(voteGovernor))),
-            SPOGGovernorAbstract(payable(address(valueGovernor)))
+            SPOGGovernorBase(payable(address(voteGovernor))),
+            SPOGGovernorBase(payable(address(valueGovernor)))
         );
 
         address spogAddress = spogFactory.predictSPOGAddress(bytecode, spogCreationSalt);
@@ -133,8 +134,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            SPOGGovernorAbstract(payable(address(voteGovernor))),
-            SPOGGovernorAbstract(payable(address(valueGovernor))),
+            SPOGGovernorBase(payable(address(voteGovernor))),
+            SPOGGovernorBase(payable(address(valueGovernor))),
             spogCreationSalt
         );
 
@@ -164,8 +165,8 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            SPOGGovernorAbstract(payable(address(voteGovernor))),
-            SPOGGovernorAbstract(payable(address(valueGovernor))),
+            SPOGGovernorBase(payable(address(voteGovernor))),
+            SPOGGovernorBase(payable(address(valueGovernor))),
             spogCreationSalt
         );
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOGGovernorAbstract} from "src/core/governance/SPOGGovernorAbstract.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -18,13 +18,13 @@ abstract contract SPOGStorage is ISPOG {
     uint256 public immutable valueFixedInflationAmount;
 
     // @note The vote governor can be changed by value governance with `RESET` proposal
-    SPOGGovernorAbstract public voteGovernor;
-    SPOGGovernorAbstract public immutable valueGovernor;
+    SPOGGovernorBase public voteGovernor;
+    SPOGGovernorBase public immutable valueGovernor;
 
     constructor(
         bytes memory _initSPOGData,
-        SPOGGovernorAbstract _voteGovernor,
-        SPOGGovernorAbstract _valueGovernor,
+        SPOGGovernorBase _voteGovernor,
+        SPOGGovernorBase _valueGovernor,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,

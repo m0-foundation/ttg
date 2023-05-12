@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IList} from "src/interfaces/IList.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {SPOGGovernorAbstract} from "src/core/governance/SPOGGovernorAbstract.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
@@ -34,8 +34,8 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ValueTokenMistmatch();
 
     // double-governance
-    function valueGovernor() external view returns (SPOGGovernorAbstract);
-    function voteGovernor() external view returns (SPOGGovernorAbstract);
+    function valueGovernor() external view returns (SPOGGovernorBase);
+    function voteGovernor() external view returns (SPOGGovernorBase);
 
     // Logic functions
     function valueVault() external view returns (IValueVault);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOG, SPOGGovernorAbstract} from "src/core/SPOG.sol";
+import {SPOG, SPOGGovernorBase} from "src/core/SPOG.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
@@ -30,8 +30,8 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        SPOGGovernorAbstract _voteGovernor,
-        SPOGGovernorAbstract _valueGovernor,
+        SPOGGovernorBase _voteGovernor,
+        SPOGGovernorBase _valueGovernor,
         uint256 _salt
     ) public returns (SPOG) {
         SPOG spog = new SPOG{salt: bytes32(_salt)}(
@@ -60,8 +60,8 @@ contract SPOGFactory {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        SPOGGovernorAbstract _voteGovernor,
-        SPOGGovernorAbstract _valueGovernor
+        SPOGGovernorBase _voteGovernor,
+        SPOGGovernorBase _valueGovernor
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SPOG).creationCode;
 
