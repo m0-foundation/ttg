@@ -19,14 +19,11 @@ contract LocalTestDeployScript is BaseScript {
     function run() public {
         vm.startBroadcast(deployer);
         // set up users
-        string memory mnemonic = "test test test test test test test test test test test junk"; // anvil accounts mnemonic
+        string memory mnemonic = vm.envString("MNEMONIC");
         (address user1,) = deriveRememberKey(mnemonic, 1);
         (address user2,) = deriveRememberKey(mnemonic, 2);
-        (address user3,) = deriveRememberKey(mnemonic, 3);
-        (address user4,) = deriveRememberKey(mnemonic, 4);
-        (address user5,) = deriveRememberKey(mnemonic, 5);
 
-        address[5] memory users = [user1, user2, user3, user4, user5];
+        address[2] memory users = [user1, user2];
         // mint tokens to users
         uint256 amount = 100000e18; // 100K
 

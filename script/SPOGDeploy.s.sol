@@ -13,9 +13,14 @@ import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
-import {Vault} from "src/periphery/Vault.sol";
+import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
+import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
 contract SPOGDeployScript is BaseScript {
     SPOGFactory public spogFactory;
@@ -34,7 +39,9 @@ contract SPOGDeployScript is BaseScript {
     ERC20PricelessAuction public auctionImplementation;
     VoteToken public vote;
     ValueToken public value;
-    Vault public vault;
+
+    VoteVault public voteVault;
+    ValueVault public valueVault;
 
     uint256 public spogCreationSalt = createSalt("Simple Participatory Onchain Governance");
 
@@ -72,8 +79,9 @@ contract SPOGDeployScript is BaseScript {
             governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
 
         auctionImplementation = new ERC20PricelessAuction();
-        vault =
-        new Vault(SPOGGovernorAbstract(payable(address(voteGovernorAddress))), SPOGGovernorAbstract(payable(address(valueGovernorAddress))), IERC20PricelessAuction(auctionImplementation));
+
+        voteVault = new VoteVault(SPOGGovernorAbstract(payable(address(voteGovernorAddress))), IERC20PricelessAuction(auctionImplementation));
+        valueVault = new ValueVault(SPOGGovernorAbstract(payable(address(valueGovernorAddress))));
 
         // deploy vote and value governors from factory
         voteGovernor = governorFactory.deploy(vote, voteQuorum, time, "VoteGovernor", voteGovernorSalt);
@@ -94,7 +102,8 @@ contract SPOGDeployScript is BaseScript {
         // predict spog address
         bytes memory bytecode = spogFactory.getBytecode(
             initSPOGData,
-            address(vault),
+            IVoteVault(voteVault),
+            IValueVault(valueVault),
             time,
             voteQuorum,
             valueQuorum,
@@ -118,7 +127,8 @@ contract SPOGDeployScript is BaseScript {
 
         spog = spogFactory.deploy(
             initSPOGData,
-            address(vault),
+            IVoteVault(voteVault),
+            IValueVault(valueVault),
             time,
             voteQuorum,
             valueQuorum,
@@ -135,7 +145,8 @@ contract SPOGDeployScript is BaseScript {
         console.log("SPOGGovernor for $VOTE address : ", address(voteGovernor));
         console.log("SPOGGovernor for $VALUE address : ", address(valueGovernor));
         console.log("Cash address: ", address(cash));
-        console.log("Vault address: ", address(vault));
+        console.log("Vote holders vault address: ", address(voteVault));
+        console.log("Value holders vault address: ", address(valueVault));
 
         vm.stopBroadcast();
     }
@@ -147,7 +158,8 @@ contract SPOGDeployScript is BaseScript {
 
         SPOG newSpog = spogFactory.deploy(
             initSPOGData,
-            address(vault),
+            IVoteVault(voteVault),
+            IValueVault(valueVault),
             time,
             voteQuorum,
             valueQuorum,

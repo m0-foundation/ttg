@@ -109,16 +109,15 @@ abstract contract SPOGStorage is ISPOG {
     function change(bytes32 what, bytes calldata value) external onlyVoteGovernor {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
 
-        _fileWithDoubleQuorum(what, value);
+        _changeWithDoubleQuorum(what, value);
 
         emit DoubleQuorumFinalized(identifier);
     }
 
-    /**
-     * Private Function ***
-     */
-
-    function _fileWithDoubleQuorum(bytes32 what, bytes calldata value) private {
+    /*//////////////////////////////////////////////////////////////
+                            PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    function _changeWithDoubleQuorum(bytes32 what, bytes calldata value) private {
         if (what == "cash") {
             spogData.cash = abi.decode(value, (IERC20));
         } else if (what == "taxRange") {

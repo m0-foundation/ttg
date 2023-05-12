@@ -9,7 +9,7 @@ interface ISPOGGovernor is IGovernorVotesQuorumFraction {
     error CallerIsNotSPOG(address caller);
     error SPOGAddressAlreadySet(address spog);
     error AlreadyVoted(uint256 proposalId, address account);
-    error ArrayLengthsMistmatch(uint256 propLength, uint256 supLength);
+    error ArrayLengthsMismatch();
     error EpochInThePast(uint256 epoch, uint256 currentEpoch);
 
     // Events

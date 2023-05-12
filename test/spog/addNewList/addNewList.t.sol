@@ -64,7 +64,7 @@ contract SPOG_AddNewList is SPOG_Base {
         spog.propose(targets, values, calldatas, description);
 
         // assert that spog has cash balance
-        assertEq(deployScript.cash().balanceOf(address(vault)), deployScript.tax());
+        assertEq(deployScript.cash().balanceOf(address(valueVault)), deployScript.tax());
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(

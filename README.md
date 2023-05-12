@@ -8,7 +8,23 @@ A SPOG, "Simple Participation Optimized Governance," is a governance mechanism t
 
 ![](assets/spog-arch-2nd-version.png)
 
-## Setup
+## Using the NPM Package
+
+```bash
+npm i @mzero-labs/spog
+```
+
+This installs the contract artifacts as a node module for use in Javascript projects.
+
+Example:
+
+```
+const ListABI = require("@mzero-labs/spog").List;
+```
+
+For Typescript bindings, consider adding [TypeChain](https://github.com/dethcrypto/TypeChain) to your project. It can parse the artifacts found in `node_modules/@mzero-labs/spog/out` as a `postinstall` step.
+
+## Dev Setup
 
 Clone the repo and install dependencies
 
@@ -55,7 +71,7 @@ To view test coverage
 Note: On Linux, install genhtml. On MacOS, `brew install lcov`
 
 ```bash
- make coverage
+ make -B coverage
 ```
 
 You can then view the file coverage/index.html to view the report. This can also be integrated into vs code with various extentions
@@ -75,3 +91,19 @@ make deploy-spog-local
 ```
 
 You can now do local development and testing against the RPC endpoint http://localhost:8545
+
+
+## Testnet
+### Sepolia
+```
+  deployer: 0x31DCb7AE01fFfD9B6468814bA2A6A0ab9c58d8e5
+  predicted SPOG address:  0x680dBfa52bf6CA633dF837f961f50EA6456e9E00
+  SPOG address:  0x680dBfa52bf6CA633dF837f961f50EA6456e9E00
+  SPOGFactory address:  0x7BcFff5D009C0ff0492e877eEF3f75127561CE63
+  SPOGVote token address:  0xB6A1AF2595Ca04870e45150b61FCf83C8a47A252
+  SPOGValue token address:  0xF6b56E5C7fcDaeca68D8FEe374331357a48B2f90
+  SPOGGovernor for $VOTE address :  0x295Bee3C816C0f42eDaA1c822c338C0eb00bbA16
+  SPOGGovernor for $VALUE address :  0xAc3de37d4d52cf6cA8CC966c7F7Bd79720C5a1DE
+  Cash address:  0x7b7E36A667F0Dd96B617343a12fB04e52C80BC2D
+  Vault address:  0x05872592c3F8653C1291E46574b99cc7e69939a5
+```

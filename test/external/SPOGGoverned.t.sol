@@ -6,7 +6,6 @@ import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
 import {SPOGGoverned} from "src/external/SPOGGoverned.sol";
 import {List} from "src/periphery/List.sol";
 import {IList} from "src/interfaces/IList.sol";
-import "forge-std/console.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
