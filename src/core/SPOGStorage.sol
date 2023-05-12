@@ -32,7 +32,9 @@ abstract contract SPOGStorage is ISPOG {
     ) {
         initSPOGData(_initSPOGData);
 
-        require(_voteGovernor != _valueGovernor, "SPOGStorage: vote and value governor cannot be the same");
+        require(
+            address(_voteGovernor) != address(_valueGovernor), "SPOGStorage: vote and value governor cannot be the same"
+        );
         require(
             address(_voteGovernor) != address(0) && address(_valueGovernor) != address(0), "SPOGStorage: zero address"
         );

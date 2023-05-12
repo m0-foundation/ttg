@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorAbstract, GovernorAbstract} from "src/core/governance/SPOGGovernorAbstract.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
@@ -46,7 +46,8 @@ contract VoteVaultTest is BaseTest {
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     function setUp() public {
-        ISPOGGovernor voteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        SPOGGovernorAbstract voteGovernor =
+            SPOGGovernorAbstract(payable(address(new MockSPOGGovernor(address(voteToken)))));
         auctionImplementation = new ERC20PricelessAuction();
         vault = new VoteVault(voteGovernor, auctionImplementation);
         spogAddress = vault.governor().spogAddress();
@@ -58,7 +59,8 @@ contract VoteVaultTest is BaseTest {
     function test_Revert_UpdateVoteGovernor_WhenCalledNoBySPOG() public {
         vm.startPrank(users.alice);
 
-        ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        SPOGGovernorAbstract newVoteGovernor =
+            SPOGGovernorAbstract(payable(address(new MockSPOGGovernor(address(voteToken)))));
         vm.expectRevert("Vault: Only spog");
         vault.updateGovernor(newVoteGovernor);
 
@@ -107,7 +109,7 @@ contract VoteVaultTest is BaseTest {
         voteToken.approve(address(vault), 1000e18);
         vault.depositRewards(epoch + 1, address(voteToken), 1000e18);
 
-        vm.roll(block.number + 2 * vault.governor().votingPeriod() + 1);
+        vm.roll(block.number + 2 * GovernorAbstract(vault.governor()).votingPeriod() + 1);
 
         vault.sellUnclaimedVoteTokens(epoch + 1, address(usdc), 30 days);
 
@@ -118,7 +120,8 @@ contract VoteVaultTest is BaseTest {
     function test_UpdateVoteGovernor() public {
         vm.startPrank(spogAddress);
 
-        ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        SPOGGovernorAbstract newVoteGovernor =
+            SPOGGovernorAbstract(payable(address(new MockSPOGGovernor(address(voteToken)))));
         expectEmit();
         emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
         vault.updateGovernor(newVoteGovernor);

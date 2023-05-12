@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorAbstract} from "src/core/governance/SPOGGovernorAbstract.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
@@ -14,7 +14,7 @@ import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 contract ValueVault is IValueVault, BaseVault {
     using SafeERC20 for IERC20;
 
-    constructor(ISPOGGovernor _governor) BaseVault(_governor) {}
+    constructor(SPOGGovernorAbstract _governor) BaseVault(_governor) {}
 
     /// @dev Withdraw rewards for multiple epochs for a token
     /// @param epochs Epochs to withdraw rewards for
