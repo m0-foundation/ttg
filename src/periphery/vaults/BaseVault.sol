@@ -41,7 +41,7 @@ abstract contract BaseVault is IBaseVault {
     }
 
     modifier onlySPOG() {
-        require(msg.sender == address(governor.spogAddress()), "Vault: Only spog");
+        if (msg.sender != address(governor.spogAddress())) revert OnlySPOG();
 
         _;
     }
@@ -52,7 +52,7 @@ abstract contract BaseVault is IBaseVault {
     /// @param amount Amount of vote tokens to deposit
     function depositRewards(uint256 epoch, address token, uint256 amount) external override onlySPOG {
         // TODO: should we allow to deposit only for next epoch ? or current and next epoch is good ?
-        require(epoch >= governor.currentEpoch(), "Vault: epoch is not in the future");
+        if (epoch < governor.currentEpoch()) revert EpochNotInTheFuture();
 
         // save start block of epoch, our governance allows to change voting period
         epochStartBlockNumber[epoch] = governor.startOfEpoch(epoch);
@@ -64,8 +64,9 @@ abstract contract BaseVault is IBaseVault {
 
     /// @dev Withdraw Vote and Value token rewards
     function _withdrawTokenRewards(uint256 epoch, address token, RewardsSharingStrategy strategy) internal virtual {
-        require(epochTokenDeposit[token][epoch] > 0, "Vault: no rewards to withdraw");
-        require(!hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token], "Vault: rewards already withdrawn");
+        if (epochTokenDeposit[token][epoch] == 0) revert NoRewardsToWithdraw();
+        if (hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token]) revert RewardsAlreadyWithdrawn();
+
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token] = true;
 
         uint256 epochStart = epochStartBlockNumber[epoch];

@@ -3,7 +3,7 @@
 pragma solidity 0.8.19;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
-import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
+import {BaseVault, IBaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {SPOGGovernorBase, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
@@ -59,7 +59,7 @@ contract VoteVaultTest is BaseTest {
         vm.startPrank(users.alice);
 
         SPOGGovernorBase newVoteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
-        vm.expectRevert("Vault: Only spog");
+        vm.expectRevert(IBaseVault.OnlySPOG.selector);
         vault.updateGovernor(newVoteGovernor);
 
         vm.stopPrank();

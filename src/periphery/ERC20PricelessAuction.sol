@@ -17,6 +17,7 @@ contract ERC20PricelessAuction is IERC20PricelessAuction, Initializable {
     error AuctionEnded();
     error AuctionNotEnded();
     error AuctionBalanceInsufficient();
+    error OnlyVault();
 
     address public auctionToken;
     address public paymentToken;
@@ -35,7 +36,7 @@ contract ERC20PricelessAuction is IERC20PricelessAuction, Initializable {
     uint256 CURVE_STEPS = 20;
 
     modifier onlyVault() {
-        require(msg.sender == vault, "ERC20PricelessAuction: Only vault");
+        if (msg.sender != vault) revert OnlyVault();
 
         _;
     }

@@ -33,6 +33,16 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ValueGovernorDidNotApprove(uint256 proposalId);
     error ValueTokenMistmatch();
 
+    error GovernorsShouldNotBeSame();
+    error VaultAddressCannotBeZero();
+    error ZeroAddress();
+    error ZeroValues();
+    error InitTaxOutOfRange();
+    error InitCashAndInflatorCannotBeZero();
+    error TaxOutOfRange();
+    error OnlyValueGovernor();
+    error OnlyVoteGovernor();
+
     // double-governance
     function valueGovernor() external view returns (SPOGGovernorBase);
     function voteGovernor() external view returns (SPOGGovernorBase);

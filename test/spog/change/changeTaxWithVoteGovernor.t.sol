@@ -16,7 +16,7 @@ contract SPOG_changeTax is SPOG_Base {
     }
 
     function test_Revert_ChangeTaxWhenNotCalledFromGovernance() public {
-        vm.expectRevert("SPOG: Only vote governor");
+        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
         spog.changeTax(newTaxValue);
     }
 
@@ -47,7 +47,7 @@ contract SPOG_changeTax is SPOG_Base {
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
-        vm.expectRevert("SPOG: Tax out of range");
+        vm.expectRevert(ISPOG.TaxOutOfRange.selector);
         spog.execute(targets, values, calldatas, hashedDescription);
 
         (uint256 taxFirstCheck,,) = spog.spogData();
