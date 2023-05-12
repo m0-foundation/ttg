@@ -15,6 +15,7 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
 
     // Errors
     error CallerIsNotSPOG();
+    error SPOGAddressAlreadySet();
 
     /// @dev Initializes the contract by creating the token
     /// @param name The name of the token
@@ -27,7 +28,8 @@ contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
     /// @dev sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
-        require(spogAddress == address(0), "SPOGVote: spogAddress already set");
+        if (spogAddress != address(0)) revert SPOGAddressAlreadySet();
+
         spogAddress = _spogAddress;
         _setupRole(MINTER_ROLE, _spogAddress);
     }

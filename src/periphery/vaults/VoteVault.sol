@@ -37,7 +37,7 @@ contract VoteVault is IVoteVault, BaseVault {
     /// @param duration The duration of the auction
     function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
         uint256 currentEpoch = governor.currentEpoch();
-        require(epoch < currentEpoch, "Vault: epoch is not in the past");
+        if (epoch >= currentEpoch) revert EpochNotInThePast();
 
         address token = address(governor.votingToken());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
@@ -113,10 +113,7 @@ contract VoteVault is IVoteVault, BaseVault {
         // withdraw rewards only if voted on all proposals in epoch
         uint256 numOfProposalsVotedOnEpoch = governor.accountEpochNumProposalsVotedOn(msg.sender, epoch);
         uint256 totalProposalsEpoch = governor.epochProposalsCount(epoch);
-        require(
-            numOfProposalsVotedOnEpoch == totalProposalsEpoch,
-            "Vault: unable to withdraw due to not voting on all proposals"
-        );
+        if (numOfProposalsVotedOnEpoch != totalProposalsEpoch) revert NotVotedOnAllProposals();
     }
 
     fallback() external {

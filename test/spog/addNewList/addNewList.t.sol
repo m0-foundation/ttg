@@ -4,10 +4,11 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {List} from "src/periphery/List.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 contract SPOG_AddNewList is SPOG_Base {
     function test_Revert_WhenAddingNewList_NotCallingFromGovernance() external {
-        vm.expectRevert("SPOG: Only vote governor");
+        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
         spog.addNewList(IList(address(list)));
     }
 

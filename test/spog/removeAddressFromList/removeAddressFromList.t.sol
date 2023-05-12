@@ -16,7 +16,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
     }
 
     function test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance() public {
-        vm.expectRevert("SPOG: Only vote governor");
+        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
         spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
     }
 
