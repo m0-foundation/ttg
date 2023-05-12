@@ -19,7 +19,7 @@ contract ValueVault is IValueVault, BaseVault {
     /// @dev Withdraw rewards for a 1+ epochs for a token
     /// @param epochs Epochs to withdraw rewards for
     /// @param token Token to withdraw rewards for
-    function withdrawRewards(uint256[] memory epochs, address token) public {
+    function withdrawRewards(uint256[] memory epochs, address token) external {
         uint256 length = epochs.length;
         uint256 currentEpoch = governor.currentEpoch();
         for (uint256 i; i < length;) {
