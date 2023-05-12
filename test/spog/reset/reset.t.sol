@@ -116,7 +116,7 @@ contract SPOG_reset is SPOG_Base {
     }
 
     function test_Revert_Reset_WhenNotCalledFromValueGovernance() public {
-        vm.expectRevert("SPOG: Only value governor");
+        vm.expectRevert(ISPOG.OnlyValueGovernor.selector);
         spog.reset(SPOGGovernorBase(payable(address(voteGovernor))));
     }
 

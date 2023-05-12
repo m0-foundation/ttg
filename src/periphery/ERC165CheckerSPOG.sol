@@ -7,11 +7,13 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 /**
  * @title ERC165CheckerSPOG
- * 
+ *
  * Utility to verify whether an address implements ISPOG.
  */
 
 abstract contract ERC165CheckerSPOG {
+    error InvalidSPOGInterface();
+
     /// Only proceed if SPOG implements ISPOG interface
     /// @param spogAddress address to check
     modifier onlySPOGInterface(address spogAddress) {
@@ -24,9 +26,8 @@ abstract contract ERC165CheckerSPOG {
     }
 
     function _checkSPOGInterface(address spogAddress) internal view {
-        require(
-            ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId),
-            "ERC165CheckerSPOG: spogAddress address does not implement proper interface"
-        );
+        if (!ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId)) {
+            revert InvalidSPOGInterface();
+        }
     }
 }

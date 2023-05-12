@@ -81,10 +81,10 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
             _valueFixedInflationAmount
         )
     {
-        require(
-            _voteVault != IVoteVault(address(0)) && _valueVault != IValueVault(address(0)),
-            "SPOG: Vault address cannot be 0"
-        );
+        if (_voteVault == IVoteVault(address(0)) || _valueVault == IValueVault(address(0))) {
+            revert ISPOG.VaultAddressCannotBeZero();
+        }
+
         voteVault = _voteVault;
         valueVault = _valueVault;
 

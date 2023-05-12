@@ -7,6 +7,7 @@ import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 contract SPOG_InitialState is SPOG_Base {
     uint256[2] internal taxRange = [uint256(1), 6e18];
@@ -47,7 +48,7 @@ contract SPOG_InitialState is SPOG_Base {
         // revert inflator is zero
         inflator = 0;
         initSPOGData = abi.encode(address(testCash), taxRange, inflator, tax);
-        vm.expectRevert("SPOGStorage: init cash and inflator cannot be zero");
+        vm.expectRevert(ISPOG.InitCashAndInflatorCannotBeZero.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         inflator = 5;
@@ -55,7 +56,7 @@ contract SPOG_InitialState is SPOG_Base {
         initSPOGData = abi.encode(address(testCash), taxRange, inflator, tax);
 
         // revert time is zero
-        vm.expectRevert("SPOGStorage: init cash and inflator cannot be zero");
+        vm.expectRevert(ISPOG.InitCashAndInflatorCannotBeZero.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         testCash = IERC20(makeAddr("Cash"));
@@ -63,55 +64,55 @@ contract SPOG_InitialState is SPOG_Base {
         initSPOGData = abi.encode(address(testCash), taxRange, inflator, tax);
 
         // revert tax is greater than taxRangeMax
-        vm.expectRevert("SPOGStorage: init tax is out of range");
+        vm.expectRevert(ISPOG.InitTaxOutOfRange.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         tax = 0;
         initSPOGData = abi.encode(address(testCash), taxRange, inflator, tax);
         // revert tax is lower than taxRangeMin
-        vm.expectRevert("SPOGStorage: init tax is out of range");
+        vm.expectRevert(ISPOG.InitTaxOutOfRange.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         tax = 5e18;
         time = 0;
         initSPOGData = abi.encode(address(testCash), taxRange, inflator, tax);
         // revert time is zero
-        vm.expectRevert("SPOGStorage: zero values");
+        vm.expectRevert(ISPOG.ZeroValues.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         time = 10;
         voteQuorum = 0;
 
         // revert voteQuorum is zero
-        vm.expectRevert("SPOGStorage: zero values");
+        vm.expectRevert(ISPOG.ZeroValues.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         voteQuorum = 4;
         valueQuorum = 0;
 
         // revert valueQuorum is zero
-        vm.expectRevert("SPOGStorage: zero values");
+        vm.expectRevert(ISPOG.ZeroValues.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         valueQuorum = 4;
         valueFixedInflationAmount = 0;
 
         // revert valueFixedInflationAmount is zero
-        vm.expectRevert("SPOGStorage: zero values");
+        vm.expectRevert(ISPOG.ZeroValues.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         valueFixedInflationAmount = 5;
 
         // revert voteGovernor is zero address
-        vm.expectRevert("SPOGStorage: zero address");
+        vm.expectRevert(ISPOG.ZeroAddress.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(0))), SPOGGovernorBase(payable(address(valueGovernor))));
 
         // revert valueGovernor is zero address
-        vm.expectRevert("SPOGStorage: zero address");
+        vm.expectRevert(ISPOG.ZeroAddress.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(0))));
 
         // revert voteGoverner and valueGovernor are the same
-        vm.expectRevert("SPOGStorage: vote and value governor cannot be the same");
+        vm.expectRevert(ISPOG.GovernorsShouldNotBeSame.selector);
         new SPOG(initSPOGData, voteVault, valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(voteGovernor))), SPOGGovernorBase(payable(address(voteGovernor))));
     }
 
@@ -124,12 +125,12 @@ contract SPOG_InitialState is SPOG_Base {
         SPOGGovernor _voteGovernor = new SPOGGovernor(voteToken, voteQuorum, time, "VoteGovernor");
 
         address invalidVoteVault = address(0);
-        vm.expectRevert("SPOG: Vault address cannot be 0");
+        vm.expectRevert(ISPOG.VaultAddressCannotBeZero.selector);
         new SPOG(initSPOGData, IVoteVault(invalidVoteVault), valueVault, time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(_voteGovernor))), SPOGGovernorBase(payable(address(_valueGovernor))));
 
         // revert vault value token is zero address
         address invalidValueVault = address(0);
-        vm.expectRevert("SPOG: Vault address cannot be 0");
+        vm.expectRevert(ISPOG.VaultAddressCannotBeZero.selector);
         new SPOG(initSPOGData, voteVault, IValueVault(invalidValueVault), time, voteQuorum, valueQuorum, valueFixedInflationAmount, SPOGGovernorBase(payable(address(_voteGovernor))), SPOGGovernorBase(payable(address(_valueGovernor))));
     }
 

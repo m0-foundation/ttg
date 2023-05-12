@@ -16,7 +16,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
     }
 
     function test_Revert_AppendToListWhenNotCallingFromGovernance() public {
-        vm.expectRevert("SPOG: Only vote governor");
+        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
         spog.append(addressToAdd, IList(listToAddAddressTo));
     }
 

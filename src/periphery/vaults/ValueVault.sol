@@ -16,27 +16,22 @@ contract ValueVault is IValueVault, BaseVault {
 
     constructor(SPOGGovernorBase _governor) BaseVault(_governor) {}
 
-    /// @dev Withdraw rewards for multiple epochs for a token
+    /// @dev Withdraw rewards for a 1+ epochs for a token
     /// @param epochs Epochs to withdraw rewards for
     /// @param token Token to withdraw rewards for
     function withdrawRewards(uint256[] memory epochs, address token) external {
         uint256 length = epochs.length;
+        uint256 currentEpoch = governor.currentEpoch();
         for (uint256 i; i < length;) {
-            withdrawRewards(epochs[i], token);
+            if (epochs[i] >= currentEpoch) {
+                revert InvalidEpoch(epochs[i], currentEpoch);
+            }
 
+            _withdrawTokenRewards(epochs[i], token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
             unchecked {
                 ++i;
             }
         }
-    }
-
-    /// @dev Withdraw rewards for a single epoch for a token
-    /// @param epoch Epoch to withdraw rewards for
-    /// @param token Token to withdraw rewards for
-    function withdrawRewards(uint256 epoch, address token) public {
-        require(epoch < governor.currentEpoch(), "ValueVault: epoch is not in the past");
-
-        _withdrawTokenRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
     }
 
     fallback() external {
