@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -18,13 +18,13 @@ abstract contract SPOGStorage is ISPOG {
     uint256 public immutable valueFixedInflationAmount;
 
     // @note The vote governor can be changed by value governance with `RESET` proposal
-    ISPOGGovernor public voteGovernor;
-    ISPOGGovernor public immutable valueGovernor;
+    SPOGGovernorBase public voteGovernor;
+    SPOGGovernorBase public immutable valueGovernor;
 
     constructor(
         bytes memory _initSPOGData,
-        ISPOGGovernor _voteGovernor,
-        ISPOGGovernor _valueGovernor,
+        SPOGGovernorBase _voteGovernor,
+        SPOGGovernorBase _valueGovernor,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -32,10 +32,11 @@ abstract contract SPOGStorage is ISPOG {
     ) {
         initSPOGData(_initSPOGData);
 
-        require(_voteGovernor != _valueGovernor, "SPOGStorage: vote and value governor cannot be the same");
         require(
-            _voteGovernor != ISPOGGovernor(address(0)) && _valueGovernor != ISPOGGovernor(address(0)),
-            "SPOGStorage: zero address"
+            address(_voteGovernor) != address(_valueGovernor), "SPOGStorage: vote and value governor cannot be the same"
+        );
+        require(
+            address(_voteGovernor) != address(0) && address(_valueGovernor) != address(0), "SPOGStorage: zero address"
         );
         require(
             _time > 0 && _voteQuorum > 0 && _valueQuorum > 0 && _valueFixedInflationAmount > 0,

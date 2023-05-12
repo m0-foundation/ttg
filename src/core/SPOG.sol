@@ -9,11 +9,11 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IList} from "src/interfaces/IList.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
-import {SPOGStorage} from "src/core/SPOGStorage.sol";
+import {SPOGStorage, SPOGGovernorBase} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
@@ -68,8 +68,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        ISPOGGovernor _voteGovernor,
-        ISPOGGovernor _valueGovernor
+        SPOGGovernorBase _voteGovernor,
+        SPOGGovernorBase _valueGovernor
     )
         SPOGStorage(
             _initSPOGData,
@@ -165,7 +165,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(ISPOGGovernor newVoteGovernor) external onlyValueGovernor {
+    function reset(SPOGGovernorBase newVoteGovernor) external onlyValueGovernor {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));
