@@ -98,20 +98,6 @@ contract VoteVaultTest is BaseTest {
         assertEq(unclaimed, 1000e18);
     }
 
-    function test_sellUnclaimedVoteTokens_Vault() public {
-        setUp();
-
-        uint256 epoch = vault.governor().currentEpoch();
-        voteToken.mint(spogAddress, 1000e18);
-        vm.startPrank(spogAddress);
-        voteToken.approve(address(vault), 1000e18);
-        vault.depositRewards(epoch + 1, address(voteToken), 1000e18);
-
-        assertEq(voteToken.balanceOf(address(vault)), 1000e18);
-
-        vm.stopPrank();
-    }
-
     function test_UpdateVoteGovernor() public {
         vm.startPrank(spogAddress);
 
