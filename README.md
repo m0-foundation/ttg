@@ -34,6 +34,16 @@ To setup the app, you need to install the toolset of prerequisites foundry.
 
 Follow the instructions: https://book.getfoundry.sh/getting-started/installation
 
+#### IMPORTANT
+
+Use a pinned version of foundry for stability pre-1.0 release
+
+```bash
+foundryup --version nightly-e15e33a07c0920189fc336391f538c3dad53da73
+```
+
+This is also the version used for CI
+
 After that you can download dependencies, compile the app and run the tests.
 
 ```bash
@@ -92,9 +102,10 @@ make deploy-spog-local
 
 You can now do local development and testing against the RPC endpoint http://localhost:8545
 
-
 ## Testnet
+
 ### Sepolia
+
 ```
   deployer: 0x31DCb7AE01fFfD9B6468814bA2A6A0ab9c58d8e5
   predicted SPOG address:  0x680dBfa52bf6CA633dF837f961f50EA6456e9E00
