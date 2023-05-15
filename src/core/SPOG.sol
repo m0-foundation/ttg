@@ -20,8 +20,8 @@ import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
