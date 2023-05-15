@@ -3,7 +3,6 @@
 pragma solidity 0.8.19;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
-import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";

@@ -7,17 +7,17 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
 
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
-import "forge-std/console.sol";
-
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract VoteVault is IVoteVault, BaseVault {
+contract VoteVault is IVoteVault, ValueVault {
     using SafeERC20 for IERC20;
 
     IERC20PricelessAuction public immutable auctionContract;
@@ -35,7 +35,7 @@ contract VoteVault is IVoteVault, BaseVault {
         _;
     }
 
-    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) BaseVault(_governor) {
+    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
         auctionContract = _auctionContract;
     }
 
@@ -72,24 +72,13 @@ contract VoteVault is IVoteVault, BaseVault {
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
 
-    /// @dev Claim Vote token inflation rewards by vote holders
-    function claimVoteRewards(uint256 epoch) external override onlyActive(epoch) {
-        console.log("Step 1");
-        if (epoch > governor.currentEpoch()) revert EpochIsNotInThePast();
-        address rewardToken = address(governor.votingToken());
-        console.log("Step 2");
-
-        // vote holders claim their epoch vote rewards
-        _claimRewards(epoch, rewardToken, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
-    }
-
-    /// @dev Claim Value token inflation rewards by vote holders
-    function claimValueRewards(uint256 epoch) external override onlyActive(epoch) {
-        if (epoch >= governor.currentEpoch()) revert EpochIsNotInThePast();
-        address valueToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
-
-        // vote holders claim their epoch value rewards
-        _claimRewards(epoch, valueToken, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+    function claimRewards(uint256 epoch, address token) public override(IValueVault, ValueVault) onlyActive(epoch) {
+        address valueToken = IVoteToken(address(governor.votingToken())).valueToken();
+        if (token == valueToken) {
+            _claimRewards(epoch, token, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+        } else {
+            _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+        }
     }
 
     // @notice Update vote governor after `RESET` was executed
