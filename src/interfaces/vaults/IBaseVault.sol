@@ -5,6 +5,14 @@ pragma solidity 0.8.19;
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 
 interface IBaseVault {
+    // errors
+    error EpochNotInThePast();
+    error NotVotedOnAllProposals();
+    error OnlySPOG();
+    error EpochNotInTheFuture();
+    error NoRewardsToWithdraw();
+    error RewardsAlreadyWithdrawn();
+
     event EpochRewardsDeposit(uint256 indexed epoch, address indexed token, uint256 amount);
     event TokenRewardsWithdrawn(address indexed account, address indexed token, uint256 amount);
 

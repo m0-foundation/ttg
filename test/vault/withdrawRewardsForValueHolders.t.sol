@@ -46,8 +46,11 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");
 
         // another sanity check
-        uint256 epochToGetRewardsFor = 1;
-        uint256 epochCashRewardDepositInVault = valueVault.epochTokenDeposit(address(cash), epochToGetRewardsFor);
+        uint256 epochNumber = 1;
+        uint256[] memory epochsToGetRewardsFor = new uint256[](1);
+        epochsToGetRewardsFor[0] = epochNumber;
+
+        uint256 epochCashRewardDepositInVault = valueVault.epochTokenDeposit(address(cash), epochNumber);
         assertEq(
             epochCashRewardDepositInVault,
             epochCashRewards,
@@ -63,7 +66,7 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         // first value holder withdraws rewards
         uint256 initialBalanceOfCash = cash.balanceOf(address(this));
 
-        valueVault.withdrawRewards(epochToGetRewardsFor, address(cash));
+        valueVault.withdrawRewards(epochsToGetRewardsFor, address(cash));
 
         uint256 finalBalanceOfCash = cash.balanceOf(address(this));
         assertEq(
@@ -74,7 +77,7 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         vm.startPrank(alice);
         uint256 initialAliceBalanceOfCash = cash.balanceOf(address(alice));
 
-        valueVault.withdrawRewards(epochToGetRewardsFor, address(cash));
+        valueVault.withdrawRewards(epochsToGetRewardsFor, address(cash));
 
         uint256 finalAliceBalanceOfCash = cash.balanceOf(address(alice));
         assertEq(
@@ -88,7 +91,7 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         vm.startPrank(bob);
         uint256 initialBobBalanceOfCash = cash.balanceOf(address(bob));
 
-        valueVault.withdrawRewards(epochToGetRewardsFor, address(cash));
+        valueVault.withdrawRewards(epochsToGetRewardsFor, address(cash));
 
         uint256 finalBobBalanceOfCash = cash.balanceOf(address(bob));
         assertEq(
@@ -102,13 +105,85 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         vm.startPrank(carol);
         uint256 initialCarolBalanceOfCash = cash.balanceOf(address(carol));
 
-        valueVault.withdrawRewards(epochToGetRewardsFor, address(cash));
+        valueVault.withdrawRewards(epochsToGetRewardsFor, address(cash));
 
         uint256 finalCarolBalanceOfCash = cash.balanceOf(address(carol));
         assertEq(
             finalCarolBalanceOfCash,
             initialCarolBalanceOfCash + rewardAmountToReceive,
             "Vault should have balance of Cash value"
+        );
+        vm.stopPrank();
+    }
+
+    function test_WithdrawRewardsForValueHolders_For_Various_Epoch() public {
+        // initially Vault has 0 balance of Cash value
+        uint256 initialVaultBalanceOfCash = cash.balanceOf(address(valueVault));
+        assertEq(initialVaultBalanceOfCash, 0, "Vault should have 0 balance of Cash value");
+
+        // set up proposals for 3 epochs with 2 proposals
+        uint256 numberOfEpochs = 3;
+        uint256 numberOfProposalsPerEpoch = 2;
+        createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
+
+        uint256 vaultBalanceOfCash = cash.balanceOf(address(valueVault));
+        // get spog tax from spog data
+        (uint256 tax,,) = spog.spogData();
+
+        uint256 epochCashRewards = tax * numberOfProposalsPerEpoch * numberOfEpochs;
+
+        assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");
+
+        uint256 epochNumber = 1;
+        uint256[] memory epochsToGetRewardsFor = new uint256[](3);
+        epochsToGetRewardsFor[0] = epochNumber;
+        epochsToGetRewardsFor[1] = epochNumber + 1;
+        epochsToGetRewardsFor[2] = epochNumber + 2;
+
+        uint256 epochCashRewardDepositInVault =
+            valueVault.epochTokenDeposit(address(cash), epochNumber) * numberOfEpochs;
+
+        assertEq(
+            epochCashRewardDepositInVault,
+            epochCashRewards,
+            "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
+        );
+
+        // advance to next epoch so msg.sender can withdraw rewards
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        uint256 initialBalanceOfCash = cash.balanceOf(address(this));
+
+        uint256 balanceOfValueVaultBefore = cash.balanceOf(address(valueVault));
+
+        valueVault.withdrawRewards(epochsToGetRewardsFor, address(cash));
+
+        uint256 finalBalanceOfCash = cash.balanceOf(address(this));
+
+        uint256 balanceOfValueVaultAfter = cash.balanceOf(address(valueVault));
+
+        assertGt(finalBalanceOfCash, initialBalanceOfCash, "User should have more balance of Cash value");
+
+        assertLt(balanceOfValueVaultAfter, balanceOfValueVaultBefore, "Vault should have less balance of Cash value");
+
+        // alice withdraws rewards
+        vm.startPrank(alice);
+        uint256 initialAliceBalanceOfCash = cash.balanceOf(address(alice));
+
+        uint256 balanceOfValueVaultBeforeAlice = cash.balanceOf(address(valueVault));
+
+        valueVault.withdrawRewards(epochsToGetRewardsFor, address(cash));
+
+        uint256 finalAliceBalanceOfCash = cash.balanceOf(address(alice));
+
+        uint256 balanceOfValueVaultAfterAlice = cash.balanceOf(address(valueVault));
+
+        assertGt(finalAliceBalanceOfCash, initialAliceBalanceOfCash, "Alice should have more balance of Cash value");
+
+        assertLt(
+            balanceOfValueVaultAfterAlice,
+            balanceOfValueVaultBeforeAlice,
+            "Vault should have less balance of Cash value"
         );
         vm.stopPrank();
     }

@@ -47,9 +47,6 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         // anyone can call
         spog.sellInactiveVoteInflation(voteGovernor.currentEpoch() - 1);
 
-        uint256 activeCoinsForEpoch = voteGovernor.epochSumOfVoteWeight(voteGovernor.currentEpoch() - 1);
-        uint256 passiveCoinsForEpoch = initialBalance - activeCoinsForEpoch;
-
         uint256 inactiveCoinsInflation = totalInflation / 2;
 
         assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), totalInflation - inactiveCoinsInflation);

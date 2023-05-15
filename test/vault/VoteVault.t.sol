@@ -3,8 +3,8 @@
 pragma solidity 0.8.19;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
-import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {BaseVault, IBaseVault} from "src/periphery/vaults/BaseVault.sol";
+import {SPOGGovernorBase, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
@@ -46,7 +46,7 @@ contract VoteVaultTest is BaseTest {
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     function setUp() public {
-        ISPOGGovernor voteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        SPOGGovernorBase voteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
         auctionImplementation = new ERC20PricelessAuction();
         vault = new VoteVault(voteGovernor, auctionImplementation);
         spogAddress = vault.governor().spogAddress();
@@ -58,8 +58,8 @@ contract VoteVaultTest is BaseTest {
     function test_Revert_UpdateVoteGovernor_WhenCalledNoBySPOG() public {
         vm.startPrank(users.alice);
 
-        ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
-        vm.expectRevert("Vault: Only spog");
+        SPOGGovernorBase newVoteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
+        vm.expectRevert(IBaseVault.OnlySPOG.selector);
         vault.updateGovernor(newVoteGovernor);
 
         vm.stopPrank();
@@ -101,7 +101,7 @@ contract VoteVaultTest is BaseTest {
     function test_UpdateVoteGovernor() public {
         vm.startPrank(spogAddress);
 
-        ISPOGGovernor newVoteGovernor = ISPOGGovernor(address(new MockSPOGGovernor(address(voteToken))));
+        SPOGGovernorBase newVoteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
         expectEmit();
         emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
         vault.updateGovernor(newVoteGovernor);

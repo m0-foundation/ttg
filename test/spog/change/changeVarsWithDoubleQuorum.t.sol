@@ -59,7 +59,7 @@ contract SPOG_change is SPOG_Base {
     }
 
     function test_Revert_Change_WhenNotCalledFromGovernance() public {
-        vm.expectRevert("SPOG: Only vote governor");
+        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
         spog.change(inflator, elevenAsCalldataValue);
     }
 
