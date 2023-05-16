@@ -100,6 +100,6 @@ contract VoteVault is IVoteVault, ValueVault {
     function _isActive(address account, uint256 epoch) internal virtual returns (bool) {
         uint256 numVotedOn = governor.accountEpochNumProposalsVotedOn(account, epoch);
         uint256 numProposals = governor.epochProposalsCount(epoch);
-        return numVotedOn != numProposals;
+        return numVotedOn == numProposals;
     }
 }

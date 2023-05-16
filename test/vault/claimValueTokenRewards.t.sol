@@ -107,11 +107,11 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // alice and bob withdraw their value token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
-        voteVault.claimRewards(relevantEpoch, address(spogValue));
+        voteVault.claimRewards(epochsToClaimRewards, address(spogValue));
         vm.stopPrank();
 
         vm.startPrank(bob);
-        voteVault.claimRewards(relevantEpoch, address(spogValue));
+        voteVault.claimRewards(epochsToClaimRewards, address(spogValue));
         vm.stopPrank();
 
         assertTrue(
@@ -146,7 +146,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // carol fails to withdraw value token rewards because she has not voted in all proposals
         vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
-        voteVault.claimRewards(relevantEpoch, address(spogValue));
+        voteVault.claimRewards(epochsToClaimRewards, address(spogValue));
         vm.stopPrank();
 
         // carol remains with the same balance
