@@ -55,6 +55,7 @@ contract VoteVault is IVoteVault, BaseVault {
 
         uint256 passiveCoinsForEpoch = preInflatedCoinsForEpoch - activeCoinsForEpoch;
 
+        // TODO: revisit to check for precision loss
         uint256 inactiveCoinsInflation = (totalInflation * 100) / preInflatedCoinsForEpoch * passiveCoinsForEpoch / 100;
 
         // TODO: introduce error
