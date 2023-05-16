@@ -45,8 +45,9 @@ contract VoteVault is IVoteVault, BaseVault {
         // includes inflation
         uint256 totalCoinsForEpoch = governor.votingToken().getPastTotalSupply(epochStartBlockNumber[epoch]);
 
-        uint256 totalInflation = epochTokenDeposit[address(governor.votingToken())][epoch];
+        uint256 totalInflation = epochTokenDeposit[token][epoch];
 
+        // vote weights as they were before inflation
         uint256 preInflatedCoinsForEpoch = totalCoinsForEpoch - totalInflation;
 
         // weights are calculated before inflation
