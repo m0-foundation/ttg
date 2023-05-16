@@ -60,23 +60,16 @@ contract ValueVault is IValueVault {
         uint256 length = epochs.length;
         uint256 currentEpoch = governor.currentEpoch();
         for (uint256 i; i < length;) {
-            if (epochs[i] >= currentEpoch) {
-                revert InvalidEpoch(epochs[i], currentEpoch);
+            uint256 epoch = epochs[i];
+            if (epoch > currentEpoch) {
+                revert InvalidEpoch(epoch, currentEpoch);
             }
 
-            _claimRewards(epochs[i], token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+            _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
             unchecked {
                 ++i;
             }
         }
-    }
-
-    /// @dev Withdraw rewards for a single epoch for a token
-    /// @param epoch Epoch to withdraw rewards for
-    /// @param token Token to withdraw rewards for
-    function claimRewards(uint256 epoch, address token) external virtual override {
-        if (epoch > governor.currentEpoch()) revert EpochIsNotInThePast();
-        _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
     }
 
     /// @dev Withdraw Vote and Value token rewards
@@ -109,7 +102,7 @@ contract ValueVault is IValueVault {
         epochTokenTotalWithdrawn[token][epoch] += amountToWithdraw;
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
-        emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+        emit EpochRewardsClaim(epoch, msg.sender, token, amountToWithdraw);
     }
 
     fallback() external {
