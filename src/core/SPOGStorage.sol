@@ -22,13 +22,13 @@ abstract contract SPOGStorage is ISPOG {
     SPOGGovernorBase public immutable valueGovernor;
 
     modifier onlyVoteGovernor() {
-        require(msg.sender == address(voteGovernor), "SPOG: Only vote governor");
+        if (msg.sender != address(voteGovernor)) revert OnlyVoteGovernor();
 
         _;
     }
 
     modifier onlyValueGovernor() {
-        require(msg.sender == address(valueGovernor), "SPOG: Only value governor");
+        if (msg.sender != address(valueGovernor)) revert OnlyValueGovernor();
 
         _;
     }
