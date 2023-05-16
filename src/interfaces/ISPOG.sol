@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 import {IList} from "src/interfaces/IList.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
@@ -32,10 +32,19 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
     error ValueGovernorDidNotApprove(uint256 proposalId);
     error ValueTokenMistmatch();
+    error GovernorsShouldNotBeSame();
+    error VaultAddressCannotBeZero();
+    error ZeroAddress();
+    error ZeroValues();
+    error InitTaxOutOfRange();
+    error InitCashAndInflatorCannotBeZero();
+    error TaxOutOfRange();
+    error OnlyValueGovernor();
+    error OnlyVoteGovernor();
 
     // Info functions about double governance and SPOG parameters
-    function valueGovernor() external view returns (ISPOGGovernor);
-    function voteGovernor() external view returns (ISPOGGovernor);
+    function valueGovernor() external view returns (SPOGGovernorBase);
+    function voteGovernor() external view returns (SPOGGovernorBase);
     function valueVault() external view returns (IValueVault);
     function voteVault() external view returns (IVoteVault);
     function taxRange() external view returns (uint256, uint256);
@@ -45,7 +54,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
     function emergencyRemove(address _address, IList _list) external;
-    function reset(ISPOGGovernor newVoteGovernor) external;
+    function reset(SPOGGovernorBase newVoteGovernor) external;
     function change(bytes32 what, bytes calldata value) external;
     function changeTax(uint256 _tax) external;
 

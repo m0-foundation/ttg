@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -18,8 +18,8 @@ abstract contract SPOGStorage is ISPOG {
     uint256 public immutable valueFixedInflationAmount;
 
     // @note The vote governor can be changed by value governance with `RESET` proposal
-    ISPOGGovernor public voteGovernor;
-    ISPOGGovernor public immutable valueGovernor;
+    SPOGGovernorBase public voteGovernor;
+    SPOGGovernorBase public immutable valueGovernor;
 
     modifier onlyVoteGovernor() {
         require(msg.sender == address(voteGovernor), "SPOG: Only vote governor");
@@ -35,8 +35,8 @@ abstract contract SPOGStorage is ISPOG {
 
     constructor(
         bytes memory _initSPOGData,
-        ISPOGGovernor _voteGovernor,
-        ISPOGGovernor _valueGovernor,
+        SPOGGovernorBase _voteGovernor,
+        SPOGGovernorBase _valueGovernor,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -44,15 +44,11 @@ abstract contract SPOGStorage is ISPOG {
     ) {
         initSPOGData(_initSPOGData);
 
-        require(_voteGovernor != _valueGovernor, "SPOGStorage: vote and value governor cannot be the same");
-        require(
-            _voteGovernor != ISPOGGovernor(address(0)) && _valueGovernor != ISPOGGovernor(address(0)),
-            "SPOGStorage: zero address"
-        );
-        require(
-            _time > 0 && _voteQuorum > 0 && _valueQuorum > 0 && _valueFixedInflationAmount > 0,
-            "SPOGStorage: zero values"
-        );
+        if (address(_voteGovernor) == address(_valueGovernor)) revert GovernorsShouldNotBeSame();
+
+        if (address(_voteGovernor) == address(0) || address(_valueGovernor) == address(0)) revert ZeroAddress();
+
+        if (_time == 0 || _voteQuorum == 0 || _valueQuorum == 0 || _valueFixedInflationAmount == 0) revert ZeroValues();
 
         voteGovernor = _voteGovernor;
         valueGovernor = _valueGovernor;
@@ -84,8 +80,8 @@ abstract contract SPOGStorage is ISPOG {
         (address _cash, uint256[2] memory _taxRange, uint256 _inflator, uint256 _tax) =
             abi.decode(_initSPOGData, (address, uint256[2], uint256, uint256));
 
-        require(_tax >= _taxRange[0] && _tax <= _taxRange[1], "SPOGStorage: init tax is out of range");
-        require(_cash != address(0) && _inflator > 0, "SPOGStorage: init cash and inflator cannot be zero");
+        if (_tax < _taxRange[0] || _tax > _taxRange[1]) revert InitTaxOutOfRange();
+        if (_cash == address(0) || _inflator == 0) revert InitCashAndInflatorCannotBeZero();
 
         spogData = SPOGData({cash: IERC20(_cash), taxRange: _taxRange, inflator: _inflator, tax: _tax});
     }
@@ -96,8 +92,8 @@ abstract contract SPOGStorage is ISPOG {
         return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
-    function changeTax(uint256 _tax) external override onlyVoteGovernor {
-        require(_tax >= spogData.taxRange[0] && _tax <= spogData.taxRange[1], "SPOG: Tax out of range");
+    function changeTax(uint256 _tax) external onlyVoteGovernor {
+        if (_tax < spogData.taxRange[0] || _tax > spogData.taxRange[1]) revert TaxOutOfRange();
 
         spogData.tax = _tax;
 

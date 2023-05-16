@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
@@ -21,7 +21,7 @@ contract ValueVault is IValueVault {
         ACTIVE_PARTICIPANTS_PRO_RATA
     }
 
-    ISPOGGovernor public governor;
+    SPOGGovernorBase public governor;
 
     // address => epoch => token => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
@@ -33,7 +33,7 @@ contract ValueVault is IValueVault {
     // start block numbers for epochs with rewards
     mapping(uint256 => uint256) public epochStartBlockNumber;
 
-    constructor(ISPOGGovernor _governor) {
+    constructor(SPOGGovernorBase _governor) {
         governor = _governor;
     }
 
@@ -53,14 +53,18 @@ contract ValueVault is IValueVault {
         emit EpochRewardsDeposit(epoch, token, amount);
     }
 
-    /// @dev Withdraw rewards for multiple epochs for a token
+    /// @dev Withdraw rewards for a 1+ epochs for a token
     /// @param epochs Epochs to withdraw rewards for
     /// @param token Token to withdraw rewards for
-    function claimRewards(uint256[] memory epochs, address token) external override {
+    function claimRewards(uint256[] memory epochs, address token) external virtual override {
         uint256 length = epochs.length;
+        uint256 currentEpoch = governor.currentEpoch();
         for (uint256 i; i < length;) {
-            claimRewards(epochs[i], token);
+            if (epochs[i] >= currentEpoch) {
+                revert InvalidEpoch(epochs[i], currentEpoch);
+            }
 
+            _claimRewards(epochs[i], token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
             unchecked {
                 ++i;
             }
@@ -70,7 +74,7 @@ contract ValueVault is IValueVault {
     /// @dev Withdraw rewards for a single epoch for a token
     /// @param epoch Epoch to withdraw rewards for
     /// @param token Token to withdraw rewards for
-    function claimRewards(uint256 epoch, address token) public virtual override {
+    function claimRewards(uint256 epoch, address token) external virtual override {
         if (epoch > governor.currentEpoch()) revert EpochIsNotInThePast();
         _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
     }
@@ -106,5 +110,9 @@ contract ValueVault is IValueVault {
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit TokenRewardsWithdrawn(msg.sender, token, amountToWithdraw);
+    }
+
+    fallback() external {
+        revert("Vault: non-existent function");
     }
 }

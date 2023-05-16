@@ -93,6 +93,8 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);
 
         uint256 relevantEpoch = valueGovernor.currentEpoch() - 1;
+        uint256[] memory epochsToClaimRewards = new uint256[](1);
+        epochsToClaimRewards[0] = relevantEpoch;
 
         assertFalse(
             voteVault.hasClaimedTokenRewardsForEpoch(alice, relevantEpoch, address(spogValue)),
@@ -165,5 +167,92 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
             spogValueBalanceForVaultForEpochOne,
             "rewards were not distrubuted evenly"
         );
+    }
+
+    function test_flowForUserToClaimValueTokenRewardsForManyEpochs() public {
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+
+        uint256 spogValueBalanceForVaultBefore = spogValue.balanceOf(address(voteVault));
+
+        uint256[] memory epochs = new uint256[](2);
+
+        // voting period started epcch 1
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        // alice votes on proposal 1
+        vm.startPrank(alice);
+        voteGovernor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+
+        // voting period started epoch 2
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        epochs[0] = voteGovernor.currentEpoch() - 1;
+
+        // alice votes on proposal 2
+        vm.startPrank(alice);
+        voteGovernor.castVote(proposalId2, yesVote);
+        vm.stopPrank();
+
+        uint256 proposal3;
+        (proposal3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+
+        // voting period started epoch 3
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        epochs[1] = voteGovernor.currentEpoch() - 1;
+        // ALICE DOES NOT vote on proposal 3
+
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        uint256 spogValueBalanceForVaultAfter = spogValue.balanceOf(address(voteVault));
+
+        assertGt(
+            spogValueBalanceForVaultAfter,
+            spogValueBalanceForVaultBefore,
+            "voteVault should have received the inflationary rewards from epochs 1, 2 and 3"
+        );
+
+        // alice claims her value token inflation rewards for epochs 1 and 2.
+
+        uint256 aliceBalanceBeforeClaiming = spogValue.balanceOf(alice);
+
+        uint256 voteVaultBalanceBeforeAliceClaiming = spogValue.balanceOf(address(voteVault));
+
+        vm.startPrank(alice);
+        voteVault.claimRewards(epochs, address(spogValue));
+        vm.stopPrank();
+
+        uint256 aliceBalanceAfterClaiming = spogValue.balanceOf(alice);
+
+        uint256 voteVaultBalanceAfterAliceClaiming = spogValue.balanceOf(address(voteVault));
+
+        assertTrue(
+            voteVault.hasClaimedTokenRewardsForEpoch(alice, 1, address(spogValue)),
+            "Alice should have claimed vote token rewards"
+        );
+        assertTrue(
+            voteVault.hasClaimedTokenRewardsForEpoch(alice, 2, address(spogValue)),
+            "Alice should have claimed vote token rewards"
+        );
+
+        assertGt(aliceBalanceAfterClaiming, aliceBalanceBeforeClaiming, "Alice should have more spogValue balance");
+
+        assertLt(
+            voteVaultBalanceAfterAliceClaiming,
+            voteVaultBalanceBeforeAliceClaiming,
+            "voteVault should have less spogValue balance"
+        );
+
+        // alice claims for an epoch she is not entitled to rewards
+        uint256[] memory unentitledRewards = new uint256[](1);
+        unentitledRewards[0] = voteGovernor.currentEpoch() - 1;
+
+        vm.startPrank(alice);
+        vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
+        voteVault.claimRewards(unentitledRewards, address(spogValue));
+        vm.stopPrank();
     }
 }

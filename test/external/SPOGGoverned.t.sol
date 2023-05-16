@@ -27,9 +27,10 @@ contract MockGovernedContract is SPOGGoverned {
         collateralManagersListAddress = address(super.getListByAddress(_collateralManagers));
     }
 
-    modifier onlyCollateralManagers() {
-        require(collateralManagersList().contains(msg.sender), "SPOGGoverned: only collateral managers");
+    error OnlyCollateralManagers();
 
+    modifier onlyCollateralManagers() {
+        if (!collateralManagersList().contains(msg.sender)) revert OnlyCollateralManagers();
         _;
     }
 

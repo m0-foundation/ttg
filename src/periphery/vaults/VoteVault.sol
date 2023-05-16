@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
+import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
@@ -28,14 +28,7 @@ contract VoteVault is IVoteVault, ValueVault {
         _;
     }
 
-    modifier onlyActive(uint256 epoch) {
-        uint256 numVotedOn = governor.accountEpochNumProposalsVotedOn(msg.sender, epoch);
-        uint256 numProposals = governor.epochProposalsCount(epoch);
-        if (numVotedOn != numProposals) revert NotVotedOnAllProposals();
-        _;
-    }
-
-    constructor(ISPOGGovernor _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
+    constructor(SPOGGovernorBase _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
         auctionContract = _auctionContract;
     }
 
@@ -72,24 +65,41 @@ contract VoteVault is IVoteVault, ValueVault {
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
 
-    function claimRewards(uint256 epoch, address token) public override(IValueVault, ValueVault) onlyActive(epoch) {
+    function claimRewards(uint256[] memory epochs, address token) external virtual override(IValueVault, ValueVault) {
         address valueToken = IVoteToken(address(governor.votingToken())).valueToken();
-        if (token == valueToken) {
-            _claimRewards(epoch, token, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
-        } else {
-            _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+        uint256 currentEpoch = governor.currentEpoch();
+        uint256 length = epochs.length;
+
+        for (uint256 i; i < length;) {
+            if (epochs[i] > currentEpoch) {
+                revert InvalidEpoch(epochs[i], currentEpoch);
+            }
+
+            if (!_isActive(msg.sender, epochs[i])) revert NotVotedOnAllProposals();
+
+            if (token == valueToken) {
+                _claimRewards(epochs[i], token, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+            } else {
+                _claimRewards(epochs[i], token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+            }
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
     // @notice Update vote governor after `RESET` was executed
     // @param newGovernor New vote governor
-    function updateGovernor(ISPOGGovernor newGovernor) external override onlySPOG {
+    function updateGovernor(SPOGGovernorBase newGovernor) external onlySPOG {
         emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.votingToken()));
 
         governor = newGovernor;
     }
 
-    fallback() external {
-        revert("Vault: non-existent function");
+    function _isActive(address account, uint256 epoch) internal virtual returns (bool) {
+        uint256 numVotedOn = governor.accountEpochNumProposalsVotedOn(account, epoch);
+        uint256 numProposals = governor.epochProposalsCount(epoch);
+        return numVotedOn != numProposals;
     }
 }
