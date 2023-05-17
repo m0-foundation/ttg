@@ -39,7 +39,9 @@ jobs:
           solc-select use 0.8.19
 
       - name: Run Slither
-        run: slither --compile-force-framework foundry --sarif results.sarif --no-fail-pedantic .
+        run: |
+          slither --compile-force-framework foundry --sarif results.sarif --no-fail-pedantic .
+          echo "sarif=results.sarif" >> "$GITHUB_OUTPUT"
         id: slither
 
       # Advanced Security must be enabled for this repository to use code scanning.
