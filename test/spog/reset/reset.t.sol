@@ -76,7 +76,7 @@ contract SPOG_reset is SPOG_Base {
         expectEmit();
         emit NewValueQuorumProposal(proposalId);
 
-        uint256 spogProposalId = spog.propose(callData, description);
+        uint256 spogProposalId = spog.propose(targets, values, calldatas, description);
 
         // Make sure the proposal is immediately (+1 block) votable
         assertEq(valueGovernor.proposalSnapshot(proposalId), block.number + 1);

@@ -71,8 +71,6 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
         string memory description
     ) external returns (uint256);
 
-    function propose(bytes memory callData, string memory description) external returns (uint256);
-
     function execute(
         address[] memory targets,
         uint256[] memory values,

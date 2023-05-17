@@ -201,32 +201,16 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) external override returns (uint256) {
+    ) public override returns (uint256) {
         // allow only 1 SPOG change with no value per proposal
         if (targets.length != 1 || targets[0] != address(this) || values[0] != 0) {
             revert InvalidProposal();
         }
 
-        return propose(calldatas[0], description);
-    }
-
-    /// @notice Create a new proposal
-    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
-    /// @param callData The calldata of the proposal
-    /// @param description The description of the proposal
-    /// @return proposalId The ID of the proposal
-    function propose(bytes memory callData, string memory description) public override returns (uint256) {
-        bytes4 executableFuncSelector = bytes4(callData);
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
         if (!governedMethods[executableFuncSelector]) {
             revert NotGovernedMethod(executableFuncSelector);
         }
-
-        address[] memory targets = new address[](1);
-        targets[0] = address(this);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = callData;
 
         _payFee(executableFuncSelector);
 
@@ -265,7 +249,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
         // prevent proposing a list that can be changed before execution
         if (executableFuncSelector == this.addNewList.selector) {
-            address listParams = _extractAddressTypeParamsFromCalldata(callData);
+            address listParams = _extractAddressTypeParamsFromCalldata(calldatas[0]);
             if (IList(listParams).admin() != address(this)) {
                 revert ListAdminIsNotSPOG();
             }

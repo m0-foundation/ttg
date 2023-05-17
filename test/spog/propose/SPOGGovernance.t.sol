@@ -91,7 +91,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
-        bytes[] memory calldatas = new bytes[](2);
+        bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
         string memory description = "add merchant to spog";
 

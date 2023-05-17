@@ -52,7 +52,7 @@ contract SPOG_change is SPOG_Base {
         expectEmit();
         emit NewDoubleQuorumProposal(proposalId);
 
-        uint256 spogProposalId = spog.propose(callData, description);
+        uint256 spogProposalId = spog.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "spog proposal id does not match vote governor proposal id");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
