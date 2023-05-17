@@ -43,7 +43,8 @@ contract ValueVault is IValueVault {
     /// @param amount Amount of vote tokens to deposit
     function depositRewards(uint256 epoch, address token, uint256 amount) external override {
         // TODO: should we allow to deposit only for next epoch ? or current and next epoch is good ?
-        if (epoch < governor.currentEpoch()) revert EpochIsNotInThePast();
+        uint256 currentEpoch = governor.currentEpoch();
+        if (epoch < currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
         // save start block of epoch, our governance allows to change voting period
         epochStartBlockNumber[epoch] = governor.startOfEpoch(epoch);
@@ -61,9 +62,7 @@ contract ValueVault is IValueVault {
         uint256 currentEpoch = governor.currentEpoch();
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
-            if (epoch > currentEpoch) {
-                revert InvalidEpoch(epoch, currentEpoch);
-            }
+            if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
             _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
             unchecked {

@@ -10,7 +10,6 @@ interface IValueVault {
 
     // errors
     error InvalidEpoch(uint256 invalidEpoch, uint256 currentEpoch);
-    error EpochIsNotInThePast();
     error EpochWithNoRewards();
     error AlreadyClaimed();
 

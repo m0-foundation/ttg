@@ -48,7 +48,7 @@ contract VoteVault is IVoteVault, ValueVault {
         override
         onlySPOG
     {
-        if (epoch >= governor.currentEpoch()) revert EpochIsNotInThePast();
+        if (epoch >= governor.currentEpoch()) revert InvalidEpoch(epoch, governor.currentEpoch());
 
         address token = address(governor.votingToken());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
@@ -71,16 +71,14 @@ contract VoteVault is IVoteVault, ValueVault {
         uint256 length = epochs.length;
 
         for (uint256 i; i < length;) {
-            if (epochs[i] > currentEpoch) {
-                revert InvalidEpoch(epochs[i], currentEpoch);
-            }
-
-            if (!_isActive(msg.sender, epochs[i])) revert NotVotedOnAllProposals();
+            uint256 epoch = epochs[i];
+            if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
+            if (!_isActive(msg.sender, epoch)) revert NotVotedOnAllProposals();
 
             if (token == valueToken) {
-                _claimRewards(epochs[i], token, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
+                _claimRewards(epoch, token, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
             } else {
-                _claimRewards(epochs[i], token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+                _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
             }
 
             unchecked {
