@@ -65,26 +65,33 @@ contract VoteVault is IVoteVault, ValueVault {
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
 
-    function claimRewards(uint256[] memory epochs, address token) external virtual override(IValueVault, ValueVault) {
+    function claimRewards(uint256[] memory epochs, address token)
+        external
+        virtual
+        override(IValueVault, ValueVault)
+        returns (uint256)
+    {
         address valueToken = IVoteToken(address(governor.votingToken())).valueToken();
         uint256 currentEpoch = governor.currentEpoch();
         uint256 length = epochs.length;
+        uint256 totalRewards;
 
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
             if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
             if (!_isActive(msg.sender, epoch)) revert NotVotedOnAllProposals();
 
-            if (token == valueToken) {
-                _claimRewards(epoch, token, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
-            } else {
-                _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
-            }
+            // TODO: should we allow to withdraw any token or vote and value ?
+            RewardsSharingStrategy strategy = (token == valueToken)
+                ? RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA
+                : RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA;
+            totalRewards += _claimRewards(epoch, token, strategy);
 
             unchecked {
                 ++i;
             }
         }
+        return totalRewards;
     }
 
     // @notice Update vote governor after `RESET` was executed

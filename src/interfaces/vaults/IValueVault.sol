@@ -14,5 +14,5 @@ interface IValueVault {
     error AlreadyClaimed();
 
     function depositRewards(uint256 epoch, address token, uint256 amount) external;
-    function claimRewards(uint256[] memory epochs, address token) external;
+    function claimRewards(uint256[] memory epochs, address token) external returns (uint256);
 }

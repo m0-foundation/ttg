@@ -57,22 +57,28 @@ contract ValueVault is IValueVault {
     /// @dev Withdraw rewards for a 1+ epochs for a token
     /// @param epochs Epochs to withdraw rewards for
     /// @param token Token to withdraw rewards for
-    function claimRewards(uint256[] memory epochs, address token) external virtual override {
+    function claimRewards(uint256[] memory epochs, address token) external virtual override returns (uint256) {
         uint256 length = epochs.length;
         uint256 currentEpoch = governor.currentEpoch();
+        uint256 totalRewards;
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
             if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
-            _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+            totalRewards += _claimRewards(epoch, token, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
             unchecked {
                 ++i;
             }
         }
+        return totalRewards;
     }
 
-    /// @dev Withdraw Vote and Value token rewards
-    function _claimRewards(uint256 epoch, address token, RewardsSharingStrategy strategy) internal virtual {
+    /// @dev Withdraw rewards per epoch base on strategy
+    function _claimRewards(uint256 epoch, address token, RewardsSharingStrategy strategy)
+        internal
+        virtual
+        returns (uint256)
+    {
         if (epochTokenDeposit[token][epoch] == 0) revert EpochWithNoRewards();
         if (hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token]) revert AlreadyClaimed();
 
@@ -102,6 +108,8 @@ contract ValueVault is IValueVault {
         IERC20(token).safeTransfer(msg.sender, amountToWithdraw);
 
         emit EpochRewardsClaim(epoch, msg.sender, token, amountToWithdraw);
+
+        return amountToWithdraw;
     }
 
     fallback() external {
