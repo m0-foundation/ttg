@@ -1,9 +1,7 @@
 name: Slither Analysis
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
 
 jobs:
   analyze:
@@ -39,7 +37,7 @@ jobs:
 
       - name: Run Slither
         run: |
-          slither --compile-force-framework foundry --sarif results.sarif --no-fail-pedantic .
+          slither --compile-force-framework foundry --sarif results.sarif --fail-high .
           echo "sarif=results.sarif" >> "$GITHUB_OUTPUT"
         id: slither
 

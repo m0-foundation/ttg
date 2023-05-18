@@ -39,17 +39,18 @@ contract VoteVault is IVoteVault, BaseVault {
         uint256 currentEpoch = governor.currentEpoch();
         if (epoch >= currentEpoch) revert EpochNotInThePast();
 
-        address token = address(governor.votingToken());
-        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
-
         uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
         // TODO: introduce error
         if (unclaimed == 0) {
             return;
         }
+
+        address token = address(governor.votingToken());
+        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
+
         IERC20(token).approve(auction, unclaimed);
 
-        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }

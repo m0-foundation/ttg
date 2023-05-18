@@ -50,13 +50,11 @@ contract ERC20PricelessAuction is IERC20PricelessAuction, Initializable {
     /// @param _auctionToken The address of the ERC20 token being auctioned
     /// @param _paymentToken The address of the ERC20 token used as payment
     /// @param _auctionDuration The duration of the auction in seconds
-    /// @param _vault The address where the payment tokens will be sent
     /// @param _auctionTokenAmount The amount of tokens to be auctioned
     function initialize(
         address _auctionToken,
         address _paymentToken,
         uint256 _auctionDuration,
-        address _vault,
         uint256 _auctionTokenAmount
     ) public initializer {
         auctionToken = _auctionToken;
@@ -65,10 +63,10 @@ contract ERC20PricelessAuction is IERC20PricelessAuction, Initializable {
         auctionEndTime = block.timestamp + _auctionDuration;
         ceilingPrice = IERC20(paymentToken).totalSupply();
         floorPrice = 1;
-        vault = _vault;
+        vault = msg.sender;
         if (initialized) revert AlreadyInitialized();
         initialized = true;
-        IERC20(auctionToken).safeTransferFrom(vault, address(this), _auctionTokenAmount);
+        IERC20(auctionToken).safeTransferFrom(msg.sender, address(this), _auctionTokenAmount);
         auctionTokenAmount = _auctionTokenAmount;
         ceilingPrice =
             IERC20(paymentToken).totalSupply() / (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
