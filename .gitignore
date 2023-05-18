@@ -20,3 +20,5 @@ lcov.info
 docs/
 
 node_modules/
+
+results.sarif
