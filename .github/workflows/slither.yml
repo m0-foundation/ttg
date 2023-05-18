@@ -1,0 +1,51 @@
+name: Slither Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: "3.x"
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: "x64"
+
+      - name: Install solc with solc-select
+        run: |
+          python -m pip install slither-analyzer
+          python -m pip install solc-select
+          solc-select install 0.8.19
+          solc-select use 0.8.19
+
+      - name: Run Slither
+        run: |
+          slither --compile-force-framework foundry --sarif results.sarif --no-fail-pedantic .
+          echo "sarif=results.sarif" >> "$GITHUB_OUTPUT"
+        id: slither
+
+      # Advanced Security must be enabled for this repository to use code scanning.
+      # - name: Upload SARIF file
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: ${{ steps.slither.outputs.sarif }}
