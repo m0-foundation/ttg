@@ -7,26 +7,34 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {BaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
 
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract VoteVault is IVoteVault, BaseVault {
+contract VoteVault is IVoteVault, ValueVault {
     using SafeERC20 for IERC20;
 
     IERC20PricelessAuction public immutable auctionContract;
 
-    constructor(SPOGGovernorBase _governor, IERC20PricelessAuction _auctionContract) BaseVault(_governor) {
+    //TODO: not changing require into error revert, this modifier should potentially be gone
+    modifier onlySPOG() {
+        require(msg.sender == address(governor.spogAddress()), "Vault: Only spog");
+        _;
+    }
+
+    constructor(SPOGGovernorBase _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
         auctionContract = _auctionContract;
     }
 
     /// @notice Sell unclaimed vote tokens
     /// @param epoch Epoch to view unclaimed tokens
-    function unclaimedVoteTokensForEpoch(uint256 epoch) public view returns (uint256) {
+    function auctionableVoteRewards(uint256 epoch) public view override returns (uint256) {
         address token = address(governor.votingToken());
         return epochTokenDeposit[token][epoch] - epochTokenTotalWithdrawn[token][epoch];
     }
@@ -35,14 +43,17 @@ contract VoteVault is IVoteVault, BaseVault {
     /// @param epoch Epoch to sell tokens from
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external onlySPOG {
-        uint256 currentEpoch = governor.currentEpoch();
-        if (epoch >= currentEpoch) revert EpochNotInThePast();
+    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration)
+        external
+        override
+        onlySPOG
+    {
+        if (epoch >= governor.currentEpoch()) revert InvalidEpoch(epoch, governor.currentEpoch());
 
         address token = address(governor.votingToken());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
-        uint256 unclaimed = unclaimedVoteTokensForEpoch(epoch);
+        uint256 unclaimed = auctionableVoteRewards(epoch);
         // TODO: introduce error
         if (unclaimed == 0) {
             return;
@@ -54,50 +65,33 @@ contract VoteVault is IVoteVault, BaseVault {
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }
 
-    /// @dev Claim Vote token inflation rewards by vote holders
-    /// @param epochs Epochs to claim rewards for
-    function claimVoteTokenRewards(uint256[] memory epochs) external {
+    function claimRewards(uint256[] memory epochs, address token)
+        external
+        virtual
+        override(IValueVault, ValueVault)
+        returns (uint256)
+    {
+        address valueToken = IVoteToken(address(governor.votingToken())).valueToken();
         uint256 currentEpoch = governor.currentEpoch();
         uint256 length = epochs.length;
-        address rewardToken = address(governor.votingToken());
+        uint256 totalRewards;
 
         for (uint256 i; i < length;) {
-            if (epochs[i] > currentEpoch) {
-                revert InvalidEpoch(epochs[i], currentEpoch);
-            }
+            uint256 epoch = epochs[i];
+            if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
+            if (!_isActive(msg.sender, epoch)) revert NotVotedOnAllProposals();
 
-            _checkParticipation(epochs[i]);
-
-            // vote holders claim their epoch vote rewards
-            _withdrawTokenRewards(epochs[i], rewardToken, RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA);
+            // TODO: should we allow to withdraw any token or vote and value ?
+            RewardsSharingStrategy strategy = (token == valueToken)
+                ? RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA
+                : RewardsSharingStrategy.ALL_PARTICIPANTS_PRO_RATA;
+            totalRewards += _claimRewards(epoch, token, strategy);
 
             unchecked {
                 ++i;
             }
         }
-    }
-
-    /// @dev Claim Value token inflation rewards by vote holders
-    /// @param epochs Epochs to claim value rewards for
-    function claimValueTokenRewards(uint256[] memory epochs) external {
-        uint256 currentEpoch = governor.currentEpoch();
-        uint256 length = epochs.length;
-        address rewardToken = address(ISPOG(governor.spogAddress()).valueGovernor().votingToken());
-
-        for (uint256 i; i < length;) {
-            if (epochs[i] >= currentEpoch) {
-                revert InvalidEpoch(epochs[i], currentEpoch);
-            }
-
-            _checkParticipation(epochs[i]);
-
-            // vote holders claim their epoch value rewards
-            _withdrawTokenRewards(epochs[i], rewardToken, RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA);
-
-            unchecked {
-                ++i;
-            }
-        }
+        return totalRewards;
     }
 
     // @notice Update vote governor after `RESET` was executed
@@ -108,15 +102,9 @@ contract VoteVault is IVoteVault, BaseVault {
         governor = newGovernor;
     }
 
-    // TODO potentially modifier ?
-    function _checkParticipation(uint256 epoch) private view {
-        // withdraw rewards only if voted on all proposals in epoch
-        uint256 numOfProposalsVotedOnEpoch = governor.accountEpochNumProposalsVotedOn(msg.sender, epoch);
-        uint256 totalProposalsEpoch = governor.epochProposalsCount(epoch);
-        if (numOfProposalsVotedOnEpoch != totalProposalsEpoch) revert NotVotedOnAllProposals();
-    }
-
-    fallback() external {
-        revert("Vault: non-existent function");
+    function _isActive(address account, uint256 epoch) internal virtual returns (bool) {
+        uint256 numVotedOn = governor.accountEpochNumProposalsVotedOn(account, epoch);
+        uint256 numProposals = governor.epochProposalsCount(epoch);
+        return numVotedOn == numProposals;
     }
 }
