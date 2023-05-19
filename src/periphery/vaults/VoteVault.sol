@@ -69,7 +69,7 @@ contract VoteVault is IVoteVault, ValueVault {
 
             uint256 percentageOfTotalSupply = activeCoinsForEpoch * 1e18 / preInflatedCoinsForEpoch;
 
-            uint256 activeCoinsInflation = percentageOfTotalSupply * totalInflation / 1e18;
+            uint256 activeCoinsInflation = percentageOfTotalSupply * totalInflation / precisionFactor;
 
             uint256 inactiveCoinsInflation = totalInflation - activeCoinsInflation;
 

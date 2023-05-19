@@ -23,6 +23,8 @@ contract ValueVault is IValueVault {
 
     SPOGGovernorBase public governor;
 
+    uint256 precisionFactor = 1e18;
+
     // address => epoch => token => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
 
@@ -100,9 +102,9 @@ contract ValueVault is IValueVault {
         uint256 accountVotesWeight = ISPOGVotes(governor.votingToken()).getPastVotes(msg.sender, epochStart);
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
 
-        uint256 percentageOfTotalSupply = accountVotesWeight * 1e18 / totalVotesWeight;
+        uint256 percentageOfTotalSupply = accountVotesWeight * precisionFactor / totalVotesWeight;
         // TODO: simplification: amountToWithdraw = accountVotesWeight * amountToBeSharedOnProRataBasis / totalVotesWeight; ?
-        uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 1e18;
+        uint256 amountToWithdraw = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / precisionFactor;
 
         // withdraw rewards from vault
         epochTokenTotalWithdrawn[token][epoch] += amountToWithdraw;
