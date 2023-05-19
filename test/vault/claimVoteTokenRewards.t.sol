@@ -3,7 +3,7 @@
 pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
-import {IBaseVault} from "src/interfaces/vaults/IBaseVault.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
     /*//////////////////////////////////////////////////////////////
@@ -53,12 +53,12 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
             "voteVault should have more spogVote balance"
         );
 
-        uint256 relevantEpochProposals = voteGovernor.currentEpoch() + 1;
+        uint256 nextEpoch = voteGovernor.currentEpoch() + 1;
         uint256[] memory relevantEpochs = new uint256[](1);
-        relevantEpochs[0] = relevantEpochProposals;
+        relevantEpochs[0] = nextEpoch;
 
         // epochProposalsCount for epoch 0 should be 3
-        assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
+        assertEq(voteGovernor.epochProposalsCount(nextEpoch), 3, "current epoch should have 3 proposals");
 
         // cannot vote in epoch 0
         vm.expectRevert("Governor: vote not currently active");
@@ -79,14 +79,10 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
 
         // check that both have voted once in epoch 1
         assertEq(
-            voteGovernor.accountEpochNumProposalsVotedOn(alice, relevantEpochProposals),
-            1,
-            "Alice should have voted once in epoch 1"
+            voteGovernor.accountEpochNumProposalsVotedOn(alice, nextEpoch), 1, "Alice should have voted once in epoch 1"
         );
         assertEq(
-            voteGovernor.accountEpochNumProposalsVotedOn(bob, relevantEpochProposals),
-            1,
-            "Bob should have voted once in epoch 1"
+            voteGovernor.accountEpochNumProposalsVotedOn(bob, nextEpoch), 1, "Bob should have voted once in epoch 1"
         );
 
         // alice and bobs vote token balance should be the same as before voting
@@ -107,49 +103,47 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
 
         // check that both alice and bob have voted 3 times in relevant epoch
         assertEq(
-            voteGovernor.accountEpochNumProposalsVotedOn(alice, relevantEpochProposals),
+            voteGovernor.accountEpochNumProposalsVotedOn(alice, nextEpoch),
             3,
             "Alice should have voted 3 times in epoch 1"
         );
         assertEq(
-            voteGovernor.accountEpochNumProposalsVotedOn(bob, relevantEpochProposals),
-            3,
-            "Bob should have voted 3 times in epoch 1"
+            voteGovernor.accountEpochNumProposalsVotedOn(bob, nextEpoch), 3, "Bob should have voted 3 times in epoch 1"
         );
 
         // and carol has not voted at all
         assertEq(
-            voteGovernor.accountEpochNumProposalsVotedOn(carol, relevantEpochProposals),
+            voteGovernor.accountEpochNumProposalsVotedOn(carol, nextEpoch),
             0,
             "Carol should have voted 0 times in epoch 1"
         );
 
-        assertEq(voteGovernor.epochProposalsCount(relevantEpochProposals), 3, "current epoch should have 3 proposals");
+        assertEq(voteGovernor.epochProposalsCount(nextEpoch), 3, "current epoch should have 3 proposals");
 
         assertFalse(
-            voteVault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(alice, nextEpoch, address(spogVote)),
             "Alice should not have claimed vote token rewards"
         );
         assertFalse(
-            voteVault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(bob, nextEpoch, address(spogVote)),
             "Bob should not have claimed vote token rewards"
         );
 
         // alice and bob claim their vote token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
-        voteVault.claimVoteTokenRewards(relevantEpochs);
+        voteVault.claimRewards(relevantEpochs, address(spogVote));
         vm.stopPrank();
 
         vm.startPrank(bob);
-        voteVault.claimVoteTokenRewards(relevantEpochs);
+        voteVault.claimRewards(relevantEpochs, address(spogVote));
         vm.stopPrank();
 
         assertTrue(
-            voteVault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(alice, relevantEpochs[0], address(spogVote)),
             "Alice should have claimed vote token rewards"
         );
         assertTrue(
-            voteVault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochProposals, address(spogVote)),
+            voteVault.hasClaimedTokenRewardsForEpoch(bob, relevantEpochs[0], address(spogVote)),
             "Bob should have claimed vote token rewards"
         );
 
@@ -175,14 +169,14 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         voteGovernor.castVote(proposalId3, noVote);
 
         // carol fails to withdraw vote rewards because she has not voted in all proposals
-        vm.expectRevert(IBaseVault.NotVotedOnAllProposals.selector);
-        voteVault.claimVoteTokenRewards(relevantEpochs);
+        vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
+        voteVault.claimRewards(relevantEpochs, address(spogVote));
 
         vm.stopPrank();
 
         // carol voted in 1 proposal
         assertEq(
-            voteGovernor.accountEpochNumProposalsVotedOn(carol, relevantEpochProposals),
+            voteGovernor.accountEpochNumProposalsVotedOn(carol, relevantEpochs[0]),
             1,
             "Carol should have voted 1 times in epoch 1"
         );
@@ -252,7 +246,7 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         uint256 voteVaultBalanceBeforeAliceClaiming = spogVote.balanceOf(address(voteVault));
 
         vm.startPrank(alice);
-        voteVault.claimVoteTokenRewards(epochs);
+        voteVault.claimRewards(epochs, address(spogVote));
         vm.stopPrank();
 
         uint256 aliceBalanceAfterClaiming = spogVote.balanceOf(alice);
@@ -281,8 +275,8 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         unentitledRewards[0] = voteGovernor.currentEpoch();
 
         vm.startPrank(alice);
-        vm.expectRevert(IBaseVault.NotVotedOnAllProposals.selector);
-        voteVault.claimVoteTokenRewards(unentitledRewards);
+        vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
+        voteVault.claimRewards(unentitledRewards, address(spogVote));
         vm.stopPrank();
     }
 }

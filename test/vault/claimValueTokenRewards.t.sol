@@ -3,7 +3,7 @@
 pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
-import {IBaseVault} from "src/interfaces/vaults/IBaseVault.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
     /*//////////////////////////////////////////////////////////////
@@ -107,11 +107,11 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // alice and bob withdraw their value token inflation rewards from Vault during current epoch. They must do so to get the rewards
         vm.startPrank(alice);
-        voteVault.claimValueTokenRewards(epochsToClaimRewards);
+        voteVault.claimRewards(epochsToClaimRewards, address(spogValue));
         vm.stopPrank();
 
         vm.startPrank(bob);
-        voteVault.claimValueTokenRewards(epochsToClaimRewards);
+        voteVault.claimRewards(epochsToClaimRewards, address(spogValue));
         vm.stopPrank();
 
         assertTrue(
@@ -145,8 +145,8 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 carolValueBalanceBefore = spogValue.balanceOf(carol);
 
         // carol fails to withdraw value token rewards because she has not voted in all proposals
-        vm.expectRevert(IBaseVault.NotVotedOnAllProposals.selector);
-        voteVault.claimValueTokenRewards(epochsToClaimRewards);
+        vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
+        voteVault.claimRewards(epochsToClaimRewards, address(spogValue));
         vm.stopPrank();
 
         // carol remains with the same balance
@@ -222,7 +222,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 voteVaultBalanceBeforeAliceClaiming = spogValue.balanceOf(address(voteVault));
 
         vm.startPrank(alice);
-        voteVault.claimValueTokenRewards(epochs);
+        voteVault.claimRewards(epochs, address(spogValue));
         vm.stopPrank();
 
         uint256 aliceBalanceAfterClaiming = spogValue.balanceOf(alice);
@@ -251,8 +251,8 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         unentitledRewards[0] = voteGovernor.currentEpoch() - 1;
 
         vm.startPrank(alice);
-        vm.expectRevert(IBaseVault.NotVotedOnAllProposals.selector);
-        voteVault.claimValueTokenRewards(unentitledRewards);
+        vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
+        voteVault.claimRewards(unentitledRewards, address(spogValue));
         vm.stopPrank();
     }
 }
