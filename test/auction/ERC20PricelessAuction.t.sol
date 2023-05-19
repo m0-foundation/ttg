@@ -30,9 +30,8 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
 
         mintAndApproveVoteTokens(1000e18);
 
-        IERC20PricelessAuction(auction).initialize(
-            address(voteToken), address(usdc), auctionDuration, fakeVault, 1000e18
-        );
+        vm.prank(fakeVault);
+        IERC20PricelessAuction(auction).initialize(address(voteToken), address(usdc), auctionDuration, 1000e18);
     }
 
     function mintAndApproveVoteTokens(uint256 amount) internal {
