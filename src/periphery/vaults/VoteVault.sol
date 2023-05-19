@@ -54,13 +54,15 @@ contract VoteVault is IVoteVault, ValueVault {
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
         uint256 unclaimed = auctionableVoteRewards(epoch);
+
         // TODO: introduce error
         if (unclaimed == 0) {
             return;
         }
+
         IERC20(token).approve(auction, unclaimed);
 
-        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, address(this), unclaimed);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, unclaimed);
 
         emit VoteTokenAuction(token, epoch, auction, unclaimed);
     }

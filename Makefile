@@ -16,3 +16,6 @@ deploy-spog-local :; forge script script/LocalTestDeployScript.s.sol --rpc-url l
 deploy-spog-sepolia :; forge script script/SPOGDeploy.s.sol --rpc-url sepolia --private-key ${ETH_PK} --broadcast -vvv
 
 deploy-spog-qa-sepolia :; forge script script/LocalTestDeployScript.s.sol --rpc-url sepolia --broadcast -v
+
+# Run slither
+slither :; slither --compile-force-framework foundry --sarif results.sarif --no-fail-pedantic .
