@@ -145,5 +145,10 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         // Assert that the amount to sell is never more than amount that can be claimed
         // Note - this does leave small dust amounts in the vault due to rounding
         assertLe(amountToSell, totalInflation - activeInflatedAmount);
+
+        assertEq(
+            voteGovernor.votingToken().balanceOf(address(voteVault)),
+            totalInflation - activeInflatedAmount - amountToSell
+        );
     }
 }
