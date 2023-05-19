@@ -46,7 +46,7 @@ contract ValueSPOGGovernorTest is SPOG_Base {
         assertEq(spogValueSupplyAfterFirstPeriod, spogValueSupplyBefore, "Vote token supply inflated incorrectly");
 
         // check that vault has received the vote inflationary supply
-        // TDO: clean up names here
+        // TODO: clean up names here
         uint256 vaultVoteTokenBalanceAfterFirstPeriod = spogValue.balanceOf(address(voteVault));
         assertEq(
             vaultVoteTokenBalanceAfterFirstPeriod,

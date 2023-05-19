@@ -24,9 +24,9 @@ interface IERC20PricelessAuction {
         address _auctionToken,
         address _paymentToken,
         uint256 _auctionDuration,
-        address _vault,
         uint256 _auctionTokenAmount
     ) external;
+
     function getCurrentPrice() external returns (uint256);
 
     function buyTokens(uint256 amountToBuy) external;

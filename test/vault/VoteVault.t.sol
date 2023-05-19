@@ -3,7 +3,6 @@
 pragma solidity 0.8.19;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
-import {BaseVault, IBaseVault} from "src/periphery/vaults/BaseVault.sol";
 import {SPOGGovernorBase, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
@@ -59,7 +58,7 @@ contract VoteVaultTest is BaseTest {
         vm.startPrank(users.alice);
 
         SPOGGovernorBase newVoteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
-        vm.expectRevert(IBaseVault.OnlySPOG.selector);
+        vm.expectRevert("Vault: Only spog");
         vault.updateGovernor(newVoteGovernor);
 
         vm.stopPrank();
@@ -80,22 +79,6 @@ contract VoteVaultTest is BaseTest {
         vm.stopPrank();
 
         assertEq(voteToken.balanceOf(address(vault)), 1000e18);
-    }
-
-    function test_unclaimedVoteTokensForEpoch() public {
-        setUp();
-
-        // deposit rewards for previous epoch
-        uint256 epoch = 1;
-        voteToken.mint(spogAddress, 1000e18);
-        vm.startPrank(spogAddress);
-        voteToken.approve(address(vault), 1000e18);
-        vault.depositRewards(epoch, address(voteToken), 1000e18);
-        vm.stopPrank();
-
-        uint256 unclaimed = vault.unclaimedVoteTokensForEpoch(epoch);
-
-        assertEq(unclaimed, 1000e18);
     }
 
     function test_UpdateVoteGovernor() public {
