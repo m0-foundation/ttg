@@ -10,10 +10,10 @@ interface IVoteVault is IValueVault {
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     error NotVotedOnAllProposals();
+    error NoTokensToSell();
 
     // Auction-related functions
-    function auctionableVoteRewards(uint256 epoch) external view returns (uint256);
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration) external;
+    function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration) external;
 
     // RESET-related functions
     function updateGovernor(SPOGGovernorBase newGovernor) external;
