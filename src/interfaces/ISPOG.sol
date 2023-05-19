@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 import {IList} from "src/interfaces/IList.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
@@ -32,7 +32,6 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
     error ValueGovernorDidNotApprove(uint256 proposalId);
     error ValueTokenMistmatch();
-
     error GovernorsShouldNotBeSame();
     error VaultAddressCannotBeZero();
     error ZeroAddress();
@@ -43,21 +42,21 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error OnlyValueGovernor();
     error OnlyVoteGovernor();
 
-    // double-governance
+    // Info functions about double governance and SPOG parameters
     function valueGovernor() external view returns (SPOGGovernorBase);
     function voteGovernor() external view returns (SPOGGovernorBase);
-
-    // Logic functions
     function valueVault() external view returns (IValueVault);
     function voteVault() external view returns (IVoteVault);
+    function taxRange() external view returns (uint256, uint256);
 
+    // Accepted `proposal` functions
     function addNewList(IList list) external;
-
     function append(address _address, IList _list) external;
-
     function remove(address _address, IList _list) external;
-
     function emergencyRemove(address _address, IList _list) external;
+    function reset(SPOGGovernorBase newVoteGovernor) external;
+    function change(bytes32 what, bytes calldata value) external;
+    function changeTax(uint256 _tax) external;
 
     // Token rewards functions
     function voteTokenInflationPerEpoch() external view returns (uint256);
