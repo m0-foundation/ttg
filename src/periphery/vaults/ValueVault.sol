@@ -92,12 +92,13 @@ contract ValueVault is IValueVault {
             totalVotesWeight = governor.epochSumOfVoteWeight(epoch);
         } else {
             // do not take into account rewards inflation for current epoch
-            uint256 inflation = epochTokenDeposit[address(governor.votingToken())][epoch];
-            totalVotesWeight = ISPOGVotes(governor.votingToken()).getPastTotalSupply(epochStart) - inflation;
+            // TODO: fix for one governor!!!!!
+            uint256 inflation = epochTokenDeposit[address(governor.vote())][epoch];
+            totalVotesWeight = ISPOGVotes(governor.vote()).getPastTotalSupply(epochStart) - inflation;
         }
 
         // account reward = (account votes weight * shared rewards) / total votes weight
-        uint256 accountVotesWeight = ISPOGVotes(governor.votingToken()).getPastVotes(msg.sender, epochStart);
+        uint256 accountVotesWeight = ISPOGVotes(governor.vote()).getPastVotes(msg.sender, epochStart);
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
         uint256 percentageOfTotalSupply = accountVotesWeight * 100 / totalVotesWeight;
         // TODO: simplification: amountToWithdraw = accountVotesWeight * amountToBeSharedOnProRataBasis / totalVotesWeight; ?

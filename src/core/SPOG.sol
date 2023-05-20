@@ -68,19 +68,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        SPOGGovernorBase _voteGovernor,
-        SPOGGovernorBase _valueGovernor
-    )
-        SPOGStorage(
-            _initSPOGData,
-            _voteGovernor,
-            _valueGovernor,
-            _time,
-            _voteQuorum,
-            _valueQuorum,
-            _valueFixedInflationAmount
-        )
-    {
+        SPOGGovernorBase _governor
+    ) SPOGStorage(_initSPOGData, _governor, _time, _voteQuorum, _valueQuorum, _valueFixedInflationAmount) {
         if (_voteVault == IVoteVault(address(0)) || _valueVault == IValueVault(address(0))) {
             revert ISPOG.VaultAddressCannotBeZero();
         }
@@ -168,8 +157,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     function reset(SPOGGovernorBase newVoteGovernor) external onlyValueGovernor {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
-        IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));
-        IValueToken valueToken = IValueToken(address(valueGovernor.votingToken()));
+        IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.vote()));
+        IValueToken valueToken = IValueToken(address(valueGovernor.value()));
         if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         // Update vote governance in the vault
@@ -188,126 +177,6 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
     }
 
-    /// @notice Create a new proposal.
-    // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
-    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
-    /// @param targets The targets of the proposal
-    /// @param values The values of the proposal
-    /// @param calldatas The calldatas of the proposal
-    /// @param description The description of the proposal
-    /// @return proposalId The ID of the proposal
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public override returns (uint256) {
-        // allow only 1 SPOG change with no value per proposal
-        if (targets.length != 1 || targets[0] != address(this) || values[0] != 0) {
-            revert InvalidProposal();
-        }
-
-        bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        if (!governedMethods[executableFuncSelector]) {
-            revert NotGovernedMethod(executableFuncSelector);
-        }
-
-        _payFee(executableFuncSelector);
-
-        // Inflate Vote and Value token supply unless method is reset or emergencyRemove
-        if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergencyRemove.selector) {
-            _inflateRewardTokens();
-        }
-
-        // Only $VALUE governance proposals
-        if (executableFuncSelector == this.reset.selector) {
-            valueGovernor.turnOnEmergencyVoting();
-            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-            valueGovernor.turnOffEmergencyVoting();
-
-            emit NewValueQuorumProposal(valueProposalId);
-            return valueProposalId;
-        }
-
-        // $VALUE and $VOTE governance proposals
-        // If we request to change config parameter, value governance should vote too
-        if (executableFuncSelector == this.change.selector) {
-            uint256 voteProposalId = voteGovernor.propose(targets, values, calldatas, description);
-            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-
-            // proposal ids should match
-            if (valueProposalId != voteProposalId) {
-                revert ValueVoteProposalIdsMistmatch(voteProposalId, valueProposalId);
-            }
-
-            emit NewDoubleQuorumProposal(voteProposalId);
-            return voteProposalId;
-        }
-
-        // Only $VOTE governance proposals
-        uint256 proposalId;
-
-        // prevent proposing a list that can be changed before execution
-        if (executableFuncSelector == this.addNewList.selector) {
-            address listParams = _extractAddressTypeParamsFromCalldata(calldatas[0]);
-            if (IList(listParams).admin() != address(this)) {
-                revert ListAdminIsNotSPOG();
-            }
-        }
-
-        // Register emergency proposal with vote governor
-        if (executableFuncSelector == this.emergencyRemove.selector) {
-            voteGovernor.turnOnEmergencyVoting();
-
-            proposalId = voteGovernor.propose(targets, values, calldatas, description);
-            voteGovernor.registerEmergencyProposal(proposalId);
-
-            voteGovernor.turnOffEmergencyVoting();
-
-            emit NewEmergencyProposal(proposalId);
-        } else {
-            proposalId = voteGovernor.propose(targets, values, calldatas, description);
-            emit NewVoteQuorumProposal(proposalId);
-        }
-
-        return proposalId;
-    }
-
-    /// @notice Execute a proposal
-    /// @dev Calls `execute` function of the vote governors, possibly checking value governor quorum (double quorum)
-    /// @param targets The targets of the proposal
-    /// @param values The values of the proposal
-    /// @param calldatas The calldatas of the proposal
-    /// @param descriptionHash The description hash of the proposal
-    /// @return proposalId The ID of the proposal
-    function execute(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) external override returns (uint256) {
-        bytes4 executableFuncSelector = bytes4(calldatas[0]);
-
-        // $VALUE governance proposals
-        if (executableFuncSelector == this.reset.selector) {
-            uint256 valueProposalId = valueGovernor.hashProposal(targets, values, calldatas, descriptionHash);
-            valueGovernor.execute(targets, values, calldatas, descriptionHash);
-            return valueProposalId;
-        }
-
-        // $VOTE governance proposals
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
-        // Check that both value and vote governance approved parameter change
-        if (executableFuncSelector == this.change.selector) {
-            if (valueGovernor.state(proposalId) != IGovernor.ProposalState.Succeeded) {
-                revert ValueGovernorDidNotApprove(proposalId);
-            }
-        }
-
-        voteGovernor.execute(targets, values, calldatas, descriptionHash);
-        return proposalId;
-    }
-
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
@@ -320,7 +189,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
     function voteTokenInflationPerEpoch() public view returns (uint256) {
-        return (voteGovernor.votingToken().totalSupply() * spogData.inflator) / 100;
+        return (voteGovernor.vote().totalSupply() * spogData.inflator) / 100;
     }
 
     /// @notice returns number of value token rewards for an epoch with active proposals
@@ -389,8 +258,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         epochRewardsMinted[nextEpoch] = true;
 
         // Mint and deposit Vote and Value rewards to vault
-        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
-        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.vote(), voteTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.value(), valueTokenInflationPerEpoch());
     }
 
     /// @notice mint reward token into the vault

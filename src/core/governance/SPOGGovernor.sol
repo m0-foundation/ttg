@@ -3,6 +3,7 @@
 pragma solidity 0.8.19;
 
 import {SPOGGovernorBase, ISPOGVotes, Governor, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin.
@@ -10,7 +11,8 @@ contract SPOGGovernor is SPOGGovernorBase {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
-    ISPOGVotes public immutable votingToken;
+    ISPOGVotes public immutable vote;
+    ISPOGVotes public immutable value;
 
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
@@ -20,6 +22,7 @@ contract SPOGGovernor is SPOGGovernorBase {
 
     // private mappings
     mapping(uint256 => ProposalVote) private _proposalVotes;
+    mapping(uint256 => ProposalType) private _proposalTypes;
 
     // public mappings
     mapping(uint256 => bool) public emergencyProposals;
@@ -31,12 +34,14 @@ contract SPOGGovernor is SPOGGovernorBase {
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
 
     constructor(
-        ISPOGVotes votingTokenContract,
-        uint256 quorumNumeratorValue,
+        ISPOGVotes vote_,
+        ISPOGVotes value_,
+        uint256 quorumNumerator,
         uint256 votingPeriod_,
         string memory name_
-    ) SPOGGovernorBase(votingTokenContract, quorumNumeratorValue, name_) {
-        votingToken = votingTokenContract;
+    ) SPOGGovernorBase(vote_, quorumNumerator, name_) {
+        vote = vote_;
+        value = value_;
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
     }
@@ -47,7 +52,8 @@ contract SPOGGovernor is SPOGGovernorBase {
             revert SPOGAddressAlreadySet(spogAddress);
         }
 
-        votingToken.initSPOGAddress(_spogAddress);
+        vote.initSPOGAddress(_spogAddress);
+        value.initSPOGAddress(_spogAddress);
         spogAddress = _spogAddress;
     }
 
@@ -171,39 +177,123 @@ contract SPOGGovernor is SPOGGovernorBase {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override(Governor, GovernorBase) onlySPOG returns (uint256) {
+    ) public override(Governor, GovernorBase) returns (uint256) {
         // update epochProposalsCount. Proposals are voted on in the next epoch
         epochProposalsCount[currentEpoch() + 1]++;
 
-        return super.propose(targets, values, calldatas, description);
-    }
+        // allow only 1 SPOG change with no value per proposal
+        if (targets.length != 1 || targets[0] != address(this) || values[0] != 0) {
+            revert InvalidProposal();
+        }
 
-    /// @notice override to check that caller is SPOG
-    function _execute(
-        uint256 proposalId,
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) internal override onlySPOG {
-        super._execute(proposalId, targets, values, calldatas, descriptionHash);
+        bytes4 executableFuncSelector = bytes4(calldatas[0]);
+        if (ISPOG(spogAddress).governedMethods(executableFuncSelector)) {
+            revert NotGovernedMethod(executableFuncSelector);
+        }
+
+        uint256 proposalId = super.propose(targets, values, calldatas, description);
+        // Check all methods for vote governance
+        if (executableFuncSelector == ISPOG.addNewList.selector) {
+            _proposalTypes[proposalId] = ProposalType.Vote;
+        }
+
+        // _payFee(executableFuncSelector);
+
+        // // Inflate Vote and Value token supply unless method is reset or emergencyRemove
+        // if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergencyRemove.selector) {
+        //     _inflateRewardTokens();
+        // }
+
+        // // Only $VALUE governance proposals
+        // if (executableFuncSelector == this.reset.selector) {
+        //     valueGovernor.turnOnEmergencyVoting();
+        //     uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+        //     valueGovernor.turnOffEmergencyVoting();
+
+        //     emit NewValueQuorumProposal(valueProposalId);
+        //     return valueProposalId;
+        // }
+
+        // // $VALUE and $VOTE governance proposals
+        // // If we request to change config parameter, value governance should vote too
+        // if (executableFuncSelector == this.change.selector) {
+        //     uint256 voteProposalId = voteGovernor.propose(targets, values, calldatas, description);
+        //     uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
+
+        //     // proposal ids should match
+        //     if (valueProposalId != voteProposalId) {
+        //         revert ValueVoteProposalIdsMistmatch(voteProposalId, valueProposalId);
+        //     }
+
+        //     emit NewDoubleQuorumProposal(voteProposalId);
+        //     return voteProposalId;
+        // }
+
+        // // Only $VOTE governance proposals
+        // uint256 proposalId;
+
+        // // prevent proposing a list that can be changed before execution
+        // if (executableFuncSelector == this.addNewList.selector) {
+        //     address listParams = _extractAddressTypeParamsFromCalldata(calldatas[0]);
+        //     if (IList(listParams).admin() != address(this)) {
+        //         revert ListAdminIsNotSPOG();
+        //     }
+        // }
+
+        // // Register emergency proposal with vote governor
+        // if (executableFuncSelector == this.emergencyRemove.selector) {
+        //     voteGovernor.turnOnEmergencyVoting();
+
+        //     proposalId = voteGovernor.propose(targets, values, calldatas, description);
+        //     voteGovernor.registerEmergencyProposal(proposalId);
+
+        //     voteGovernor.turnOffEmergencyVoting();
+
+        //     emit NewEmergencyProposal(proposalId);
+        // } else {
+        //     proposalId = voteGovernor.propose(targets, values, calldatas, description);
+        //     emit NewVoteQuorumProposal(proposalId);
+        // }
+
+        return super.propose(targets, values, calldatas, description);
     }
 
     /// @notice override to count user activity in epochs
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
+        virtual
         override
         returns (uint256)
     {
-        uint256 weight = super._castVote(proposalId, account, support, reason, params);
+        require(state(proposalId) == ProposalState.Active, "SPOGGovernor: vote not currently active");
 
-        _updateAccountEpochVotes(weight);
+        ProposalType proposalType = _proposalTypes[proposalId];
+        uint256 snapshot = proposalSnapshot(proposalId);
+        uint256 voteWeight = (proposalType == ProposalType.Vote || proposalType == ProposalType.Double)
+            ? _getVoteVotes(account, snapshot, params)
+            : 0;
+        uint256 valueWeight = (proposalType == ProposalType.Value || proposalType == ProposalType.Double)
+            ? _getValueVotes(account, snapshot, params)
+            : 0;
 
-        return weight;
+        _countVote(proposalId, account, support, voteWeight, valueWeight, params);
+
+        if (voteWeight > 0) {
+            _updateAccountEpochVotes(voteWeight);
+        }
+
+        // TODO: adjust weight we need to return ?
+        if (params.length == 0) {
+            emit VoteCast(account, proposalId, support, voteWeight, reason);
+        } else {
+            emit VoteCastWithParams(account, proposalId, support, voteWeight, reason, params);
+        }
+
+        return voteWeight;
     }
 
     /// @dev update number of proposals account voted for and cumulative vote weight casted in epoch
-    function _updateAccountEpochVotes(uint256 weight) private {
+    function _updateAccountEpochVotes(uint256 weight) internal virtual {
         uint256 epoch = currentEpoch();
 
         // update number of proposals account voted for in current epoch
@@ -253,20 +343,48 @@ contract SPOGGovernor is SPOGGovernorBase {
         return _proposalVotes[proposalId].hasVoted[account];
     }
 
-    /// @dev Accessor to the internal vote counts.
-    function proposalVotes(uint256 proposalId) public view override returns (uint256 noVotes, uint256 yesVotes) {
-        ProposalVote storage proposalVote = _proposalVotes[proposalId];
-        return (proposalVote.noVotes, proposalVote.yesVotes);
+    // /// @dev Accessor to the internal vote counts.
+    // function proposalVoteVotes(uint256 proposalId) public view override returns (uint256 noVotes, uint256 yesVotes) {
+    //     ProposalVote storage proposalVote = _proposalVotes[proposalId];
+    //     return (proposalVote.noVotes, proposalVote.yesVotes);
+    // }
+
+    /**
+     * @dev Returns the quorum for a timepoint, in terms of number of votes: `supply * numerator / denominator`.
+     */
+    function voteQuorum(uint256 timepoint) public view virtual returns (uint256) {
+        return (vote.getPastTotalSupply(timepoint) * quorumNumerator(timepoint)) / quorumDenominator();
+    }
+
+    /**
+     * @dev Returns the quorum for a timepoint, in terms of number of votes: `supply * numerator / denominator`.
+     */
+    function valueQuorum(uint256 timepoint) public view virtual returns (uint256) {
+        return (value.getPastTotalSupply(timepoint) * quorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @dev See {Governor-_quorumReached}.
     function _quorumReached(uint256 proposalId) internal view override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        uint256 proposalQuorum = quorum(proposalSnapshot(proposalId));
-        // if token has 0 supply, make sure that quorum was not reached
-        // @dev short-circuiting the rare usecase of 0 supply check to save gas
-        return proposalQuorum <= proposalVote.yesVotes && proposalQuorum > 0;
+        ProposalType proposalType = _proposalTypes[proposalId];
+        uint256 snapshot = proposalSnapshot(proposalId);
+        uint256 voteQuorum_ = voteQuorum(snapshot);
+        uint256 valueQuorum_ = valueQuorum(snapshot);
+
+        // TODO: fix checks with 0 quorum
+        if (proposalType == ProposalType.Vote) {
+            return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0;
+        }
+        if (proposalType == ProposalType.Value) {
+            return valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
+        }
+        if (proposalType == ProposalType.Double) {
+            return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0
+                && valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
+        }
+
+        revert InvalidProposal();
     }
 
     /// @dev See {Governor-_voteSucceeded}.
@@ -274,11 +392,33 @@ contract SPOGGovernor is SPOGGovernorBase {
         return _quorumReached(proposalId);
     }
 
-    /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
+    function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
-        override
+        view
+        virtual
+        returns (uint256)
     {
+        return vote.getPastVotes(account, timepoint);
+    }
+
+    function _getValueVotes(address account, uint256 timepoint, bytes memory /*params*/ )
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        return value.getPastVotes(account, timepoint);
+    }
+
+    /// @dev See {Governor-_countVote}.
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256 voteVotes,
+        uint256 valueVotes,
+        bytes memory
+    ) internal virtual {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         if (proposalVote.hasVoted[account]) {
@@ -287,10 +427,16 @@ contract SPOGGovernor is SPOGGovernorBase {
         proposalVote.hasVoted[account] = true;
 
         if (support == uint8(VoteType.No)) {
-            proposalVote.noVotes += votes;
+            proposalVote.voteNoVotes += voteVotes;
+            proposalVote.valueNoVotes += valueVotes;
         } else {
-            proposalVote.yesVotes += votes;
+            proposalVote.voteYesVotes += voteVotes;
+            proposalVote.valueYesVotes += valueVotes;
         }
+    }
+
+    function _countVote(uint256, address, uint8, uint256, bytes memory) internal virtual override {
+        revert("Not implemented");
     }
 
     fallback() external {

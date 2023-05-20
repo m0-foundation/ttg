@@ -35,7 +35,8 @@ contract VoteVault is IVoteVault, ValueVault {
     /// @notice Sell unclaimed vote tokens
     /// @param epoch Epoch to view unclaimed tokens
     function auctionableVoteRewards(uint256 epoch) public view override returns (uint256) {
-        address token = address(governor.votingToken());
+        // TODO: fix governor
+        address token = address(governor.vote());
         return epochTokenDeposit[token][epoch] - epochTokenTotalWithdrawn[token][epoch];
     }
 
@@ -50,7 +51,8 @@ contract VoteVault is IVoteVault, ValueVault {
     {
         if (epoch >= governor.currentEpoch()) revert InvalidEpoch(epoch, governor.currentEpoch());
 
-        address token = address(governor.votingToken());
+        // TODO: fix that!!!
+        address token = address(governor.vote());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
         uint256 unclaimed = auctionableVoteRewards(epoch);
@@ -73,7 +75,8 @@ contract VoteVault is IVoteVault, ValueVault {
         override(IValueVault, ValueVault)
         returns (uint256)
     {
-        address valueToken = IVoteToken(address(governor.votingToken())).valueToken();
+        // TODO: fix here as well when governor is one
+        address valueToken = IVoteToken(address(governor.vote())).valueToken();
         uint256 currentEpoch = governor.currentEpoch();
         uint256 length = epochs.length;
         uint256 totalRewards;
@@ -99,7 +102,8 @@ contract VoteVault is IVoteVault, ValueVault {
     // @notice Update vote governor after `RESET` was executed
     // @param newGovernor New vote governor
     function updateGovernor(SPOGGovernorBase newGovernor) external onlySPOG {
-        emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.votingToken()));
+        // TODO: fix here as well when governor is one
+        emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.vote()));
 
         governor = newGovernor;
     }

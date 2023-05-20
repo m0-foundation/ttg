@@ -18,25 +18,17 @@ abstract contract SPOGStorage is ISPOG {
     uint256 public immutable valueFixedInflationAmount;
 
     // @note The vote governor can be changed by value governance with `RESET` proposal
-    SPOGGovernorBase public voteGovernor;
-    SPOGGovernorBase public immutable valueGovernor;
+    SPOGGovernorBase public governor;
 
-    modifier onlyVoteGovernor() {
-        if (msg.sender != address(voteGovernor)) revert OnlyVoteGovernor();
-
-        _;
-    }
-
-    modifier onlyValueGovernor() {
-        if (msg.sender != address(valueGovernor)) revert OnlyValueGovernor();
+    modifier onlyGovernor() {
+        if (msg.sender != address(governor)) revert OnlyGovernor();
 
         _;
     }
 
     constructor(
         bytes memory _initSPOGData,
-        SPOGGovernorBase _voteGovernor,
-        SPOGGovernorBase _valueGovernor,
+        SPOGGovernorBase _governor,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -44,30 +36,20 @@ abstract contract SPOGStorage is ISPOG {
     ) {
         initSPOGData(_initSPOGData);
 
-        if (address(_voteGovernor) == address(_valueGovernor)) revert GovernorsShouldNotBeSame();
-
-        if (address(_voteGovernor) == address(0) || address(_valueGovernor) == address(0)) revert ZeroAddress();
+        if (address(_voteGovernor) == address(0)) revert ZeroAddress();
 
         if (_time == 0 || _voteQuorum == 0 || _valueQuorum == 0 || _valueFixedInflationAmount == 0) revert ZeroValues();
 
-        voteGovernor = _voteGovernor;
-        valueGovernor = _valueGovernor;
+        governor = _governor;
 
         valueFixedInflationAmount = _valueFixedInflationAmount;
 
         // set SPOG address in vote governor
-        voteGovernor.initSPOGAddress(address(this));
+        governor.initSPOGAddress(address(this));
 
         // set quorum and voting period for vote governor
-        voteGovernor.updateQuorumNumerator(_voteQuorum);
-        voteGovernor.updateVotingTime(_time);
-
-        // set SPOG address in value governor
-        valueGovernor.initSPOGAddress(address(this));
-
-        // set quorum and voting period for value governor
-        valueGovernor.updateQuorumNumerator(_valueQuorum);
-        valueGovernor.updateVotingTime(_time);
+        governor.updateQuorumNumerator(_voteQuorum);
+        governor.updateVotingTime(_time);
     }
 
     /// @param _initSPOGData The data used to initialize spogData
@@ -92,7 +74,7 @@ abstract contract SPOGStorage is ISPOG {
         return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
-    function changeTax(uint256 _tax) external onlyVoteGovernor {
+    function changeTax(uint256 _tax) external onlyGovernor {
         if (_tax < spogData.taxRange[0] || _tax > spogData.taxRange[1]) revert TaxOutOfRange();
 
         spogData.tax = _tax;
@@ -103,7 +85,7 @@ abstract contract SPOGStorage is ISPOG {
     /// @dev file double quorum function to change the following values: cash, taxRange, inflator, time, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
-    function change(bytes32 what, bytes calldata value) external override onlyVoteGovernor {
+    function change(bytes32 what, bytes calldata value) external override onlyGovernor {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
 
         _changeWithDoubleQuorum(what, value);

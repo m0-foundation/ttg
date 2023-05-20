@@ -25,6 +25,7 @@ contract SPOGGovernorFactory {
     ) public returns (SPOGGovernor) {
         SPOGGovernor governor = new SPOGGovernor{salt: bytes32(_salt)}(
             votingTokenContract,
+            votingTokenContract,
             quorumNumeratorValue,
             votingPeriod_,
             name_

@@ -12,13 +12,40 @@ interface ISPOGGovernor is IGovernorVotesQuorumFraction {
     error ArrayLengthsMismatch();
     error EpochInThePast(uint256 epoch, uint256 currentEpoch);
 
+    // Errors
+    error InvalidParameter(bytes32 what);
+    error ListAdminIsNotSPOG();
+    error ListIsNotInMasterList();
+    error ListIsAlreadyInMasterList();
+    error InvalidProposal();
+    error NotGovernedMethod(bytes4 funcSelector);
+    error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
+    error ValueGovernorDidNotApprove(uint256 proposalId);
+    error ValueTokenMistmatch();
+    error GovernorsShouldNotBeSame();
+    error VaultAddressCannotBeZero();
+    error ZeroAddress();
+    error ZeroValues();
+    error InitTaxOutOfRange();
+    error InitCashAndInflatorCannotBeZero();
+    error TaxOutOfRange();
+    error OnlyGovernor();
+
     // Events
     event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
 
     struct ProposalVote {
-        uint256 noVotes;
-        uint256 yesVotes;
+        uint256 voteNoVotes;
+        uint256 voteYesVotes;
+        uint256 valueNoVotes;
+        uint256 valueYesVotes;
         mapping(address => bool) hasVoted;
+    }
+
+    enum ProposalType {
+        Value,
+        Vote,
+        Double
     }
 
     /// @dev Supported vote types.
@@ -30,7 +57,8 @@ interface ISPOGGovernor is IGovernorVotesQuorumFraction {
     // public variables
     function spogAddress() external view returns (address);
 
-    function votingToken() external view returns (ISPOGVotes);
+    function vote() external view returns (ISPOGVotes);
+    function value() external view returns (ISPOGVotes);
 
     // public mappings
     function emergencyProposals(uint256 proposalId) external view returns (bool);
@@ -51,7 +79,8 @@ interface ISPOGGovernor is IGovernorVotesQuorumFraction {
 
     function initSPOGAddress(address) external;
 
-    function proposalVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
+    // function proposalVoteVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
+    // function proposalValueVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
 
     function updateVotingTime(uint256 newVotingTime) external;
 

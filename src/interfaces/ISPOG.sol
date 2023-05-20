@@ -62,20 +62,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function voteTokenInflationPerEpoch() external view returns (uint256);
     function valueTokenInflationPerEpoch() external view returns (uint256);
 
-    // Governance process functions
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) external returns (uint256);
-
-    function execute(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) external returns (uint256);
+    function governedMethods(bytes4 func) external view returns (bool);
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
