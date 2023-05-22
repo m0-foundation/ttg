@@ -13,7 +13,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event NewListAdded(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
     event AddressRemovedFromList(address indexed _list, address indexed _address);
-    event EmergencyExecuted(bytes4 indexed target, bytes callData);
+    event EmergencyExecuted(bytes4 indexed selector, bytes callData);
     event TaxChanged(uint256 indexed tax);
     event NewVoteQuorumProposal(uint256 indexed proposalId);
     event NewValueQuorumProposal(uint256 indexed proposalId);
