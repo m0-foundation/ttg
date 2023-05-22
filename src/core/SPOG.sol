@@ -145,19 +145,21 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     }
 
     /// @notice Emergency version of existing methods
-    /// @param selector The target method to be executed
+    /// @param emergencyType The type of emergency method to be called (See enum in ISPOG)
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
     // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
     // TODO: IMPORTANT: implement immediate remove
-    function emergency(bytes4 selector, bytes calldata callData) external override onlyVoteGovernor {
-        if (selector == this.remove.selector) {
+    function emergency(uint8 emergencyType, bytes calldata callData) external override onlyVoteGovernor {
+        EmergencyType _emergencyType = EmergencyType(emergencyType);
+
+        if (_emergencyType == EmergencyType.Remove) {
             (address _address, IList _list) = abi.decode(callData, (address, IList));
             remove(_address, _list);
-        } else if (selector == this.append.selector) {
+        } else if (_emergencyType == EmergencyType.Append) {
             (address _address, IList _list) = abi.decode(callData, (address, IList));
             append(_address, _list);
-        } else if (selector == this.changeConfig.selector) {
+        } else if (_emergencyType == EmergencyType.ChangeConfig) {
             (bytes32 configName, address configAddress, bytes4 interfaceId) =
                 abi.decode(callData, (bytes32, address, bytes4));
             super.changeConfig(configName, configAddress, interfaceId);
@@ -165,7 +167,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
             revert EmergencyMethodNotSupported();
         }
 
-        emit EmergencyExecuted(selector, callData);
+        emit EmergencyExecuted(emergencyType, callData);
     }
 
     /*//////////////////////////////////////////////////////////////

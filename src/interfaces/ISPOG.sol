@@ -9,11 +9,17 @@ import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
+    enum EmergencyType {
+        Remove,
+        Append,
+        ChangeConfig
+    }
+
     // Events
     event NewListAdded(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
     event AddressRemovedFromList(address indexed _list, address indexed _address);
-    event EmergencyExecuted(bytes4 indexed selector, bytes callData);
+    event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 indexed tax);
     event NewVoteQuorumProposal(uint256 indexed proposalId);
     event NewValueQuorumProposal(uint256 indexed proposalId);
@@ -54,7 +60,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function addNewList(IList list) external;
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
-    function emergency(bytes4 selector, bytes calldata callData) external;
+    function emergency(uint8 emergencyType, bytes calldata callData) external;
     function reset(SPOGGovernorBase newVoteGovernor) external;
     function change(bytes32 what, bytes calldata value) external;
     function changeTax(uint256 _tax) external;

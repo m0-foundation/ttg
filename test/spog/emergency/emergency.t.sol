@@ -3,8 +3,9 @@ pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
-contract SPOG_emergencyRemove is SPOG_Base {
+contract SPOG_emergency is SPOG_Base {
     address internal addressToRemove;
     uint8 internal yesVote;
     uint8 internal noVote;
@@ -26,7 +27,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    function createEmergencyProposal()
+    function createEmergencyRemoveProposal()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -34,7 +35,6 @@ contract SPOG_emergencyRemove is SPOG_Base {
         assertTrue(list.contains(addressToRemove), "Address is not in the list");
 
         // the actual proposal to wrap as an emergency
-        bytes4 selector = spog.remove.selector;
         bytes memory callData = abi.encode(addressToRemove, address(list));
 
         // the emergency proposal
@@ -43,7 +43,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("emergency(bytes4,bytes)", selector, callData);
+        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Remove), callData);
         string memory description = "Emergency remove of merchant";
 
         (bytes32 hashedDescription, uint256 proposalId) =
@@ -60,8 +60,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function test_Revert_EmergencyRemove_WhenNotEnoughTaxPaid() public {
-        bytes4 selector = spog.remove.selector;
+    function test_Revert_Emergency_WhenNotEnoughTaxPaid() public {
         bytes memory callData = abi.encode(addressToRemove, address(list));
 
         address[] memory targets = new address[](1);
@@ -69,7 +68,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("emergency(bytes4,bytes)", selector, callData);
+        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Remove), callData);
         string memory description = "Emergency remove of merchant";
 
         // emergency propose, 12 * tax price is needed, but only 1 * tax is approved to be paid
@@ -78,7 +77,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         spog.propose(targets, values, calldatas, description);
     }
 
-    function test_Revert_EmergencyRemove_WhenQuorumWasNotReached() public {
+    function test_Revert_Emergency_WhenQuorumWasNotReached() public {
         // create proposal to emergency remove address from list
         (
             uint256 proposalId,
@@ -86,7 +85,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyProposal();
+        ) = createEmergencyRemoveProposal();
 
         // Emergency proposal is in the governor list
         assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -116,7 +115,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         assertTrue(list.contains(addressToRemove), "Address is not in the list");
     }
 
-    function test_EmergencyRemove_BeforeDeadlineEnd() public {
+    function test_Emergency_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
         uint256 votingPeriodBeforeER = voteGovernor.votingPeriod();
         uint256 balanceBeforeProposal = deployScript.cash().balanceOf(address(valueVault));
@@ -126,7 +125,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyProposal();
+        ) = createEmergencyRemoveProposal();
 
         // Check that tax was paid
         uint256 balanceAfterProposal = deployScript.cash().balanceOf(address(valueVault));
@@ -163,11 +162,11 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // check proposal was executed
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
-        // assert that address is in the list
+        // assert that address is not in the list
         assertFalse(list.contains(addressToRemove), "Address is still in the list");
     }
 
-    function test_EmergencyRemove_AfterDeadlineEnd() public {
+    function test_Emergency_AfterDeadlineEnd() public {
         // create proposal to emergency remove address from list
         (
             uint256 proposalId,
@@ -175,7 +174,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyProposal();
+        ) = createEmergencyRemoveProposal();
 
         // Emergency proposal is in the governor list
         assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -194,17 +193,17 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // check proposal was executed
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
-        // assert that address is in the list
+        // assert that address is not in the list
         assertFalse(list.contains(addressToRemove), "Address is still in the list");
     }
 
-    function test_EmergencyRemove_VoteAndValueTokensAreNotInflated() public {
+    function test_Emergency_VoteAndValueTokensAreNotInflated() public {
         uint256 voteTokenInitialBalanceForVault = spogVote.balanceOf(address(voteVault));
         uint256 valueTokenInitialBalanceForVault = spogValue.balanceOf(address(voteVault));
         uint256 voteTotalBalance = spogVote.totalSupply();
         uint256 valueTotalBalance = spogValue.totalSupply();
 
-        createEmergencyProposal();
+        createEmergencyRemoveProposal();
 
         uint256 voteTokenBalanceAfterProposal = spogVote.balanceOf(address(voteVault));
         uint256 valueTokenBalanceAfterProposal = spogValue.balanceOf(address(voteVault));
