@@ -58,8 +58,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param _valueFixedInflationAmount The fixed inflation amount for the $VALUE token
-    /// @param _voteGovernor The address of the `SPOGGovernor` which $VOTE token is used for voting
-    /// @param _valueGovernor The address of the `SPOGGovernor` which $VALUE token is used for voting
+    /// @param _governor The address of the `SPOGGovernor`
     constructor(
         bytes memory _initSPOGData,
         IVoteVault _voteVault,
@@ -93,7 +92,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(IList list) external override onlyVoteGovernor {
+    function addNewList(IList list) external override onlyGovernance {
         if (list.admin() != address(this)) {
             revert ListAdminIsNotSPOG();
         }
@@ -105,7 +104,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external override onlyVoteGovernor {
+    function append(address _address, IList _list) external override onlyGovernance {
         // require that the list is on the master list
         if (!masterlist.contains(address(_list))) {
             revert ListIsNotInMasterList();
@@ -120,7 +119,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice Remove an address from a list
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external override onlyVoteGovernor {
+    function remove(address _address, IList _list) external override onlyGovernance {
         _removeFromList(_address, _list);
         emit AddressRemovedFromList(address(_list), _address);
     }
@@ -131,7 +130,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param _list The list from which the address will be removed
     // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
     // TODO: IMPORTANT: implement immediate remove
-    function emergencyRemove(address _address, IList _list) external override onlyVoteGovernor {
+    function emergencyRemove(address _address, IList _list) external override onlyGovernance {
         _removeFromList(_address, _list);
         emit EmergencyAddressRemovedFromList(address(_list), _address);
     }
@@ -143,7 +142,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
         public
         override(IProtocolConfigurator, ProtocolConfigurator)
-        onlyVoteGovernor
+        onlyGovernance
     {
         return super.changeConfig(configName, configAddress, interfaceId);
     }
@@ -154,27 +153,27 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(SPOGGovernorBase newVoteGovernor) external onlyValueGovernor {
+    function reset(SPOGGovernorBase newGovernor) external onlyGovernance {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
-        IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.vote()));
-        IValueToken valueToken = IValueToken(address(valueGovernor.value()));
+        IVoteToken newVoteToken = IVoteToken(address(newGovernor.vote()));
+        IValueToken valueToken = IValueToken(address(newGovernor.value()));
         if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         // Update vote governance in the vault
         // TODO: how to avoid this ?
-        IVoteVault(voteVault).updateGovernor(newVoteGovernor);
+        IVoteVault(voteVault).updateGovernor(newGovernor);
 
-        voteGovernor = newVoteGovernor;
+        governor = newGovernor;
         // Important: initialize SPOG address in the new vote governor
-        voteGovernor.initSPOGAddress(address(this));
+        governor.initSPOGAddress(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
         uint256 resetSnapshotId = valueToken.snapshot();
         newVoteToken.initReset(resetSnapshotId);
 
-        emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
+        emit SPOGResetExecuted(address(newVoteToken), address(newGovernor));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -184,12 +183,12 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellUnclaimedVoteTokens(uint256 epoch) public {
-        voteVault.sellUnclaimedVoteTokens(epoch, address(spogData.cash), voteGovernor.votingPeriod());
+        voteVault.sellUnclaimedVoteTokens(epoch, address(spogData.cash), governor.votingPeriod());
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
     function voteTokenInflationPerEpoch() public view returns (uint256) {
-        return (voteGovernor.vote().totalSupply() * spogData.inflator) / 100;
+        return (governor.vote().totalSupply() * spogData.inflator) / 100;
     }
 
     /// @notice returns number of value token rewards for an epoch with active proposals
@@ -243,14 +242,14 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         spogData.cash.approve(address(valueVault), fee);
 
         // deposit the amount to the vault
-        uint256 epoch = valueGovernor.currentEpoch();
+        uint256 epoch = governor.currentEpoch();
         valueVault.depositRewards(epoch, address(spogData.cash), fee);
     }
 
     /// @notice inflate Vote and Value token supplies
     /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
     function _inflateRewardTokens() private {
-        uint256 nextEpoch = voteGovernor.currentEpoch() + 1;
+        uint256 nextEpoch = governor.currentEpoch() + 1;
 
         // Epoch reward tokens already minted, silently return
         if (epochRewardsMinted[nextEpoch]) return;
@@ -258,8 +257,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         epochRewardsMinted[nextEpoch] = true;
 
         // Mint and deposit Vote and Value rewards to vault
-        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.vote(), voteTokenInflationPerEpoch());
-        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.value(), valueTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteTokenInflationPerEpoch());
+        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueTokenInflationPerEpoch());
     }
 
     /// @notice mint reward token into the vault

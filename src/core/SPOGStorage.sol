@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -20,7 +20,7 @@ abstract contract SPOGStorage is ISPOG {
     // @note The vote governor can be changed by value governance with `RESET` proposal
     SPOGGovernorBase public governor;
 
-    modifier onlyGovernor() {
+    modifier onlyGovernance() {
         if (msg.sender != address(governor)) revert OnlyGovernor();
 
         _;
@@ -36,7 +36,7 @@ abstract contract SPOGStorage is ISPOG {
     ) {
         initSPOGData(_initSPOGData);
 
-        if (address(_voteGovernor) == address(0)) revert ZeroAddress();
+        if (address(_governor) == address(0)) revert ZeroAddress();
 
         if (_time == 0 || _voteQuorum == 0 || _valueQuorum == 0 || _valueFixedInflationAmount == 0) revert ZeroValues();
 
@@ -74,7 +74,7 @@ abstract contract SPOGStorage is ISPOG {
         return (spogData.taxRange[0], spogData.taxRange[1]);
     }
 
-    function changeTax(uint256 _tax) external onlyGovernor {
+    function changeTax(uint256 _tax) external onlyGovernance {
         if (_tax < spogData.taxRange[0] || _tax > spogData.taxRange[1]) revert TaxOutOfRange();
 
         spogData.tax = _tax;
@@ -85,7 +85,7 @@ abstract contract SPOGStorage is ISPOG {
     /// @dev file double quorum function to change the following values: cash, taxRange, inflator, time, voteQuorum, and valueQuorum.
     /// @param what The value to be changed
     /// @param value The new value
-    function change(bytes32 what, bytes calldata value) external override onlyGovernor {
+    function change(bytes32 what, bytes calldata value) external override onlyGovernance {
         bytes32 identifier = keccak256(abi.encodePacked(what, value));
 
         _changeWithDoubleQuorum(what, value);
@@ -105,14 +105,14 @@ abstract contract SPOGStorage is ISPOG {
             spogData.inflator = abi.decode(value, (uint256));
         } else if (what == "time") {
             uint256 decodedTime = abi.decode(value, (uint256));
-            voteGovernor.updateVotingTime(decodedTime);
-            valueGovernor.updateVotingTime(decodedTime);
+            governor.updateVotingTime(decodedTime);
         } else if (what == "voteQuorum") {
             uint256 decodedVoteQuorum = abi.decode(value, (uint256));
-            voteGovernor.updateQuorumNumerator(decodedVoteQuorum);
+            governor.updateQuorumNumerator(decodedVoteQuorum);
         } else if (what == "valueQuorum") {
+            // TODO: incorrect, find solution for value and vote quorums
             uint256 decodedValueQuorum = abi.decode(value, (uint256));
-            valueGovernor.updateQuorumNumerator(decodedValueQuorum);
+            governor.updateQuorumNumerator(decodedValueQuorum);
         } else {
             revert InvalidParameter(what);
         }

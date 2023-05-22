@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 

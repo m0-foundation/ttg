@@ -2,21 +2,24 @@
 
 pragma solidity 0.8.19;
 
-import {SPOGGovernorBase, ISPOGVotes, Governor, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {Governor} from "@openzeppelin/contracts/governance/Governor.sol";
+
+import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
+import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
 /// @title SPOG Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin.
-contract SPOGGovernor is SPOGGovernorBase {
+contract DualGovernor is ISPOGGovernor, Governor, DualGovernorQuorumFraction {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
-    ISPOGVotes public immutable vote;
-    ISPOGVotes public immutable value;
+    address public spogAddress;
 
     uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
     uint256 private _votingPeriodChangedEpoch;
+
     // @note voting with no delay is required for certain proposals
     bool private _emergencyVotingIsOn;
 
@@ -33,20 +36,25 @@ contract SPOGGovernor is SPOGGovernorBase {
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
 
+    uint256 public quorumNumerator;
+
+    modifier onlySPOG() {
+        if (msg.sender != spogAddress) revert CallerIsNotSPOG(msg.sender);
+
+        _;
+    }
+
     constructor(
         ISPOGVotes vote_,
         ISPOGVotes value_,
-        uint256 quorumNumerator,
+        uint256 quorumNumerator_,
         uint256 votingPeriod_,
         string memory name_
-    ) SPOGGovernorBase(vote_, quorumNumerator, name_) {
-        vote = vote_;
-        value = value_;
+    ) Governor(name_), DualGovernorQuorumFraction(vote_, value_, quorumNumerator_, quorumNumerator_) {
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
     }
 
-    /// @inheritdoc SPOGGovernorBase
     function initSPOGAddress(address _spogAddress) external override {
         if (spogAddress != address(0)) {
             revert SPOGAddressAlreadySet(spogAddress);
@@ -79,67 +87,6 @@ contract SPOGGovernor is SPOGGovernorBase {
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
 
         return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
-    }
-
-    /// @dev Allows batch voting
-    /// @notice Uses same params as castVote, but in arrays.
-    /// @param proposalIds an array of proposalIds
-    /// @param support an array of vote values for each proposal
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support)
-        public
-        override
-        returns (uint256[] memory)
-    {
-        if (proposalIds.length != support.length) {
-            revert ArrayLengthsMismatch();
-        }
-
-        uint256[] memory results = new uint256[](proposalIds.length);
-        for (uint256 i; i < proposalIds.length;) {
-            results[i] = castVote(proposalIds[i], support[i]);
-            unchecked {
-                ++i;
-            }
-        }
-        return results;
-    }
-
-    /// @dev Allows batch voting
-    /// @notice Uses same params as castVote, but in arrays.
-    /// @param proposalIds an array of proposalIds
-    /// @param support an array of vote values for each proposal
-    /// @param v an array of v values for each proposal signature
-    /// @param r an array of r values for each proposal signature
-    /// @param s an array of s values for each proposal signature
-    function castVotesBySig(
-        uint256[] calldata proposalIds,
-        uint8[] calldata support,
-        uint8[] calldata v,
-        bytes32[] calldata r,
-        bytes32[] calldata s
-    ) public virtual returns (uint256[] memory) {
-        if (
-            proposalIds.length != support.length || proposalIds.length != v.length || proposalIds.length != r.length
-                || proposalIds.length != s.length
-        ) {
-            revert ArrayLengthsMismatch();
-        }
-
-        uint256[] memory results = new uint256[](proposalIds.length);
-        for (uint256 i; i < proposalIds.length;) {
-            results[i] = castVoteBySig(proposalIds[i], support[i], v[i], r[i], s[i]);
-            unchecked {
-                ++i;
-            }
-        }
-        return results;
-    }
-
-    /// @dev Allows provide EIP-712 digest for vote by sig
-    /// @param proposalId the proposal id
-    /// @param support yes or no
-    function hashVote(uint256 proposalId, uint8 support) public view returns (bytes32) {
-        return _hashTypedDataV4(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId, support)));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -177,7 +124,7 @@ contract SPOGGovernor is SPOGGovernorBase {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override(Governor, GovernorBase) returns (uint256) {
+    ) public override returns (uint256) {
         // update epochProposalsCount. Proposals are voted on in the next epoch
         epochProposalsCount[currentEpoch() + 1]++;
 
@@ -308,7 +255,7 @@ contract SPOGGovernor is SPOGGovernorBase {
     /**
      * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
      */
-    function state(uint256 proposalId) public view override(Governor, GovernorBase) returns (ProposalState) {
+    function state(uint256 proposalId) public view override returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
@@ -341,26 +288,6 @@ contract SPOGGovernor is SPOGGovernorBase {
     /// @dev See {GovernorBase-hasVoted}.
     function hasVoted(uint256 proposalId, address account) public view override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
-    }
-
-    // /// @dev Accessor to the internal vote counts.
-    // function proposalVoteVotes(uint256 proposalId) public view override returns (uint256 noVotes, uint256 yesVotes) {
-    //     ProposalVote storage proposalVote = _proposalVotes[proposalId];
-    //     return (proposalVote.noVotes, proposalVote.yesVotes);
-    // }
-
-    /**
-     * @dev Returns the quorum for a timepoint, in terms of number of votes: `supply * numerator / denominator`.
-     */
-    function voteQuorum(uint256 timepoint) public view virtual returns (uint256) {
-        return (vote.getPastTotalSupply(timepoint) * quorumNumerator(timepoint)) / quorumDenominator();
-    }
-
-    /**
-     * @dev Returns the quorum for a timepoint, in terms of number of votes: `supply * numerator / denominator`.
-     */
-    function valueQuorum(uint256 timepoint) public view virtual returns (uint256) {
-        return (value.getPastTotalSupply(timepoint) * quorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @dev See {Governor-_quorumReached}.

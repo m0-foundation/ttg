@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
 interface IVoteVault is IValueVault {

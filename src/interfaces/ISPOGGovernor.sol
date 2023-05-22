@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {IGovernorVotesQuorumFraction} from "src/interfaces/IGovernorVotesQuorumFraction.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
-interface ISPOGGovernor is IGovernorVotesQuorumFraction {
+interface ISPOGGovernor {
     // Errors
     error CallerIsNotSPOG(address caller);
     error SPOGAddressAlreadySet(address spog);
@@ -13,22 +12,8 @@ interface ISPOGGovernor is IGovernorVotesQuorumFraction {
     error EpochInThePast(uint256 epoch, uint256 currentEpoch);
 
     // Errors
-    error InvalidParameter(bytes32 what);
-    error ListAdminIsNotSPOG();
-    error ListIsNotInMasterList();
-    error ListIsAlreadyInMasterList();
     error InvalidProposal();
     error NotGovernedMethod(bytes4 funcSelector);
-    error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
-    error ValueGovernorDidNotApprove(uint256 proposalId);
-    error ValueTokenMistmatch();
-    error GovernorsShouldNotBeSame();
-    error VaultAddressCannotBeZero();
-    error ZeroAddress();
-    error ZeroValues();
-    error InitTaxOutOfRange();
-    error InitCashAndInflatorCannotBeZero();
-    error TaxOutOfRange();
     error OnlyGovernor();
 
     // Events

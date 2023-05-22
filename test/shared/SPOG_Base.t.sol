@@ -6,7 +6,7 @@ import {BaseTest} from "test/Base.t.sol";
 import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
 import "src/core/SPOG.sol";
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
 import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
 import {List} from "src/periphery/List.sol";
