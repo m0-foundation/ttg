@@ -14,7 +14,7 @@ contract SPOG_AddNewList is SPOG_Base {
 
     function test_Revert_WhenListAdminIsNotSPOG() external {
         // set list admin to different spog
-        SPOG spog2 = deployScript.createSpog();
+        SPOG spog2 = deployScript.createSpog(true);
         vm.prank(address(spog));
         list.changeAdmin(address(spog2));
 
