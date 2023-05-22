@@ -23,6 +23,8 @@ import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
+import "forge-std/console.sol";
+
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -40,7 +42,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     mapping(bytes4 => bool) public governedMethods;
 
     uint256 private constant inMasterList = 1;
-    uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
+    uint256 public constant EMERGENCY_TAX_MULTIPLIER = 12;
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
     // List of addresses that are part of the masterlist
@@ -116,14 +118,15 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external override onlyVoteGovernor {
+    function append(address _address, IList _list) public override onlyVoteGovernor {
         // require that the list is on the master list
         if (!masterlist.contains(address(_list))) {
             revert ListIsNotInMasterList();
         }
 
-        // append the address to the list
+        // add the address to the list
         _list.add(_address);
+
         emit AddressAppendedToList(address(_list), _address);
     }
 
@@ -131,20 +134,43 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @notice Remove an address from a list
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external override onlyVoteGovernor {
-        _removeFromList(_address, _list);
+    function remove(address _address, IList _list) public override onlyVoteGovernor {
+        // require that the list is on the master list
+        if (!masterlist.contains(address(_list))) {
+            revert ListIsNotInMasterList();
+        }
+
+        // remove the address from the list
+        _list.remove(_address);
+
         emit AddressRemovedFromList(address(_list), _address);
     }
 
-    // create function to remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @param _address The address to be removed from the list
-    /// @param _list The list from which the address will be removed
-    // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
-    // TODO: IMPORTANT: implement immediate remove
-    function emergencyRemove(address _address, IList _list) external override onlyVoteGovernor {
-        _removeFromList(_address, _list);
-        emit EmergencyAddressRemovedFromList(address(_list), _address);
+    /// @notice Emergency version of existing methods
+    /// @param selector The target method to be executed
+    /// @param callData The data to be used for the target method
+    /// @dev Emergency methods are encoded much like change proposals
+    function emergency(bytes4 selector, bytes calldata callData) external override onlyVoteGovernor {
+        console.log("Emergency execute");
+        if (selector == this.remove.selector) {
+            (address _address, IList _list) = abi.decode(callData, (address, IList));
+            console.log("Emergency remove", _address, address(_list));
+
+            remove(_address, _list);
+        } else if (selector == this.append.selector) {
+            (address _address, IList _list) = abi.decode(callData, (address, IList));
+
+            append(_address, _list);
+        } else if (selector == this.changeConfig.selector) {
+            (bytes32 configName, address configAddress, bytes4 interfaceId) =
+                abi.decode(callData, (bytes32, address, bytes4));
+
+            super.changeConfig(configName, configAddress, interfaceId);
+        } else {
+            revert EmergencyMethodNotSupported();
+        }
+
+        emit EmergencyExecuted(selector, callData);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -156,7 +182,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         override(IProtocolConfigurator, ProtocolConfigurator)
         onlyVoteGovernor
     {
-        return super.changeConfig(configName, configAddress, interfaceId);
+        super.changeConfig(configName, configAddress, interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -231,7 +257,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         _payFee(executableFuncSelector);
 
         // Inflate Vote and Value token supply unless method is reset or emergencyRemove
-        if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergencyRemove.selector) {
+        if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergency.selector) {
             _inflateRewardTokens();
         }
 
@@ -272,7 +298,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         }
 
         // Register emergency proposal with vote governor
-        if (executableFuncSelector == this.emergencyRemove.selector) {
+        if (executableFuncSelector == this.emergency.selector) {
             voteGovernor.turnOnEmergencyVoting();
 
             proposalId = voteGovernor.propose(targets, values, calldatas, description);
@@ -365,7 +391,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         governedMethods[this.remove.selector] = true;
         governedMethods[this.addNewList.selector] = true;
         governedMethods[this.change.selector] = true;
-        governedMethods[this.emergencyRemove.selector] = true;
+        governedMethods[this.emergency.selector] = true;
         governedMethods[this.reset.selector] = true;
         governedMethods[this.changeConfig.selector] = true;
     }
@@ -376,8 +402,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         uint256 fee;
 
         // Pay flat fee for all the operations except emergency remove and reset
-        if (funcSelector == this.emergencyRemove.selector) {
-            fee = EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax;
+        if (funcSelector == this.emergency.selector) {
+            fee = EMERGENCY_TAX_MULTIPLIER * spogData.tax;
         } else if (funcSelector == this.reset.selector) {
             fee = RESET_TAX_MULTIPLIER * spogData.tax;
         } else {
@@ -417,16 +443,6 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         token.mint(address(this), amount);
         token.approve(address(voteVault), amount);
         voteVault.depositRewards(epoch, address(token), amount);
-    }
-
-    function _removeFromList(address _address, IList _list) private {
-        // require that the list is on the master list
-        if (!masterlist.contains(address(_list))) {
-            revert ListIsNotInMasterList();
-        }
-
-        // remove the address from the list
-        _list.remove(_address);
     }
 
     /// @notice extract address params from the call data

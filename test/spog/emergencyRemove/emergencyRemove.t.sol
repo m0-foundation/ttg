@@ -33,19 +33,24 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // assert that address is in the list
         assertTrue(list.contains(addressToRemove), "Address is not in the list");
 
+        // the actual proposal to wrap as an emergency
+        bytes4 selector = spog.remove.selector;
+        bytes memory callData = abi.encode(addressToRemove, address(list));
+
+        // the emergency proposal
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("emergencyRemove(address,address)", addressToRemove, address(list));
+        calldatas[0] = abi.encodeWithSignature("emergency(bytes4,bytes)", selector, callData);
         string memory description = "Emergency remove of merchant";
 
         (bytes32 hashedDescription, uint256 proposalId) =
             getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
 
         // emergency propose, 12 * tax price
-        deployScript.cash().approve(address(spog), spog.EMERGENCY_REMOVE_TAX_MULTIPLIER() * deployScript.tax());
+        deployScript.cash().approve(address(spog), spog.EMERGENCY_TAX_MULTIPLIER() * deployScript.tax());
 
         // Check that `NewEmergencyProposal` event is emitted
         expectEmit();
@@ -56,15 +61,18 @@ contract SPOG_emergencyRemove is SPOG_Base {
     }
 
     function test_Revert_EmergencyRemove_WhenNotEnoughTaxPaid() public {
+        bytes4 selector = spog.remove.selector;
+        bytes memory callData = abi.encode(addressToRemove, address(list));
+
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("emergencyRemove(address,address)", addressToRemove, address(list));
+        calldatas[0] = abi.encodeWithSignature("emergency(bytes4,bytes)", selector, callData);
         string memory description = "Emergency remove of merchant";
 
-        // emergency propose, 12 * tax price is needed, but 1 * tax is allowed to be paid
+        // emergency propose, 12 * tax price is needed, but only 1 * tax is approved to be paid
         deployScript.cash().approve(address(spog), deployScript.tax());
         vm.expectRevert("ERC20: insufficient allowance");
         spog.propose(targets, values, calldatas, description);
@@ -124,9 +132,11 @@ contract SPOG_emergencyRemove is SPOG_Base {
         uint256 balanceAfterProposal = deployScript.cash().balanceOf(address(valueVault));
         assertEq(
             balanceAfterProposal - balanceBeforeProposal,
-            spog.EMERGENCY_REMOVE_TAX_MULTIPLIER() * deployScript.tax(),
+            spog.EMERGENCY_TAX_MULTIPLIER() * deployScript.tax(),
             "Emergency proposal costs 12x tax"
         );
+
+        console.log("1");
 
         // Emergency proposal is in the governor list
         assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -147,10 +157,14 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // cast vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
 
+        console.log("2");
+
         // check proposal is succeeded
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         spog.execute(targets, values, calldatas, hashedDescription);
+
+        console.log("3");
 
         // check proposal was executed
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");

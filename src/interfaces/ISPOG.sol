@@ -13,7 +13,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event NewListAdded(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
     event AddressRemovedFromList(address indexed _list, address indexed _address);
-    event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
+    event EmergencyExecuted(bytes4 indexed target, bytes callData);
     event TaxChanged(uint256 indexed tax);
     event NewVoteQuorumProposal(uint256 indexed proposalId);
     event NewValueQuorumProposal(uint256 indexed proposalId);
@@ -23,6 +23,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
+    error EmergencyMethodNotSupported();
     error InvalidParameter(bytes32 what);
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
@@ -53,7 +54,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function addNewList(IList list) external;
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
-    function emergencyRemove(address _address, IList _list) external;
+    function emergency(bytes4 target, bytes calldata callData) external;
     function reset(SPOGGovernorBase newVoteGovernor) external;
     function change(bytes32 what, bytes calldata value) external;
     function changeTax(uint256 _tax) external;
