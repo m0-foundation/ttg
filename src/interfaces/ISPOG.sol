@@ -54,7 +54,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function addNewList(IList list) external;
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
-    function emergency(bytes4 target, bytes calldata callData) external;
+    function emergency(bytes4 selector, bytes calldata callData) external;
     function reset(SPOGGovernorBase newVoteGovernor) external;
     function change(bytes32 what, bytes calldata value) external;
     function changeTax(uint256 _tax) external;
