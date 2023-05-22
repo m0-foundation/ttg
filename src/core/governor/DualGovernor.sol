@@ -81,7 +81,7 @@ contract DualGovernor is ISPOGGovernor, Governor, DualGovernorQuorumFraction {
 
     /// @dev get `block.number` of the start of the given epoch
     /// we can correctly calculate start of epochs only for current and future epochs
-    /// it happens because epoch voting time can be changed more that once
+    /// it happens because epoch voting time can be changed more than once
     function startOfEpoch(uint256 epoch) public view override returns (uint256) {
         if (epoch < currentEpoch()) revert EpochInThePast(epoch, currentEpoch());
         uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;

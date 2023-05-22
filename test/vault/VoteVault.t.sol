@@ -81,39 +81,6 @@ contract VoteVaultTest is BaseTest {
         assertEq(voteToken.balanceOf(address(vault)), 1000e18);
     }
 
-    function test_auctionableVoteRewards() public {
-        setUp();
-
-        // deposit rewards for previous epoch
-        uint256 epoch = 1;
-        voteToken.mint(spogAddress, 1000e18);
-        vm.startPrank(spogAddress);
-        voteToken.approve(address(vault), 1000e18);
-        vault.depositRewards(epoch, address(voteToken), 1000e18);
-        vm.stopPrank();
-
-        uint256 unclaimed = vault.auctionableVoteRewards(epoch);
-
-        assertEq(unclaimed, 1000e18);
-    }
-
-    function test_sellUnclaimedVoteTokens_Vault() public {
-        setUp();
-
-        uint256 epoch = vault.governor().currentEpoch();
-        voteToken.mint(spogAddress, 1000e18);
-        vm.startPrank(spogAddress);
-        voteToken.approve(address(vault), 1000e18);
-        vault.depositRewards(epoch + 1, address(voteToken), 1000e18);
-
-        vm.roll(block.number + 2 * GovernorBase(vault.governor()).votingPeriod() + 1);
-
-        vault.sellUnclaimedVoteTokens(epoch + 1, address(usdc), 30 days);
-
-        assertEq(voteToken.balanceOf(address(vault)), 0);
-        vm.stopPrank();
-    }
-
     function test_UpdateVoteGovernor() public {
         vm.startPrank(spogAddress);
 

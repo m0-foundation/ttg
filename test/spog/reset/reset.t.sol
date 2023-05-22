@@ -6,7 +6,9 @@ import {IGovernor} from "@openzeppelin/contracts/governance/Governor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
+import {SPOG} from "src/core/SPOG.sol";
+import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
+
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 
@@ -15,7 +17,6 @@ import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 
 contract SPOG_reset is SPOG_Base {
     uint8 internal yesVote;
-    SPOGGovernorFactory internal governorFactory;
 
     event NewValueQuorumProposal(uint256 indexed proposalId);
     event SPOGResetExecuted(address indexed newVoteToken, address indexed newVoteGovernor);
@@ -24,7 +25,6 @@ contract SPOG_reset is SPOG_Base {
         super.setUp();
 
         yesVote = 1;
-        governorFactory = new SPOGGovernorFactory();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -41,11 +41,9 @@ contract SPOG_reset is SPOG_Base {
         newVoteToken.mint(address(this), 100e18);
         newVoteToken.delegate(address(this));
 
-        uint256 voteGovernorSalt = deployScript.createSalt("new VoteGovernor");
         uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
-        SPOGGovernor newVoteGovernor =
-            governorFactory.deploy(newVoteToken, voteQuorum, time, "new VoteGovernor", voteGovernorSalt);
+        SPOGGovernor newVoteGovernor = new SPOGGovernor(newVoteToken, voteQuorum, time, "new VoteGovernor");
 
         return address(newVoteGovernor);
     }
@@ -133,11 +131,9 @@ contract SPOG_reset is SPOG_Base {
         newVoteToken.mint(address(this), 100e18);
         newVoteToken.delegate(address(this));
 
-        uint256 voteGovernorSalt = deployScript.createSalt("new VoteGovernor");
         uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
-        SPOGGovernor newVoteGovernor =
-            governorFactory.deploy(newVoteToken, voteQuorum, time, "new VoteGovernor", voteGovernorSalt);
+        SPOGGovernor newVoteGovernor = new SPOGGovernor(newVoteToken, voteQuorum, time, "new VoteGovernor");
 
         vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
         spog.reset(SPOGGovernorBase(payable(address(newVoteGovernor))));

@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
@@ -13,7 +15,6 @@ import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
 
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
@@ -32,19 +33,11 @@ contract VoteVault is IVoteVault, ValueVault {
         auctionContract = _auctionContract;
     }
 
-    /// @notice Sell unclaimed vote tokens
-    /// @param epoch Epoch to view unclaimed tokens
-    function auctionableVoteRewards(uint256 epoch) public view override returns (uint256) {
-        // TODO: fix governor
-        address token = address(governor.vote());
-        return epochTokenDeposit[token][epoch] - epochTokenTotalWithdrawn[token][epoch];
-    }
-
-    /// @notice Sell unclaimed vote tokens
+    /// @notice Sell inactive voters inflation rewards
     /// @param epoch Epoch to sell tokens from
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
-    function sellUnclaimedVoteTokens(uint256 epoch, address paymentToken, uint256 duration)
+    function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration)
         external
         override
         onlySPOG
@@ -55,18 +48,30 @@ contract VoteVault is IVoteVault, ValueVault {
         address token = address(governor.vote());
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
-        uint256 unclaimed = auctionableVoteRewards(epoch);
+        // includes inflation
+        uint256 totalCoinsForEpoch = governor.votingToken().getPastTotalSupply(epochStartBlockNumber[epoch]);
 
-        // TODO: introduce error
-        if (unclaimed == 0) {
-            return;
+        uint256 totalInflation = epochTokenDeposit[token][epoch];
+
+        // vote weights as they were before inflation
+        uint256 preInflatedCoinsForEpoch = totalCoinsForEpoch - totalInflation;
+
+        // weights are calculated before inflation
+        uint256 activeCoinsForEpoch = governor.epochSumOfVoteWeight(epoch);
+
+        uint256 activeCoinsInflation = totalInflation * activeCoinsForEpoch / preInflatedCoinsForEpoch;
+
+        uint256 inactiveCoinsInflation = totalInflation - activeCoinsInflation;
+
+        if (inactiveCoinsInflation == 0) {
+            revert NoTokensToSell();
         }
 
-        IERC20(token).approve(auction, unclaimed);
+        IERC20(token).approve(auction, inactiveCoinsInflation);
 
-        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, unclaimed);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, inactiveCoinsInflation);
 
-        emit VoteTokenAuction(token, epoch, auction, unclaimed);
+        emit VoteTokenAuction(token, epoch, auction, inactiveCoinsInflation);
     }
 
     function claimRewards(uint256[] memory epochs, address token)
@@ -84,6 +89,7 @@ contract VoteVault is IVoteVault, ValueVault {
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
             if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
+
             if (!_isActive(msg.sender, epoch)) revert NotVotedOnAllProposals();
 
             // TODO: should we allow to withdraw any token or vote and value ?
