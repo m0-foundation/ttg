@@ -3,9 +3,7 @@ pragma solidity 0.8.19;
 
 import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
-import {SPOG, SPOGGovernorBase} from "src/factories/SPOGFactory.sol";
-import {SPOGFactory} from "src/factories/SPOGFactory.sol";
-import {SPOGGovernorFactory} from "src/factories/SPOGGovernorFactory.sol";
+import {SPOG, SPOGGovernorBase} from "src/core/SPOG.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
@@ -23,8 +21,6 @@ import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
 contract SPOGDeployScript is BaseScript {
-    SPOGFactory public spogFactory;
-    SPOGGovernorFactory public governorFactory;
     SPOG public spog;
     ERC20Mock public cash;
     uint256[2] public taxRange;
@@ -42,8 +38,6 @@ contract SPOGDeployScript is BaseScript {
 
     VoteVault public voteVault;
     ValueVault public valueVault;
-
-    uint256 public spogCreationSalt = createSalt("Simple Participatory Onchain Governance");
 
     function setUp() public override {
         super.setUp();
@@ -65,56 +59,19 @@ contract SPOGDeployScript is BaseScript {
 
         valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
 
-        governorFactory = new SPOGGovernorFactory();
-
-        // predict vote governor address
-        bytes memory voteGovernorBytecode = governorFactory.getBytecode(vote, voteQuorum, time, "VoteGovernor");
-        uint256 voteGovernorSalt = createSalt("VoteGovernor");
-        address voteGovernorAddress = governorFactory.predictSPOGGovernorAddress(voteGovernorBytecode, voteGovernorSalt);
-
-        // predict value governor address
-        bytes memory valueGovernorBytecode = governorFactory.getBytecode(value, valueQuorum, time, "ValueGovernor");
-        uint256 valueGovernorSalt = createSalt("ValueGovernor");
-        address valueGovernorAddress =
-            governorFactory.predictSPOGGovernorAddress(valueGovernorBytecode, valueGovernorSalt);
-
         auctionImplementation = new ERC20PricelessAuction();
 
+        // deploy vote and value governors
+        voteGovernor = new SPOGGovernor(vote, voteQuorum, time, "VoteGovernor");
+        valueGovernor = new SPOGGovernor(value, valueQuorum, time, "ValueGovernor");
+
         voteVault =
-        new VoteVault(SPOGGovernorBase(payable(address(voteGovernorAddress))), IERC20PricelessAuction(auctionImplementation));
-        valueVault = new ValueVault(SPOGGovernorBase(payable(address(valueGovernorAddress))));
-
-        // deploy vote and value governors from factory
-        voteGovernor = governorFactory.deploy(vote, voteQuorum, time, "VoteGovernor", voteGovernorSalt);
-        valueGovernor = governorFactory.deploy(value, valueQuorum, time, "ValueGovernor", valueGovernorSalt);
-
-        // sanity check
-        assert(address(voteGovernor) == voteGovernorAddress); // SPOG vote governor address mismatch
-        assert(address(valueGovernor) == valueGovernorAddress); // SPOG value governor address mismatch
+        new VoteVault(SPOGGovernorBase(payable(address(voteGovernor))), IERC20PricelessAuction(auctionImplementation));
+        valueVault = new ValueVault(SPOGGovernorBase(payable(address(valueGovernor))));
 
         // grant minter role for test runner
         IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), msg.sender);
         IAccessControl(address(value)).grantRole(value.MINTER_ROLE(), msg.sender);
-
-        spogFactory = new SPOGFactory();
-
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
-
-        // predict spog address
-        bytes memory bytecode = spogFactory.getBytecode(
-            initSPOGData,
-            IVoteVault(voteVault),
-            IValueVault(valueVault),
-            time,
-            voteQuorum,
-            valueQuorum,
-            valueFixedInflationAmount,
-            SPOGGovernorBase(payable(address(voteGovernor))),
-            SPOGGovernorBase(payable(address(valueGovernor)))
-        );
-
-        address spogAddress = spogFactory.predictSPOGAddress(bytecode, spogCreationSalt);
-        console.log("predicted SPOG address: ", spogAddress);
 
         vm.stopBroadcast();
     }
@@ -124,23 +81,9 @@ contract SPOGDeployScript is BaseScript {
 
         vm.startBroadcast(deployer);
 
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
-
-        spog = spogFactory.deploy(
-            initSPOGData,
-            IVoteVault(voteVault),
-            IValueVault(valueVault),
-            time,
-            voteQuorum,
-            valueQuorum,
-            valueFixedInflationAmount,
-            SPOGGovernorBase(payable(address(voteGovernor))),
-            SPOGGovernorBase(payable(address(valueGovernor))),
-            spogCreationSalt
-        );
+        spog = createSpog(false);
 
         console.log("SPOG address: ", address(spog));
-        console.log("SPOGFactory address: ", address(spogFactory));
         console.log("SPOGVote token address: ", address(vote));
         console.log("SPOGValue token address: ", address(value));
         console.log("SPOGGovernor for $VOTE address : ", address(voteGovernor));
@@ -152,12 +95,13 @@ contract SPOGDeployScript is BaseScript {
         vm.stopBroadcast();
     }
 
-    function createSpog() public returns (SPOG) {
-        setUp();
-
+    function createSpog(bool runSetup) public returns (SPOG) {
+        if (runSetup) {
+            setUp();
+        }
         bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
-        SPOG newSpog = spogFactory.deploy(
+        SPOG newSpog = new SPOG(
             initSPOGData,
             IVoteVault(voteVault),
             IValueVault(valueVault),
@@ -166,14 +110,9 @@ contract SPOGDeployScript is BaseScript {
             valueQuorum,
             valueFixedInflationAmount,
             SPOGGovernorBase(payable(address(voteGovernor))),
-            SPOGGovernorBase(payable(address(valueGovernor))),
-            spogCreationSalt
+            SPOGGovernorBase(payable(address(valueGovernor)))
         );
 
         return newSpog;
-    }
-
-    function createSalt(string memory saltValue) public view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(saltValue, address(this), block.timestamp, block.number)));
     }
 }
