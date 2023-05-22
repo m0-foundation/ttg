@@ -148,6 +148,8 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param selector The target method to be executed
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
+    // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
+    // TODO: IMPORTANT: implement immediate remove
     function emergency(bytes4 selector, bytes calldata callData) external override onlyVoteGovernor {
         if (selector == this.remove.selector) {
             (address _address, IList _list) = abi.decode(callData, (address, IList));
