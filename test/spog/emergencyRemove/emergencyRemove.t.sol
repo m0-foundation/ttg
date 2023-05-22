@@ -136,8 +136,6 @@ contract SPOG_emergencyRemove is SPOG_Base {
             "Emergency proposal costs 12x tax"
         );
 
-        console.log("1");
-
         // Emergency proposal is in the governor list
         assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
 
@@ -157,14 +155,10 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // cast vote on proposal
         voteGovernor.castVote(proposalId, yesVote);
 
-        console.log("2");
-
         // check proposal is succeeded
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         spog.execute(targets, values, calldatas, hashedDescription);
-
-        console.log("3");
 
         // check proposal was executed
         assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");

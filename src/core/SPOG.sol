@@ -23,8 +23,6 @@ import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
-import "forge-std/console.sol";
-
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -151,20 +149,15 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
     function emergency(bytes4 selector, bytes calldata callData) external override onlyVoteGovernor {
-        console.log("Emergency execute");
         if (selector == this.remove.selector) {
             (address _address, IList _list) = abi.decode(callData, (address, IList));
-            console.log("Emergency remove", _address, address(_list));
-
             remove(_address, _list);
         } else if (selector == this.append.selector) {
             (address _address, IList _list) = abi.decode(callData, (address, IList));
-
             append(_address, _list);
         } else if (selector == this.changeConfig.selector) {
             (bytes32 configName, address configAddress, bytes4 interfaceId) =
                 abi.decode(callData, (bytes32, address, bytes4));
-
             super.changeConfig(configName, configAddress, interfaceId);
         } else {
             revert EmergencyMethodNotSupported();
