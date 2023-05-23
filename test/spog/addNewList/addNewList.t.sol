@@ -21,7 +21,7 @@ contract SPOG_AddNewList is SPOG_Base {
         bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
 
         vm.expectRevert(expectedError);
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.addNewList(IList(address(list)));
     }
 
@@ -58,7 +58,7 @@ contract SPOG_AddNewList is SPOG_Base {
         string memory description = "Add new list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
@@ -68,27 +68,25 @@ contract SPOG_AddNewList is SPOG_Base {
         assertEq(deployScript.cash().balanceOf(address(valueVault)), deployScript.tax());
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
-        assertTrue(
-            voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state"
-        );
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // proposal should be active now
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // check proposal is not yet succeeded
-        assertFalse(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Already in succeeded state");
+        assertFalse(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Already in succeeded state");
 
         // cast vote on proposal
         uint8 yesVote = uint8(VoteType.Yes);
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
         // check proposal is succeeded
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         // TODO: do we need to queue for a time lock execution?
         // queue proposal
@@ -98,7 +96,7 @@ contract SPOG_AddNewList is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is executed
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Proposal not executed");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Proposal not executed");
 
         // assert that list was created
         address createdList = address(list);

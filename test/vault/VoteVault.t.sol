@@ -3,7 +3,7 @@
 pragma solidity 0.8.19;
 
 import {StdCheats} from "forge-std/StdCheats.sol";
-import {SPOGGovernorBase, GovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 import {BaseTest} from "test/Base.t.sol";
 import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
@@ -45,7 +45,7 @@ contract VoteVaultTest is BaseTest {
     event VoteGovernorUpdated(address indexed newVoteGovernor, address indexed newVotingToken);
 
     function setUp() public {
-        SPOGGovernorBase voteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
+        SPOGGovernor voteGovernor = SPOGGovernor(payable(address(new MockSPOGGovernor(address(voteToken)))));
         auctionImplementation = new ERC20PricelessAuction();
         vault = new VoteVault(voteGovernor, auctionImplementation);
         spogAddress = vault.governor().spogAddress();
@@ -57,7 +57,7 @@ contract VoteVaultTest is BaseTest {
     function test_Revert_UpdateVoteGovernor_WhenCalledNoBySPOG() public {
         vm.startPrank(users.alice);
 
-        SPOGGovernorBase newVoteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
+        SPOGGovernor newVoteGovernor = SPOGGovernor(payable(address(new MockSPOGGovernor(address(voteToken)))));
         vm.expectRevert("Vault: Only spog");
         vault.updateGovernor(newVoteGovernor);
 
@@ -84,7 +84,7 @@ contract VoteVaultTest is BaseTest {
     function test_UpdateVoteGovernor() public {
         vm.startPrank(spogAddress);
 
-        SPOGGovernorBase newVoteGovernor = SPOGGovernorBase(payable(address(new MockSPOGGovernor(address(voteToken)))));
+        SPOGGovernor newVoteGovernor = SPOGGovernor(payable(address(new MockSPOGGovernor(address(voteToken)))));
         expectEmit();
         emit VoteGovernorUpdated(address(newVoteGovernor), address(voteToken));
         vault.updateGovernor(newVoteGovernor);

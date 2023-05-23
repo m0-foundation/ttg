@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
@@ -21,7 +21,7 @@ contract ValueVault is IValueVault {
         ACTIVE_PARTICIPANTS_PRO_RATA
     }
 
-    SPOGGovernorBase public governor;
+    SPOGGovernor public governor;
 
     // address => epoch => token => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
@@ -33,7 +33,7 @@ contract ValueVault is IValueVault {
     // start block numbers for epochs with rewards
     mapping(uint256 => uint256) public epochStartBlockNumber;
 
-    constructor(SPOGGovernorBase _governor) {
+    constructor(SPOGGovernor _governor) {
         governor = _governor;
     }
 

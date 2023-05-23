@@ -3,11 +3,11 @@ pragma solidity 0.8.19;
 
 import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
-import {SPOG, SPOGGovernorBase} from "src/core/SPOG.sol";
+import {SPOG, SPOGGovernor} from "src/core/SPOG.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
@@ -30,8 +30,7 @@ contract SPOGDeployScript is BaseScript {
     uint256 public valueQuorum;
     uint256 public valueFixedInflationAmount;
     uint256 public tax;
-    SPOGGovernor public voteGovernor;
-    SPOGGovernor public valueGovernor;
+    SPOGGovernor public governor;
     ERC20PricelessAuction public auctionImplementation;
     VoteToken public vote;
     ValueToken public value;
@@ -61,13 +60,12 @@ contract SPOGDeployScript is BaseScript {
 
         auctionImplementation = new ERC20PricelessAuction();
 
-        // deploy vote and value governors
-        voteGovernor = new SPOGGovernor(vote, voteQuorum, time, "VoteGovernor");
-        valueGovernor = new SPOGGovernor(value, valueQuorum, time, "ValueGovernor");
+        // deploy governor
+        governor = new SPOGGovernor(vote, value, voteQuorum, valueQuorum, time, "SPOGGovernor");
 
         voteVault =
-        new VoteVault(SPOGGovernorBase(payable(address(voteGovernor))), IERC20PricelessAuction(auctionImplementation));
-        valueVault = new ValueVault(SPOGGovernorBase(payable(address(valueGovernor))));
+            new VoteVault(SPOGGovernor(payable(address(governor))), IERC20PricelessAuction(auctionImplementation));
+        valueVault = new ValueVault(SPOGGovernor(payable(address(governor))));
 
         // grant minter role for test runner
         IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), msg.sender);
@@ -86,8 +84,7 @@ contract SPOGDeployScript is BaseScript {
         console.log("SPOG address: ", address(spog));
         console.log("SPOGVote token address: ", address(vote));
         console.log("SPOGValue token address: ", address(value));
-        console.log("SPOGGovernor for $VOTE address : ", address(voteGovernor));
-        console.log("SPOGGovernor for $VALUE address : ", address(valueGovernor));
+        console.log("SPOGGovernor address: ", address(governor));
         console.log("Cash address: ", address(cash));
         console.log("Vote holders vault address: ", address(voteVault));
         console.log("Value holders vault address: ", address(valueVault));
@@ -109,8 +106,7 @@ contract SPOGDeployScript is BaseScript {
             voteQuorum,
             valueQuorum,
             valueFixedInflationAmount,
-            SPOGGovernorBase(payable(address(voteGovernor))),
-            SPOGGovernorBase(payable(address(valueGovernor)))
+            SPOGGovernor(payable(address(governor)))
         );
 
         return newSpog;

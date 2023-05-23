@@ -7,7 +7,7 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {SPOG} from "src/core/SPOG.sol";
-import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 
 import {VoteToken} from "src/tokens/VoteToken.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
@@ -31,7 +31,7 @@ contract SPOG_reset is SPOG_Base {
                             HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    function createNewVoteGovernor(address valueToken) private returns (address) {
+    function createNewGovernor(address valueToken) private returns (address) {
         // deploy vote governor from factory
         VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", valueToken);
         // grant minter role to new voteToken deployer
@@ -43,9 +43,11 @@ contract SPOG_reset is SPOG_Base {
 
         uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
-        SPOGGovernor newVoteGovernor = new SPOGGovernor(newVoteToken, voteQuorum, time, "new VoteGovernor");
+        uint256 valueQuorum = 5;
+        SPOGGovernor newGovernor =
+            new SPOGGovernor(newVoteToken, valueToken, voteQuorum, valueQuorum, time, "new SPOGGovernor");
 
-        return address(newVoteGovernor);
+        return address(newGovernor);
     }
 
     function proposeGovernanceReset(string memory proposalDescription, address valueToken)
@@ -59,13 +61,13 @@ contract SPOG_reset is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        address newVoteGovernor = createNewVoteGovernor(valueToken);
-        bytes memory callData = abi.encodeWithSignature("reset(address)", newVoteGovernor);
+        address newGovernor = createNewGovernor(valueToken);
+        bytes memory callData = abi.encodeWithSignature("reset(address)", newGovernor);
         string memory description = proposalDescription;
         calldatas[0] = callData;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = valueGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
         deployScript.cash().approve(address(spog), 12 * deployScript.tax());
@@ -77,7 +79,7 @@ contract SPOG_reset is SPOG_Base {
         uint256 spogProposalId = spog.propose(targets, values, calldatas, description);
 
         // Make sure the proposal is immediately (+1 block) votable
-        assertEq(valueGovernor.proposalSnapshot(proposalId), block.number + 1);
+        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
 
         assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
 
@@ -85,7 +87,7 @@ contract SPOG_reset is SPOG_Base {
     }
 
     function executeValidProposal() private {
-        SPOGGovernor voteGovernor = SPOGGovernor(payable(address(spog.voteGovernor())));
+        SPOGGovernor governor = SPOGGovernor(payable(address(spog.governor())));
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -95,19 +97,19 @@ contract SPOG_reset is SPOG_Base {
         string memory description = "Add new list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + voteGovernor.votingPeriod() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
@@ -115,17 +117,17 @@ contract SPOG_reset is SPOG_Base {
 
     function test_Revert_Reset_WhenNotCalledFromValueGovernance() public {
         vm.expectRevert(ISPOG.OnlyValueGovernor.selector);
-        spog.reset(SPOGGovernorBase(payable(address(voteGovernor))));
+        spog.reset(SPOGGovernor(payable(address(governor))));
     }
 
     function test_Revert_Reset_WhenValueAndVoteTokensMistmatch() public {
-        vm.startPrank(address(valueGovernor));
+        vm.startPrank(address(governor));
         ValueToken newValueToken = new ValueToken("new Value token", "value");
 
         // deploy vote governor from factory
         VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", address(newValueToken));
-        // grant minter role to new voteToken to valueGovernor
-        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(valueGovernor));
+        // grant minter role to new voteToken to governor
+        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(governor));
 
         // mint new vote tokens to address(this) and self-delegate
         newVoteToken.mint(address(this), 100e18);
@@ -133,10 +135,12 @@ contract SPOG_reset is SPOG_Base {
 
         uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
-        SPOGGovernor newVoteGovernor = new SPOGGovernor(newVoteToken, voteQuorum, time, "new VoteGovernor");
+        uint256 valueQuorum = 5;
+        SPOGGovernor newGovernor =
+            new SPOGGovernor(newVoteToken, newValueToken, voteQuorum, valueQuorum, time, "new SPOGGovernor");
 
         vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
-        spog.reset(SPOGGovernorBase(payable(address(newVoteGovernor))));
+        spog.reset(SPOGGovernor(payable(address(newGovernor))));
     }
 
     function test_Reset_Success() public {
@@ -148,28 +152,28 @@ contract SPOG_reset is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeGovernanceReset("Propose reset of vote governance", address(spogValue));
 
-        assertTrue(valueGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
         // fast forward to an active voting period
         vm.roll(block.number + 2);
-        assertTrue(valueGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // value holders vote on proposal
-        valueGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
-        address voteGovernorBeforeFork = address(spog.voteGovernor());
+        address governorBeforeFork = address(spog.governor());
 
         vm.expectEmit(false, false, false, false);
         address anyAddress = address(0);
         emit SPOGResetExecuted(anyAddress, anyAddress);
         spog.execute(targets, values, calldatas, hashedDescription);
 
-        assertFalse(address(spog.voteGovernor()) == voteGovernorBeforeFork, "Vote governor was not reset");
-        assertEq(spog.voteGovernor().quorumNumerator(), 5, "Vote governor quorum was not set correctly");
-        assertEq(spog.voteGovernor().votingPeriod(), 15, "Vote governor voting delay was not set correctly");
+        assertFalse(address(spog.governor()) == governorBeforeFork, "Governor was not reset");
+        assertEq(spog.governor().voteQuorumNumerator(), 5, "Governor quorum was not set correctly");
+        assertEq(spog.governor().votingPeriod(), 15, "Governor voting delay was not set correctly");
 
         // Make sure governance is functional
         executeValidProposal();

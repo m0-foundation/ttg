@@ -24,7 +24,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         bytes memory expectedError = abi.encodeWithSignature("ListIsNotInMasterList()");
 
         vm.expectRevert(expectedError);
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.remove(addressToRemove, IList(address(0x1234)));
     }
 
@@ -39,7 +39,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         string memory description = "Remove address from a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
@@ -52,11 +52,11 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 

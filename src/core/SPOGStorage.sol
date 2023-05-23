@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -18,7 +18,7 @@ abstract contract SPOGStorage is ISPOG {
     uint256 public immutable valueFixedInflationAmount;
 
     // @note The vote governor can be changed by value governance with `RESET` proposal
-    SPOGGovernorBase public governor;
+    SPOGGovernor public governor;
 
     modifier onlyGovernance() {
         if (msg.sender != address(governor)) revert OnlyGovernor();
@@ -28,7 +28,7 @@ abstract contract SPOGStorage is ISPOG {
 
     constructor(
         bytes memory _initSPOGData,
-        SPOGGovernorBase _governor,
+        SPOGGovernor _governor,
         uint256 _time,
         uint256 _voteQuorum,
         uint256 _valueQuorum,
@@ -47,8 +47,9 @@ abstract contract SPOGStorage is ISPOG {
         // set SPOG address in vote governor
         governor.initSPOGAddress(address(this));
 
-        // set quorum and voting period for vote governor
-        governor.updateQuorumNumerator(_voteQuorum);
+        // set vote and value quorums and voting period for governor
+        governor.updateVoteQuorumNumerator(_voteQuorum);
+        governor.updateValueQuorumNumerator(_valueQuorum);
         governor.updateVotingTime(_time);
     }
 
@@ -108,11 +109,10 @@ abstract contract SPOGStorage is ISPOG {
             governor.updateVotingTime(decodedTime);
         } else if (what == "voteQuorum") {
             uint256 decodedVoteQuorum = abi.decode(value, (uint256));
-            governor.updateQuorumNumerator(decodedVoteQuorum);
+            governor.updateVoteQuorumNumerator(decodedVoteQuorum);
         } else if (what == "valueQuorum") {
-            // TODO: incorrect, find solution for value and vote quorums
             uint256 decodedValueQuorum = abi.decode(value, (uint256));
-            governor.updateQuorumNumerator(decodedValueQuorum);
+            governor.updateValueQuorumNumerator(decodedValueQuorum);
         } else {
             revert InvalidParameter(what);
         }

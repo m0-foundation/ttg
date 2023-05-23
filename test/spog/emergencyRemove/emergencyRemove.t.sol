@@ -42,7 +42,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         string memory description = "Emergency remove of merchant";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // emergency propose, 12 * tax price
         deployScript.cash().approve(address(spog), spog.EMERGENCY_REMOVE_TAX_MULTIPLIER() * deployScript.tax());
@@ -81,19 +81,19 @@ contract SPOG_emergencyRemove is SPOG_Base {
         ) = createEmergencyProposal();
 
         // Emergency proposal is in the governor list
-        assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
+        assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, noVote);
+        governor.castVote(proposalId, noVote);
 
         vm.expectRevert("Governor: proposal not successful");
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is active
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
@@ -102,7 +102,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was defeated
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Defeated, "Not in defeated state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Defeated, "Not in defeated state");
 
         // assert that address is in the list
         assertTrue(list.contains(addressToRemove), "Address is not in the list");
@@ -110,7 +110,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
 
     function test_EmergencyRemove_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
-        uint256 votingPeriodBeforeER = voteGovernor.votingPeriod();
+        uint256 votingPeriodBeforeER = governor.votingPeriod();
         uint256 balanceBeforeProposal = deployScript.cash().balanceOf(address(valueVault));
         (
             uint256 proposalId,
@@ -129,31 +129,31 @@ contract SPOG_emergencyRemove is SPOG_Base {
         );
 
         // Emergency proposal is in the governor list
-        assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
+        assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
 
-        assertEq(voteGovernor.proposalSnapshot(proposalId), block.number + 1);
+        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
 
         // check proposal is pending
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
         // fast forward to an active voting period
         vm.roll(block.number + 2);
 
-        assertTrue(voteGovernor.votingPeriod() == votingPeriodBeforeER, "Governor voting period was messed up");
+        assertTrue(governor.votingPeriod() == votingPeriodBeforeER, "Governor voting period was messed up");
 
         // check proposal is active
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // check proposal is succeeded
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was executed
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that address is in the list
         assertFalse(list.contains(addressToRemove), "Address is still in the list");
@@ -170,13 +170,13 @@ contract SPOG_emergencyRemove is SPOG_Base {
         ) = createEmergencyProposal();
 
         // Emergency proposal is in the governor list
-        assertTrue(voteGovernor.emergencyProposals(proposalId), "Proposal was added to the list");
+        assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
@@ -184,7 +184,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         spog.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was executed
-        assertTrue(voteGovernor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that address is in the list
         assertFalse(list.contains(addressToRemove), "Address is still in the list");

@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {IList} from "src/interfaces/IList.sol";
 import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
@@ -42,7 +42,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error OnlyGovernor();
 
     // Info functions about double governance and SPOG parameters
-    function governor() external view returns (SPOGGovernorBase);
+    function governor() external view returns (SPOGGovernor);
     function valueVault() external view returns (IValueVault);
     function voteVault() external view returns (IVoteVault);
     function taxRange() external view returns (uint256, uint256);
@@ -52,7 +52,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
     function emergencyRemove(address _address, IList _list) external;
-    function reset(SPOGGovernorBase newVoteGovernor) external;
+    function reset(SPOGGovernor newVoteGovernor) external;
     function change(bytes32 what, bytes calldata value) external;
     function changeTax(uint256 _tax) external;
 

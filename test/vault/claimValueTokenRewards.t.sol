@@ -16,11 +16,11 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256 proposalId,
         uint256 amountToBeSharedOnProRataBasis
     ) private view returns (uint256) {
-        uint256 relevantVotingPeriodEpoch = voteGovernor.currentEpoch() - 1;
+        uint256 relevantVotingPeriodEpoch = governor.currentEpoch() - 1;
 
-        uint256 accountVotingTokenBalance = voteGovernor.getVotes(voter, voteGovernor.proposalSnapshot(proposalId));
+        uint256 accountVotingTokenBalance = governor.getVotes(voter, governor.proposalSnapshot(proposalId));
 
-        uint256 totalVotingTokenSupplyApplicable = voteGovernor.epochSumOfVoteWeight(relevantVotingPeriodEpoch);
+        uint256 totalVotingTokenSupplyApplicable = governor.epochSumOfVoteWeight(relevantVotingPeriodEpoch);
 
         uint256 percentageOfTotalSupply = accountVotingTokenBalance * 100 / totalVotingTokenSupplyApplicable;
 
@@ -56,15 +56,15 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         );
 
         // voting period started
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         uint256 epochInflation = spog.valueTokenInflationPerEpoch();
 
         // alice votes on proposal 1, 2 and 3
         vm.startPrank(alice);
-        voteGovernor.castVote(proposalId, yesVote);
-        voteGovernor.castVote(proposalId2, yesVote);
-        voteGovernor.castVote(proposalId3, noVote);
+        governor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId2, yesVote);
+        governor.castVote(proposalId3, noVote);
         vm.stopPrank();
 
         uint256 spogValueBalanceForVaultForEpochOne = spogValue.balanceOf(address(voteVault));
@@ -76,23 +76,23 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // bob votes on proposal 1, 2 and 3
         vm.startPrank(bob);
-        voteGovernor.castVote(proposalId, noVote);
-        voteGovernor.castVote(proposalId2, noVote);
-        voteGovernor.castVote(proposalId3, noVote);
+        governor.castVote(proposalId, noVote);
+        governor.castVote(proposalId2, noVote);
+        governor.castVote(proposalId3, noVote);
         vm.stopPrank();
 
         // carol doen't vote in all proposals
         vm.startPrank(carol);
-        voteGovernor.castVote(proposalId3, noVote);
+        governor.castVote(proposalId3, noVote);
         vm.stopPrank();
 
         // start epoch 2
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         uint256 aliceValueBalanceBefore = spogValue.balanceOf(alice);
         uint256 bobValueBalanceBefore = spogValue.balanceOf(bob);
 
-        uint256 relevantEpoch = valueGovernor.currentEpoch() - 1;
+        uint256 relevantEpoch = governor.currentEpoch() - 1;
         uint256[] memory epochsToClaimRewards = new uint256[](1);
         epochsToClaimRewards[0] = relevantEpoch;
 
@@ -177,35 +177,35 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         uint256[] memory epochs = new uint256[](2);
 
         // voting period started epcch 1
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // alice votes on proposal 1
         vm.startPrank(alice);
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         vm.stopPrank();
 
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
 
         // voting period started epoch 2
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
-        epochs[0] = voteGovernor.currentEpoch() - 1;
+        epochs[0] = governor.currentEpoch() - 1;
 
         // alice votes on proposal 2
         vm.startPrank(alice);
-        voteGovernor.castVote(proposalId2, yesVote);
+        governor.castVote(proposalId2, yesVote);
         vm.stopPrank();
 
         uint256 proposal3;
         (proposal3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // voting period started epoch 3
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
-        epochs[1] = voteGovernor.currentEpoch() - 1;
+        epochs[1] = governor.currentEpoch() - 1;
         // ALICE DOES NOT vote on proposal 3
 
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         uint256 spogValueBalanceForVaultAfter = spogValue.balanceOf(address(voteVault));
 
@@ -248,7 +248,7 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
 
         // alice claims for an epoch she is not entitled to rewards
         uint256[] memory unentitledRewards = new uint256[](1);
-        unentitledRewards[0] = voteGovernor.currentEpoch() - 1;
+        unentitledRewards[0] = governor.currentEpoch() - 1;
 
         vm.startPrank(alice);
         vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);

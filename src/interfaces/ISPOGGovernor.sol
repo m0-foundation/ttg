@@ -42,8 +42,8 @@ interface ISPOGGovernor {
     // public variables
     function spogAddress() external view returns (address);
 
-    function vote() external view returns (ISPOGVotes);
-    function value() external view returns (ISPOGVotes);
+    // function vote() external view returns (ISPOGVotes);
+    // function value() external view returns (ISPOGVotes);
 
     // public mappings
     function emergencyProposals(uint256 proposalId) external view returns (bool);
@@ -68,10 +68,4 @@ interface ISPOGGovernor {
     // function proposalValueVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
 
     function updateVotingTime(uint256 newVotingTime) external;
-
-    function turnOnEmergencyVoting() external;
-
-    function turnOffEmergencyVoting() external;
-
-    function registerEmergencyProposal(uint256 proposalId) external;
 }

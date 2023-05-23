@@ -59,7 +59,7 @@ contract Vault_IntegratedWithSPOG is SPOG_Base {
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());

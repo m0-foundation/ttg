@@ -41,7 +41,7 @@ contract SPOG_ChangeConfig is SPOG_Base {
         MockConfigNoERC165 badConfig = new MockConfigNoERC165();
 
         vm.expectRevert();
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.changeConfig(keccak256("MockConfigNoERC165"), address(badConfig), type(IMockConfig).interfaceId);
     }
 
@@ -51,27 +51,27 @@ contract SPOG_ChangeConfig is SPOG_Base {
         bytes memory expectedError = abi.encodeWithSignature("ConfigERC165Unsupported()");
 
         vm.expectRevert(expectedError);
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.changeConfig(keccak256("MockConfigWithERC165"), address(badConfig), type(IMockConfigV2).interfaceId);
     }
 
     function test_Revert_WhenNewContractDoesNotMatchExistingContract() public {
         MockConfigWithERC165v2 configV2 = new MockConfigWithERC165v2();
 
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.changeConfig(keccak256("MockConfigWithERC165"), address(configV2), type(IMockConfigV2).interfaceId);
 
         MockConfigWithERC165 config = new MockConfigWithERC165();
 
         vm.expectRevert();
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
     }
 
     function test_NamedConfigCanBeSet() public {
         MockConfigWithERC165 config = new MockConfigWithERC165();
 
-        vm.prank(address(voteGovernor));
+        vm.prank(address(governor));
         spog.changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
 
         (address configAddress,) = spog.getConfig(keccak256("MockConfigWithERC165"));

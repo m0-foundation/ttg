@@ -7,7 +7,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {SPOGGovernorBase} from "src/core/SPOGGovernorBase.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
@@ -29,7 +29,7 @@ contract VoteVault is IVoteVault, ValueVault {
         _;
     }
 
-    constructor(SPOGGovernorBase _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
+    constructor(SPOGGovernor _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
         auctionContract = _auctionContract;
     }
 
@@ -49,7 +49,7 @@ contract VoteVault is IVoteVault, ValueVault {
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
         // includes inflation
-        uint256 totalCoinsForEpoch = governor.votingToken().getPastTotalSupply(epochStartBlockNumber[epoch]);
+        uint256 totalCoinsForEpoch = governor.vote().getPastTotalSupply(epochStartBlockNumber[epoch]);
 
         uint256 totalInflation = epochTokenDeposit[token][epoch];
 
@@ -107,7 +107,7 @@ contract VoteVault is IVoteVault, ValueVault {
 
     // @notice Update vote governor after `RESET` was executed
     // @param newGovernor New vote governor
-    function updateGovernor(SPOGGovernorBase newGovernor) external onlySPOG {
+    function updateGovernor(SPOGGovernor newGovernor) external onlySPOG {
         // TODO: fix here as well when governor is one
         emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.vote()));
 

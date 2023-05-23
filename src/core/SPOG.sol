@@ -13,7 +13,7 @@ import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
-import {SPOGStorage, SPOGGovernorBase} from "src/core/SPOGStorage.sol";
+import {SPOGStorage, SPOGGovernor} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
@@ -67,7 +67,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         uint256 _voteQuorum,
         uint256 _valueQuorum,
         uint256 _valueFixedInflationAmount,
-        SPOGGovernorBase _governor
+        SPOGGovernor _governor
     ) SPOGStorage(_initSPOGData, _governor, _time, _voteQuorum, _valueQuorum, _valueFixedInflationAmount) {
         if (_voteVault == IVoteVault(address(0)) || _valueVault == IValueVault(address(0))) {
             revert ISPOG.VaultAddressCannotBeZero();
@@ -153,7 +153,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(SPOGGovernorBase newGovernor) external onlyGovernance {
+    function reset(SPOGGovernor newGovernor) external onlyGovernance {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         IVoteToken newVoteToken = IVoteToken(address(newGovernor.vote()));
@@ -180,10 +180,24 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
 
+    function getFee(bytes4 funcSelector) returns (uint256, address) {
+        uint256 fee;
+        // Pay flat fee for all the operations except emergency remove and reset
+        if (funcSelector == this.emergencyRemove.selector) {
+            fee = EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax;
+        } else if (funcSelector == this.reset.selector) {
+            fee = RESET_TAX_MULTIPLIER * spogData.tax;
+        } else {
+            fee = spogData.tax;
+        }
+
+        return (fee, address(spogData.cash));
+    }
+
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellInactiveVoteInflation(uint256 epoch) public {
-        voteVault.sellInactiveVoteInflation(epoch, address(spogData.cash), voteGovernor.votingPeriod());
+        voteVault.sellInactiveVoteInflation(epoch, address(spogData.cash), governor.votingPeriod());
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
@@ -220,55 +234,6 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         governedMethods[this.emergencyRemove.selector] = true;
         governedMethods[this.reset.selector] = true;
         governedMethods[this.changeConfig.selector] = true;
-    }
-
-    /// @notice pay tax from the caller to the SPOG
-    /// @param funcSelector The executable function selector
-    function _payFee(bytes4 funcSelector) private {
-        uint256 fee;
-
-        // Pay flat fee for all the operations except emergency remove and reset
-        if (funcSelector == this.emergencyRemove.selector) {
-            fee = EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax;
-        } else if (funcSelector == this.reset.selector) {
-            fee = RESET_TAX_MULTIPLIER * spogData.tax;
-        } else {
-            fee = spogData.tax;
-        }
-
-        // transfer the amount from the caller to the SPOG
-        spogData.cash.safeTransferFrom(msg.sender, address(this), fee);
-        // approve amount to be sent to the vault
-        spogData.cash.approve(address(valueVault), fee);
-
-        // deposit the amount to the vault
-        uint256 epoch = governor.currentEpoch();
-        valueVault.depositRewards(epoch, address(spogData.cash), fee);
-    }
-
-    /// @notice inflate Vote and Value token supplies
-    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
-    function _inflateRewardTokens() private {
-        uint256 nextEpoch = governor.currentEpoch() + 1;
-
-        // Epoch reward tokens already minted, silently return
-        if (epochRewardsMinted[nextEpoch]) return;
-
-        epochRewardsMinted[nextEpoch] = true;
-
-        // Mint and deposit Vote and Value rewards to vault
-        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteTokenInflationPerEpoch());
-        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueTokenInflationPerEpoch());
-    }
-
-    /// @notice mint reward token into the vault
-    /// @param epoch The epoch for which rewards become claimable
-    /// @param token The reward token, only vote or value tokens
-    /// @param amount The amount to mint and deposit into the vault
-    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
-        token.mint(address(this), amount);
-        token.approve(address(voteVault), amount);
-        voteVault.depositRewards(epoch, address(token), amount);
     }
 
     function _removeFromList(address _address, IList _list) private {

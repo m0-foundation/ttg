@@ -82,11 +82,11 @@ contract SPOGGovernedTest is SPOG_Base {
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create new proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -107,11 +107,11 @@ contract SPOGGovernedTest is SPOG_Base {
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create new proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -136,16 +136,16 @@ contract SPOGGovernedTest is SPOG_Base {
         ) = proposeAddingNewListToSpog("Add Collateral Managers List", address(list));
 
         // fast forward one epoch to propose
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward one epoch to execute
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // execute vote
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         MockGovernedContract testGovernedContract = new MockGovernedContract(address(spog), address(list));
 
@@ -173,16 +173,16 @@ contract SPOGGovernedTest is SPOG_Base {
         );
 
         // fast forward one epoch to propose
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward one epoch to execute
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // execute vote
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         MockGovernedContract2 testGovernedContract = new MockGovernedContract2(address(spog));
 

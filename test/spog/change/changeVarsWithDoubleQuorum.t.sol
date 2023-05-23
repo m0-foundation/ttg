@@ -43,7 +43,7 @@ contract SPOG_change is SPOG_Base {
         calldatas[0] = callData;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
@@ -76,20 +76,20 @@ contract SPOG_change is SPOG_Base {
         string memory description = "Change tax which should not be possible to change with double quorum";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote holders vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // value holders vote on proposal
-        valueGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
@@ -112,12 +112,12 @@ contract SPOG_change is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeInflatorChange("Change inflator variable in spog");
 
-        assertTrue(voteGovernor.votingDelay() == valueGovernor.votingDelay(), "voting delay should be 1");
+        assertTrue(governor.votingDelay() == governor.votingDelay(), "voting delay should be 1");
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote holders vote on proposal and no votes from value holders
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
@@ -141,18 +141,18 @@ contract SPOG_change is SPOG_Base {
             bytes32 hashedDescription
         ) = proposeInflatorChange("Change inflator variable in spog");
 
-        assertTrue(voteGovernor.votingDelay() == valueGovernor.votingDelay(), "voting delay should be 1");
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // value holders vote `Yes` on proposal, vote holders vote `No`
-        valueGovernor.castVote(proposalId, yesVote);
-        voteGovernor.castVote(proposalId, noVote);
+        // TODO: it's not possible anymore
+        // governor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, noVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
-        assertFalse(voteGovernor.state(proposalId) == IGovernor.ProposalState.Succeeded);
+        assertFalse(governor.state(proposalId) == IGovernor.ProposalState.Succeeded);
 
         // Check that execute function is reverted if vote quorum is not reached
         vm.expectRevert("Governor: proposal not successful");
@@ -174,12 +174,10 @@ contract SPOG_change is SPOG_Base {
         ) = proposeInflatorChange("Change inflator variable in spog");
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
-        // vote holders vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
-        // value holders vote on proposal
-        valueGovernor.castVote(proposalId, yesVote);
+        // vote and value holders vote on proposal
+        governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
@@ -216,19 +214,19 @@ contract SPOG_change is SPOG_Base {
         string memory description = "Change cash variable in spog";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // create proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
         spog.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote holders vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // value holders vote on proposal
-        valueGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
