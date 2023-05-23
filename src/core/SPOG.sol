@@ -180,7 +180,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
 
-    function getFee(bytes4 funcSelector) returns (uint256, address) {
+    function getFee(bytes4 funcSelector) public view returns (uint256, address) {
         uint256 fee;
         // Pay flat fee for all the operations except emergency remove and reset
         if (funcSelector == this.emergencyRemove.selector) {
@@ -201,6 +201,7 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
+    // TODO: can we use `totalSupply` here
     function voteTokenInflationPerEpoch() public view returns (uint256) {
         return (governor.vote().totalSupply() * spogData.inflator) / 100;
     }

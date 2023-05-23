@@ -104,9 +104,6 @@ abstract contract SPOGStorage is ISPOG {
             spogData.taxRange = abi.decode(value, (uint256[2]));
         } else if (what == "inflator") {
             spogData.inflator = abi.decode(value, (uint256));
-        } else if (what == "time") {
-            uint256 decodedTime = abi.decode(value, (uint256));
-            governor.updateVotingTime(decodedTime);
         } else if (what == "voteQuorum") {
             uint256 decodedVoteQuorum = abi.decode(value, (uint256));
             governor.updateVoteQuorumNumerator(decodedVoteQuorum);

@@ -16,7 +16,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
     }
 
     function test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance() public {
-        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
+        vm.expectRevert(ISPOG.OnlyGovernor.selector);
         spog.remove(addressToRemove, IList(listToRemoveAddressFrom));
     }
 
@@ -43,7 +43,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         // assert that vault has cash balance paid for proposals
         assertTrue(
@@ -61,7 +61,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
         vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");

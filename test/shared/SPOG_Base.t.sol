@@ -61,7 +61,7 @@ contract SPOG_Base is BaseTest {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) internal pure returns (bytes32 hashedDescription, uint256 proposalId) {
+    ) internal view returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
         proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }

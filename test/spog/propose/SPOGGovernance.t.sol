@@ -32,7 +32,7 @@ contract SPOGGovernanceTest is SPOG_Base {
 
         // revert when method is not supported
         vm.expectRevert(ISPOG.InvalidProposal.selector);
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_Propose_WhenEtherValueIsPassed() public {
@@ -49,7 +49,7 @@ contract SPOGGovernanceTest is SPOG_Base {
 
         // revert when proposal expects ETH value
         vm.expectRevert(ISPOG.InvalidProposal.selector);
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_Propose_WhenTargetIsNotSPOG() public {
@@ -67,7 +67,7 @@ contract SPOGGovernanceTest is SPOG_Base {
 
         // revert when proposal expects ETH value
         vm.expectRevert(ISPOG.InvalidProposal.selector);
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_Propose_WhenMethodIsNotSupported() public {
@@ -83,7 +83,7 @@ contract SPOGGovernanceTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
         // revert when method signature is not supported
         vm.expectRevert(abi.encodeWithSelector(ISPOG.NotGovernedMethod.selector, bytes4(calldatas[0])));
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_Propose_SameProposal() public {
@@ -99,10 +99,10 @@ contract SPOGGovernanceTest is SPOG_Base {
         deployScript.cash().approve(address(spog), deployScript.tax());
 
         // propose
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         deployScript.cash().approve(address(spog), deployScript.tax());
         vm.expectRevert("Governor: proposal already exists");
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 }

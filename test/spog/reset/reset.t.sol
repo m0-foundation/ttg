@@ -45,7 +45,7 @@ contract SPOG_reset is SPOG_Base {
         uint256 voteQuorum = 5;
         uint256 valueQuorum = 5;
         SPOGGovernor newGovernor =
-            new SPOGGovernor(newVoteToken, valueToken, voteQuorum, valueQuorum, time, "new SPOGGovernor");
+            new SPOGGovernor(newVoteToken, ISPOGVotes(valueToken), voteQuorum, valueQuorum, time, "new SPOGGovernor");
 
         return address(newGovernor);
     }
@@ -76,7 +76,7 @@ contract SPOG_reset is SPOG_Base {
         expectEmit();
         emit NewValueQuorumProposal(proposalId);
 
-        uint256 spogProposalId = spog.propose(targets, values, calldatas, description);
+        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
 
         // Make sure the proposal is immediately (+1 block) votable
         assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
@@ -101,7 +101,7 @@ contract SPOG_reset is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -112,11 +112,11 @@ contract SPOG_reset is SPOG_Base {
         vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_Reset_WhenNotCalledFromValueGovernance() public {
-        vm.expectRevert(ISPOG.OnlyValueGovernor.selector);
+        vm.expectRevert(ISPOG.OnlyGovernor.selector);
         spog.reset(SPOGGovernor(payable(address(governor))));
     }
 
@@ -169,7 +169,7 @@ contract SPOG_reset is SPOG_Base {
         vm.expectEmit(false, false, false, false);
         address anyAddress = address(0);
         emit SPOGResetExecuted(anyAddress, anyAddress);
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         assertFalse(address(spog.governor()) == governorBeforeFork, "Governor was not reset");
         assertEq(spog.governor().voteQuorumNumerator(), 5, "Governor quorum was not set correctly");

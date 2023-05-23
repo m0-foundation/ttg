@@ -63,7 +63,7 @@ contract Vault_IntegratedWithSPOG is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }

@@ -8,7 +8,7 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 contract SPOG_AddNewList is SPOG_Base {
     function test_Revert_WhenAddingNewList_NotCallingFromGovernance() external {
-        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
+        vm.expectRevert(ISPOG.OnlyGovernor.selector);
         spog.addNewList(IList(address(list)));
     }
 
@@ -44,7 +44,7 @@ contract SPOG_AddNewList is SPOG_Base {
         bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
 
         vm.expectRevert(expectedError);
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 
     function test_SPOGProposalToAddNewList() public {
@@ -62,7 +62,7 @@ contract SPOG_AddNewList is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         // assert that spog has cash balance
         assertEq(deployScript.cash().balanceOf(address(valueVault)), deployScript.tax());
@@ -93,7 +93,7 @@ contract SPOG_AddNewList is SPOG_Base {
         // spog.queue(proposalId);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is executed
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Proposal not executed");

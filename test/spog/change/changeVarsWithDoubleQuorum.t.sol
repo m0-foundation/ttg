@@ -52,14 +52,14 @@ contract SPOG_change is SPOG_Base {
         expectEmit();
         emit NewDoubleQuorumProposal(proposalId);
 
-        uint256 spogProposalId = spog.propose(targets, values, calldatas, description);
+        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "spog proposal id does not match vote governor proposal id");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
     function test_Revert_Change_WhenNotCalledFromGovernance() public {
-        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
+        vm.expectRevert(ISPOG.OnlyGovernor.selector);
         spog.change(inflator, elevenAsCalldataValue);
     }
 
@@ -80,7 +80,7 @@ contract SPOG_change is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -96,7 +96,7 @@ contract SPOG_change is SPOG_Base {
 
         // another way to get custom error selector:
         vm.expectRevert(abi.encodeWithSelector(ISPOG.InvalidParameter.selector, incorrectParams));
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax was not modified
         (uint256 tax,,) = spog.spogData();
@@ -124,7 +124,7 @@ contract SPOG_change is SPOG_Base {
 
         // Check that execute function is reverted if value quorum is not reached
         vm.expectRevert(abi.encodeWithSelector(ISPOG.ValueGovernorDidNotApprove.selector, proposalId));
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         (, uint256 inflatorFirstCheck,) = spog.spogData();
 
@@ -156,7 +156,7 @@ contract SPOG_change is SPOG_Base {
 
         // Check that execute function is reverted if vote quorum is not reached
         vm.expectRevert("Governor: proposal not successful");
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         (, uint256 inflatorFirstCheck,) = spog.spogData();
 
@@ -186,7 +186,7 @@ contract SPOG_change is SPOG_Base {
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         (, uint256 inflatorFirstCheck,) = spog.spogData();
 
@@ -218,14 +218,12 @@ contract SPOG_change is SPOG_Base {
 
         // create proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        // vote holders vote on proposal
-        governor.castVote(proposalId, yesVote);
-        // value holders vote on proposal
+        // vote and value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -235,7 +233,7 @@ contract SPOG_change is SPOG_Base {
         // check that DoubleQuorumFinalized event was triggered
         expectEmit();
         emit DoubleQuorumFinalized(identifier);
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         (,, IERC20 cashFirstCheck) = spog.spogData();
 

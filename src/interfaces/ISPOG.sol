@@ -59,8 +59,8 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     // Token rewards functions
     function voteTokenInflationPerEpoch() external view returns (uint256);
     function valueTokenInflationPerEpoch() external view returns (uint256);
-
     function governedMethods(bytes4 func) external view returns (bool);
+    function getFee(bytes4 funcSelector) external view returns (uint256, address);
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);

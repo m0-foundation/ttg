@@ -50,7 +50,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // Check that `NewEmergencyProposal` event is emitted
         expectEmit();
         emit NewEmergencyProposal(proposalId);
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -67,7 +67,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // emergency propose, 12 * tax price is needed, but 1 * tax is allowed to be paid
         deployScript.cash().approve(address(spog), deployScript.tax());
         vm.expectRevert("ERC20: insufficient allowance");
-        spog.propose(targets, values, calldatas, description);
+        governor.propose(targets, values, calldatas, description);
     }
 
     function test_Revert_EmergencyRemove_WhenQuorumWasNotReached() public {
@@ -90,7 +90,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         governor.castVote(proposalId, noVote);
 
         vm.expectRevert("Governor: proposal not successful");
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal is active
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
@@ -99,7 +99,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         vm.roll(block.number + deployScript.time() + 1);
 
         vm.expectRevert("Governor: proposal not successful");
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was defeated
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Defeated, "Not in defeated state");
@@ -150,7 +150,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was executed
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
@@ -181,7 +181,7 @@ contract SPOG_emergencyRemove is SPOG_Base {
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was executed
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
