@@ -9,11 +9,17 @@ import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
+    enum EmergencyType {
+        Remove,
+        Append,
+        ChangeConfig
+    }
+
     // Events
     event NewListAdded(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
     event AddressRemovedFromList(address indexed _list, address indexed _address);
-    event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
+    event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 indexed tax);
     event NewVoteQuorumProposal(uint256 indexed proposalId);
     event NewValueQuorumProposal(uint256 indexed proposalId);
@@ -23,6 +29,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
+    error EmergencyMethodNotSupported();
     error InvalidParameter(bytes32 what);
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
@@ -53,7 +60,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function addNewList(IList list) external;
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
-    function emergencyRemove(address _address, IList _list) external;
+    function emergency(uint8 emergencyType, bytes calldata callData) external;
     function reset(SPOGGovernorBase newVoteGovernor) external;
     function change(bytes32 what, bytes calldata value) external;
     function changeTax(uint256 _tax) external;
