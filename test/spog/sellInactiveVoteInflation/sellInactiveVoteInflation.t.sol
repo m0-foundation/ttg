@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {ValueToken} from "src/tokens/ValueToken.sol";
 import {VoteToken} from "src/tokens/VoteToken.sol";
 
@@ -53,6 +54,29 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         uint256 inactiveCoinsInflation = totalInflation / 2;
 
         assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), totalInflation - inactiveCoinsInflation);
+    }
+
+    function test_Revert_sellInactiveVoteInflation_whenEpochAlreadyAuctioned() public {
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+
+        // deposit rewards for previous epoch
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        voteGovernor.castVote(proposalId, yesVote);
+
+        uint256[] memory epochs = new uint256[](1);
+        epochs[0] = voteGovernor.currentEpoch();
+
+        // roll forward another epoch
+        vm.roll(block.number + voteGovernor.votingPeriod() + 1);
+
+        // anyone can call
+        (address auctionAddress,) = spog.sellInactiveVoteInflation(epochs);
+
+        vm.expectRevert(abi.encodeWithSelector(IVoteVault.AuctionAlreadyExists.selector, epochs[0], auctionAddress));
+
+        //attempt to auction same epoch again
+        spog.sellInactiveVoteInflation(epochs);
     }
 
     function test_sellInactiveVoteInflation_withFuzzBalances(uint256 daveBalance, uint256 ernieBalance) public {

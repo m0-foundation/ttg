@@ -52,9 +52,13 @@ contract VoteVault is IVoteVault, ValueVault {
 
         uint256 currentEpoch = governor.currentEpoch();
 
+        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(auctionCount));
+        auctionCount++;
+
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
             if (epoch >= currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
+            if (auctionForEpoch[epoch] != address(0)) revert AuctionAlreadyExists(epoch, auctionForEpoch[epoch]);
 
             // includes inflation
             uint256 totalCoinsForEpoch = governor.votingToken().getPastTotalSupply(epochStartBlockNumber[epoch]);
@@ -67,13 +71,15 @@ contract VoteVault is IVoteVault, ValueVault {
             // weights are calculated before inflation
             uint256 activeCoinsForEpoch = governor.epochSumOfVoteWeight(epoch);
 
-            uint256 percentageOfTotalSupply = activeCoinsForEpoch * 1e18 / preInflatedCoinsForEpoch;
+            uint256 percentageOfTotalSupply = activeCoinsForEpoch * PRECISION_FACTOR / preInflatedCoinsForEpoch;
 
-            uint256 activeCoinsInflation = percentageOfTotalSupply * totalInflation / precisionFactor;
+            uint256 activeCoinsInflation = percentageOfTotalSupply * totalInflation / PRECISION_FACTOR;
 
             uint256 inactiveCoinsInflation = totalInflation - activeCoinsInflation;
 
             numTokensToSell += inactiveCoinsInflation;
+
+            auctionForEpoch[epoch] = address(auction);
 
             unchecked {
                 ++i;
@@ -83,9 +89,6 @@ contract VoteVault is IVoteVault, ValueVault {
         if (numTokensToSell == 0) {
             revert NoTokensToSell();
         }
-
-        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(auctionCount));
-        auctionCount++;
 
         IERC20(token).approve(auction, numTokensToSell);
 

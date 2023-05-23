@@ -11,6 +11,7 @@ interface IVoteVault is IValueVault {
 
     error NotVotedOnAllProposals();
     error NoTokensToSell();
+    error AuctionAlreadyExists(uint256 epoch, address auction);
 
     // Auction-related functions
     function sellInactiveVoteInflation(uint256[] calldata epochs, address paymentToken, uint256 duration)
