@@ -29,6 +29,8 @@ contract SPOGGovernor is SPOGGovernorBase {
     mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
     // epoch => cumulative epoch vote weight casted
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
+    // proposalId => epoch
+    mapping(uint256 => uint256) public epochOfProposal;
 
     constructor(
         ISPOGVotes votingTokenContract,
@@ -216,7 +218,7 @@ contract SPOGGovernor is SPOGGovernorBase {
     }
 
     /**
-     * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
+     * @dev Overridden version of the {Governor-state} function with added support for emergency proposals and expiration.
      */
     function state(uint256 proposalId) public view override(Governor, GovernorBase) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
@@ -224,7 +226,21 @@ contract SPOGGovernor is SPOGGovernorBase {
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
         // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
         if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
-            return ProposalState.Succeeded;
+            status = ProposalState.Succeeded;
+        }
+
+        // If the proposal is not executed before expiration, set status to `Expired`.
+        if (status == ProposalState.Active || status == ProposalState.Succeeded) {
+            // proposal deadline is for voting in block.number
+            uint256 deadline = proposalDeadline(proposalId);
+
+            // expires is for execution in block.number
+            uint256 expires = deadline + _votingPeriod;
+
+            // Set state to Expired if it can no longer be executed.
+            if (expires < block.number) {
+                return ProposalState.Expired;
+            }
         }
 
         return status;

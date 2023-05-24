@@ -30,7 +30,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         spog.append(addressToAdd, IList(listToAddAddressTo));
     }
 
-    function test_SPOGProposalToAppedToAList() public {
+    function test_SPOGProposalToAppendToAList() public {
         // create proposal to append address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -45,6 +45,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
 
         // vote on proposal
         deployScript.cash().approve(address(spog), deployScript.tax());
+
         spog.propose(targets, values, calldatas, description);
 
         // assert that vault has cash balance paid for proposals
@@ -59,8 +60,8 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         // cast vote on proposal
         uint8 yesVote = 1;
         voteGovernor.castVote(proposalId, yesVote);
-        // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        // fast forward to next epoch
+        vm.roll(block.number + voteGovernor.votingDelay() + 1);
 
         // execute proposal
         spog.execute(targets, values, calldatas, hashedDescription);
