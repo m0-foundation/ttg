@@ -23,7 +23,7 @@ contract ValueVault is IValueVault {
 
     SPOGGovernorBase public governor;
 
-    uint256 constant PRECISION_FACTOR = 1e18;
+    uint256 public constant PRECISION_FACTOR = 1e18;
 
     // address => epoch => token => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
