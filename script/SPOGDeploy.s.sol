@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+
 import {console} from "forge-std/Script.sol";
 import {BaseScript} from "script/shared/Base.s.sol";
-import {SPOG, SPOGGovernor} from "src/core/SPOG.sol";
-import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
+import {SPOG} from "src/core/SPOG.sol";
+
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
 import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
 import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
@@ -21,22 +23,36 @@ import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
 contract SPOGDeployScript is BaseScript {
-    SPOG public spog;
-    ERC20Mock public cash;
-    uint256[2] public taxRange;
-    uint256 public inflator;
+    SPOGGovernor public governor;
     uint256 public time;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
-    uint256 public valueFixedInflationAmount;
+
+    SPOG public spog;
+    ERC20Mock public cash;
     uint256 public tax;
-    SPOGGovernor public governor;
+    uint256 public taxLowerBound;
+    uint256 public taxUpperBound;
+    uint256 public inflator;
+    uint256 public valueFixedInflation;
+
     ERC20PricelessAuction public auctionImplementation;
     VoteToken public vote;
     ValueToken public value;
-
     VoteVault public voteVault;
     ValueVault public valueVault;
+
+    //  struct Configuration {
+    //     address payable governor;
+    //     address voteVault;
+    //     address valueVault;
+    //     address cash;
+    //     uint256 tax;
+    //     uint256 taxLowerBound;
+    //     uint256 taxUpperBound;
+    //     uint256 inflator;
+    //     uint256 valueFixedInflation;
+    // }
 
     function setUp() public override {
         super.setUp();
@@ -46,22 +62,23 @@ contract SPOGDeployScript is BaseScript {
         // for the actual deployment, we will use an ERC20 token for cash
         cash = new ERC20Mock("CashToken", "cash", msg.sender, 100e18); // mint 10 tokens to msg.sender
 
-        taxRange = [uint256(0), 6e18];
         inflator = 5;
+        valueFixedInflation = 100 * 10e18;
+
         time = 10; // in blocks
         voteQuorum = 4;
         valueQuorum = 4;
+
         tax = 5e18;
+        taxLowerBound = 0;
+        taxUpperBound = 6e18;
 
         value = new ValueToken("SPOGValue", "value");
         vote = new VoteToken("SPOGVote", "vote", address(value));
-
-        valueFixedInflationAmount = 100 * 10 ** SPOGVotes(address(value)).decimals();
-
         auctionImplementation = new ERC20PricelessAuction();
 
         // deploy governor
-        governor = new SPOGGovernor(vote, value, voteQuorum, valueQuorum, time, "SPOGGovernor");
+        governor = new SPOGGovernor("SPOGGovernor", address(vote), address(value), voteQuorum, valueQuorum, time);
 
         voteVault =
             new VoteVault(SPOGGovernor(payable(address(governor))), IERC20PricelessAuction(auctionImplementation));
@@ -96,18 +113,20 @@ contract SPOGDeployScript is BaseScript {
         if (runSetup) {
             setUp();
         }
-        bytes memory initSPOGData = abi.encode(address(cash), taxRange, inflator, tax);
 
-        SPOG newSpog = new SPOG(
-            initSPOGData,
-            IVoteVault(voteVault),
-            IValueVault(valueVault),
-            time,
-            voteQuorum,
-            valueQuorum,
-            valueFixedInflationAmount,
-            SPOGGovernor(payable(address(governor)))
+        SPOG.Configuration memory config = SPOG.Configuration(
+            payable(address(governor)),
+            address(voteVault),
+            address(valueVault),
+            address(cash),
+            tax,
+            taxLowerBound,
+            taxUpperBound,
+            inflator,
+            valueFixedInflation
         );
+
+        SPOG newSpog = new SPOG(config);
 
         return newSpog;
     }

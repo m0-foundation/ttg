@@ -19,8 +19,8 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     address public spogAddress;
+    uint256 private immutable _votingPeriod;
 
-    uint256 private _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
     uint256 private _votingPeriodChangedEpoch;
 
@@ -48,14 +48,18 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
         _;
     }
 
+    /// @param voteQuorum_ The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
+    /// @param valueQuorum_ The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
+    /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
     constructor(
-        ISPOGVotes vote_,
-        ISPOGVotes value_,
+        string memory name_,
+        address vote_,
+        address value_,
         uint256 voteQuorum_,
         uint256 valueQuorum_,
-        uint256 votingPeriod_,
-        string memory name_
-    ) DualGovernorVotesQuorumFraction(vote_, value_, voteQuorum_, valueQuorum_, name_) {
+        uint256 votingPeriod_
+    ) DualGovernorVotesQuorumFraction(name_, vote_, value_, voteQuorum_, valueQuorum_) {
+        // TODO: sanity checks
         _votingPeriod = votingPeriod_;
         _votingPeriodChangedBlockNumber = block.number;
     }
@@ -98,16 +102,6 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
                             SETTERS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Update voting time only by SPOG
-    /// @param newVotingTime New voting time
-    function updateVotingTime(uint256 newVotingTime) external override onlySPOG {
-        emit VotingPeriodUpdated(_votingPeriod, newVotingTime);
-
-        _votingPeriod = newVotingTime;
-        _votingPeriodChangedBlockNumber = block.number;
-        _votingPeriodChangedEpoch = currentEpoch();
-    }
-
     function _registerEmergencyProposal(uint256 proposalId) internal virtual {
         emergencyProposals[proposalId] = true;
     }
@@ -134,7 +128,7 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
         epochProposalsCount[currentEpoch() + 1]++;
 
         // allow only 1 SPOG change with no value per proposal
-        if (targets.length != 1 || targets[0] != address(this) || values[0] != 0) {
+        if (targets.length != 1 || values[0] != 0) {
             revert InvalidProposal();
         }
 
@@ -143,14 +137,14 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
         }
 
         bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        if (ISPOG(spogAddress).governedMethods(executableFuncSelector)) {
+        if (ISPOG(spogAddress).isGovernedMethod(executableFuncSelector)) {
             revert NotGovernedMethod(executableFuncSelector);
         }
 
         // _payFee(executableFuncSelector);
 
         // // Inflate Vote and Value token supply unless method is reset or emergencyRemove
-        // if (executableFuncSelector != ISPOG.reset.selector && executableFuncSelector != ISPOG.emergencyRemove.selector)
+        // if (executableFuncSelector != ISPOG.reset.selector && executableFuncSelector != ISPOG.emergency.selector)
         // {
         //     _inflateRewardTokens();
         // }
@@ -167,9 +161,11 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
             return proposalId;
         }
 
+        // TODO: add proposal to change quorum numerators as double proposal too
+
         // $VALUE and $VOTE governance proposals
         // If we request to change config parameter, value governance should vote too
-        if (executableFuncSelector == ISPOG.change.selector) {
+        if (executableFuncSelector == ISPOG.changeTaxRange.selector) {
             uint256 proposalId = super.propose(targets, values, calldatas, description);
             _proposalTypes[proposalId] = ProposalType.Double;
             // emit NewDoubleQuorumProposal(voteProposalId);
@@ -178,7 +174,7 @@ contract SPOGGovernor is ISPOGGovernor, DualGovernorVotesQuorumFraction {
 
         // Only $VOTE governance proposals
 
-        if (executableFuncSelector == ISPOG.emergencyRemove.selector) {
+        if (executableFuncSelector == ISPOG.emergency.selector) {
             _turnOnEmergencyVoting();
             uint256 proposalId = super.propose(targets, values, calldatas, description);
             _turnOffEmergencyVoting();

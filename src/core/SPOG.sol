@@ -6,14 +6,13 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
 import {IList} from "src/interfaces/IList.sol";
-import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 
-import {SPOGStorage, SPOGGovernor} from "src/core/SPOGStorage.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
 import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
 
@@ -22,121 +21,155 @@ import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
-/// @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
-contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
+/// @notice SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property.
+/// @notice SPOG is used for **permissioning actors**  and optimized for token holder participation.
+contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    // vault for vote holders voting inflation rewards
-    IVoteVault public immutable voteVault;
-    // vault for value holders assets rewards
-    IValueVault public immutable valueVault;
-
-    // List of methods that can be executed by SPOG governance
-    mapping(bytes4 => bool) public governedMethods;
-
-    uint256 private constant inMasterList = 1;
-    uint256 public constant EMERGENCY_REMOVE_TAX_MULTIPLIER = 12;
-    uint256 public constant RESET_TAX_MULTIPLIER = 12;
-
-    // List of addresses that are part of the masterlist
-    // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
-    EnumerableMap.AddressToUintMap private masterlist;
-
-    // Indicator that token rewards were already minted for an epoch, epoch number => bool
-    mapping(uint256 => bool) private epochRewardsMinted;
-
-    /// @notice Create a new SPOG
-    /// @param _initSPOGData The data used to initialize spogData
-    /// @param _voteVault The address of the `Vault` contract for vote holders
-    /// @param _valueVault The address of the `Vault` contract for value holders
-    /// @param _time The duration of a voting epochs for governors and auctions in blocks
-    /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
-    /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
-    /// @param _valueFixedInflationAmount The fixed inflation amount for the $VALUE token
-    /// @param _governor The address of the `SPOGGovernor`
-    constructor(
-        bytes memory _initSPOGData,
-        IVoteVault _voteVault,
-        IValueVault _valueVault,
-        uint256 _time,
-        uint256 _voteQuorum,
-        uint256 _valueQuorum,
-        uint256 _valueFixedInflationAmount,
-        SPOGGovernor _governor
-    ) SPOGStorage(_initSPOGData, _governor, _time, _voteQuorum, _valueQuorum, _valueFixedInflationAmount) {
-        if (_voteVault == IVoteVault(address(0)) || _valueVault == IValueVault(address(0))) {
-            revert ISPOG.VaultAddressCannotBeZero();
-        }
-
-        voteVault = _voteVault;
-        valueVault = _valueVault;
-
-        _initGovernedMethods();
+    struct Configuration {
+        address payable governor;
+        address voteVault;
+        address valueVault;
+        address cash;
+        uint256 tax;
+        uint256 taxLowerBound;
+        uint256 taxUpperBound;
+        uint256 inflator;
+        uint256 valueFixedInflation;
     }
 
-    /// @dev Getter for finding whether a list is in a masterlist
+    /// @notice Indicator that list is in master list
+    uint256 private constant inMasterList = 1;
+
+    /// @notice Multiplier in cash for `emergency` proposal
+    uint256 public constant EMERGENCY_TAX_MULTIPLIER = 12;
+
+    /// @notice Multiplier in cash for `reset` proposal
+    uint256 public constant RESET_TAX_MULTIPLIER = 12;
+
+    /// @notice Vault for vote holders vote and value inflation rewards
+    IVoteVault public immutable voteVault;
+
+    /// @notice Vault for value holders assets
+    IValueVault public immutable valueVault;
+
+    /// @notice Cash token used for proposal fee payments
+    IERC20 public immutable cash;
+
+    /// @notice Fixed inflation rewards per epoch for value holders
+    uint256 public immutable valueFixedInflation;
+
+    /// @notice Inflation rate per epoch for vote holders
+    uint256 public immutable inflator;
+
+    /// @notice Governor, upgradable via `reset` by value holders
+    SPOGGovernor public governor;
+
+    /// @notice Tax value for proposal cash fee
+    uint256 public tax;
+
+    /// @notice Tax range: lower bound for proposal cash fee
+    uint256 public taxLowerBound;
+
+    /// @notice Tax range: upper bound for proposal cash fee
+    uint256 public taxUpperBound;
+
+    /// @notice List of addresses that are part of the masterlist
+    // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
+    EnumerableMap.AddressToUintMap private _masterlist;
+
+    /// @notice Indicator if token rewards were minted for an epoch,
+    /// @dev (epoch number => bool)
+    mapping(uint256 => bool) private _epochRewardsMinted;
+
+    modifier onlyGovernance() {
+        if (msg.sender != address(governor)) revert OnlyGovernor();
+
+        _;
+    }
+
+    /// @notice Create a new SPOG instance
+    /// @param config The configuration data for the SPOG
+    constructor(Configuration memory config) {
+        // Sanity checks
+        if (config.governor == address(0)) revert ZeroGovernorAddress();
+        if (config.voteVault == address(0) || config.valueVault == address(0)) revert ZeroVaultAddress();
+        if (config.cash == address(0)) revert ZeroCashAddress();
+        if (config.tax == 0) revert ZeroTax();
+        if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
+        if (config.inflator == 0) revert ZeroInflator();
+        if (config.valueFixedInflation == 0) revert ZeroValueInflation();
+
+        // Set configuration data
+        governor = SPOGGovernor(config.governor);
+        // Initialize governor
+        governor.initSPOGAddress(address(this));
+
+        voteVault = IVoteVault(config.voteVault);
+        valueVault = IValueVault(config.valueVault);
+        cash = IERC20(config.cash);
+        tax = config.tax;
+        taxLowerBound = config.taxLowerBound;
+        taxUpperBound = config.taxUpperBound;
+        inflator = config.inflator;
+        valueFixedInflation = config.valueFixedInflation;
+    }
+
+    /// @notice Getter for finding whether a list is in a masterlist
+    /// @param list The list address to check
     /// @return Whether the list is in the masterlist
     function isListInMasterList(address list) external view override returns (bool) {
-        return masterlist.contains(list);
+        return _masterlist.contains(list);
     }
 
     /*//////////////////////////////////////////////////////////////
-                            MASTERLIST FUNCTIONS
+                            MASTERLIST GOVERNANCE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
     function addNewList(IList list) external override onlyGovernance {
-        if (list.admin() != address(this)) {
-            revert ListAdminIsNotSPOG();
-        }
+        if (list.admin() != address(this)) revert ListAdminIsNotSPOG();
+
         // add the list to the master list
-        masterlist.set(address(list), inMasterList);
+        _masterlist.set(address(list), inMasterList);
         emit NewListAdded(address(list));
     }
 
     /// @notice Append an address to a list
     /// @param _address The address to be appended to the list
     /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) external override onlyGovernance {
+    function append(address _address, IList _list) public override onlyGovernance {
         // require that the list is on the master list
-        if (!masterlist.contains(address(_list))) {
-            revert ListIsNotInMasterList();
-        }
+        if (!_masterlist.contains(address(_list))) revert ListIsNotInMasterList();
 
-        // append the address to the list
+        // add the address to the list
         _list.add(_address);
+
         emit AddressAppendedToList(address(_list), _address);
     }
 
-    // create function to remove an address from a list
     /// @notice Remove an address from a list
     /// @param _address The address to be removed from the list
     /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) external override onlyGovernance {
-        _removeFromList(_address, _list);
+    function remove(address _address, IList _list) public override onlyGovernance {
+        // require that the list is on the master list
+        if (!_masterlist.contains(address(_list))) revert ListIsNotInMasterList();
+
+        // remove the address from the list
+        _list.remove(_address);
+
         emit AddressRemovedFromList(address(_list), _address);
     }
 
-    // create function to remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @notice Remove an address from a list immediately upon reaching a `VOTE QUORUM`
-    /// @param _address The address to be removed from the list
-    /// @param _list The list from which the address will be removed
-    // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
-    // TODO: IMPORTANT: implement immediate remove
-    function emergencyRemove(address _address, IList _list) external override onlyGovernance {
-        _removeFromList(_address, _list);
-        emit EmergencyAddressRemovedFromList(address(_list), _address);
-    }
-
     /*//////////////////////////////////////////////////////////////
-                            CONFIG GOVERNANCE FUNCTIONS
+                            GOVERNANCE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
@@ -144,12 +177,34 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         override(IProtocolConfigurator, ProtocolConfigurator)
         onlyGovernance
     {
-        return super.changeConfig(configName, configAddress, interfaceId);
+        super.changeConfig(configName, configAddress, interfaceId);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            GOVERNANCE INTERFACE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
+    /// @notice Emergency version of existing methods
+    /// @param emergencyType The type of emergency method to be called (See enum in ISPOG)
+    /// @param callData The data to be used for the target method
+    /// @dev Emergency methods are encoded much like change proposals
+    // TODO: IMPORTANT: right now voting period and logic is the same as for other functions
+    // TODO: IMPORTANT: implement immediate remove
+    function emergency(uint8 emergencyType, bytes calldata callData) external override onlyGovernance {
+        EmergencyType _emergencyType = EmergencyType(emergencyType);
+
+        if (_emergencyType == EmergencyType.Remove) {
+            (address _address, IList _list) = abi.decode(callData, (address, IList));
+            remove(_address, _list);
+        } else if (_emergencyType == EmergencyType.Append) {
+            (address _address, IList _list) = abi.decode(callData, (address, IList));
+            append(_address, _list);
+        } else if (_emergencyType == EmergencyType.ChangeConfig) {
+            (bytes32 configName, address configAddress, bytes4 interfaceId) =
+                abi.decode(callData, (bytes32, address, bytes4));
+            super.changeConfig(configName, configAddress, interfaceId);
+        } else {
+            revert EmergencyMethodNotSupported();
+        }
+
+        emit EmergencyExecuted(emergencyType, callData);
+    }
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
@@ -176,76 +231,73 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         emit SPOGResetExecuted(address(newVoteToken), address(newGovernor));
     }
 
+    function changeTax(uint256 _tax) external onlyGovernance {
+        if (_tax < taxLowerBound || _tax > taxUpperBound) revert TaxOutOfRange();
+
+        tax = _tax;
+
+        emit TaxChanged(_tax);
+    }
+
+    function changeTaxRange(uint256 _taxLowerBound, uint256 _taxUpperBound) external onlyGovernance {
+        // TODO: add adequate sanity checks
+        taxLowerBound = _taxLowerBound;
+        taxUpperBound = _taxUpperBound;
+
+        emit TaxRangeChanged(_taxLowerBound, _taxUpperBound);
+    }
+
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTION
     //////////////////////////////////////////////////////////////*/
 
+    function isGovernedMethod(bytes4 selector) external view returns (bool) {
+        // TODO: order by frequence of usage
+        if (selector == this.append.selector) return true;
+        if (selector == this.changeTax.selector) return true;
+        if (selector == this.changeTaxRange.selector) return true;
+        if (selector == this.remove.selector) return true;
+        if (selector == this.addNewList.selector) return true;
+        if (selector == this.emergency.selector) return true;
+        if (selector == this.reset.selector) return true;
+        if (selector == this.changeConfig.selector) return true;
+        return false;
+    }
+
     function getFee(bytes4 funcSelector) public view returns (uint256, address) {
         uint256 fee;
         // Pay flat fee for all the operations except emergency remove and reset
-        if (funcSelector == this.emergencyRemove.selector) {
-            fee = EMERGENCY_REMOVE_TAX_MULTIPLIER * spogData.tax;
+        if (funcSelector == this.emergency.selector) {
+            fee = EMERGENCY_TAX_MULTIPLIER * tax;
         } else if (funcSelector == this.reset.selector) {
-            fee = RESET_TAX_MULTIPLIER * spogData.tax;
+            fee = RESET_TAX_MULTIPLIER * tax;
         } else {
-            fee = spogData.tax;
+            fee = tax;
         }
 
-        return (fee, address(spogData.cash));
+        return (fee, address(cash));
     }
 
     /// @notice sell unclaimed $vote tokens
     /// @param epoch The epoch for which to sell unclaimed $vote tokens
     function sellInactiveVoteInflation(uint256 epoch) public {
-        voteVault.sellInactiveVoteInflation(epoch, address(spogData.cash), governor.votingPeriod());
+        voteVault.sellInactiveVoteInflation(epoch, address(cash), governor.votingPeriod());
     }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
-    // TODO: can we use `totalSupply` here
-    function voteTokenInflationPerEpoch() public view returns (uint256) {
-        return (governor.vote().totalSupply() * spogData.inflator) / 100;
+    // TODO: fix `totalSupply` here and denominator here
+    function voteTokenInflationPerEpoch(uint256 epoch) public view returns (uint256) {
+        return (governor.vote().totalSupply() * inflator) / 100;
     }
 
     /// @notice returns number of value token rewards for an epoch with active proposals
     function valueTokenInflationPerEpoch() public view returns (uint256) {
-        return valueFixedInflationAmount;
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            UTILITY FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev check SPOG interface support
-    /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
-        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
+        return valueFixedInflation;
     }
 
     /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-
-    function _initGovernedMethods() private {
-        // TODO: review if there is better, more efficient way to do it
-        governedMethods[this.append.selector] = true;
-        governedMethods[this.changeTax.selector] = true;
-        governedMethods[this.remove.selector] = true;
-        governedMethods[this.addNewList.selector] = true;
-        governedMethods[this.change.selector] = true;
-        governedMethods[this.emergencyRemove.selector] = true;
-        governedMethods[this.reset.selector] = true;
-        governedMethods[this.changeConfig.selector] = true;
-    }
-
-    function _removeFromList(address _address, IList _list) private {
-        // require that the list is on the master list
-        if (!masterlist.contains(address(_list))) {
-            revert ListIsNotInMasterList();
-        }
-
-        // remove the address from the list
-        _list.remove(_address);
-    }
 
     /// @notice extract address params from the call data
     /// @param callData The call data with selector in first 4 bytes
@@ -263,6 +315,16 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
             // load the address params
             targetParams := mload(addressPosition)
         }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            UTILITY FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev check SPOG interface support
+    /// @param interfaceId The interface ID to check
+    function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
+        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 
     fallback() external {

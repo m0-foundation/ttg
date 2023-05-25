@@ -112,7 +112,8 @@ contract SPOG_InitialState is SPOG_Base {
         ValueToken valueToken = new ValueToken("TEST_SPOGValue", "value");
         VoteToken voteToken = new VoteToken("TEST_SPOGVote", "vote", address(valueToken));
 
-        SPOGGovernor _governor = new SPOGGovernor(voteToken, valueToken, voteQuorum, valueQuorum, time, "SPOGGovernor");
+        SPOGGovernor _governor =
+            new SPOGGovernor("SPOGGovernor", address(voteToken), address(valueToken), voteQuorum, valueQuorum, time);
 
         address invalidVoteVault = address(0);
         vm.expectRevert(ISPOG.VaultAddressCannotBeZero.selector);

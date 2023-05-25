@@ -63,6 +63,4 @@ interface ISPOGGovernor {
 
     function proposalVoteVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
     function proposalValueVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
-
-    function updateVotingTime(uint256 newVotingTime) external;
 }

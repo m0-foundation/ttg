@@ -9,58 +9,58 @@ import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
+    enum EmergencyType {
+        Remove,
+        Append,
+        ChangeConfig
+    }
+
     // Events
     event NewListAdded(address indexed _list);
     event AddressAppendedToList(address indexed _list, address indexed _address);
     event AddressRemovedFromList(address indexed _list, address indexed _address);
-    event EmergencyAddressRemovedFromList(address indexed _list, address indexed _address);
+    event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 indexed tax);
-    event NewVoteQuorumProposal(uint256 indexed proposalId);
-    event NewValueQuorumProposal(uint256 indexed proposalId);
-    event NewDoubleQuorumProposal(uint256 indexed proposalId);
-    event NewEmergencyProposal(uint256 indexed proposalId);
-    event DoubleQuorumFinalized(bytes32 indexed identifier);
+    event TaxRangeChanged(uint256 lowerRange, uint256 upperRange);
+    // event NewVoteQuorumProposal(uint256 indexed proposalId);
+    // event NewValueQuorumProposal(uint256 indexed proposalId);
+    // event NewDoubleQuorumProposal(uint256 indexed proposalId);
+    // event NewEmergencyProposal(uint256 indexed proposalId);
     event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
 
     // Errors
-    error InvalidParameter(bytes32 what);
+    error OnlyGovernor();
+    error ZeroGovernorAddress();
+    error ZeroVaultAddress();
+    error ZeroCashAddress();
+    error ZeroTax();
+    error TaxOutOfRange();
+    error ZeroInflator();
+    error ZeroValueInflation();
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
-    error ListIsAlreadyInMasterList();
-    error InvalidProposal();
-    error NotGovernedMethod(bytes4 funcSelector);
-    error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
-    error ValueGovernorDidNotApprove(uint256 proposalId);
+    error EmergencyMethodNotSupported();
     error ValueTokenMistmatch();
-    error GovernorsShouldNotBeSame();
-    error VaultAddressCannotBeZero();
-    error ZeroAddress();
-    error ZeroValues();
-    error InitTaxOutOfRange();
-    error InitCashAndInflatorCannotBeZero();
-    error TaxOutOfRange();
-    error OnlyGovernor();
 
     // Info functions about double governance and SPOG parameters
     function governor() external view returns (SPOGGovernor);
-    function valueVault() external view returns (IValueVault);
     function voteVault() external view returns (IVoteVault);
-    function taxRange() external view returns (uint256, uint256);
+    function valueVault() external view returns (IValueVault);
 
     // Accepted `proposal` functions
     function addNewList(IList list) external;
     function append(address _address, IList _list) external;
     function remove(address _address, IList _list) external;
-    function emergencyRemove(address _address, IList _list) external;
-    function reset(SPOGGovernor newVoteGovernor) external;
-    function change(bytes32 what, bytes calldata value) external;
+    function emergency(uint8 emergencyType, bytes calldata callData) external;
+    function reset(SPOGGovernor newGovernor) external;
     function changeTax(uint256 _tax) external;
+    function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
 
     // Token rewards functions
-    function voteTokenInflationPerEpoch() external view returns (uint256);
+    function voteTokenInflationPerEpoch(uint256 epoch) external view returns (uint256);
     function valueTokenInflationPerEpoch() external view returns (uint256);
-    function governedMethods(bytes4 func) external view returns (bool);
-    function getFee(bytes4 funcSelector) external view returns (uint256, address);
+    function isGovernedMethod(bytes4 func) external view returns (bool);
+    function getFee(bytes4 func) external view returns (uint256, address);
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);

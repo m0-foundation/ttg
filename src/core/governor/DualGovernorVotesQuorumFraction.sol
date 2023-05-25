@@ -26,14 +26,14 @@ abstract contract DualGovernorVotesQuorumFraction is Governor {
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
     constructor(
-        ISPOGVotes vote_,
-        ISPOGVotes value_,
+        string memory name_,
+        address vote_,
+        address value_,
         uint256 voteQuorumNumerator_,
-        uint256 valueQuorumNumerator_,
-        string memory name_
+        uint256 valueQuorumNumerator_
     ) Governor(name_) {
-        vote = vote_;
-        value = value_;
+        vote = ISPOGVotes(vote_);
+        value = ISPOGVotes(value_);
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
         _updateValueQuorumNumerator(valueQuorumNumerator_);
     }

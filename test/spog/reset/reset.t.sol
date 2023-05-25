@@ -45,7 +45,7 @@ contract SPOG_reset is SPOG_Base {
         uint256 voteQuorum = 5;
         uint256 valueQuorum = 5;
         SPOGGovernor newGovernor =
-            new SPOGGovernor(newVoteToken, ISPOGVotes(valueToken), voteQuorum, valueQuorum, time, "new SPOGGovernor");
+            new SPOGGovernor("new SPOGGovernor", address(newVoteToken), valueToken, voteQuorum, valueQuorum, time);
 
         return address(newGovernor);
     }
@@ -137,7 +137,7 @@ contract SPOG_reset is SPOG_Base {
         uint256 voteQuorum = 5;
         uint256 valueQuorum = 5;
         SPOGGovernor newGovernor =
-            new SPOGGovernor(newVoteToken, newValueToken, voteQuorum, valueQuorum, time, "new SPOGGovernor");
+        new SPOGGovernor("new SPOGGovernor", address(newVoteToken), address(newValueToken), voteQuorum, valueQuorum, time);
 
         vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
         spog.reset(SPOGGovernor(payable(address(newGovernor))));
