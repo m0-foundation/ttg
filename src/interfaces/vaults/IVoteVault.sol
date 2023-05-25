@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
+import {DualGovernor} from "src/core/governor/DualGovernor.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
 
 interface IVoteVault is IValueVault {
@@ -16,5 +16,5 @@ interface IVoteVault is IValueVault {
     function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration) external;
 
     // RESET-related functions
-    function updateGovernor(SPOGGovernor newGovernor) external;
+    function updateGovernor(DualGovernor newGovernor) external;
 }

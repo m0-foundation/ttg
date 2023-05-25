@@ -7,7 +7,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
+import {DualGovernor} from "src/core/governor/DualGovernor.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
@@ -25,11 +25,11 @@ contract VoteVault is IVoteVault, ValueVault {
 
     //TODO: not changing require into error revert, this modifier should potentially be gone
     modifier onlySPOG() {
-        require(msg.sender == address(governor.spogAddress()), "Vault: Only spog");
+        require(msg.sender == address(governor.spog()), "Vault: Only spog");
         _;
     }
 
-    constructor(SPOGGovernor _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
+    constructor(DualGovernor _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
         auctionContract = _auctionContract;
     }
 
@@ -107,7 +107,7 @@ contract VoteVault is IVoteVault, ValueVault {
 
     // @notice Update vote governor after `RESET` was executed
     // @param newGovernor New vote governor
-    function updateGovernor(SPOGGovernor newGovernor) external onlySPOG {
+    function updateGovernor(DualGovernor newGovernor) external onlySPOG {
         // TODO: fix here as well when governor is one
         emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.vote()));
 

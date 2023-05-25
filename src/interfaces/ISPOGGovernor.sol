@@ -2,19 +2,18 @@
 pragma solidity 0.8.19;
 
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 interface ISPOGGovernor {
     // Errors
     error CallerIsNotSPOG(address caller);
-    error SPOGAddressAlreadySet(address spog);
+    error AlreadyInitialized();
     error AlreadyVoted(uint256 proposalId, address account);
-    error ArrayLengthsMismatch();
     error EpochInThePast(uint256 epoch, uint256 currentEpoch);
-
-    // Errors
     error InvalidProposal();
     error NotGovernedMethod(bytes4 funcSelector);
     error OnlyGovernor();
+    error ZeroSPOGAddress();
 
     // Events
     event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
@@ -28,9 +27,9 @@ interface ISPOGGovernor {
     }
 
     enum ProposalType {
-        Value,
         Vote,
-        Double
+        Double,
+        Value
     }
 
     /// @dev Supported vote types.
@@ -40,8 +39,7 @@ interface ISPOGGovernor {
     }
 
     // public variables
-    function spogAddress() external view returns (address);
-
+    function spog() external view returns (ISPOG);
     // function vote() external view returns (ISPOGVotes);
     // function value() external view returns (ISPOGVotes);
 
@@ -49,10 +47,9 @@ interface ISPOGGovernor {
     function emergencyProposals(uint256 proposalId) external view returns (bool);
 
     function epochProposalsCount(uint256 epoch) external view returns (uint256);
+    function epochSumOfVoteWeight(uint256 epoch) external view returns (uint256);
 
     function accountEpochNumProposalsVotedOn(address account, uint256 epoch) external view returns (uint256);
-
-    function epochSumOfVoteWeight(uint256 epoch) external view returns (uint256);
 
     // public functions
 

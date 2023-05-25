@@ -19,7 +19,7 @@ contract SPOG_reset is SPOG_Base {
     uint8 internal yesVote;
 
     event NewValueQuorumProposal(uint256 indexed proposalId);
-    event SPOGResetExecuted(address indexed newVoteToken, address indexed newVoteGovernor);
+    event ResetExecuted(address indexed newVoteToken, address indexed newVoteGovernor);
 
     function setUp() public override {
         super.setUp();
@@ -168,7 +168,7 @@ contract SPOG_reset is SPOG_Base {
 
         vm.expectEmit(false, false, false, false);
         address anyAddress = address(0);
-        emit SPOGResetExecuted(anyAddress, anyAddress);
+        emit ResetExecuted(anyAddress, anyAddress);
         governor.execute(targets, values, calldatas, hashedDescription);
 
         assertFalse(address(spog.governor()) == governorBeforeFork, "Governor was not reset");

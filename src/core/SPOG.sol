@@ -21,7 +21,7 @@ import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
 
 import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
-import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
+import {DualGovernor} from "src/core/governor/DualGovernor.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -69,7 +69,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     uint256 public immutable inflator;
 
     /// @notice Governor, upgradable via `reset` by value holders
-    SPOGGovernor public governor;
+    DualGovernor public governor;
 
     /// @notice Tax value for proposal cash fee
     uint256 public tax;
@@ -107,7 +107,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         if (config.valueFixedInflation == 0) revert ZeroValueInflation();
 
         // Set configuration data
-        governor = SPOGGovernor(config.governor);
+        governor = DualGovernor(config.governor);
         // Initialize governor
         governor.initSPOGAddress(address(this));
 
@@ -208,7 +208,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(SPOGGovernor newGovernor) external onlyGovernance {
+    function reset(DualGovernor newGovernor) external onlyGovernance {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         IVoteToken newVoteToken = IVoteToken(address(newGovernor.vote()));
@@ -228,7 +228,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         uint256 resetSnapshotId = valueToken.snapshot();
         newVoteToken.initReset(resetSnapshotId);
 
-        emit SPOGResetExecuted(address(newVoteToken), address(newGovernor));
+        emit ResetExecuted(address(newVoteToken), address(newGovernor));
     }
 
     function changeTax(uint256 newTax) external onlyGovernance {
@@ -246,8 +246,45 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         taxUpperBound = newTaxUpperBound;
     }
 
+    function chargeFee(address account, bytes4 func) external onlyGovernance {
+        uint256 fee = _getFee(func);
+
+        // transfer the amount from the caller to the SPOG
+        cash.safeTransferFrom(account, address(this), fee);
+        // approve amount to be sent to the vault
+        cash.approve(address(valueVault), fee);
+
+        // deposit the amount to the vault
+        valueVault.depositRewards(governor.currentEpoch(), address(cash), fee);
+    }
+
+    /// @notice inflate Vote and Value token supplies
+    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
+    function inflateRewardTokens() external onlyGovernance {
+        uint256 nextEpoch = governor.currentEpoch() + 1;
+
+        // Epoch reward tokens already minted, silently return
+        if (_epochRewardsMinted[nextEpoch]) return;
+
+        _epochRewardsMinted[nextEpoch] = true;
+
+        // Mint and deposit Vote and Value rewards to vault
+        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteTokenInflationPerEpoch(nextEpoch));
+        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueTokenInflationPerEpoch());
+    }
+
+    /// @notice mint reward token into the vault
+    /// @param epoch The epoch for which rewards become claimable
+    /// @param token The reward token, only vote or value tokens
+    /// @param amount The amount to mint and deposit into the vault
+    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
+        token.mint(address(this), amount);
+        token.approve(address(voteVault), amount);
+        voteVault.depositRewards(epoch, address(token), amount);
+    }
+
     /*//////////////////////////////////////////////////////////////
-                            PUBLIC FUNCTION
+                            PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     function isGovernedMethod(bytes4 selector) external view returns (bool) {
@@ -263,25 +300,22 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         return false;
     }
 
-    function getFee(bytes4 funcSelector) public view returns (uint256, address) {
-        uint256 fee;
-        // Pay flat fee for all the operations except emergency remove and reset
+    /// @dev Pay flat fee for all the operations except emergency and reset
+    function _getFee(bytes4 funcSelector) internal view returns (uint256) {
         if (funcSelector == this.emergency.selector) {
-            fee = EMERGENCY_TAX_MULTIPLIER * tax;
-        } else if (funcSelector == this.reset.selector) {
-            fee = RESET_TAX_MULTIPLIER * tax;
-        } else {
-            fee = tax;
+            return EMERGENCY_TAX_MULTIPLIER * tax;
         }
-
-        return (fee, address(cash));
+        if (funcSelector == this.reset.selector) {
+            return RESET_TAX_MULTIPLIER * tax;
+        }
+        return tax;
     }
 
-    /// @notice sell unclaimed $vote tokens
-    /// @param epoch The epoch for which to sell unclaimed $vote tokens
-    function sellInactiveVoteInflation(uint256 epoch) public {
-        voteVault.sellInactiveVoteInflation(epoch, address(cash), governor.votingPeriod());
-    }
+    // /// @notice sell unclaimed $vote tokens
+    // /// @param epoch The epoch for which to sell unclaimed $vote tokens
+    // function sellInactiveVoteInflation(uint256 epoch) public {
+    //     voteVault.sellInactiveVoteInflation(epoch, address(cash), governor.votingPeriod());
+    // }
 
     /// @notice returns number of vote token rewards for an epoch with active proposals
     // TODO: fix `totalSupply` here and denominator here
