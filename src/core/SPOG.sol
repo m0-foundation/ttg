@@ -134,38 +134,38 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(IList list) external override onlyGovernance {
-        if (list.admin() != address(this)) revert ListAdminIsNotSPOG();
+    function addNewList(address list) external override onlyGovernance {
+        if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
 
         // add the list to the master list
-        _masterlist.set(address(list), inMasterList);
-        emit NewListAdded(address(list));
+        _masterlist.set(list, inMasterList);
+        emit NewListAdded(list);
     }
 
     /// @notice Append an address to a list
-    /// @param _address The address to be appended to the list
-    /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) public override onlyGovernance {
+    /// @param list The list to which the address will be appended
+    /// @param account The address to be appended to the list
+    function append(address list, address account) public override onlyGovernance {
         // require that the list is on the master list
-        if (!_masterlist.contains(address(_list))) revert ListIsNotInMasterList();
+        if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // add the address to the list
-        _list.add(_address);
+        IList(list).add(account);
 
-        emit AddressAppendedToList(address(_list), _address);
+        emit AddressAppendedToList(list, account);
     }
 
     /// @notice Remove an address from a list
-    /// @param _address The address to be removed from the list
-    /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) public override onlyGovernance {
+    /// @param list The list from which the address will be removed
+    /// @param account The address to be removed from the list
+    function remove(address list, address account) public override onlyGovernance {
         // require that the list is on the master list
-        if (!_masterlist.contains(address(_list))) revert ListIsNotInMasterList();
+        if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // remove the address from the list
-        _list.remove(_address);
+        IList(list).remove(account);
 
-        emit AddressRemovedFromList(address(_list), _address);
+        emit AddressRemovedFromList(list, account);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -190,11 +190,11 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         EmergencyType _emergencyType = EmergencyType(emergencyType);
 
         if (_emergencyType == EmergencyType.Remove) {
-            (address _address, IList _list) = abi.decode(callData, (address, IList));
-            remove(_address, _list);
+            (address list, address account) = abi.decode(callData, (address, address));
+            remove(list, account);
         } else if (_emergencyType == EmergencyType.Append) {
-            (address _address, IList _list) = abi.decode(callData, (address, IList));
-            append(_address, _list);
+            (address list, address account) = abi.decode(callData, (address, address));
+            append(list, account);
         } else if (_emergencyType == EmergencyType.ChangeConfig) {
             (bytes32 configName, address configAddress, bytes4 interfaceId) =
                 abi.decode(callData, (bytes32, address, bytes4));
@@ -231,20 +231,19 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         emit SPOGResetExecuted(address(newVoteToken), address(newGovernor));
     }
 
-    function changeTax(uint256 _tax) external onlyGovernance {
-        if (_tax < taxLowerBound || _tax > taxUpperBound) revert TaxOutOfRange();
+    function changeTax(uint256 newTax) external onlyGovernance {
+        if (newTax < taxLowerBound || newTax > taxUpperBound) revert TaxOutOfRange();
 
-        tax = _tax;
-
-        emit TaxChanged(_tax);
+        emit TaxChanged(tax, newTax);
+        tax = newTax;
     }
 
-    function changeTaxRange(uint256 _taxLowerBound, uint256 _taxUpperBound) external onlyGovernance {
+    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external onlyGovernance {
         // TODO: add adequate sanity checks
-        taxLowerBound = _taxLowerBound;
-        taxUpperBound = _taxUpperBound;
+        emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
 
-        emit TaxRangeChanged(_taxLowerBound, _taxUpperBound);
+        taxLowerBound = newTaxLowerBound;
+        taxUpperBound = newTaxUpperBound;
     }
 
     /*//////////////////////////////////////////////////////////////

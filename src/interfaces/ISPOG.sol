@@ -16,17 +16,17 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     }
 
     // Events
-    event NewListAdded(address indexed _list);
-    event AddressAppendedToList(address indexed _list, address indexed _address);
-    event AddressRemovedFromList(address indexed _list, address indexed _address);
+    event NewListAdded(address indexed list);
+    event AddressAppendedToList(address indexed list, address indexed account);
+    event AddressRemovedFromList(address indexed list, address indexed account);
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
-    event TaxChanged(uint256 indexed tax);
-    event TaxRangeChanged(uint256 lowerRange, uint256 upperRange);
+    event TaxChanged(uint256 oldTax, uint256 newTax);
+    event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     // event NewVoteQuorumProposal(uint256 indexed proposalId);
     // event NewValueQuorumProposal(uint256 indexed proposalId);
     // event NewDoubleQuorumProposal(uint256 indexed proposalId);
     // event NewEmergencyProposal(uint256 indexed proposalId);
-    event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
+    event SPOGResetExecuted(address indexed newVoteToken, address indexed newGovernor);
 
     // Errors
     error OnlyGovernor();
@@ -48,9 +48,9 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function valueVault() external view returns (IValueVault);
 
     // Accepted `proposal` functions
-    function addNewList(IList list) external;
-    function append(address _address, IList _list) external;
-    function remove(address _address, IList _list) external;
+    function addNewList(address list) external;
+    function append(address list, address account) external;
+    function remove(address list, address account) external;
     function emergency(uint8 emergencyType, bytes calldata callData) external;
     function reset(SPOGGovernor newGovernor) external;
     function changeTax(uint256 _tax) external;
