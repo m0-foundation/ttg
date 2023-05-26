@@ -6,17 +6,18 @@ import {ISPOG} from "src/interfaces/ISPOG.sol";
 
 interface ISPOGGovernor {
     // Errors
-    error CallerIsNotSPOG(address caller);
+    error TooManyTargets();
+    error InvalidTarget();
+    error InvalidValue();
+    error InvalidMethod();
+    error ListAdminIsNotSPOG();
     error AlreadyInitialized();
     error AlreadyVoted(uint256 proposalId, address account);
     error EpochInThePast(uint256 epoch, uint256 currentEpoch);
-    error InvalidProposal();
-    error NotGovernedMethod(bytes4 funcSelector);
-    error OnlyGovernor();
     error ZeroSPOGAddress();
 
     // Events
-    event VotingPeriodUpdated(uint256 oldVotingPeriod, uint256 newVotingPeriod);
+    event NewProposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
 
     struct ProposalVote {
         uint256 voteNoVotes;

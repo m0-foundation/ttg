@@ -332,24 +332,6 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice extract address params from the call data
-    /// @param callData The call data with selector in first 4 bytes
-    /// @dev used to inspect params before allowing proposal
-    function _extractAddressTypeParamsFromCalldata(bytes memory callData)
-        internal
-        pure
-        returns (address targetParams)
-    {
-        assembly {
-            // byte offset to represent function call data. 4 bytes funcSelector plus address 32 bytes
-            let offset := 36
-            // add offset so we pick from start of address params
-            let addressPosition := add(callData, offset)
-            // load the address params
-            targetParams := mload(addressPosition)
-        }
-    }
-
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/

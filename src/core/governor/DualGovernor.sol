@@ -9,6 +9,7 @@ import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
 import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
 import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import {IList} from "src/interfaces/IList.sol";
 import {DualGovernorQuorum} from "src/core/governor/DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
@@ -40,12 +41,6 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
     mapping(uint256 => uint256) public epochSumOfVoteWeight;
     // address => epoch => number of proposals voted on
     mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
-
-    // modifier onlySPOG() {
-    //     if (msg.sender != spogAddress) revert CallerIsNotSPOG(msg.sender);
-
-    //     _;
-    // }
 
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
@@ -103,11 +98,6 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
     /*//////////////////////////////////////////////////////////////
                             SETTERS
     //////////////////////////////////////////////////////////////*/
-
-    function _registerEmergencyProposal(uint256 proposalId) internal virtual {
-        emergencyProposals[proposalId] = true;
-    }
-
     function _turnOnEmergencyVoting() internal virtual {
         _emergencyVotingIsOn = true;
     }
@@ -120,84 +110,70 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
+    function _getProposalType(bytes4 func) internal view virtual returns (ProposalType) {
+        if (
+            func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector
+                || func == ISPOG.changeTaxRange.selector
+        ) {
+            return ProposalType.Double;
+        }
+
+        if (func == ISPOG.reset.selector) {
+            return ProposalType.Value;
+        }
+
+        return ProposalType.Vote;
+    }
+
+    function isGovernedMethod(bytes4 func) public view returns (bool) {
+        return func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector;
+    }
+
     function propose(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
     ) public override returns (uint256) {
-        // update epochProposalsCount. Proposals are voted on in the next epoch
-        epochProposalsCount[currentEpoch() + 1]++;
-
-        // allow only 1 SPOG change with no value per proposal
-        if (targets.length != 1 || values[0] != 0) {
-            revert InvalidProposal();
-        }
-
-        if (targets[0] != address(this) && targets[0] != address(spog)) {
-            revert InvalidProposal();
-        }
-
-        bytes4 executableFuncSelector = bytes4(calldatas[0]);
-        if (spog.isGovernedMethod(executableFuncSelector)) {
-            revert NotGovernedMethod(executableFuncSelector);
-        }
-
-        spog.chargeFee(msg.sender, executableFuncSelector);
-
-        // Inflate Vote and Value token supply unless method is reset or emergencyRemove
-        if (executableFuncSelector != ISPOG.reset.selector && executableFuncSelector != ISPOG.emergency.selector) {
-            spog.inflateRewardTokens();
-        }
-
-        // Only $VALUE governance proposals
-        if (executableFuncSelector == ISPOG.reset.selector) {
-            _turnOnEmergencyVoting();
-            uint256 proposalId = super.propose(targets, values, calldatas, description);
-            _turnOffEmergencyVoting();
-
-            _proposalTypes[proposalId] = ProposalType.Value;
-
-            // emit NewValueQuorumProposal(proposalId);
-            return proposalId;
-        }
-
-        // TODO: add proposal to change quorum numerators as double proposal too
-
-        // $VALUE and $VOTE governance proposals
-        // If we request to change config parameter, value governance should vote too
-        if (executableFuncSelector == ISPOG.changeTaxRange.selector) {
-            uint256 proposalId = super.propose(targets, values, calldatas, description);
-            _proposalTypes[proposalId] = ProposalType.Double;
-            // emit NewDoubleQuorumProposal(voteProposalId);
-            return proposalId;
-        }
-
-        // Only $VOTE governance proposals
-
-        if (executableFuncSelector == ISPOG.emergency.selector) {
-            _turnOnEmergencyVoting();
-            uint256 proposalId = super.propose(targets, values, calldatas, description);
-            _turnOffEmergencyVoting();
-
-            _proposalTypes[proposalId] = ProposalType.Vote;
-            _registerEmergencyProposal(proposalId);
-
-            // emit NewEmergencyProposal(proposalId);
-            return proposalId;
-        }
-
-        uint256 proposalId = super.propose(targets, values, calldatas, description);
-        _proposalTypes[proposalId] = ProposalType.Vote;
+        // Sanity checks
+        if (values[0] != 0) revert InvalidValue();
+        if (targets.length != 1) revert TooManyTargets();
+        address target = targets[0];
+        bytes4 func = bytes4(calldatas[0]);
+        if (target != address(this) && target != address(spog)) revert InvalidTarget();
+        if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
+        if (target == address(spog) && !spog.isGovernedMethod(func)) revert InvalidMethod();
         // prevent proposing a list that can be changed before execution
-        // if (executableFuncSelector == this.addNewList.selector) {
-        //     address listParams = _extractAddressTypeParamsFromCalldata(calldatas[0]);
-        //     if (IList(listParams).admin() != address(this)) {
-        //         revert ListAdminIsNotSPOG();
-        //     }
-        // }
+        // TODO: potentially this should be part of pre-validation logic
+        if (func == ISPOG.addNewList.selector) {
+            address list = _extractAddressTypeParamsFromCalldata(calldatas[0]);
+            if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
+        }
 
-        // emit NewVoteQuorumProposal(proposalId);
+        spog.chargeFee(msg.sender, func);
+
+        uint256 proposalId;
+        ProposalType proposalType = _getProposalType(func);
+        _proposalTypes[proposalId] = proposalType;
+        if (func == ISPOG.reset.selector || func == ISPOG.emergency.selector) {
+            _emergencyVotingIsOn = true;
+            proposalId = super.propose(targets, values, calldatas, description);
+            _emergencyVotingIsOn = false;
+        } else {
+            // do not inflate tokens for emergency and reset proposals
+            spog.inflateRewardTokens();
+            proposalId = super.propose(targets, values, calldatas, description);
+        }
+
+        if (func == ISPOG.emergency.selector) {
+            emergencyProposals[proposalId] = true;
+        }
+
+        /// @dev proposals are voted on in the next epoch
+        uint256 nextEpoch = currentEpoch() + 1;
+        epochProposalsCount[nextEpoch]++;
+
+        emit NewProposal(nextEpoch, proposalId, proposalType);
         return proposalId;
     }
 
@@ -271,21 +247,23 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
         return _votingPeriod;
     }
 
-    // /// @notice pay tax from the caller to the SPOG
-    // /// @param funcSelector The executable function selector
-    // function _payFee(bytes4 funcSelector) private {
-    //     uint256 fee = spog.getFee(funcSelector);
-    //     IValueVault vault = spog.valueVault();
-    //     IERC20 cash = spog.cash();
-
-    //     // transfer the amount from the caller to the SPOG
-    //     cash.safeTransferFrom(msg.sender, address(this), fee);
-    //     // approve amount to be sent to the vault
-    //     cash.approve(address(vault), fee);
-
-    //     // deposit the amount to the vault
-    //     vault.depositRewards(currentEpoch(), address(cash), fee);
-    // }
+    /// @notice extract address params from the call data
+    /// @param callData The call data with selector in first 4 bytes
+    /// @dev used to inspect params before allowing proposal
+    function _extractAddressTypeParamsFromCalldata(bytes memory callData)
+        internal
+        pure
+        returns (address targetParams)
+    {
+        assembly {
+            // byte offset to represent function call data. 4 bytes funcSelector plus address 32 bytes
+            let offset := 36
+            // add offset so we pick from start of address params
+            let addressPosition := add(callData, offset)
+            // load the address params
+            targetParams := mload(addressPosition)
+        }
+    }
 
     /*//////////////////////////////////////////////////////////////
                             COUNTING MODULE FUNCTIONS
@@ -323,19 +301,16 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
         uint256 voteQuorum_ = voteQuorum(snapshot);
         uint256 valueQuorum_ = valueQuorum(snapshot);
 
-        // TODO: fix checks with 0 quorum
-        if (proposalType == ProposalType.Vote) {
-            return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0;
-        }
-        if (proposalType == ProposalType.Value) {
-            return valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
-        }
+        // TODO: fix checks with 0 quorum, do we really need it ?
         if (proposalType == ProposalType.Double) {
             return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0
                 && valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
         }
+        if (proposalType == ProposalType.Value) {
+            return valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
+        }
 
-        revert InvalidProposal();
+        return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0;
     }
 
     /// @dev See {Governor-_voteSucceeded}.
