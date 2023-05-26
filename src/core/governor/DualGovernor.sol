@@ -11,11 +11,12 @@ contract DualGovernor is DualGovernorQuorum {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
-    ISPOG public spog;
-
     uint256 private immutable _votingPeriod;
-    uint256 private _votingPeriodChangedBlockNumber;
-    uint256 private _votingPeriodChangedEpoch;
+    uint256 private immutable _start;
+
+    ISPOG public spog;
+    mapping(uint256 => bool) public emergencyProposals;
+
     // @note voting with no delay is required for certain proposals
     bool private _emergencyVotingIsOn;
 
@@ -24,8 +25,6 @@ contract DualGovernor is DualGovernorQuorum {
     mapping(uint256 => ProposalType) private _proposalTypes;
     // epoch => proposals info
     mapping(uint256 => EpochBasic) private _epochBasic;
-
-    mapping(uint256 => bool) public emergencyProposals;
 
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
@@ -43,7 +42,8 @@ contract DualGovernor is DualGovernorQuorum {
     ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
         // TODO: sanity checks
         _votingPeriod = votingPeriod_;
-        _votingPeriodChangedBlockNumber = block.number;
+        // TODO: should setting SPOG be start of counting epochs ?
+        _start = block.number;
     }
 
     function initSPOGAddress(address _spog) external override {
@@ -56,39 +56,16 @@ contract DualGovernor is DualGovernorQuorum {
         value.initSPOGAddress(_spog);
     }
 
-    /// @dev get current epoch number - 1, 2, 3, .. etc
+    /// @dev get current epoch number - 0, 1, 2, 3, .. etc
     function currentEpoch() public view override returns (uint256) {
-        uint256 blocksSinceVotingPeriodChange = block.number - _votingPeriodChangedBlockNumber;
-
-        return _votingPeriodChangedEpoch + blocksSinceVotingPeriodChange / _votingPeriod;
-    }
-
-    /// @dev get `block.number` of the start of the next epoch
-    function startOfNextEpoch() public view override returns (uint256) {
-        uint256 nextEpoch = currentEpoch() + 1;
-
-        return startOfEpoch(nextEpoch);
+        return (block.number - _start) / _votingPeriod;
     }
 
     /// @dev get `block.number` of the start of the given epoch
     /// we can correctly calculate start of epochs only for current and future epochs
     /// it happens because epoch voting time can be changed more than once
-    function startOfEpoch(uint256 epoch) public view override returns (uint256) {
-        if (epoch < currentEpoch()) revert EpochInThePast(epoch, currentEpoch());
-        uint256 epochsSinceVotingPeriodChange = epoch - _votingPeriodChangedEpoch;
-
-        return _votingPeriodChangedBlockNumber + epochsSinceVotingPeriodChange * _votingPeriod;
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            SETTERS
-    //////////////////////////////////////////////////////////////*/
-    function _turnOnEmergencyVoting() internal virtual {
-        _emergencyVotingIsOn = true;
-    }
-
-    function _turnOffEmergencyVoting() internal virtual {
-        _emergencyVotingIsOn = false;
+    function startOf(uint256 epoch) public view override returns (uint256) {
+        return _start + epoch * _votingPeriod;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -235,7 +212,7 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     function votingDelay() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOfNextEpoch() - block.number;
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOf(currentEpoch() + 1) - block.number;
     }
 
     function votingPeriod() public view override returns (uint256) {

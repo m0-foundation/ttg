@@ -43,7 +43,8 @@ contract VoteVault is IVoteVault, ValueVault {
         address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
 
         // includes inflation
-        uint256 totalCoinsForEpoch = governor.vote().getPastTotalSupply(epochStartBlockNumber[epoch]);
+        uint256 epochStart = governor.startOf(epoch);
+        uint256 totalCoinsForEpoch = governor.vote().getPastTotalSupply(epochStart);
 
         uint256 totalInflation = epochTokenDeposit[token][epoch];
 

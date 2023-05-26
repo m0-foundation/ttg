@@ -58,7 +58,6 @@ interface ISPOGGovernor {
 
     // public functions
     function currentEpoch() external view returns (uint256);
-    function startOfEpoch(uint256 epoch) external view returns (uint256);
-    function startOfNextEpoch() external view returns (uint256);
+    function startOf(uint256 epoch) external view returns (uint256);
     function initSPOGAddress(address) external;
 }

@@ -29,9 +29,6 @@ contract ValueVault is IValueVault {
     mapping(address => mapping(uint256 => uint256)) public epochTokenDeposit;
     mapping(address => mapping(uint256 => uint256)) public epochTokenTotalWithdrawn;
 
-    // start block numbers for epochs with rewards
-    mapping(uint256 => uint256) public epochStartBlockNumber;
-
     constructor(address _governor) {
         governor = ISPOGGovernor(_governor);
     }
@@ -45,8 +42,6 @@ contract ValueVault is IValueVault {
         uint256 currentEpoch = governor.currentEpoch();
         if (epoch < currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
-        // save start block of epoch, our governance allows to change voting period
-        epochStartBlockNumber[epoch] = governor.startOfEpoch(epoch);
         epochTokenDeposit[token][epoch] += amount;
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
@@ -83,7 +78,7 @@ contract ValueVault is IValueVault {
 
         hasClaimedTokenRewardsForEpoch[msg.sender][epoch][token] = true;
 
-        uint256 epochStart = epochStartBlockNumber[epoch];
+        uint256 epochStart = governor.startOf(epoch);
         // if vote holders claim value inflation, use special case - total votes weight of only active participants
         // otherwise use standard total supply votes weight
         uint256 totalVotesWeight;
