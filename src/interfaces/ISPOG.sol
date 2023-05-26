@@ -23,7 +23,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 oldTax, uint256 newTax);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
-    event ResetExecuted(address indexed newVoteToken, address indexed newGovernor);
+    event ResetExecuted(address indexed newGovernor, address indexed newVoteVault, uint256 indexed resetSnapshotId);
 
     // Errors
     error OnlyGovernor();
@@ -55,7 +55,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function append(address list, address account) external;
     function remove(address list, address account) external;
     function emergency(uint8 emergencyType, bytes calldata callData) external;
-    function reset(address newGovernor) external;
+    function reset(address newGovernor, address newVoteVault) external;
     function changeTax(uint256 _tax) external;
     function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
 

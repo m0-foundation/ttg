@@ -4,8 +4,8 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/governance/IGovernor.sol";
 
-import "src/interfaces/ISPOGGovernor.sol";
 import "src/interfaces/vaults/IVoteVault.sol";
 import "src/interfaces/IERC20PricelessAuction.sol";
 import "src/periphery/vaults/ValueVault.sol";
@@ -17,25 +17,13 @@ contract VoteVault is IVoteVault, ValueVault {
 
     IERC20PricelessAuction public immutable auctionContract;
 
-    //TODO: not changing require into error revert, this modifier should potentially be gone
-    modifier onlySPOG() {
-        require(msg.sender == address(governor.spog()), "Vault: Only spog");
-        _;
-    }
-
     constructor(address governor, address _auctionContract) ValueVault(governor) {
         auctionContract = IERC20PricelessAuction(_auctionContract);
     }
 
     /// @notice Sell inactive voters inflation rewards
     /// @param epoch Epoch to sell tokens from
-    /// @param paymentToken Token to accept for payment
-    /// @param duration The duration of the auction
-    function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration)
-        external
-        override
-        onlySPOG
-    {
+    function sellInactiveVoteInflation(uint256 epoch) external override {
         if (epoch >= governor.currentEpoch()) revert InvalidEpoch(epoch, governor.currentEpoch());
 
         // TODO: fix that!!!
@@ -64,6 +52,8 @@ contract VoteVault is IVoteVault, ValueVault {
 
         IERC20(token).approve(auction, inactiveCoinsInflation);
 
+        address paymentToken = address(governor.spog().cash());
+        uint256 duration = IGovernor(address(governor)).votingPeriod();
         IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, inactiveCoinsInflation);
 
         emit VoteTokenAuction(token, epoch, auction, inactiveCoinsInflation);
@@ -96,14 +86,5 @@ contract VoteVault is IVoteVault, ValueVault {
             }
         }
         return totalRewards;
-    }
-
-    // @notice Update vote governor after `RESET` was executed
-    // @param newGovernor New vote governor
-    // TODO: this method should be gone
-    function updateGovernor(address newGovernor) external onlySPOG {
-        governor = ISPOGGovernor(newGovernor);
-
-        emit VoteGovernorUpdated(newGovernor, address(governor.vote()));
     }
 }

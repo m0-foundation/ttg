@@ -41,6 +41,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 votingPeriod_
     ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
         // TODO: sanity checks
+        // TODO: check that vote and value are connected ?
         _votingPeriod = votingPeriod_;
         // TODO: should setting SPOG be start of counting epochs ?
         _start = block.number;

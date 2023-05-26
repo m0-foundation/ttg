@@ -45,7 +45,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
     /// @notice Vault for vote holders vote and value inflation rewards
-    IVoteVault public immutable override voteVault;
+    IVoteVault public override voteVault;
 
     /// @notice Vault for value holders assets
     IValueVault public immutable override valueVault;
@@ -192,27 +192,24 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(address _newGovernor) external override onlyGovernance {
-        // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
-        ISPOGGovernor newGovernor = ISPOGGovernor(_newGovernor);
-        IVoteToken newVoteToken = IVoteToken(address(newGovernor.vote()));
-        IValueToken valueToken = IValueToken(address(newGovernor.value()));
-        if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
+    function reset(address newGovernor, address newVoteVault) external override onlyGovernance {
+        // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
+        // TODO: checks should be in governor itself
+        // IVoteToken newVote = IVoteToken(address(_newGovernor.vote()));
+        // IValueToken valueToken = IValueToken(address(_newGovernor.value()));
+        // if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
-        // Update vote governance in the vault
-        // TODO: how to avoid this ?
-        voteVault.updateGovernor(_newGovernor);
-
-        governor = newGovernor;
+        voteVault = IVoteVault(newVoteVault);
+        governor = ISPOGGovernor(newGovernor);
         // Important: initialize SPOG address in the new vote governor
         governor.initSPOGAddress(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetSnapshotId = valueToken.snapshot();
-        newVoteToken.initReset(resetSnapshotId);
+        uint256 resetSnapshotId = IValueToken(address(governor.value())).snapshot();
+        IVoteToken(address(governor.vote())).initReset(resetSnapshotId);
 
-        emit ResetExecuted(address(newVoteToken), address(newGovernor));
+        emit ResetExecuted(newGovernor, newVoteVault, resetSnapshotId);
     }
 
     function changeTax(uint256 newTax) external override onlyGovernance {
@@ -286,12 +283,6 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         if (selector == this.changeConfig.selector) return true;
         return false;
     }
-
-    // / @notice sell unclaimed $vote tokens
-    // /// @param epoch The epoch for which to sell unclaimed $vote tokens
-    // function sellInactiveVoteInflation(uint256 epoch) public {
-    //     voteVault.sellInactiveVoteInflation(epoch, address(cash), governor.votingPeriod());
-    // }
 
     /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
