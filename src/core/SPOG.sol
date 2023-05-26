@@ -256,8 +256,10 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         _epochRewardsMinted[nextEpoch] = true;
 
         // Mint and deposit Vote and Value rewards to vault
-        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteTokenInflationPerEpoch(nextEpoch));
-        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueTokenInflationPerEpoch());
+        // TODO: move denominator into constant, figure out correct precision
+        uint256 voteInflation = (governor.vote().getPastTotalSupply(nextEpoch - 1) * inflator) / 100;
+        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteInflation);
+        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueFixedInflation);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -284,33 +286,22 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         return false;
     }
 
-    // /// @notice sell unclaimed $vote tokens
+    // / @notice sell unclaimed $vote tokens
     // /// @param epoch The epoch for which to sell unclaimed $vote tokens
     // function sellInactiveVoteInflation(uint256 epoch) public {
     //     voteVault.sellInactiveVoteInflation(epoch, address(cash), governor.votingPeriod());
     // }
-
-    /// @notice returns number of vote token rewards for an epoch with active proposals
-    // TODO: fix `totalSupply` here and denominator here
-    function voteTokenInflationPerEpoch(uint256 epoch) public view returns (uint256) {
-        return (governor.vote().totalSupply() * inflator) / 100;
-    }
-
-    /// @notice returns number of value token rewards for an epoch with active proposals
-    function valueTokenInflationPerEpoch() public view returns (uint256) {
-        return valueFixedInflation;
-    }
 
     /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Pay flat fee for all the operations except emergency and reset
-    function _getFee(bytes4 funcSelector) internal view returns (uint256) {
-        if (funcSelector == this.emergency.selector) {
+    function _getFee(bytes4 func) internal view virtual returns (uint256) {
+        if (func == this.emergency.selector) {
             return EMERGENCY_TAX_MULTIPLIER * tax;
         }
-        if (funcSelector == this.reset.selector) {
+        if (func == this.reset.selector) {
             return RESET_TAX_MULTIPLIER * tax;
         }
         return tax;

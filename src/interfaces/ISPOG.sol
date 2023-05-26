@@ -25,10 +25,6 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 oldTax, uint256 newTax);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
-    // event NewVoteQuorumProposal(uint256 indexed proposalId);
-    // event NewValueQuorumProposal(uint256 indexed proposalId);
-    // event NewDoubleQuorumProposal(uint256 indexed proposalId);
-    // event NewEmergencyProposal(uint256 indexed proposalId);
     event ResetExecuted(address indexed newVoteToken, address indexed newGovernor);
 
     // Errors
@@ -60,9 +56,6 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function changeTax(uint256 _tax) external;
     function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
 
-    // Token rewards functions
-    function voteTokenInflationPerEpoch(uint256 epoch) external view returns (uint256);
-    function valueTokenInflationPerEpoch() external view returns (uint256);
     function isGovernedMethod(bytes4 func) external view returns (bool);
     function chargeFee(address account, bytes4 func) external;
     function inflateRewardTokens() external;
