@@ -19,6 +19,12 @@ interface ISPOGGovernor {
     // Events
     event NewProposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
 
+    struct EpochBasic {
+        uint256 numProposals;
+        uint256 totalVotesWeight;
+        mapping(address => uint256) numVotedOn;
+    }
+
     struct ProposalVote {
         uint256 voteNoVotes;
         uint256 voteYesVotes;
@@ -44,16 +50,11 @@ interface ISPOGGovernor {
     // function vote() external view returns (ISPOGVotes);
     // function value() external view returns (ISPOGVotes);
 
-    // public mappings
     function emergencyProposals(uint256 proposalId) external view returns (bool);
-
-    function epochProposalsCount(uint256 epoch) external view returns (uint256);
-    function epochSumOfVoteWeight(uint256 epoch) external view returns (uint256);
-
-    function accountEpochNumProposalsVotedOn(address account, uint256 epoch) external view returns (uint256);
+    function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
+    function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
 
     // public functions
-
     function currentEpoch() external view returns (uint256);
     function startOfEpoch(uint256 epoch) external view returns (uint256);
     function startOfNextEpoch() external view returns (uint256);

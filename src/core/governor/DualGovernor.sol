@@ -2,8 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
 import {ISPOG} from "src/interfaces/ISPOG.sol";
@@ -32,15 +31,16 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
     // private mappings
     mapping(uint256 => ProposalVote) private _proposalVotes;
     mapping(uint256 => ProposalType) private _proposalTypes;
+    mapping(uint256 => EpochBasic) public _epochBasic;
 
-    // public mappings
+    //
     mapping(uint256 => bool) public emergencyProposals;
-    // epoch => proposalCount
-    mapping(uint256 => uint256) public epochProposalsCount;
-    // epoch => cumulative epoch vote weight casted
-    mapping(uint256 => uint256) public epochSumOfVoteWeight;
-    // address => epoch => number of proposals voted on
-    mapping(address => mapping(uint256 => uint256)) public accountEpochNumProposalsVotedOn;
+    // // epoch => proposalCount
+    // mapping(uint256 => uint256) public epochProposalsCount;
+    // // epoch => cumulative epoch vote weight casted
+    // mapping(uint256 => uint256) public epochSumOfVoteWeight;
+    // // epoch => account => number of proposals voted on
+    // mapping(uint256 => mapping(address => uint256)) public accountEpochNumProposalsVotedOn;
 
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
@@ -125,7 +125,7 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
         return ProposalType.Vote;
     }
 
-    function isGovernedMethod(bytes4 func) public view returns (bool) {
+    function isGovernedMethod(bytes4 func) public pure returns (bool) {
         return func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector;
     }
 
@@ -171,7 +171,7 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
 
         /// @dev proposals are voted on in the next epoch
         uint256 nextEpoch = currentEpoch() + 1;
-        epochProposalsCount[nextEpoch]++;
+        _epochBasic[nextEpoch].numProposals += 1;
 
         emit NewProposal(nextEpoch, proposalId, proposalType);
         return proposalId;
@@ -215,13 +215,23 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
     function _updateAccountEpochVotes(uint256 weight) internal virtual {
         uint256 epoch = currentEpoch();
 
+        EpochBasic storage epochBasic = _epochBasic[epoch];
         // update number of proposals account voted for in current epoch
-        accountEpochNumProposalsVotedOn[msg.sender][epoch]++;
+        epochBasic.numVotedOn[msg.sender] += 1;
 
         // update cumulative vote weight for epoch if user voted in all proposals
-        if (accountEpochNumProposalsVotedOn[msg.sender][epoch] == epochProposalsCount[epoch]) {
-            epochSumOfVoteWeight[epoch] += weight;
+        if (epochBasic.numVotedOn[msg.sender] == epochBasic.numProposals) {
+            epochBasic.totalVotesWeight += weight;
         }
+    }
+
+    function epochTotalVotesWeight(uint256 epoch) external view returns (uint256) {
+        return _epochBasic[epoch].totalVotesWeight;
+    }
+
+    function isActiveParticipant(uint256 epoch, address account) external view returns (bool) {
+        EpochBasic storage epochBasic = _epochBasic[epoch];
+        return epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
 
     /**
@@ -344,7 +354,7 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
     }
 
     function _countVote(uint256, address, uint8, uint256, bytes memory) internal virtual override {
-        revert("Not implemented");
+        // revert("Not implemented");
     }
 
     fallback() external {

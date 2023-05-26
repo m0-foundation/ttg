@@ -57,7 +57,7 @@ contract VoteVault is IVoteVault, ValueVault {
         uint256 preInflatedCoinsForEpoch = totalCoinsForEpoch - totalInflation;
 
         // weights are calculated before inflation
-        uint256 activeCoinsForEpoch = governor.epochSumOfVoteWeight(epoch);
+        uint256 activeCoinsForEpoch = governor.epochTotalVotesWeight(epoch);
 
         uint256 activeCoinsInflation = totalInflation * activeCoinsForEpoch / preInflatedCoinsForEpoch;
 
@@ -89,8 +89,7 @@ contract VoteVault is IVoteVault, ValueVault {
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
             if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
-
-            if (!_isActive(msg.sender, epoch)) revert NotVotedOnAllProposals();
+            if (governor.isActiveParticipant(epoch, msg.sender)) revert NotVotedOnAllProposals();
 
             // TODO: should we allow to withdraw any token or vote and value ?
             RewardsSharingStrategy strategy = (token == valueToken)
@@ -112,11 +111,5 @@ contract VoteVault is IVoteVault, ValueVault {
         emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.vote()));
 
         governor = newGovernor;
-    }
-
-    function _isActive(address account, uint256 epoch) internal virtual returns (bool) {
-        uint256 numVotedOn = governor.accountEpochNumProposalsVotedOn(account, epoch);
-        uint256 numProposals = governor.epochProposalsCount(epoch);
-        return numVotedOn == numProposals;
     }
 }

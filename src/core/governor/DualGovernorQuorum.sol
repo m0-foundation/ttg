@@ -98,7 +98,7 @@ abstract contract DualGovernorQuorum is Governor {
     }
 
     function quorum(uint256 /*blockNumber*/ ) public view virtual override returns (uint256) {
-        revert("Not implemented");
+        // revert("Not implemented");
     }
 
     function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual onlyGovernance {
@@ -176,6 +176,6 @@ abstract contract DualGovernorQuorum is Governor {
         override
         returns (uint256)
     {
-        revert("Not implemented");
+        // revert("Not implemented");
     }
 }

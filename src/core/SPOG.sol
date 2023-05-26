@@ -287,7 +287,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function isGovernedMethod(bytes4 selector) external view returns (bool) {
+    function isGovernedMethod(bytes4 selector) external pure returns (bool) {
         // TODO: order by frequence of usage
         if (selector == this.append.selector) return true;
         if (selector == this.changeTax.selector) return true;

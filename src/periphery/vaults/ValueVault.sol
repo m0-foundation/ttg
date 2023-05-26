@@ -90,7 +90,7 @@ contract ValueVault is IValueVault {
         // otherwise use standard total supply votes weight
         uint256 totalVotesWeight;
         if (strategy == RewardsSharingStrategy.ACTIVE_PARTICIPANTS_PRO_RATA) {
-            totalVotesWeight = governor.epochSumOfVoteWeight(epoch);
+            totalVotesWeight = governor.epochTotalVotesWeight(epoch);
         } else {
             // do not take into account rewards inflation for current epoch
             // TODO: fix for one governor!!!!!
