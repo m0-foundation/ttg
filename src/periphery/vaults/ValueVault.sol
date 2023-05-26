@@ -2,12 +2,10 @@
 
 pragma solidity 0.8.19;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {DualGovernor} from "src/core/governor/DualGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import "src/interfaces/ISPOGGovernor.sol";
+import "src/interfaces/vaults/IValueVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold inflation rewards and the SPOG assets.
@@ -22,7 +20,7 @@ contract ValueVault is IValueVault {
         ACTIVE_PARTICIPANTS_PRO_RATA
     }
 
-    DualGovernor public governor;
+    ISPOGGovernor public governor;
 
     // address => epoch => token => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) public hasClaimedTokenRewardsForEpoch;
@@ -34,8 +32,8 @@ contract ValueVault is IValueVault {
     // start block numbers for epochs with rewards
     mapping(uint256 => uint256) public epochStartBlockNumber;
 
-    constructor(DualGovernor _governor) {
-        governor = _governor;
+    constructor(address _governor) {
+        governor = ISPOGGovernor(_governor);
     }
 
     /// @notice Deposit voting (vote and value) reward tokens for epoch

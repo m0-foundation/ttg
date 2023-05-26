@@ -2,19 +2,13 @@
 
 pragma solidity 0.8.19;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {DualGovernor} from "src/core/governor/DualGovernor.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
-import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
-import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
-
-import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
+import "src/interfaces/ISPOGGovernor.sol";
+import "src/interfaces/vaults/IVoteVault.sol";
+import "src/interfaces/IERC20PricelessAuction.sol";
+import "src/periphery/vaults/ValueVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
@@ -29,8 +23,8 @@ contract VoteVault is IVoteVault, ValueVault {
         _;
     }
 
-    constructor(DualGovernor _governor, IERC20PricelessAuction _auctionContract) ValueVault(_governor) {
-        auctionContract = _auctionContract;
+    constructor(address governor, address _auctionContract) ValueVault(governor) {
+        auctionContract = IERC20PricelessAuction(_auctionContract);
     }
 
     /// @notice Sell inactive voters inflation rewards
@@ -80,8 +74,7 @@ contract VoteVault is IVoteVault, ValueVault {
         override(IValueVault, ValueVault)
         returns (uint256)
     {
-        // TODO: fix here as well when governor is one
-        address valueToken = IVoteToken(address(governor.vote())).valueToken();
+        address valueToken = address(governor.value());
         uint256 currentEpoch = governor.currentEpoch();
         uint256 length = epochs.length;
         uint256 totalRewards;
@@ -106,10 +99,10 @@ contract VoteVault is IVoteVault, ValueVault {
 
     // @notice Update vote governor after `RESET` was executed
     // @param newGovernor New vote governor
-    function updateGovernor(DualGovernor newGovernor) external onlySPOG {
-        // TODO: fix here as well when governor is one
-        emit VoteGovernorUpdated(address(newGovernor), address(newGovernor.vote()));
+    // TODO: this method should be gone
+    function updateGovernor(address newGovernor) external onlySPOG {
+        governor = ISPOGGovernor(newGovernor);
 
-        governor = newGovernor;
+        emit VoteGovernorUpdated(newGovernor, address(governor.vote()));
     }
 }

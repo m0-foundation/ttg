@@ -9,6 +9,7 @@ import "src/interfaces/tokens/IVoteToken.sol";
 import "src/interfaces/tokens/IValueToken.sol";
 import "src/interfaces/vaults/IVoteVault.sol";
 import "src/interfaces/vaults/IValueVault.sol";
+import "src/interfaces/ISPOGGovernor.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 import "src/core/governor/DualGovernor.sol";
@@ -59,7 +60,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     uint256 public immutable override inflator;
 
     /// @notice Governor, upgradable via `reset` by value holders
-    DualGovernor public override governor;
+    ISPOGGovernor public override governor;
 
     /// @notice Tax value for proposal cash fee
     uint256 public override tax;
@@ -97,7 +98,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         if (config.valueFixedInflation == 0) revert ZeroValueInflation();
 
         // Set configuration data
-        governor = DualGovernor(config.governor);
+        governor = ISPOGGovernor(config.governor);
         // Initialize governor
         governor.initSPOGAddress(address(this));
 
@@ -191,16 +192,16 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(DualGovernor newGovernor) external override onlyGovernance {
+    function reset(address _newGovernor) external override onlyGovernance {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
-
+        ISPOGGovernor newGovernor = ISPOGGovernor(_newGovernor);
         IVoteToken newVoteToken = IVoteToken(address(newGovernor.vote()));
         IValueToken valueToken = IValueToken(address(newGovernor.value()));
         if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         // Update vote governance in the vault
         // TODO: how to avoid this ?
-        IVoteVault(voteVault).updateGovernor(newGovernor);
+        voteVault.updateGovernor(_newGovernor);
 
         governor = newGovernor;
         // Important: initialize SPOG address in the new vote governor

@@ -7,8 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "src/interfaces/IProtocolConfigurator.sol";
 import "src/interfaces/vaults/IValueVault.sol";
 import "src/interfaces/vaults/IVoteVault.sol";
-
-import "src/core/governor/DualGovernor.sol";
+import "src/interfaces/ISPOGGovernor.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
     enum EmergencyType {
@@ -41,7 +40,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ValueTokenMistmatch();
 
     // Info functions about double governance and SPOG parameters
-    function governor() external view returns (DualGovernor);
+    function governor() external view returns (ISPOGGovernor);
     function voteVault() external view returns (IVoteVault);
     function valueVault() external view returns (IValueVault);
     function cash() external view returns (IERC20);
@@ -56,7 +55,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function append(address list, address account) external;
     function remove(address list, address account) external;
     function emergency(uint8 emergencyType, bytes calldata callData) external;
-    function reset(DualGovernor newGovernor) external;
+    function reset(address newGovernor) external;
     function changeTax(uint256 _tax) external;
     function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
 

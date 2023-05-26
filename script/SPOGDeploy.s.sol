@@ -68,9 +68,8 @@ contract SPOGDeployScript is BaseScript {
         // deploy governor
         governor = new DualGovernor("DualGovernor", address(vote), address(value), voteQuorum, valueQuorum, time);
 
-        voteVault =
-            new VoteVault(DualGovernor(payable(address(governor))), IERC20PricelessAuction(auctionImplementation));
-        valueVault = new ValueVault(DualGovernor(payable(address(governor))));
+        voteVault = new VoteVault(address(governor), address(auctionImplementation));
+        valueVault = new ValueVault(address(governor));
 
         // grant minter role for test runner
         IAccessControl(address(vote)).grantRole(vote.MINTER_ROLE(), msg.sender);

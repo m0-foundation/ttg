@@ -2,8 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import {DualGovernor} from "src/core/governor/DualGovernor.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import "src/interfaces/vaults/IValueVault.sol";
 
 interface IVoteVault is IValueVault {
     event VoteTokenAuction(address indexed token, uint256 indexed epoch, address indexed auction, uint256 amount);
@@ -16,5 +15,5 @@ interface IVoteVault is IValueVault {
     function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration) external;
 
     // RESET-related functions
-    function updateGovernor(DualGovernor newGovernor) external;
+    function updateGovernor(address newGovernor) external;
 }
