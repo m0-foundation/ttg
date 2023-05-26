@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {IList} from "src/interfaces/IList.sol";
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
-import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import "src/interfaces/IProtocolConfigurator.sol";
+import "src/interfaces/vaults/IValueVault.sol";
+import "src/interfaces/vaults/IVoteVault.sol";
 
-import {DualGovernor} from "src/core/governor/DualGovernor.sol";
+import "src/core/governor/DualGovernor.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
     enum EmergencyType {
@@ -46,6 +45,11 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function voteVault() external view returns (IVoteVault);
     function valueVault() external view returns (IValueVault);
     function cash() external view returns (IERC20);
+    function tax() external view returns (uint256);
+    function taxLowerBound() external view returns (uint256);
+    function taxUpperBound() external view returns (uint256);
+    function inflator() external view returns (uint256);
+    function valueFixedInflation() external view returns (uint256);
 
     // Accepted `proposal` functions
     function addNewList(address list) external;

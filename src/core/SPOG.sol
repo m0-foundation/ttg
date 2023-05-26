@@ -44,34 +44,34 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
     /// @notice Vault for vote holders vote and value inflation rewards
-    IVoteVault public immutable voteVault;
+    IVoteVault public immutable override voteVault;
 
     /// @notice Vault for value holders assets
-    IValueVault public immutable valueVault;
+    IValueVault public immutable override valueVault;
 
     /// @notice Cash token used for proposal fee payments
-    IERC20 public immutable cash;
+    IERC20 public immutable override cash;
 
     /// @notice Fixed inflation rewards per epoch for value holders
-    uint256 public immutable valueFixedInflation;
+    uint256 public immutable override valueFixedInflation;
 
     /// @notice Inflation rate per epoch for vote holders
-    uint256 public immutable inflator;
+    uint256 public immutable override inflator;
 
     /// @notice Governor, upgradable via `reset` by value holders
-    DualGovernor public governor;
+    DualGovernor public override governor;
 
     /// @notice Tax value for proposal cash fee
-    uint256 public tax;
+    uint256 public override tax;
 
     /// @notice Tax range: lower bound for proposal cash fee
-    uint256 public taxLowerBound;
+    uint256 public override taxLowerBound;
 
     /// @notice Tax range: upper bound for proposal cash fee
-    uint256 public taxUpperBound;
+    uint256 public override taxUpperBound;
 
     /// @notice List of addresses that are part of the masterlist
-    // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
+    /// @dev (address => uint256) 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private _masterlist;
 
     /// @notice Indicator if token rewards were minted for an epoch,
@@ -191,7 +191,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
 
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(DualGovernor newGovernor) external onlyGovernance {
+    function reset(DualGovernor newGovernor) external override onlyGovernance {
         // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
 
         IVoteToken newVoteToken = IVoteToken(address(newGovernor.vote()));
@@ -214,14 +214,14 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         emit ResetExecuted(address(newVoteToken), address(newGovernor));
     }
 
-    function changeTax(uint256 newTax) external onlyGovernance {
+    function changeTax(uint256 newTax) external override onlyGovernance {
         if (newTax < taxLowerBound || newTax > taxUpperBound) revert TaxOutOfRange();
 
         emit TaxChanged(tax, newTax);
         tax = newTax;
     }
 
-    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external onlyGovernance {
+    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external override onlyGovernance {
         // TODO: add adequate sanity checks
         emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
 
@@ -229,11 +229,11 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         taxUpperBound = newTaxUpperBound;
     }
 
-    /*//////////////////////////////////////////////////////////////
+    /*/////////////////////////////////////////////////////////////////////////////
                             GOVERNANCE FEE AND REWARDS FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
+    ////////////////////////////////////////////////////////////////////////////*/
 
-    function chargeFee(address account, bytes4 func) external onlyGovernance {
+    function chargeFee(address account, bytes4 func) external override onlyGovernance {
         uint256 fee = _getFee(func);
 
         // transfer the amount from the caller to the SPOG
@@ -247,7 +247,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
 
     /// @notice inflate Vote and Value token supplies
     /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
-    function inflateRewardTokens() external onlyGovernance {
+    function inflateRewardTokens() external override onlyGovernance {
         uint256 nextEpoch = governor.currentEpoch() + 1;
 
         // Epoch reward tokens already minted, silently return
@@ -297,7 +297,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Pay flat fee for all the operations except emergency and reset
-    function _getFee(bytes4 func) internal view virtual returns (uint256) {
+    function _getFee(bytes4 func) internal view returns (uint256) {
         if (func == this.emergency.selector) {
             return EMERGENCY_TAX_MULTIPLIER * tax;
         }
