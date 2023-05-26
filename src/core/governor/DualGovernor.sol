@@ -2,45 +2,30 @@
 
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
-import {IList} from "src/interfaces/IList.sol";
-import {DualGovernorQuorum} from "src/core/governor/DualGovernorQuorum.sol";
+import "src/interfaces/IList.sol";
+import "src/core/governor/DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin.
-contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
-    using SafeERC20 for IERC20;
-
+contract DualGovernor is DualGovernorQuorum {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     ISPOG public spog;
-    uint256 private immutable _votingPeriod;
 
+    uint256 private immutable _votingPeriod;
     uint256 private _votingPeriodChangedBlockNumber;
     uint256 private _votingPeriodChangedEpoch;
-
     // @note voting with no delay is required for certain proposals
     bool private _emergencyVotingIsOn;
 
     // private mappings
     mapping(uint256 => ProposalVote) private _proposalVotes;
     mapping(uint256 => ProposalType) private _proposalTypes;
-    mapping(uint256 => EpochBasic) public _epochBasic;
+    // epoch => proposals info
+    mapping(uint256 => EpochBasic) private _epochBasic;
 
-    //
     mapping(uint256 => bool) public emergencyProposals;
-    // // epoch => proposalCount
-    // mapping(uint256 => uint256) public epochProposalsCount;
-    // // epoch => cumulative epoch vote weight casted
-    // mapping(uint256 => uint256) public epochSumOfVoteWeight;
-    // // epoch => account => number of proposals voted on
-    // mapping(uint256 => mapping(address => uint256)) public accountEpochNumProposalsVotedOn;
 
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
@@ -291,13 +276,13 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
     }
 
     /// @dev Accessor to the internal vote counts.
-    function proposalVoteVotes(uint256 proposalId) public view override returns (uint256 noVotes, uint256 yesVotes) {
+    function proposalVotes(uint256 proposalId) public view override returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.voteNoVotes, proposalVote.voteYesVotes);
     }
 
     /// @dev Accessor to the internal vote counts.
-    function proposalValueVotes(uint256 proposalId) public view override returns (uint256 noVotes, uint256 yesVotes) {
+    function proposalValueVotes(uint256 proposalId) public view override returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.valueNoVotes, proposalVote.valueYesVotes);
     }
@@ -353,8 +338,12 @@ contract DualGovernor is ISPOGGovernor, DualGovernorQuorum {
         }
     }
 
-    function _countVote(uint256, address, uint8, uint256, bytes memory) internal virtual override {
-        // revert("Not implemented");
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
+        internal
+        virtual
+        override
+    {
+        _countVote(proposalId, account, support, votes, 0, "");
     }
 
     fallback() external {

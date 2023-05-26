@@ -47,19 +47,18 @@ interface ISPOGGovernor {
 
     // public variables
     function spog() external view returns (ISPOG);
-    // function vote() external view returns (ISPOGVotes);
-    // function value() external view returns (ISPOGVotes);
+    function vote() external view returns (ISPOGVotes);
+    function value() external view returns (ISPOGVotes);
 
     function emergencyProposals(uint256 proposalId) external view returns (bool);
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
     function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
+    function proposalVotes(uint256 proposalId) external view returns (uint256, uint256);
+    function proposalValueVotes(uint256 proposalId) external view returns (uint256, uint256);
 
     // public functions
     function currentEpoch() external view returns (uint256);
     function startOfEpoch(uint256 epoch) external view returns (uint256);
     function startOfNextEpoch() external view returns (uint256);
     function initSPOGAddress(address) external;
-
-    function proposalVoteVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
-    function proposalValueVotes(uint256 proposalId) external view returns (uint256 noVotes, uint256 yesVotes);
 }

@@ -1,27 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import {IList} from "src/interfaces/IList.sol";
+import "src/interfaces/tokens/IVoteToken.sol";
+import "src/interfaces/tokens/IValueToken.sol";
+import "src/interfaces/vaults/IVoteVault.sol";
+import "src/interfaces/vaults/IValueVault.sol";
 
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-
-import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
-import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
-
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
-import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
-
-import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
-import {DualGovernor} from "src/core/governor/DualGovernor.sol";
+import "src/config/ProtocolConfigurator.sol";
+import "src/core/governor/DualGovernor.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
@@ -121,13 +111,6 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         valueFixedInflation = config.valueFixedInflation;
     }
 
-    /// @notice Getter for finding whether a list is in a masterlist
-    /// @param list The list address to check
-    /// @return Whether the list is in the masterlist
-    function isListInMasterList(address list) external view override returns (bool) {
-        return _masterlist.contains(list);
-    }
-
     /*//////////////////////////////////////////////////////////////
                             MASTERLIST GOVERNANCE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -169,7 +152,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            GOVERNANCE FUNCTIONS
+                            GOVERNANCE CHANGE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
@@ -246,6 +229,10 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         taxUpperBound = newTaxUpperBound;
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            GOVERNANCE FEE AND REWARDS FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     function chargeFee(address account, bytes4 func) external onlyGovernance {
         uint256 fee = _getFee(func);
 
@@ -273,19 +260,16 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueTokenInflationPerEpoch());
     }
 
-    /// @notice mint reward token into the vault
-    /// @param epoch The epoch for which rewards become claimable
-    /// @param token The reward token, only vote or value tokens
-    /// @param amount The amount to mint and deposit into the vault
-    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
-        token.mint(address(this), amount);
-        token.approve(address(voteVault), amount);
-        voteVault.depositRewards(epoch, address(token), amount);
-    }
-
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Getter for finding whether a list is in a masterlist
+    /// @param list The list address to check
+    /// @return Whether the list is in the masterlist
+    function isListInMasterList(address list) external view override returns (bool) {
+        return _masterlist.contains(list);
+    }
 
     function isGovernedMethod(bytes4 selector) external pure returns (bool) {
         // TODO: order by frequence of usage
@@ -298,17 +282,6 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         if (selector == this.reset.selector) return true;
         if (selector == this.changeConfig.selector) return true;
         return false;
-    }
-
-    /// @dev Pay flat fee for all the operations except emergency and reset
-    function _getFee(bytes4 funcSelector) internal view returns (uint256) {
-        if (funcSelector == this.emergency.selector) {
-            return EMERGENCY_TAX_MULTIPLIER * tax;
-        }
-        if (funcSelector == this.reset.selector) {
-            return RESET_TAX_MULTIPLIER * tax;
-        }
-        return tax;
     }
 
     // /// @notice sell unclaimed $vote tokens
@@ -331,6 +304,27 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Pay flat fee for all the operations except emergency and reset
+    function _getFee(bytes4 funcSelector) internal view returns (uint256) {
+        if (funcSelector == this.emergency.selector) {
+            return EMERGENCY_TAX_MULTIPLIER * tax;
+        }
+        if (funcSelector == this.reset.selector) {
+            return RESET_TAX_MULTIPLIER * tax;
+        }
+        return tax;
+    }
+
+    /// @notice mint reward token into the vault
+    /// @param epoch The epoch for which rewards become claimable
+    /// @param token The reward token, only vote or value tokens
+    /// @param amount The amount to mint and deposit into the vault
+    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
+        token.mint(address(this), amount);
+        token.approve(address(voteVault), amount);
+        voteVault.depositRewards(epoch, address(token), amount);
+    }
 
     /*//////////////////////////////////////////////////////////////
                             UTILITY FUNCTIONS

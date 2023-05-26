@@ -3,12 +3,11 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Checkpoints.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/governance/Governor.sol";
 
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import "src/interfaces/ISPOGGovernor.sol";
 
-abstract contract DualGovernorQuorum is Governor {
+abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     using Checkpoints for Checkpoints.Trace224;
 
     ISPOGVotes public immutable vote;
@@ -97,8 +96,8 @@ abstract contract DualGovernorQuorum is Governor {
         return (value.getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
-    function quorum(uint256 /*blockNumber*/ ) public view virtual override returns (uint256) {
-        // revert("Not implemented");
+    function quorum(uint256 timepoint) public view virtual override returns (uint256) {
+        return voteQuorum(timepoint);
     }
 
     function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual onlyGovernance {
@@ -169,13 +168,13 @@ abstract contract DualGovernorQuorum is Governor {
         return value.getPastVotes(account, timepoint);
     }
 
-    function _getVotes(address, /*account*/ uint256, /*timepoint*/ bytes memory /*params*/ )
+    function _getVotes(address account, uint256 timepoint, bytes memory params)
         internal
         view
         virtual
         override
         returns (uint256)
     {
-        // revert("Not implemented");
+        return _getVoteVotes(account, timepoint, params);
     }
 }
