@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {BaseScript} from "script/shared/Base.s.sol";
-import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-import {console} from "forge-std/Script.sol";
+import "script/shared/Base.s.sol";
+import "script/SPOGDeploy.s.sol";
 
 contract LocalTestDeployScript is BaseScript {
     SPOGDeployScript public spogDeployScript;
@@ -28,9 +27,9 @@ contract LocalTestDeployScript is BaseScript {
         uint256 amount = 100000e18; // 100K
 
         for (uint256 i = 0; i < users.length; i++) {
-            spogDeployScript.cash().mint(users[i], amount);
-            spogDeployScript.value().mint(users[i], amount);
-            spogDeployScript.vote().mint(users[i], amount);
+            ERC20Mock(spogDeployScript.cash()).mint(users[i], amount);
+            ISPOGVotes(spogDeployScript.value()).mint(users[i], amount);
+            ISPOGVotes(spogDeployScript.vote()).mint(users[i], amount);
         }
 
         console.log("Minted 100K cash, value, and vote to each user");

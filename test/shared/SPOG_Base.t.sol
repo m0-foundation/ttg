@@ -1,27 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "forge-std/console.sol";
-import {BaseTest} from "test/Base.t.sol";
-import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-import "src/core/SPOG.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {SPOGGovernor} from "src/core/governor/SPOGGovernor.sol";
-import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {List} from "src/periphery/List.sol";
-import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
-import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
+import "@openzeppelin/contracts/governance/IGovernor.sol";
+
+import "test/Base.t.sol";
+import "script/SPOGDeploy.s.sol";
+
+import "src/periphery/List.sol";
+import "src/interfaces/tokens/ISPOGVotes.sol";
 
 contract SPOG_Base is BaseTest {
-    SPOG public spog;
-    SPOGGovernor public governor;
-    SPOGVotes public spogVote;
-    SPOGVotes public spogValue;
     SPOGDeployScript public deployScript;
-    List public list;
-    VoteVault public voteVault;
-    ValueVault public valueVault;
-    IERC20 public cash;
+
+    address public spog;
+    address public governor;
+    address public vote;
+    address public value;
+    address public voteVault;
+    address public valueVault;
+    address public cash;
+    address public list;
 
     enum VoteType {
         No,
@@ -34,25 +32,24 @@ contract SPOG_Base is BaseTest {
 
         spog = deployScript.spog();
         governor = deployScript.governor();
-        spogVote = SPOGVotes(address(deployScript.vote()));
-        spogValue = SPOGVotes(address(deployScript.value()));
-
-        // mint spogVote to address(this) and self-delegate
-        spogVote.mint(address(this), 100e18);
-        spogVote.delegate(address(this));
-
-        // mint spogValue to address(this) and self-delegate
-        spogValue.mint(address(this), 100e18);
-        spogValue.delegate(address(this));
-
-        // deploy list and change admin to spog
-        list = new List("My List");
-        list.changeAdmin(address(spog));
-
+        cash = deployScript.cash();
+        vote = deployScript.vote();
+        value = deployScript.value();
         voteVault = deployScript.voteVault();
         valueVault = deployScript.valueVault();
 
-        cash = IERC20(address(deployScript.cash()));
+        // mint vote tokens and self-delegate
+        ISPOGVotes(vote).mint(address(this), 100e18);
+        ISPOGVotes(vote).delegate(address(this));
+
+        // mint value tokens and self-delegate
+        ISPOGVotes(value).mint(address(this), 100e18);
+        ISPOGVotes(value).delegate(address(this));
+
+        // deploy list and change admin to spog
+        List newList = new List("SPOG List");
+        newList.changeAdmin(address(spog));
+        list = address(newList);
     }
 
     /* Helper functions */
@@ -63,7 +60,7 @@ contract SPOG_Base is BaseTest {
         string memory description
     ) internal view returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
+        proposalId = IGovernor(governor).hashProposal(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpog() internal {
@@ -79,20 +76,20 @@ contract SPOG_Base is BaseTest {
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        governor.propose(targets, values, calldatas, description);
+        IERC20(deployScript.cash()).approve(address(spog), deployScript.tax());
+        IGovernor(governor).propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(block.number + IGovernor(governor).votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        governor.castVote(proposalId, yesVote);
+        IGovernor(governor).castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
-        governor.execute(targets, values, calldatas, hashedDescription);
+        IGovernor(governor).execute(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpogAndAppendAnAddressToIt() internal {
@@ -114,19 +111,19 @@ contract SPOG_Base is BaseTest {
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        governor.propose(targets, values, calldatas, description);
+        IERC20(deployScript.cash()).approve(address(spog), deployScript.tax());
+        IGovernor(governor).propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(block.number + IGovernor(governor).votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        governor.castVote(proposalId, yesVote);
+        IGovernor(governor).castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + deployScript.time() + 1);
 
         // execute proposal
-        governor.execute(targets, values, calldatas, hashedDescription);
+        IGovernor(governor).execute(targets, values, calldatas, hashedDescription);
     }
 }

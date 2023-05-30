@@ -2,8 +2,7 @@
 pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "forge-std/console.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
@@ -42,7 +41,7 @@ contract SPOG_ChangeConfig is SPOG_Base {
 
         vm.expectRevert();
         vm.prank(address(governor));
-        spog.changeConfig(keccak256("MockConfigNoERC165"), address(badConfig), type(IMockConfig).interfaceId);
+        ISPOG(spog).changeConfig(keccak256("MockConfigNoERC165"), address(badConfig), type(IMockConfig).interfaceId);
     }
 
     function test_Revert_WhenContractDoesSupportERC165_ButInterfaceDoesntMatch() public {
@@ -52,29 +51,29 @@ contract SPOG_ChangeConfig is SPOG_Base {
 
         vm.expectRevert(expectedError);
         vm.prank(address(governor));
-        spog.changeConfig(keccak256("MockConfigWithERC165"), address(badConfig), type(IMockConfigV2).interfaceId);
+        ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(badConfig), type(IMockConfigV2).interfaceId);
     }
 
     function test_Revert_WhenNewContractDoesNotMatchExistingContract() public {
         MockConfigWithERC165v2 configV2 = new MockConfigWithERC165v2();
 
         vm.prank(address(governor));
-        spog.changeConfig(keccak256("MockConfigWithERC165"), address(configV2), type(IMockConfigV2).interfaceId);
+        ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(configV2), type(IMockConfigV2).interfaceId);
 
         MockConfigWithERC165 config = new MockConfigWithERC165();
 
         vm.expectRevert();
         vm.prank(address(governor));
-        spog.changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
+        ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
     }
 
     function test_NamedConfigCanBeSet() public {
         MockConfigWithERC165 config = new MockConfigWithERC165();
 
         vm.prank(address(governor));
-        spog.changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
+        ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
 
-        (address configAddress,) = spog.getConfig(keccak256("MockConfigWithERC165"));
+        (address configAddress,) = ISPOG(spog).getConfig(keccak256("MockConfigWithERC165"));
         assertTrue(configAddress == address(config), "Config not set");
     }
 }
