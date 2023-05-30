@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
+import "src/interfaces/tokens/ISPOGVotes.sol";
+import "src/interfaces/ISPOG.sol";
 
 interface ISPOGGovernor {
     // Errors
@@ -45,19 +45,18 @@ interface ISPOGGovernor {
         Yes
     }
 
-    // public variables
     function spog() external view returns (ISPOG);
     function vote() external view returns (ISPOGVotes);
     function value() external view returns (ISPOGVotes);
 
+    function initSPOGAddress(address) external;
     function emergencyProposals(uint256 proposalId) external view returns (bool);
+
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
     function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
     function proposalVotes(uint256 proposalId) external view returns (uint256, uint256);
     function proposalValueVotes(uint256 proposalId) external view returns (uint256, uint256);
 
-    // public functions
     function currentEpoch() external view returns (uint256);
     function startOf(uint256 epoch) external view returns (uint256);
-    function initSPOGAddress(address) external;
 }

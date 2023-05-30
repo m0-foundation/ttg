@@ -2,9 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import "src/interfaces/vaults/IValueVault.sol";
-
-interface IVoteVault is IValueVault {
+interface IVoteVault {
     event VoteTokenAuction(address indexed token, uint256 indexed epoch, address indexed auction, uint256 amount);
 
     error NotVotedOnAllProposals();

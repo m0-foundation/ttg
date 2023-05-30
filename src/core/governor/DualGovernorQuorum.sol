@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/governance/Governor.sol";
 
 import "src/interfaces/ISPOGGovernor.sol";
 
-abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
+abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
     ISPOGVotes public immutable vote;

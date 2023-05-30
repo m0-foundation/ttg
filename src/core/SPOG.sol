@@ -5,21 +5,20 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
+import "src/interfaces/ISPOGGovernor.sol";
 import "src/interfaces/tokens/IVoteToken.sol";
 import "src/interfaces/tokens/IValueToken.sol";
-import "src/interfaces/vaults/IVoteVault.sol";
-import "src/interfaces/vaults/IValueVault.sol";
-import "src/interfaces/ISPOGGovernor.sol";
+import "src/interfaces/vaults/ISPOGVault.sol";
+import "src/interfaces/IList.sol";
 
 import "src/config/ProtocolConfigurator.sol";
-import "src/core/governor/DualGovernor.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
 /// @notice SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property.
 /// @notice SPOG is used for **permissioning actors**  and optimized for token holder participation.
-contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
+contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -45,10 +44,10 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
     /// @notice Vault for vote holders vote and value inflation rewards
-    IVoteVault public override voteVault;
+    ISPOGVault public override voteVault;
 
     /// @notice Vault for value holders assets
-    IValueVault public immutable override valueVault;
+    ISPOGVault public immutable override valueVault;
 
     /// @notice Cash token used for proposal fee payments
     IERC20 public immutable override cash;
@@ -102,8 +101,8 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         // Initialize governor
         governor.initSPOGAddress(address(this));
 
-        voteVault = IVoteVault(config.voteVault);
-        valueVault = IValueVault(config.valueVault);
+        voteVault = ISPOGVault(config.voteVault);
+        valueVault = ISPOGVault(config.valueVault);
         cash = IERC20(config.cash);
         tax = config.tax;
         taxLowerBound = config.taxLowerBound;
@@ -199,7 +198,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         // IValueToken valueToken = IValueToken(address(_newGovernor.value()));
         // if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
-        voteVault = IVoteVault(newVoteVault);
+        voteVault = ISPOGVault(newVoteVault);
         governor = ISPOGGovernor(newGovernor);
         // Important: initialize SPOG address in the new vote governor
         governor.initSPOGAddress(address(this));
@@ -240,7 +239,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         cash.approve(address(valueVault), fee);
 
         // deposit the amount to the vault
-        valueVault.depositRewards(governor.currentEpoch(), address(cash), fee);
+        valueVault.deposit(governor.currentEpoch(), address(cash), fee);
     }
 
     /// @notice inflate Vote and Value token supplies
@@ -271,7 +270,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
         return _masterlist.contains(list);
     }
 
-    function isGovernedMethod(bytes4 selector) external pure returns (bool) {
+    function isGovernedMethod(bytes4 selector) external pure override returns (bool) {
         // TODO: order by frequence of usage
         if (selector == this.append.selector) return true;
         if (selector == this.changeTax.selector) return true;
@@ -306,7 +305,7 @@ contract SPOG is ISPOG, ProtocolConfigurator, ERC165 {
     function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
         token.mint(address(this), amount);
         token.approve(address(voteVault), amount);
-        voteVault.depositRewards(epoch, address(token), amount);
+        voteVault.deposit(epoch, address(token), amount);
     }
 
     /*//////////////////////////////////////////////////////////////

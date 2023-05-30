@@ -11,11 +11,11 @@ contract DualGovernor is DualGovernorQuorum {
     // @note minimum voting delay in blocks
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
+    ISPOG public override spog;
+    mapping(uint256 => bool) public emergencyProposals;
+
     uint256 private immutable _votingPeriod;
     uint256 private immutable _start;
-
-    ISPOG public spog;
-    mapping(uint256 => bool) public emergencyProposals;
 
     // @note voting with no delay is required for certain proposals
     bool private _emergencyVotingIsOn;

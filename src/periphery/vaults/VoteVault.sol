@@ -6,13 +6,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
 
-import "src/interfaces/vaults/IVoteVault.sol";
 import "src/interfaces/IERC20PricelessAuction.sol";
+import "src/interfaces/vaults/IVoteVault.sol";
 import "src/periphery/vaults/ValueVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
-contract VoteVault is IVoteVault, ValueVault {
+contract VoteVault is ValueVault, IVoteVault {
     using SafeERC20 for IERC20;
 
     IERC20PricelessAuction public immutable auctionContract;
@@ -59,12 +59,7 @@ contract VoteVault is IVoteVault, ValueVault {
         emit VoteTokenAuction(token, epoch, auction, inactiveCoinsInflation);
     }
 
-    function claimRewards(uint256[] memory epochs, address token)
-        external
-        virtual
-        override(IValueVault, ValueVault)
-        returns (uint256)
-    {
+    function withdraw(uint256[] memory epochs, address token) external virtual override returns (uint256) {
         address valueToken = address(governor.value());
         uint256 currentEpoch = governor.currentEpoch();
         uint256 length = epochs.length;

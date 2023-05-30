@@ -5,8 +5,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "src/interfaces/IProtocolConfigurator.sol";
-import "src/interfaces/vaults/IValueVault.sol";
-import "src/interfaces/vaults/IVoteVault.sol";
+import "src/interfaces/vaults/ISPOGVault.sol";
 import "src/interfaces/ISPOGGovernor.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
@@ -41,8 +40,8 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     // Info functions about double governance and SPOG parameters
     function governor() external view returns (ISPOGGovernor);
-    function voteVault() external view returns (IVoteVault);
-    function valueVault() external view returns (IValueVault);
+    function voteVault() external view returns (ISPOGVault);
+    function valueVault() external view returns (ISPOGVault);
     function cash() external view returns (IERC20);
     function tax() external view returns (uint256);
     function taxLowerBound() external view returns (uint256);
@@ -59,7 +58,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function changeTax(uint256 _tax) external;
     function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
 
-    function isGovernedMethod(bytes4 func) external view returns (bool);
+    function isGovernedMethod(bytes4 func) external pure returns (bool);
     function chargeFee(address account, bytes4 func) external;
     function inflateRewardTokens() external;
 
