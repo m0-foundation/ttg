@@ -12,14 +12,16 @@ import "src/interfaces/tokens/ISPOGVotes.sol";
 contract SPOG_Base is BaseTest {
     SPOGDeployScript public deployScript;
 
-    address public spog;
-    address public governor;
+    ISPOG public spog;
+    DualGovernor public governor;
     address public vote;
     address public value;
     address public voteVault;
     address public valueVault;
-    address public cash;
-    address public list;
+    IERC20 public cash;
+    IList public list;
+
+    uint256 tax;
 
     enum VoteType {
         No,
@@ -30,13 +32,14 @@ contract SPOG_Base is BaseTest {
         deployScript = new SPOGDeployScript();
         deployScript.run();
 
-        spog = deployScript.spog();
-        governor = deployScript.governor();
-        cash = deployScript.cash();
+        spog = ISPOG(deployScript.spog());
+        governor = DualGovernor(payable(deployScript.governor()));
+        cash = IERC20(deployScript.cash());
         vote = deployScript.vote();
         value = deployScript.value();
         voteVault = deployScript.voteVault();
         valueVault = deployScript.valueVault();
+        tax = deployScript.tax();
 
         // mint vote tokens and self-delegate
         ISPOGVotes(vote).mint(address(this), 100e18);
@@ -49,7 +52,7 @@ contract SPOG_Base is BaseTest {
         // deploy list and change admin to spog
         List newList = new List("SPOG List");
         newList.changeAdmin(address(spog));
-        list = address(newList);
+        list = IList(address(newList));
     }
 
     /* Helper functions */
@@ -60,7 +63,7 @@ contract SPOG_Base is BaseTest {
         string memory description
     ) internal view returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
-        proposalId = IGovernor(governor).hashProposal(targets, values, calldatas, hashedDescription);
+        proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpog() internal {
@@ -76,20 +79,20 @@ contract SPOG_Base is BaseTest {
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        IERC20(deployScript.cash()).approve(address(spog), deployScript.tax());
-        IGovernor(governor).propose(targets, values, calldatas, description);
+        cash.approve(address(spog), tax);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + IGovernor(governor).votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        IGovernor(governor).castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
-        IGovernor(governor).execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpogAndAppendAnAddressToIt() internal {
@@ -111,19 +114,19 @@ contract SPOG_Base is BaseTest {
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        IERC20(deployScript.cash()).approve(address(spog), deployScript.tax());
-        IGovernor(governor).propose(targets, values, calldatas, description);
+        cash.approve(address(spog), tax);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + IGovernor(governor).votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        IGovernor(governor).castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
-        IGovernor(governor).execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
     }
 }

@@ -17,7 +17,7 @@ contract SPOG_changeTax is SPOG_Base {
 
     function test_Revert_ChangeTaxWhenNotCalledFromGovernance() public {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
-        ISPOG(spog).changeTax(newTaxValue);
+        spog.changeTax(newTaxValue);
     }
 
     function test_Revert_WhenTaxValueIsOutOfTaxRangeBounds() public {
@@ -36,21 +36,21 @@ contract SPOG_changeTax is SPOG_Base {
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        IERC20(deployScript.cash()).approve(address(spog), deployScript.tax());
-        IGovernor(governor).propose(targets, values, calldatas, description);
+        cash.approve(address(spog), tax);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + IGovernor(governor).votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        IGovernor(governor).castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         vm.expectRevert(ISPOG.TaxOutOfRange.selector);
-        IGovernor(governor).execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
-        uint256 tax = ISPOG(spog).tax();
+        uint256 tax = spog.tax();
         // assert that tax has not been modified
         assertFalse(tax == outOfBoundsTaxValue, "Tax should not have been changed");
     }
@@ -70,20 +70,20 @@ contract SPOG_changeTax is SPOG_Base {
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        IERC20(deployScript.cash()).approve(address(spog), deployScript.tax());
-        IGovernor(governor).propose(targets, values, calldatas, description);
+        cash.approve(address(spog), tax);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + IGovernor(governor).votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        IGovernor(governor).castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
-        IGovernor(governor).execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
-        uint256 tax = ISPOG(spog).tax();
+        uint256 tax = spog.tax();
 
         // assert that tax was modified
         assertTrue(tax == newTaxValue, "Tax wasn't changed");

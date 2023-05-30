@@ -51,6 +51,7 @@ interface ISPOGGovernor {
 
     function initSPOGAddress(address) external;
     function emergencyProposals(uint256 proposalId) external view returns (bool);
+    function isGovernedMethod(bytes4 func) external pure returns (bool);
 
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
     function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
