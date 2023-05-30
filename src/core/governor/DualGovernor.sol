@@ -116,8 +116,6 @@ contract DualGovernor is DualGovernorQuorum {
         spog.chargeFee(msg.sender, func);
 
         uint256 proposalId;
-        ProposalType proposalType = _getProposalType(func);
-        _proposalTypes[proposalId] = proposalType;
         if (func == ISPOG.reset.selector || func == ISPOG.emergency.selector) {
             _emergencyVotingIsOn = true;
             proposalId = super.propose(targets, values, calldatas, description);
@@ -131,6 +129,10 @@ contract DualGovernor is DualGovernorQuorum {
         if (func == ISPOG.emergency.selector) {
             emergencyProposals[proposalId] = true;
         }
+
+        // Save proposal type
+        ProposalType proposalType = _getProposalType(func);
+        _proposalTypes[proposalId] = proposalType;
 
         /// @dev proposals are voted on in the next epoch
         uint256 nextEpoch = currentEpoch() + 1;

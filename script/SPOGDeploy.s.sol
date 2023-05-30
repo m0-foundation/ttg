@@ -46,8 +46,8 @@ contract SPOGDeployScript is BaseScript {
         valueFixedInflation = 100 * 10e18;
 
         time = 100; // in blocks
-        voteQuorum = 65; // 65%
-        valueQuorum = 65; // 65%
+        voteQuorum = 4; // 4%
+        valueQuorum = 4; // 4%
         tax = 5e18;
         taxLowerBound = 0;
         taxUpperBound = 6e18;
