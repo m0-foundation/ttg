@@ -13,8 +13,6 @@ import "src/interfaces/IList.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 
-import "forge-std/console.sol";
-
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -236,7 +234,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         uint256 fee = _getFee(func);
 
         // transfer the amount from the caller to the SPOG
-        // slither-disable-next-line arbitrary-from-in-transferfrom
+        // slither-disable-next-line arbitrary-send-erc20
         cash.safeTransferFrom(account, address(this), fee);
         // approve amount to be sent to the vault
         cash.approve(address(valueVault), fee);
