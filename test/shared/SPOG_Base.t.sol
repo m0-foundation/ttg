@@ -21,7 +21,7 @@ contract SPOG_Base is BaseTest {
     IERC20 public cash;
     IList public list;
 
-    uint256 tax;
+    uint256 public tax;
 
     enum VoteType {
         No,
@@ -107,7 +107,7 @@ contract SPOG_Base is BaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToAdd, listToAddAddressTo);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =

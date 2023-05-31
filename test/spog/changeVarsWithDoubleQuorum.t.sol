@@ -293,7 +293,7 @@ contract SPOG_change is SPOG_Base {
         emit ValueQuorumNumeratorUpdated(4, 16);
         governor.execute(targets, values, calldatas, hashedDescription);
 
-        uint256 newVoteQuorumNumerator = governor.valueQuorumNumerator();
-        assertTrue(newVoteQuorumNumerator == 16, "Value quorum numerator has not changed");
+        uint256 newValueQuorumNumerator = governor.valueQuorumNumerator();
+        assertTrue(newValueQuorumNumerator == 16, "Value quorum numerator has not changed");
     }
 }
