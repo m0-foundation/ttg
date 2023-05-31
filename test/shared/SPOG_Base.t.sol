@@ -14,10 +14,10 @@ contract SPOG_Base is BaseTest {
 
     ISPOG public spog;
     DualGovernor public governor;
-    address public vote;
-    address public value;
-    address public voteVault;
-    address public valueVault;
+    ISPOGVotes public vote;
+    ISPOGVotes public value;
+    VoteVault public voteVault;
+    ValueVault public valueVault;
     IERC20 public cash;
     IList public list;
 
@@ -35,10 +35,10 @@ contract SPOG_Base is BaseTest {
         spog = ISPOG(deployScript.spog());
         governor = DualGovernor(payable(deployScript.governor()));
         cash = IERC20(deployScript.cash());
-        vote = deployScript.vote();
-        value = deployScript.value();
-        voteVault = deployScript.voteVault();
-        valueVault = deployScript.valueVault();
+        vote = ISPOGVotes(deployScript.vote());
+        value = ISPOGVotes(deployScript.value());
+        voteVault = VoteVault(deployScript.voteVault());
+        valueVault = ValueVault(deployScript.valueVault());
         tax = deployScript.tax();
 
         // mint vote tokens and self-delegate
@@ -66,21 +66,39 @@ contract SPOG_Base is BaseTest {
         proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
-    function addNewListToSpog() internal {
+    function proposeAddingNewListToSpog(string memory proposalDescription)
+        internal
+        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
+    {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
-        string memory description = "Add new list";
+        string memory description = proposalDescription;
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
-        // vote on proposal
+        // create new proposal
         cash.approve(address(spog), tax);
+        // expectEmit();
+        // emit NewVoteQuorumProposal(proposalId);
         governor.propose(targets, values, calldatas, description);
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
+    }
+
+    function addNewListToSpog() internal {
+        // create proposal to add new list
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingNewListToSpog("Add new list");
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);

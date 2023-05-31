@@ -13,6 +13,8 @@ import "src/interfaces/IList.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 
+import "forge-std/console.sol";
+
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
@@ -254,7 +256,9 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // Mint and deposit Vote and Value rewards to vault
         // TODO: move denominator into constant, figure out correct precision
-        uint256 voteInflation = (governor.vote().getPastTotalSupply(nextEpoch - 1) * inflator) / 100;
+        // TODO: figure out how to use epoch correctly here
+        // uint256 voteInflation = (governor.vote().getPastTotalSupply(nextEpoch - 1) * inflator) / 100;
+        uint256 voteInflation = governor.vote().totalSupply() * inflator / 100;
         _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteInflation);
         _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueFixedInflation);
     }

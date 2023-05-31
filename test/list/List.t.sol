@@ -2,11 +2,11 @@
 
 pragma solidity 0.8.19;
 
-import {List, NotAdmin} from "src/periphery/List.sol";
-import {BaseTest} from "test/Base.t.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {ERC165CheckerSPOG} from "src/periphery/ERC165CheckerSPOG.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
+import "src/periphery/List.sol";
+import "test/Base.t.sol";
+import "src/interfaces/ISPOG.sol";
 
 contract MockSPOG is ERC165 {
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
