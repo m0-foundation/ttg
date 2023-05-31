@@ -236,6 +236,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         uint256 fee = _getFee(func);
 
         // transfer the amount from the caller to the SPOG
+        // slither-disable-next-line arbitrary-from-in-transferfrom
         cash.safeTransferFrom(account, address(this), fee);
         // approve amount to be sent to the vault
         cash.approve(address(valueVault), fee);
