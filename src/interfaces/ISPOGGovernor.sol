@@ -17,7 +17,7 @@ interface ISPOGGovernor {
     error ZeroSPOGAddress();
 
     // Events
-    event NewProposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
+    event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
 
     struct EpochBasic {
         uint256 numProposals;

@@ -140,7 +140,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 nextEpoch = currentEpoch() + 1;
         _epochBasic[nextEpoch].numProposals += 1;
 
-        emit NewProposal(nextEpoch, proposalId, proposalType);
+        emit Proposal(nextEpoch, proposalId, proposalType);
         return proposalId;
     }
 

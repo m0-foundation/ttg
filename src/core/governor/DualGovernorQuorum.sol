@@ -62,7 +62,7 @@ abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
         }
 
         // Otherwise, do the binary search
-        // TODO:
+        // TODO: `upperLookupRecent` vs `upperLookup`, check that we use latest OZ libs
         return _voteQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 

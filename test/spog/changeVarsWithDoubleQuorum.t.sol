@@ -8,9 +8,7 @@ contract SPOG_change is SPOG_Base {
     uint8 internal noVote;
     address internal alice;
 
-    event NewProposal(
-        uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType
-    );
+    event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
@@ -49,7 +47,7 @@ contract SPOG_change is SPOG_Base {
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit NewProposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "spog proposal ids don't match");
 
@@ -231,7 +229,7 @@ contract SPOG_change is SPOG_Base {
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit NewProposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "spog proposal ids don't match");
 
@@ -275,7 +273,7 @@ contract SPOG_change is SPOG_Base {
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit NewProposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "spog proposal ids don't match");
 
