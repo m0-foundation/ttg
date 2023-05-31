@@ -54,7 +54,9 @@ contract DualGovernor is DualGovernorQuorum {
         spog = ISPOG(_spog);
         // initialize tokens
         vote.initSPOGAddress(_spog);
-        value.initSPOGAddress(_spog);
+        // TODO: find the way to avoid mistake with initialization
+        // TODO: do not fall if spog address has been already initialized for value token
+        try value.initSPOGAddress(_spog) {} catch {}
     }
 
     /// @dev get current epoch number - 0, 1, 2, 3, .. etc
