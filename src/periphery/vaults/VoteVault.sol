@@ -21,6 +21,9 @@ contract VoteVault is IVoteVault, ValueVault {
     using SafeERC20 for IERC20;
 
     IERC20PricelessAuction public immutable auctionContract;
+    uint256 public auctionCount;
+
+    mapping(uint256 => address) public auctionForEpoch;
 
     //TODO: not changing require into error revert, this modifier should potentially be gone
     modifier onlySPOG() {
@@ -33,43 +36,67 @@ contract VoteVault is IVoteVault, ValueVault {
     }
 
     /// @notice Sell inactive voters inflation rewards
-    /// @param epoch Epoch to sell tokens from
+    /// @param epochs Epoch to sell tokens from
     /// @param paymentToken Token to accept for payment
     /// @param duration The duration of the auction
-    function sellInactiveVoteInflation(uint256 epoch, address paymentToken, uint256 duration)
+    function sellInactiveVoteInflation(uint256[] calldata epochs, address paymentToken, uint256 duration)
         external
         override
         onlySPOG
+        returns (address, uint256)
     {
-        if (epoch >= governor.currentEpoch()) revert InvalidEpoch(epoch, governor.currentEpoch());
-
         address token = address(governor.votingToken());
-        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(epoch));
+        uint256 numTokensToSell;
 
-        // includes inflation
-        uint256 totalCoinsForEpoch = governor.votingToken().getPastTotalSupply(epochStartBlockNumber[epoch]);
+        uint256 length = epochs.length;
 
-        uint256 totalInflation = epochTokenDeposit[token][epoch];
+        uint256 currentEpoch = governor.currentEpoch();
 
-        // vote weights as they were before inflation
-        uint256 preInflatedCoinsForEpoch = totalCoinsForEpoch - totalInflation;
+        address auction = Clones.cloneDeterministic(address(auctionContract), bytes32(auctionCount));
+        auctionCount++;
 
-        // weights are calculated before inflation
-        uint256 activeCoinsForEpoch = governor.epochSumOfVoteWeight(epoch);
+        for (uint256 i; i < length;) {
+            uint256 epoch = epochs[i];
+            if (epoch >= currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
+            if (auctionForEpoch[epoch] != address(0)) revert AuctionAlreadyExists(epoch, auctionForEpoch[epoch]);
 
-        uint256 activeCoinsInflation = totalInflation * activeCoinsForEpoch / preInflatedCoinsForEpoch;
+            // includes inflation
+            uint256 totalCoinsForEpoch = governor.votingToken().getPastTotalSupply(epochStartBlockNumber[epoch]);
 
-        uint256 inactiveCoinsInflation = totalInflation - activeCoinsInflation;
+            uint256 totalInflation = epochTokenDeposit[token][epoch];
 
-        if (inactiveCoinsInflation == 0) {
+            // vote weights as they were before inflation
+            uint256 preInflatedCoinsForEpoch = totalCoinsForEpoch - totalInflation;
+
+            // weights are calculated before inflation
+            uint256 activeCoinsForEpoch = governor.epochSumOfVoteWeight(epoch);
+
+            uint256 percentageOfTotalSupply = activeCoinsForEpoch * PRECISION_FACTOR / preInflatedCoinsForEpoch;
+
+            uint256 activeCoinsInflation = percentageOfTotalSupply * totalInflation / PRECISION_FACTOR;
+
+            uint256 inactiveCoinsInflation = totalInflation - activeCoinsInflation;
+
+            numTokensToSell += inactiveCoinsInflation;
+
+            auctionForEpoch[epoch] = address(auction);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        if (numTokensToSell == 0) {
             revert NoTokensToSell();
         }
 
-        IERC20(token).approve(auction, inactiveCoinsInflation);
+        IERC20(token).approve(auction, numTokensToSell);
 
-        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, inactiveCoinsInflation);
+        IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, numTokensToSell);
 
-        emit VoteTokenAuction(token, epoch, auction, inactiveCoinsInflation);
+        emit VoteTokenAuction(token, epochs, auction, numTokensToSell);
+
+        return (auction, numTokensToSell);
     }
 
     function claimRewards(uint256[] memory epochs, address token)
