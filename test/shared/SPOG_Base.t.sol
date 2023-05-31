@@ -1,29 +1,27 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "forge-std/console.sol";
-import {BaseTest} from "test/Base.t.sol";
-import {SPOGDeployScript} from "script/SPOGDeploy.s.sol";
-import "src/core/SPOG.sol";
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
-import {SPOGGovernor} from "src/core/governance/SPOGGovernor.sol";
-import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {List} from "src/periphery/List.sol";
-import {VoteVault} from "src/periphery/vaults/VoteVault.sol";
-import {ValueVault} from "src/periphery/vaults/ValueVault.sol";
+import "@openzeppelin/contracts/governance/IGovernor.sol";
+
+import "test/Base.t.sol";
+import "script/SPOGDeploy.s.sol";
+
+import "src/periphery/List.sol";
+import "src/interfaces/tokens/ISPOGVotes.sol";
 
 contract SPOG_Base is BaseTest {
-    SPOG public spog;
-    SPOGVotes public spogVote;
-    SPOGGovernor public voteGovernor;
-    SPOGVotes public spogValue;
-    SPOGGovernor public valueGovernor;
     SPOGDeployScript public deployScript;
-    List public list;
+
+    ISPOG public spog;
+    DualGovernor public governor;
+    ISPOGVotes public vote;
+    ISPOGVotes public value;
     VoteVault public voteVault;
     ValueVault public valueVault;
     IERC20 public cash;
+    IList public list;
+
+    uint256 public tax;
 
     enum VoteType {
         No,
@@ -34,69 +32,85 @@ contract SPOG_Base is BaseTest {
         deployScript = new SPOGDeployScript();
         deployScript.run();
 
-        spog = deployScript.spog();
-        spogVote = SPOGVotes(address(deployScript.vote()));
-        voteGovernor = deployScript.voteGovernor();
-        spogValue = SPOGVotes(address(deployScript.value()));
-        valueGovernor = deployScript.valueGovernor();
+        spog = ISPOG(deployScript.spog());
+        governor = DualGovernor(payable(deployScript.governor()));
+        cash = IERC20(deployScript.cash());
+        vote = ISPOGVotes(deployScript.vote());
+        value = ISPOGVotes(deployScript.value());
+        voteVault = VoteVault(deployScript.voteVault());
+        valueVault = ValueVault(deployScript.valueVault());
+        tax = deployScript.tax();
 
-        // mint spogVote to address(this) and self-delegate
-        spogVote.mint(address(this), 100e18);
-        spogVote.delegate(address(this));
+        // mint vote tokens and self-delegate
+        ISPOGVotes(vote).mint(address(this), 100e18);
+        ISPOGVotes(vote).delegate(address(this));
 
-        // mint spogValue to address(this) and self-delegate
-        spogValue.mint(address(this), 100e18);
-        spogValue.delegate(address(this));
+        // mint value tokens and self-delegate
+        ISPOGVotes(value).mint(address(this), 100e18);
+        ISPOGVotes(value).delegate(address(this));
 
         // deploy list and change admin to spog
-        list = new List("My List");
-        list.changeAdmin(address(spog));
-
-        voteVault = deployScript.voteVault();
-        valueVault = deployScript.valueVault();
-
-        cash = IERC20(address(deployScript.cash()));
+        List newList = new List("SPOG List");
+        newList.changeAdmin(address(spog));
+        list = IList(address(newList));
     }
 
     /* Helper functions */
     function getProposalIdAndHashedDescription(
-        SPOGGovernor governor,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) internal pure returns (bytes32 hashedDescription, uint256 proposalId) {
+    ) internal view returns (bytes32 hashedDescription, uint256 proposalId) {
         hashedDescription = keccak256(abi.encodePacked(description));
         proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
-    function addNewListToSpog() internal {
+    function proposeAddingNewListToSpog(string memory proposalDescription)
+        internal
+        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
+    {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
-        string memory description = "Add new list";
+        calldatas[0] = abi.encodeWithSignature("addList(address)", list);
+        string memory description = proposalDescription;
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
-        // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        // create new proposal
+        cash.approve(address(spog), tax);
+        // expectEmit();
+        // emit NewVoteQuorumProposal(proposalId);
+        governor.propose(targets, values, calldatas, description);
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
+    }
+
+    function addNewListToSpog() internal {
+        // create proposal to add new list
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingNewListToSpog("Add new list");
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
     }
 
     function addNewListToSpogAndAppendAnAddressToIt() internal {
@@ -111,26 +125,26 @@ contract SPOG_Base is BaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToAdd, listToAddAddressTo);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        cash.approve(address(spog), tax);
+        governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
-        vm.roll(block.number + deployScript.time() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
     }
 }

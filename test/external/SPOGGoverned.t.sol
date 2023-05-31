@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
-import {SPOGGoverned} from "src/external/SPOGGoverned.sol";
-import {List} from "src/periphery/List.sol";
-import {IList} from "src/interfaces/IList.sol";
+import "test/shared/SPOG_Base.t.sol";
+import "src/external/SPOGGoverned.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
@@ -78,15 +75,15 @@ contract SPOGGovernedTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
+        calldatas[0] = abi.encodeWithSignature("addList(address)", list);
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create new proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        cash.approve(address(spog), deployScript.tax());
+        governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -107,11 +104,11 @@ contract SPOGGovernedTest is SPOG_Base {
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, hashedDescription);
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create new proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-        spog.propose(targets, values, calldatas, description);
+        cash.approve(address(spog), deployScript.tax());
+        governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -136,16 +133,16 @@ contract SPOGGovernedTest is SPOG_Base {
         ) = proposeAddingNewListToSpog("Add Collateral Managers List", address(list));
 
         // fast forward one epoch to propose
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward one epoch to execute
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // execute vote
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         MockGovernedContract testGovernedContract = new MockGovernedContract(address(spog), address(list));
 
@@ -173,16 +170,16 @@ contract SPOGGovernedTest is SPOG_Base {
         );
 
         // fast forward one epoch to propose
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         // fast forward one epoch to execute
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // execute vote
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         MockGovernedContract2 testGovernedContract = new MockGovernedContract2(address(spog));
 

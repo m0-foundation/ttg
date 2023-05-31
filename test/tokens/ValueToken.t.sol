@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
-import {ValueToken} from "src/tokens/ValueToken.sol";
-import {SPOGVotes} from "src/tokens/SPOGVotes.sol";
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import "test/shared/SPOG_Base.t.sol";
 
 contract ValueTokenTest is SPOG_Base {
     address alice = createUser("alice");
@@ -27,9 +23,6 @@ contract ValueTokenTest is SPOG_Base {
         vm.deal({account: alice, newBalance: 10 ether});
     }
 
-    /**
-     * Test Functions
-     */
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {
         vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
         valueToken.snapshot();

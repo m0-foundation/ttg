@@ -2,10 +2,10 @@
 
 pragma solidity 0.8.19;
 
-import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 
-import {SPOGVotes} from "./SPOGVotes.sol";
-import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
+import "./SPOGVotes.sol";
+import "src/interfaces/tokens/IVoteToken.sol";
 
 /// @title VoteToken
 /// @dev Main token of vote governance.

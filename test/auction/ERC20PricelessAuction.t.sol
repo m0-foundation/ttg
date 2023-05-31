@@ -2,14 +2,10 @@
 
 pragma solidity 0.8.19;
 
-import {StdCheats} from "forge-std/StdCheats.sol";
-import {ERC20PricelessAuction} from "src/periphery/ERC20PricelessAuction.sol";
-import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
-import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
-import {SPOG_Base} from "test/shared/SPOG_Base.t.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
-import "forge-std/console.sol";
+import "src/periphery/ERC20PricelessAuction.sol";
+import "test/shared/SPOG_Base.t.sol";
 
 contract ERC20PricelessAuctionTest is SPOG_Base {
     IERC20PricelessAuction public auctionImplementation;

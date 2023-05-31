@@ -2,12 +2,11 @@
 
 pragma solidity 0.8.19;
 
-import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import {SPOGVotes} from "./SPOGVotes.sol";
-import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
+import "src/interfaces/tokens/IValueToken.sol";
+import "./SPOGVotes.sol";
 
 /// @title ValueToken
 /// @dev Main token of value governance, has a built-in snapshot functionality.

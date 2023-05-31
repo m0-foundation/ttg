@@ -2,81 +2,78 @@
 pragma solidity 0.8.19;
 
 import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
-import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
-import {ValueToken} from "src/tokens/ValueToken.sol";
-import {VoteToken} from "src/tokens/VoteToken.sol";
 
 contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
     function test_sellInactiveVoteInflation() public {
-        uint256 initialBalance = voteGovernor.votingToken().totalSupply();
+        uint256 initialBalance = governor.vote().totalSupply();
 
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
 
         // deposit rewards for previous epoch
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 adminBalance = spogVote.balanceOf(address(this));
-        uint256 aliceBalance = spogVote.balanceOf(alice);
-        uint256 bobBalance = spogVote.balanceOf(bob);
-        uint256 carolBalance = spogVote.balanceOf(carol);
+        uint256 adminBalance = vote.balanceOf(address(this));
+        uint256 aliceBalance = vote.balanceOf(alice);
+        uint256 bobBalance = vote.balanceOf(bob);
+        uint256 carolBalance = vote.balanceOf(carol);
 
         assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + carolBalance);
 
         // alice votes
         vm.startPrank(alice);
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         vm.stopPrank();
 
         // bob votes
         vm.startPrank(bob);
-        voteGovernor.castVote(proposalId, noVote);
+        governor.castVote(proposalId, noVote);
         vm.stopPrank();
 
         //admin and carol do not vote
 
         // inflation should have happened
-        uint256 inflatedBalance = voteGovernor.votingToken().totalSupply();
+        uint256 inflatedBalance = governor.vote().totalSupply();
 
         uint256 totalInflation = inflatedBalance - initialBalance;
 
-        assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), totalInflation);
+        assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation);
 
         uint256[] memory epochs = new uint256[](1);
-        epochs[0] = voteGovernor.currentEpoch();
+        epochs[0] = governor.currentEpoch();
 
         // roll forward another epoch
-        vm.roll(block.number + voteGovernor.votingPeriod() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // anyone can call
-        spog.sellInactiveVoteInflation(epochs);
+        voteVault.sellInactiveVoteInflation(epochs);
 
         // hard coded scenario uses half of voting weight
         uint256 inactiveCoinsInflation = totalInflation / 2;
 
-        assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), totalInflation - inactiveCoinsInflation);
+        assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation - inactiveCoinsInflation);
     }
 
     function test_Revert_sellInactiveVoteInflation_whenEpochAlreadyAuctioned() public {
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
 
         // deposit rewards for previous epoch
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
 
         uint256[] memory epochs = new uint256[](1);
-        epochs[0] = voteGovernor.currentEpoch();
+        epochs[0] = governor.currentEpoch();
 
         // roll forward another epoch
-        vm.roll(block.number + voteGovernor.votingPeriod() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // anyone can call
-        (address auctionAddress,) = spog.sellInactiveVoteInflation(epochs);
+        (address auctionAddress,) = voteVault.sellInactiveVoteInflation(epochs);
 
         vm.expectRevert(abi.encodeWithSelector(IVoteVault.AuctionAlreadyExists.selector, epochs[0], auctionAddress));
 
         //attempt to auction same epoch again
-        spog.sellInactiveVoteInflation(epochs);
+        voteVault.sellInactiveVoteInflation(epochs);
     }
 
     function test_sellInactiveVoteInflation_withFuzzBalances(uint256 daveBalance, uint256 ernieBalance) public {
@@ -89,38 +86,38 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         address dave = createUser("dave");
         address ernie = createUser("ernie");
 
-        spogVote.mint(dave, daveBalance);
+        vote.mint(dave, daveBalance);
         vm.startPrank(dave);
-        spogVote.delegate(dave);
+        vote.delegate(dave);
         vm.stopPrank();
 
-        spogVote.mint(ernie, ernieBalance);
+        vote.mint(ernie, ernieBalance);
         vm.startPrank(ernie);
-        spogVote.delegate(ernie);
+        vote.delegate(ernie);
         vm.stopPrank();
 
-        uint256 initialBalance = voteGovernor.votingToken().totalSupply();
+        uint256 initialBalance = governor.vote().totalSupply();
 
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
 
         // deposit rewards for previous epoch
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 adminBalance = spogVote.balanceOf(address(this));
-        uint256 aliceBalance = spogVote.balanceOf(alice);
-        uint256 bobBalance = spogVote.balanceOf(bob);
-        uint256 carolBalance = spogVote.balanceOf(carol);
+        uint256 adminBalance = vote.balanceOf(address(this));
+        uint256 aliceBalance = vote.balanceOf(alice);
+        uint256 bobBalance = vote.balanceOf(bob);
+        uint256 carolBalance = vote.balanceOf(carol);
 
         assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + carolBalance + daveBalance + ernieBalance);
 
         // alice votes
         vm.startPrank(alice);
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         vm.stopPrank();
 
         // bob votes
         vm.startPrank(bob);
-        voteGovernor.castVote(proposalId, noVote);
+        governor.castVote(proposalId, noVote);
         vm.stopPrank();
 
         //admin and carol do not vote
@@ -129,50 +126,47 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
 
         // ernie votes with fuzz balance
         vm.startPrank(ernie);
-        voteGovernor.castVote(proposalId, yesVote);
+        governor.castVote(proposalId, yesVote);
         vm.stopPrank();
 
         // inflation should have happened
-        uint256 inflatedBalance = voteGovernor.votingToken().totalSupply();
+        uint256 inflatedBalance = governor.vote().totalSupply();
 
         uint256 totalInflation = inflatedBalance - initialBalance;
 
-        assertEq(voteGovernor.votingToken().balanceOf(address(voteVault)), totalInflation);
+        assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation);
 
         uint256[] memory epochs = new uint256[](1);
-        epochs[0] = voteGovernor.currentEpoch();
+        epochs[0] = governor.currentEpoch();
 
         uint256 activeInflatedAmount;
 
         vm.startPrank(alice);
-        spog.voteVault().claimRewards(epochs, address(voteGovernor.votingToken()));
-        activeInflatedAmount += voteGovernor.votingToken().balanceOf(alice) - aliceBalance;
+        spog.voteVault().withdraw(epochs, address(governor.vote()));
+        activeInflatedAmount += governor.vote().balanceOf(alice) - aliceBalance;
         vm.stopPrank();
 
         vm.startPrank(bob);
-        spog.voteVault().claimRewards(epochs, address(voteGovernor.votingToken()));
-        activeInflatedAmount += voteGovernor.votingToken().balanceOf(bob) - bobBalance;
+        spog.voteVault().withdraw(epochs, address(governor.vote()));
+        activeInflatedAmount += governor.vote().balanceOf(bob) - bobBalance;
         vm.stopPrank();
 
         vm.startPrank(ernie);
-        uint256 ernieBefore = voteGovernor.votingToken().balanceOf(ernie);
-        spog.voteVault().claimRewards(epochs, address(voteGovernor.votingToken()));
-        activeInflatedAmount += voteGovernor.votingToken().balanceOf(ernie) - ernieBefore;
+        uint256 ernieBefore = governor.vote().balanceOf(ernie);
+        spog.voteVault().withdraw(epochs, address(governor.vote()));
+        activeInflatedAmount += governor.vote().balanceOf(ernie) - ernieBefore;
         vm.stopPrank();
 
         // roll forward another epoch
-        vm.roll(block.number + voteGovernor.votingPeriod() + 1);
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // anyone can call
-        (, uint256 amountToSell) = spog.sellInactiveVoteInflation(epochs);
+        (, uint256 amountToSell) = voteVault.sellInactiveVoteInflation(epochs);
 
         // Assert that the amount to sell is never more than amount that can be claimed
         // Note - this does leave small dust amounts in the vault due to rounding
         assertLe(amountToSell, totalInflation - activeInflatedAmount);
 
-        assertEq(
-            voteGovernor.votingToken().balanceOf(address(voteVault)),
-            totalInflation - activeInflatedAmount - amountToSell
-        );
+        assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation - activeInflatedAmount - amountToSell);
     }
 }

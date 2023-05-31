@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {IList} from "src/interfaces/IList.sol";
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {SPOGGovernorBase} from "src/core/governance/SPOGGovernorBase.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
-import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import "src/interfaces/IProtocolConfigurator.sol";
+import "src/interfaces/vaults/ISPOGVault.sol";
+import "src/interfaces/ISPOGGovernor.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
     enum EmergencyType {
@@ -16,75 +16,51 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     }
 
     // Events
-    event NewListAdded(address indexed _list);
-    event AddressAppendedToList(address indexed _list, address indexed _address);
-    event AddressRemovedFromList(address indexed _list, address indexed _address);
+    event ListAdded(address indexed list);
+    event AddressAppendedToList(address indexed list, address indexed account);
+    event AddressRemovedFromList(address indexed list, address indexed account);
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
-    event TaxChanged(uint256 indexed tax);
-    event NewVoteQuorumProposal(uint256 indexed proposalId);
-    event NewValueQuorumProposal(uint256 indexed proposalId);
-    event NewDoubleQuorumProposal(uint256 indexed proposalId);
-    event NewEmergencyProposal(uint256 indexed proposalId);
-    event DoubleQuorumFinalized(bytes32 indexed identifier);
-    event SPOGResetExecuted(address indexed newVoteToken, address indexed nnewVoteGovernor);
+    event TaxChanged(uint256 oldTax, uint256 newTax);
+    event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
+    event ResetExecuted(address indexed newGovernor, address indexed newVoteVault, uint256 indexed resetSnapshotId);
 
     // Errors
-    error EmergencyMethodNotSupported();
-    error InvalidParameter(bytes32 what);
+    error OnlyGovernor();
+    error ZeroGovernorAddress();
+    error ZeroVaultAddress();
+    error ZeroCashAddress();
+    error ZeroTax();
+    error TaxOutOfRange();
+    error ZeroInflator();
+    error ZeroValueInflation();
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
-    error ListIsAlreadyInMasterList();
-    error InvalidProposal();
-    error NotGovernedMethod(bytes4 funcSelector);
-    error ValueVoteProposalIdsMistmatch(uint256 voteProposalId, uint256 valueProposalId);
-    error ValueGovernorDidNotApprove(uint256 proposalId);
+    error EmergencyMethodNotSupported();
     error ValueTokenMistmatch();
-    error GovernorsShouldNotBeSame();
-    error VaultAddressCannotBeZero();
-    error ZeroAddress();
-    error ZeroValues();
-    error InitTaxOutOfRange();
-    error InitCashAndInflatorCannotBeZero();
-    error TaxOutOfRange();
-    error OnlyValueGovernor();
-    error OnlyVoteGovernor();
 
     // Info functions about double governance and SPOG parameters
-    function valueGovernor() external view returns (SPOGGovernorBase);
-    function voteGovernor() external view returns (SPOGGovernorBase);
-    function valueVault() external view returns (IValueVault);
-    function voteVault() external view returns (IVoteVault);
-    function taxRange() external view returns (uint256, uint256);
+    function governor() external view returns (ISPOGGovernor);
+    function voteVault() external view returns (ISPOGVault);
+    function valueVault() external view returns (ISPOGVault);
+    function cash() external view returns (IERC20);
+    function tax() external view returns (uint256);
+    function taxLowerBound() external view returns (uint256);
+    function taxUpperBound() external view returns (uint256);
+    function inflator() external view returns (uint256);
+    function valueFixedInflation() external view returns (uint256);
 
     // Accepted `proposal` functions
-    function addNewList(IList list) external;
-    function append(address _address, IList _list) external;
-    function remove(address _address, IList _list) external;
+    function addList(address list) external;
+    function append(address list, address account) external;
+    function remove(address list, address account) external;
     function emergency(uint8 emergencyType, bytes calldata callData) external;
-    function reset(SPOGGovernorBase newVoteGovernor) external;
-    function change(bytes32 what, bytes calldata value) external;
+    function reset(address newGovernor, address newVoteVault) external;
     function changeTax(uint256 _tax) external;
+    function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
 
-    // Token rewards functions
-    function voteTokenInflationPerEpoch() external view returns (uint256);
-    function valueTokenInflationPerEpoch() external view returns (uint256);
-
-    // Governance process functions
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) external returns (uint256);
-
-    function propose(bytes memory callData, string memory description) external returns (uint256);
-
-    function execute(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) external returns (uint256);
+    function isGovernedMethod(bytes4 func) external pure returns (bool);
+    function chargeFee(address account, bytes4 func) external;
+    function inflateRewardTokens() external;
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
