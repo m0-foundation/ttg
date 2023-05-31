@@ -2,9 +2,7 @@
 
 pragma solidity 0.8.19;
 
-import {ISPOGGovernor} from "src/interfaces/ISPOGGovernor.sol";
-
-interface IValueVault {
+interface ISPOGVault {
     event EpochRewardsDeposit(uint256 indexed epoch, address indexed token, uint256 amount);
     event EpochRewardsClaim(uint256 indexed epoch, address indexed account, address indexed token, uint256 amount);
 
@@ -13,6 +11,6 @@ interface IValueVault {
     error EpochWithNoRewards();
     error AlreadyClaimed();
 
-    function depositRewards(uint256 epoch, address token, uint256 amount) external;
-    function claimRewards(uint256[] memory epochs, address token) external returns (uint256);
+    function deposit(uint256 epoch, address token, uint256 amount) external;
+    function withdraw(uint256[] memory epochs, address token) external returns (uint256);
 }

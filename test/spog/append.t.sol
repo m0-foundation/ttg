@@ -16,8 +16,8 @@ contract SPOG_AppendAddressToList is SPOG_Base {
     }
 
     function test_Revert_AppendToListWhenNotCallingFromGovernance() public {
-        vm.expectRevert(ISPOG.OnlyVoteGovernor.selector);
-        spog.append(addressToAdd, IList(listToAddAddressTo));
+        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        spog.append(listToAddAddressTo, addressToAdd);
     }
 
     function test_Revert_WhenListNotInMasterList() external {
@@ -26,8 +26,8 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         bytes memory expectedError = abi.encodeWithSignature("ListIsNotInMasterList()");
 
         vm.expectRevert(expectedError);
-        vm.prank(address(voteGovernor));
-        spog.append(addressToAdd, IList(listToAddAddressTo));
+        vm.prank(address(governor));
+        ISPOG(spog).append(listToAddAddressTo, addressToAdd);
     }
 
     function test_SPOGProposalToAppendToAList() public {
@@ -37,34 +37,34 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", addressToAdd, listToAddAddressTo);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(voteGovernor, targets, values, calldatas, description);
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        deployScript.cash().approve(address(spog), deployScript.tax());
-
-        spog.propose(targets, values, calldatas, description);
+        cash.approve(address(spog), tax);
+        governor.propose(targets, values, calldatas, description);
 
         // assert that vault has cash balance paid for proposals
         assertTrue(
-            deployScript.cash().balanceOf(address(valueVault)) == deployScript.tax() * 2,
+            cash.balanceOf(address(valueVault)) == tax * 2,
             "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
         );
 
         // fast forward to an active voting period
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+        vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
         uint8 yesVote = 1;
-        voteGovernor.castVote(proposalId, yesVote);
-        // fast forward to next epoch
-        vm.roll(block.number + voteGovernor.votingDelay() + 1);
+
+        governor.castVote(proposalId, yesVote);
+        // fast forward to end of voting period
+        vm.roll(block.number + governor.votingPeriod() + 1);
 
         // execute proposal
-        spog.execute(targets, values, calldatas, hashedDescription);
+        governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
         assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");

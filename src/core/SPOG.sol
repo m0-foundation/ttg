@@ -1,164 +1,183 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import {IList} from "src/interfaces/IList.sol";
-import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
+import "src/interfaces/ISPOGGovernor.sol";
+import "src/interfaces/tokens/IVoteToken.sol";
+import "src/interfaces/tokens/IValueToken.sol";
+import "src/interfaces/vaults/ISPOGVault.sol";
+import "src/interfaces/IList.sol";
 
-import {ISPOG} from "src/interfaces/ISPOG.sol";
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-
-import {SPOGStorage, SPOGGovernorBase} from "src/core/SPOGStorage.sol";
-import {IVoteToken} from "src/interfaces/tokens/IVoteToken.sol";
-import {IValueToken} from "src/interfaces/tokens/IValueToken.sol";
-
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
-import {ProtocolConfigurator} from "src/config/ProtocolConfigurator.sol";
-
-import {IVoteVault} from "src/interfaces/vaults/IVoteVault.sol";
-import {IValueVault} from "src/interfaces/vaults/IValueVault.sol";
+import "src/config/ProtocolConfigurator.sol";
 
 /// @title SPOG
 /// @dev Contracts for governing lists and managing communal property through token voting.
 /// @dev Reference: https://github.com/TheThing0/SPOG-Spec/blob/main/README.md
-/// @notice A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
-contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
+/// @notice SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property.
+/// @notice SPOG is used for **permissioning actors**  and optimized for token holder participation.
+contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
-    // vault for vote holders voting inflation rewards
-    IVoteVault public immutable voteVault;
-    // vault for value holders assets rewards
-    IValueVault public immutable valueVault;
-
-    // List of methods that can be executed by SPOG governance
-    mapping(bytes4 => bool) public governedMethods;
-
-    uint256 private constant inMasterList = 1;
-    uint256 public constant EMERGENCY_TAX_MULTIPLIER = 12;
-    uint256 public constant RESET_TAX_MULTIPLIER = 12;
-
-    // List of addresses that are part of the masterlist
-    // Masterlist declaration. address => uint256. 0 = not in masterlist, 1 = in masterlist
-    EnumerableMap.AddressToUintMap private masterlist;
-
-    // Indicator that token rewards were already minted for an epoch, epoch number => bool
-    mapping(uint256 => bool) private epochRewardsMinted;
-
-    /// @notice Create a new SPOG
-    /// @param _initSPOGData The data used to initialize spogData
-    /// @param _voteVault The address of the `Vault` contract for vote holders
-    /// @param _valueVault The address of the `Vault` contract for value holders
-    /// @param _time The duration of a voting epochs for governors and auctions in blocks
-    /// @param _voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
-    /// @param _valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
-    /// @param _valueFixedInflationAmount The fixed inflation amount for the $VALUE token
-    /// @param _voteGovernor The address of the `SPOGGovernor` which $VOTE token is used for voting
-    /// @param _valueGovernor The address of the `SPOGGovernor` which $VALUE token is used for voting
-    constructor(
-        bytes memory _initSPOGData,
-        IVoteVault _voteVault,
-        IValueVault _valueVault,
-        uint256 _time,
-        uint256 _voteQuorum,
-        uint256 _valueQuorum,
-        uint256 _valueFixedInflationAmount,
-        SPOGGovernorBase _voteGovernor,
-        SPOGGovernorBase _valueGovernor
-    )
-        SPOGStorage(
-            _initSPOGData,
-            _voteGovernor,
-            _valueGovernor,
-            _time,
-            _voteQuorum,
-            _valueQuorum,
-            _valueFixedInflationAmount
-        )
-    {
-        if (_voteVault == IVoteVault(address(0)) || _valueVault == IValueVault(address(0))) {
-            revert ISPOG.VaultAddressCannotBeZero();
-        }
-
-        voteVault = _voteVault;
-        valueVault = _valueVault;
-
-        _initGovernedMethods();
+    struct Configuration {
+        address payable governor;
+        address voteVault;
+        address valueVault;
+        address cash;
+        uint256 tax;
+        uint256 taxLowerBound;
+        uint256 taxUpperBound;
+        uint256 inflator;
+        uint256 valueFixedInflation;
     }
 
-    /// @dev Getter for finding whether a list is in a masterlist
-    /// @return Whether the list is in the masterlist
-    function isListInMasterList(address list) external view override returns (bool) {
-        return masterlist.contains(list);
+    /// @notice Indicator that list is in master list
+    uint256 private constant inMasterList = 1;
+
+    /// @notice Multiplier in cash for `emergency` proposal
+    uint256 public constant EMERGENCY_TAX_MULTIPLIER = 12;
+
+    /// @notice Multiplier in cash for `reset` proposal
+    uint256 public constant RESET_TAX_MULTIPLIER = 12;
+
+    /// @notice Vault for vote holders vote and value inflation rewards
+    ISPOGVault public override voteVault;
+
+    /// @notice Vault for value holders assets
+    ISPOGVault public immutable override valueVault;
+
+    /// @notice Cash token used for proposal fee payments
+    IERC20 public immutable override cash;
+
+    /// @notice Fixed inflation rewards per epoch for value holders
+    uint256 public immutable override valueFixedInflation;
+
+    /// @notice Inflation rate per epoch for vote holders
+    uint256 public immutable override inflator;
+
+    /// @notice Governor, upgradable via `reset` by value holders
+    ISPOGGovernor public override governor;
+
+    /// @notice Tax value for proposal cash fee
+    uint256 public override tax;
+
+    /// @notice Tax range: lower bound for proposal cash fee
+    uint256 public override taxLowerBound;
+
+    /// @notice Tax range: upper bound for proposal cash fee
+    uint256 public override taxUpperBound;
+
+    /// @notice List of addresses that are part of the masterlist
+    /// @dev (address => uint256) 0 = not in masterlist, 1 = in masterlist
+    EnumerableMap.AddressToUintMap private _masterlist;
+
+    /// @notice Indicator if token rewards were minted for an epoch,
+    /// @dev (epoch number => bool)
+    mapping(uint256 => bool) private _epochRewardsMinted;
+
+    modifier onlyGovernance() {
+        if (msg.sender != address(governor)) revert OnlyGovernor();
+
+        _;
+    }
+
+    /// @notice Create a new SPOG instance
+    /// @param config The configuration data for the SPOG
+    constructor(Configuration memory config) {
+        // Sanity checks
+        if (config.governor == address(0)) revert ZeroGovernorAddress();
+        if (config.voteVault == address(0) || config.valueVault == address(0)) revert ZeroVaultAddress();
+        if (config.cash == address(0)) revert ZeroCashAddress();
+        if (config.tax == 0) revert ZeroTax();
+        if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
+        if (config.inflator == 0) revert ZeroInflator();
+        if (config.valueFixedInflation == 0) revert ZeroValueInflation();
+
+        // Set configuration data
+        governor = ISPOGGovernor(config.governor);
+        // Initialize governor
+        governor.initSPOGAddress(address(this));
+
+        voteVault = ISPOGVault(config.voteVault);
+        valueVault = ISPOGVault(config.valueVault);
+        cash = IERC20(config.cash);
+        tax = config.tax;
+        taxLowerBound = config.taxLowerBound;
+        taxUpperBound = config.taxUpperBound;
+        inflator = config.inflator;
+        valueFixedInflation = config.valueFixedInflation;
     }
 
     /*//////////////////////////////////////////////////////////////
-                            MASTERLIST FUNCTIONS
+                            MASTERLIST GOVERNANCE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    // functions for adding lists to masterlist and appending/removing addresses to/from lists through VOTE
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(IList list) external override onlyVoteGovernor {
-        if (list.admin() != address(this)) {
-            revert ListAdminIsNotSPOG();
-        }
+    function addList(address list) external override onlyGovernance {
+        if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
+
         // add the list to the master list
-        masterlist.set(address(list), inMasterList);
-        emit NewListAdded(address(list));
+        _masterlist.set(list, inMasterList);
+        emit ListAdded(list);
     }
 
     /// @notice Append an address to a list
-    /// @param _address The address to be appended to the list
-    /// @param _list The list to which the address will be appended
-    function append(address _address, IList _list) public override onlyVoteGovernor {
+    /// @param list The list to which the address will be appended
+    /// @param account The address to be appended to the list
+    function append(address list, address account) public override onlyGovernance {
         // require that the list is on the master list
-        if (!masterlist.contains(address(_list))) {
-            revert ListIsNotInMasterList();
-        }
+        if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // add the address to the list
-        _list.add(_address);
+        IList(list).add(account);
 
-        emit AddressAppendedToList(address(_list), _address);
+        emit AddressAppendedToList(list, account);
     }
 
-    // create function to remove an address from a list
     /// @notice Remove an address from a list
-    /// @param _address The address to be removed from the list
-    /// @param _list The list from which the address will be removed
-    function remove(address _address, IList _list) public override onlyVoteGovernor {
+    /// @param list The list from which the address will be removed
+    /// @param account The address to be removed from the list
+    function remove(address list, address account) public override onlyGovernance {
         // require that the list is on the master list
-        if (!masterlist.contains(address(_list))) {
-            revert ListIsNotInMasterList();
-        }
+        if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // remove the address from the list
-        _list.remove(_address);
+        IList(list).remove(account);
 
-        emit AddressRemovedFromList(address(_list), _address);
+        emit AddressRemovedFromList(list, account);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            GOVERNANCE CHANGE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
+        public
+        override(IProtocolConfigurator, ProtocolConfigurator)
+        onlyGovernance
+    {
+        super.changeConfig(configName, configAddress, interfaceId);
     }
 
     /// @notice Emergency version of existing methods
     /// @param emergencyType The type of emergency method to be called (See enum in ISPOG)
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
-    // TODO: IMPORTANT: right now voting period and logic is the same as for otherfunctions
+    // TODO: IMPORTANT: right now voting period and logic is the same as for other functions
     // TODO: IMPORTANT: implement immediate remove
-    function emergency(uint8 emergencyType, bytes calldata callData) external override onlyVoteGovernor {
+    function emergency(uint8 emergencyType, bytes calldata callData) external override onlyGovernance {
         EmergencyType _emergencyType = EmergencyType(emergencyType);
 
         if (_emergencyType == EmergencyType.Remove) {
-            (address _address, IList _list) = abi.decode(callData, (address, IList));
-            remove(_address, _list);
+            (address list, address account) = abi.decode(callData, (address, address));
+            remove(list, account);
         } else if (_emergencyType == EmergencyType.Append) {
-            (address _address, IList _list) = abi.decode(callData, (address, IList));
-            append(_address, _list);
+            (address list, address account) = abi.decode(callData, (address, address));
+            append(list, account);
         } else if (_emergencyType == EmergencyType.ChangeConfig) {
             (bytes32 configName, address configAddress, bytes4 interfaceId) =
                 abi.decode(callData, (bytes32, address, bytes4));
@@ -170,201 +189,128 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
         emit EmergencyExecuted(emergencyType, callData);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            CONFIG GOVERNANCE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
-        public
-        override(IProtocolConfigurator, ProtocolConfigurator)
-        onlyVoteGovernor
-    {
-        super.changeConfig(configName, configAddress, interfaceId);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            GOVERNANCE INTERFACE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
     // reset current vote governance, only value governor can do it
     // @param newVoteGovernor The address of the new vote governance
-    function reset(SPOGGovernorBase newVoteGovernor) external onlyValueGovernor {
-        // TODO: check that newVoteGovernor implements SPOGGovernor interface, ERC165 ?
+    function reset(address newGovernor, address newVoteVault) external override onlyGovernance {
+        // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
+        // TODO: checks should be in governor itself
+        // IVoteToken newVote = IVoteToken(address(_newGovernor.vote()));
+        // IValueToken valueToken = IValueToken(address(_newGovernor.value()));
+        // if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
-        IVoteToken newVoteToken = IVoteToken(address(newVoteGovernor.votingToken()));
-        IValueToken valueToken = IValueToken(address(valueGovernor.votingToken()));
-        if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
-
-        // Update vote governance in the vault
-        // TODO: how to avoid this ?
-        IVoteVault(voteVault).updateGovernor(newVoteGovernor);
-
-        voteGovernor = newVoteGovernor;
+        voteVault = ISPOGVault(newVoteVault);
+        governor = ISPOGGovernor(newGovernor);
         // Important: initialize SPOG address in the new vote governor
-        voteGovernor.initSPOGAddress(address(this));
+        governor.initSPOGAddress(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetSnapshotId = valueToken.snapshot();
-        newVoteToken.initReset(resetSnapshotId);
+        uint256 resetSnapshotId = IValueToken(address(governor.value())).snapshot();
+        IVoteToken(address(governor.vote())).initReset(resetSnapshotId);
 
-        emit SPOGResetExecuted(address(newVoteToken), address(newVoteGovernor));
+        emit ResetExecuted(newGovernor, newVoteVault, resetSnapshotId);
     }
 
-    /// @notice Create a new proposal.
-    // Similar function sig to propose in Governor.sol so that it is compatible with tools such as Snapshot and Tally
-    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
-    /// @param targets The targets of the proposal
-    /// @param values The values of the proposal
-    /// @param calldatas The calldatas of the proposal
-    /// @param description The description of the proposal
-    /// @return proposalId The ID of the proposal
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) external override returns (uint256) {
-        // allow only 1 SPOG change with no value per proposal
-        if (targets.length != 1 || targets[0] != address(this) || values[0] != 0) {
-            revert InvalidProposal();
-        }
+    function changeTax(uint256 newTax) external override onlyGovernance {
+        if (newTax < taxLowerBound || newTax > taxUpperBound) revert TaxOutOfRange();
 
-        return propose(calldatas[0], description);
+        emit TaxChanged(tax, newTax);
+        tax = newTax;
     }
 
-    /// @notice Create a new proposal
-    /// @dev Calls `propose` function of the vote or value and vote governors (double quorum)
-    /// @param callData The calldata of the proposal
-    /// @param description The description of the proposal
-    /// @return proposalId The ID of the proposal
-    function propose(bytes memory callData, string memory description) public override returns (uint256) {
-        bytes4 executableFuncSelector = bytes4(callData);
-        if (!governedMethods[executableFuncSelector]) {
-            revert NotGovernedMethod(executableFuncSelector);
-        }
+    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external override onlyGovernance {
+        // TODO: add adequate sanity checks
+        emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
 
-        address[] memory targets = new address[](1);
-        targets[0] = address(this);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = callData;
-
-        _payFee(executableFuncSelector);
-
-        // Inflate Vote and Value token supply unless method is reset or emergencyRemove
-        if (executableFuncSelector != this.reset.selector && executableFuncSelector != this.emergency.selector) {
-            _inflateRewardTokens();
-        }
-
-        // Only $VALUE governance proposals
-        if (executableFuncSelector == this.reset.selector) {
-            valueGovernor.turnOnEmergencyVoting();
-            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-            valueGovernor.turnOffEmergencyVoting();
-
-            emit NewValueQuorumProposal(valueProposalId);
-            return valueProposalId;
-        }
-
-        // $VALUE and $VOTE governance proposals
-        // If we request to change config parameter, value governance should vote too
-        if (executableFuncSelector == this.change.selector) {
-            uint256 voteProposalId = voteGovernor.propose(targets, values, calldatas, description);
-            uint256 valueProposalId = valueGovernor.propose(targets, values, calldatas, description);
-
-            // proposal ids should match
-            if (valueProposalId != voteProposalId) {
-                revert ValueVoteProposalIdsMistmatch(voteProposalId, valueProposalId);
-            }
-
-            emit NewDoubleQuorumProposal(voteProposalId);
-            return voteProposalId;
-        }
-
-        // Only $VOTE governance proposals
-        uint256 proposalId;
-
-        // prevent proposing a list that can be changed before execution
-        if (executableFuncSelector == this.addNewList.selector) {
-            address listParams = _extractAddressTypeParamsFromCalldata(callData);
-            if (IList(listParams).admin() != address(this)) {
-                revert ListAdminIsNotSPOG();
-            }
-        }
-
-        // Register emergency proposal with vote governor
-        if (executableFuncSelector == this.emergency.selector) {
-            voteGovernor.turnOnEmergencyVoting();
-
-            proposalId = voteGovernor.propose(targets, values, calldatas, description);
-            voteGovernor.registerEmergencyProposal(proposalId);
-
-            voteGovernor.turnOffEmergencyVoting();
-
-            emit NewEmergencyProposal(proposalId);
-        } else {
-            proposalId = voteGovernor.propose(targets, values, calldatas, description);
-            emit NewVoteQuorumProposal(proposalId);
-        }
-
-        return proposalId;
+        taxLowerBound = newTaxLowerBound;
+        taxUpperBound = newTaxUpperBound;
     }
 
-    /// @notice Execute a proposal
-    /// @dev Calls `execute` function of the vote governors, possibly checking value governor quorum (double quorum)
-    /// @param targets The targets of the proposal
-    /// @param values The values of the proposal
-    /// @param calldatas The calldatas of the proposal
-    /// @param descriptionHash The description hash of the proposal
-    /// @return proposalId The ID of the proposal
-    function execute(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) external override returns (uint256) {
-        bytes4 executableFuncSelector = bytes4(calldatas[0]);
+    /*/////////////////////////////////////////////////////////////////////////////
+                            GOVERNANCE FEE AND REWARDS FUNCTIONS
+    ////////////////////////////////////////////////////////////////////////////*/
 
-        // $VALUE governance proposals
-        if (executableFuncSelector == this.reset.selector) {
-            uint256 valueProposalId = valueGovernor.hashProposal(targets, values, calldatas, descriptionHash);
-            valueGovernor.execute(targets, values, calldatas, descriptionHash);
-            return valueProposalId;
-        }
+    function chargeFee(address account, bytes4 func) external override onlyGovernance {
+        uint256 fee = _getFee(func);
 
-        // $VOTE governance proposals
-        uint256 proposalId = voteGovernor.hashProposal(targets, values, calldatas, descriptionHash);
-        // Check that both value and vote governance approved parameter change
-        if (executableFuncSelector == this.change.selector) {
-            if (valueGovernor.state(proposalId) != IGovernor.ProposalState.Succeeded) {
-                revert ValueGovernorDidNotApprove(proposalId);
-            }
-        }
+        // transfer the amount from the caller to the SPOG
+        // slither-disable-next-line arbitrary-send-erc20
+        cash.safeTransferFrom(account, address(this), fee);
+        // approve amount to be sent to the vault
+        cash.approve(address(valueVault), fee);
 
-        voteGovernor.execute(targets, values, calldatas, descriptionHash);
-        return proposalId;
+        // deposit the amount to the vault
+        valueVault.deposit(governor.currentEpoch(), address(cash), fee);
+    }
+
+    /// @notice inflate Vote and Value token supplies
+    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
+    function inflateRewardTokens() external override onlyGovernance {
+        uint256 nextEpoch = governor.currentEpoch() + 1;
+
+        // Epoch reward tokens already minted, silently return
+        if (_epochRewardsMinted[nextEpoch]) return;
+
+        _epochRewardsMinted[nextEpoch] = true;
+
+        // Mint and deposit Vote and Value rewards to vault
+        // TODO: move denominator into constant, figure out correct precision
+        // TODO: figure out how to use epoch correctly here
+        // uint256 voteInflation = (governor.vote().getPastTotalSupply(nextEpoch - 1) * inflator) / 100;
+        uint256 voteInflation = governor.vote().totalSupply() * inflator / 100;
+        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteInflation);
+        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueFixedInflation);
     }
 
     /*//////////////////////////////////////////////////////////////
-                            PUBLIC FUNCTION
+                            PUBLIC FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice sell unclaimed $vote tokens
-    /// @param epoch The epoch for which to sell unclaimed $vote tokens
-    function sellInactiveVoteInflation(uint256 epoch) public {
-        voteVault.sellInactiveVoteInflation(epoch, address(spogData.cash), voteGovernor.votingPeriod());
+    /// @notice Getter for finding whether a list is in a masterlist
+    /// @param list The list address to check
+    /// @return Whether the list is in the masterlist
+    function isListInMasterList(address list) external view override returns (bool) {
+        return _masterlist.contains(list);
     }
 
-    /// @notice returns number of vote token rewards for an epoch with active proposals
-    function voteTokenInflationPerEpoch() public view returns (uint256) {
-        return (voteGovernor.votingToken().totalSupply() * spogData.inflator) / 100;
+    function isGovernedMethod(bytes4 selector) external pure override returns (bool) {
+        // TODO: order by frequence of usage
+        if (selector == this.append.selector) return true;
+        if (selector == this.addList.selector) return true;
+        if (selector == this.changeConfig.selector) return true;
+        if (selector == this.remove.selector) return true;
+        if (selector == this.changeTax.selector) return true;
+        if (selector == this.changeTaxRange.selector) return true;
+
+        if (selector == this.emergency.selector) return true;
+        if (selector == this.reset.selector) return true;
+
+        return false;
     }
 
-    /// @notice returns number of value token rewards for an epoch with active proposals
-    function valueTokenInflationPerEpoch() public view returns (uint256) {
-        return valueFixedInflationAmount;
+    /*//////////////////////////////////////////////////////////////
+                            PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Pay flat fee for all the operations except emergency and reset
+    function _getFee(bytes4 func) internal view returns (uint256) {
+        if (func == this.emergency.selector) {
+            return EMERGENCY_TAX_MULTIPLIER * tax;
+        }
+        if (func == this.reset.selector) {
+            return RESET_TAX_MULTIPLIER * tax;
+        }
+        return tax;
+    }
+
+    /// @notice mint reward token into the vault
+    /// @param epoch The epoch for which rewards become claimable
+    /// @param token The reward token, only vote or value tokens
+    /// @param amount The amount to mint and deposit into the vault
+    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
+        token.mint(address(this), amount);
+        token.approve(address(voteVault), amount);
+        voteVault.deposit(epoch, address(token), amount);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -375,89 +321,6 @@ contract SPOG is ProtocolConfigurator, SPOGStorage, ERC165 {
     /// @param interfaceId The interface ID to check
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            PRIVATE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function _initGovernedMethods() private {
-        // TODO: review if there is better, more efficient way to do it
-        governedMethods[this.append.selector] = true;
-        governedMethods[this.changeTax.selector] = true;
-        governedMethods[this.remove.selector] = true;
-        governedMethods[this.addNewList.selector] = true;
-        governedMethods[this.change.selector] = true;
-        governedMethods[this.emergency.selector] = true;
-        governedMethods[this.reset.selector] = true;
-        governedMethods[this.changeConfig.selector] = true;
-    }
-
-    /// @notice pay tax from the caller to the SPOG
-    /// @param funcSelector The executable function selector
-    function _payFee(bytes4 funcSelector) private {
-        uint256 fee;
-
-        // Pay flat fee for all the operations except emergency remove and reset
-        if (funcSelector == this.emergency.selector) {
-            fee = EMERGENCY_TAX_MULTIPLIER * spogData.tax;
-        } else if (funcSelector == this.reset.selector) {
-            fee = RESET_TAX_MULTIPLIER * spogData.tax;
-        } else {
-            fee = spogData.tax;
-        }
-
-        // transfer the amount from the caller to the SPOG
-        spogData.cash.safeTransferFrom(msg.sender, address(this), fee);
-        // approve amount to be sent to the vault
-        spogData.cash.approve(address(valueVault), fee);
-
-        // deposit the amount to the vault
-        uint256 epoch = valueGovernor.currentEpoch();
-        valueVault.depositRewards(epoch, address(spogData.cash), fee);
-    }
-
-    /// @notice inflate Vote and Value token supplies
-    /// @dev Called once per epoch when the first reward-accruing proposal is submitted ( except reset and emergencyRemove)
-    function _inflateRewardTokens() private {
-        uint256 nextEpoch = voteGovernor.currentEpoch() + 1;
-
-        // Epoch reward tokens already minted, silently return
-        if (epochRewardsMinted[nextEpoch]) return;
-
-        epochRewardsMinted[nextEpoch] = true;
-
-        // Mint and deposit Vote and Value rewards to vault
-        _mintRewardsAndDepositToVault(nextEpoch, voteGovernor.votingToken(), voteTokenInflationPerEpoch());
-        _mintRewardsAndDepositToVault(nextEpoch, valueGovernor.votingToken(), valueTokenInflationPerEpoch());
-    }
-
-    /// @notice mint reward token into the vault
-    /// @param epoch The epoch for which rewards become claimable
-    /// @param token The reward token, only vote or value tokens
-    /// @param amount The amount to mint and deposit into the vault
-    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
-        token.mint(address(this), amount);
-        token.approve(address(voteVault), amount);
-        voteVault.depositRewards(epoch, address(token), amount);
-    }
-
-    /// @notice extract address params from the call data
-    /// @param callData The call data with selector in first 4 bytes
-    /// @dev used to inspect params before allowing proposal
-    function _extractAddressTypeParamsFromCalldata(bytes memory callData)
-        internal
-        pure
-        returns (address targetParams)
-    {
-        assembly {
-            // byte offset to represent function call data. 4 bytes funcSelector plus address 32 bytes
-            let offset := 36
-            // add offset so we pick from start of address params
-            let addressPosition := add(callData, offset)
-            // load the address params
-            targetParams := mload(addressPosition)
-        }
     }
 
     fallback() external {
