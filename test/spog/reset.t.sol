@@ -108,30 +108,6 @@ contract SPOG_reset is SPOG_Base {
         spog.reset(payable(address(governor)), address(voteVault));
     }
 
-    // TODO: move it into governor ?
-    // function test_Revert_Reset_WhenValueAndVoteTokensMistmatch() public {
-    //     vm.startPrank(address(governor));
-    //     ValueToken newValueToken = new ValueToken("new Value token", "value");
-
-    //     // deploy vote governor from factory
-    //     VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", address(newValueToken));
-    //     // grant minter role to new voteToken to governor
-    //     IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(governor));
-
-    //     // mint new vote tokens to address(this) and self-delegate
-    //     newVoteToken.mint(address(this), 100e18);
-    //     newVoteToken.delegate(address(this));
-
-    //     uint256 time = 15; // in blocks
-    //     uint256 voteQuorum = 5;
-    //     uint256 valueQuorum = 5;
-    //     DualGovernor newGovernor =
-    //     new DualGovernor("new SPOGGovernor", address(newVoteToken), address(newValueToken), voteQuorum, valueQuorum, time);
-
-    //     vm.expectRevert(ISPOG.ValueTokenMistmatch.selector);
-    //     spog.reset(payable(address(newGovernor)), address(voteVault));
-    // }
-
     function test_Reset_Success() public {
         (
             uint256 proposalId,
