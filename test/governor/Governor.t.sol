@@ -341,7 +341,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewListFun(address)", list);
+        calldatas[0] = abi.encodeWithSignature("addListFun(address)", list);
         string memory description = "Should not pass proposal";
 
         // approve cash spend for proposal

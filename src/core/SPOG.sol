@@ -117,12 +117,12 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addNewList(address list) external override onlyGovernance {
+    function addList(address list) external override onlyGovernance {
         if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
 
         // add the list to the master list
         _masterlist.set(list, inMasterList);
-        emit NewListAdded(list);
+        emit ListAdded(list);
     }
 
     /// @notice Append an address to a list
@@ -276,13 +276,15 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     function isGovernedMethod(bytes4 selector) external pure override returns (bool) {
         // TODO: order by frequence of usage
         if (selector == this.append.selector) return true;
+        if (selector == this.addList.selector) return true;
+        if (selector == this.changeConfig.selector) return true;
+        if (selector == this.remove.selector) return true;
         if (selector == this.changeTax.selector) return true;
         if (selector == this.changeTaxRange.selector) return true;
-        if (selector == this.remove.selector) return true;
-        if (selector == this.addNewList.selector) return true;
+
         if (selector == this.emergency.selector) return true;
         if (selector == this.reset.selector) return true;
-        if (selector == this.changeConfig.selector) return true;
+
         return false;
     }
 

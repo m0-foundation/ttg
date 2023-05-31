@@ -6,7 +6,7 @@ import "test/shared/SPOG_Base.t.sol";
 contract SPOG_AddNewList is SPOG_Base {
     function test_Revert_AddNewList_WhenCallerIsNotSPOG() external {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
-        spog.addNewList(address(list));
+        spog.addList(address(list));
     }
 
     function test_Revert_AddNewList_WhenListAdminIsNotSPOG() external {
@@ -19,7 +19,7 @@ contract SPOG_AddNewList is SPOG_Base {
 
         vm.expectRevert(expectedError);
         vm.prank(address(governor));
-        spog.addNewList(address(list));
+        spog.addList(address(list));
     }
 
     function test_Revert_DuringProposal_WhenListAdminIsNotSPOG() public {
@@ -33,7 +33,7 @@ contract SPOG_AddNewList is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList(address)", newList);
+        calldatas[0] = abi.encodeWithSignature("addList(address)", newList);
         string memory description = "Add new list";
 
         cash.approve(address(spog), tax);
@@ -50,7 +50,7 @@ contract SPOG_AddNewList is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList(address)", address(list));
+        calldatas[0] = abi.encodeWithSignature("addList(address)", address(list));
         string memory description = "Add new list";
 
         (bytes32 hashedDescription, uint256 proposalId) =

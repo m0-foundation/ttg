@@ -16,7 +16,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     }
 
     // Events
-    event NewListAdded(address indexed list);
+    event ListAdded(address indexed list);
     event AddressAppendedToList(address indexed list, address indexed account);
     event AddressRemovedFromList(address indexed list, address indexed account);
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
@@ -50,7 +50,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function valueFixedInflation() external view returns (uint256);
 
     // Accepted `proposal` functions
-    function addNewList(address list) external;
+    function addList(address list) external;
     function append(address list, address account) external;
     function remove(address list, address account) external;
     function emergency(uint8 emergencyType, bytes calldata callData) external;

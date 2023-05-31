@@ -75,7 +75,7 @@ contract SPOG_Base is BaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addNewList(address)", list);
+        calldatas[0] = abi.encodeWithSignature("addList(address)", list);
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
