@@ -214,7 +214,7 @@ contract DualGovernor is DualGovernorQuorum {
         }
 
         // If the proposal is not executed before expiration, set status to `Expired`.
-        if (status == ProposalState.Active || status == ProposalState.Succeeded) {
+        if (status == ProposalState.Succeeded) {
             // proposal deadline is for voting in block.number
             uint256 deadline = proposalDeadline(proposalId);
 
