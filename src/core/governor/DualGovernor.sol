@@ -8,11 +8,26 @@ import "src/core/governor/DualGovernorQuorum.sol";
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin.
 contract DualGovernor is DualGovernorQuorum {
+    struct EpochBasic {
+        uint256 numProposals;
+        uint256 totalVotesWeight;
+        mapping(address => uint256) numVotedOn;
+    }
+
+    struct ProposalVote {
+        uint256 voteNoVotes;
+        uint256 voteYesVotes;
+        uint256 valueNoVotes;
+        uint256 valueYesVotes;
+        mapping(address => bool) hasVoted;
+    }
+
     // @note minimum voting delay in blocks
+
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     ISPOG public override spog;
-    mapping(uint256 => bool) public emergencyProposals;
+    mapping(uint256 => bool) public override emergencyProposals;
 
     uint256 private immutable _votingPeriod;
     uint256 private immutable _start;
@@ -90,7 +105,7 @@ contract DualGovernor is DualGovernorQuorum {
         return ProposalType.Vote;
     }
 
-    function isGovernedMethod(bytes4 func) public pure returns (bool) {
+    function isGovernedMethod(bytes4 func) public pure override returns (bool) {
         return func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector;
     }
 
@@ -192,11 +207,11 @@ contract DualGovernor is DualGovernorQuorum {
         }
     }
 
-    function epochTotalVotesWeight(uint256 epoch) external view returns (uint256) {
+    function epochTotalVotesWeight(uint256 epoch) external view override returns (uint256) {
         return _epochBasic[epoch].totalVotesWeight;
     }
 
-    function isActiveParticipant(uint256 epoch, address account) external view returns (bool) {
+    function isActiveParticipant(uint256 epoch, address account) external view override returns (bool) {
         EpochBasic storage epochBasic = _epochBasic[epoch];
         return epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
