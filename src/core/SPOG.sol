@@ -280,7 +280,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (selector == this.remove.selector) return true;
         if (selector == this.changeTax.selector) return true;
         if (selector == this.changeTaxRange.selector) return true;
-
         if (selector == this.emergency.selector) return true;
         if (selector == this.reset.selector) return true;
 
