@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/governance/Governor.sol";
 import "src/interfaces/tokens/ISPOGVotes.sol";
 import "src/interfaces/ISPOG.sol";
 
+abstract contract ISPOGGovernor is Governor, IDualGovernor {}
+
 interface IDualGovernor {
     // Errors
     error TooManyTargets();
@@ -58,5 +60,3 @@ interface IDualGovernor {
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
     function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
 }
-
-abstract contract ISPOGGovernor is Governor, IDualGovernor {}
