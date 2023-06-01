@@ -296,7 +296,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         cash.approve(address(spog), tax);
 
         // revert when method is not supported
-        vm.expectRevert(ISPOGGovernor.TooManyTargets.selector);
+        vm.expectRevert(IDualGovernor.TooManyTargets.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -313,7 +313,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         cash.approve(address(spog), tax);
 
         // revert when proposal expects ETH value
-        vm.expectRevert(ISPOGGovernor.InvalidValue.selector);
+        vm.expectRevert(IDualGovernor.InvalidValue.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -331,7 +331,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         cash.approve(address(spog), tax);
 
         // revert when proposal has invalid target
-        vm.expectRevert(ISPOGGovernor.InvalidTarget.selector);
+        vm.expectRevert(IDualGovernor.InvalidTarget.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -347,7 +347,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // approve cash spend for proposal
         cash.approve(address(spog), tax);
         // revert when method signature is not supported
-        vm.expectRevert(ISPOGGovernor.InvalidMethod.selector);
+        vm.expectRevert(IDualGovernor.InvalidMethod.selector);
         governor.propose(targets, values, calldatas, description);
     }
 

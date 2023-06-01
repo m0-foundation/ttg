@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/governance/IGovernor.sol";
+import "@openzeppelin/contracts/governance/Governor.sol";
 import "src/interfaces/tokens/ISPOGVotes.sol";
 import "src/interfaces/ISPOG.sol";
 
-interface ISPOGGovernor {
+interface IDualGovernor {
     // Errors
     error TooManyTargets();
     error InvalidTarget();
@@ -59,4 +59,4 @@ interface ISPOGGovernor {
     function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
 }
 
-abstract contract GovernorInterface is IGovernor, ISPOGGovernor {}
+abstract contract ISPOGGovernor is Governor, IDualGovernor {}

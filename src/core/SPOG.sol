@@ -198,7 +198,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         voteVault = ISPOGVault(newVoteVault);
-        governor = ISPOGGovernor(newGovernor);
+        governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
         governor.initSPOGAddress(address(this));
 

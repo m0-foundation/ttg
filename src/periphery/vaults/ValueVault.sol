@@ -32,7 +32,7 @@ contract ValueVault is ISPOGVault {
     mapping(address => mapping(uint256 => uint256)) public epochTokenTotalWithdrawn;
 
     constructor(address _governor) {
-        governor = ISPOGGovernor(_governor);
+        governor = ISPOGGovernor(payable(_governor));
     }
 
     /// @notice Deposit voting (vote and value) reward tokens for epoch

@@ -3,11 +3,10 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Checkpoints.sol";
-import "@openzeppelin/contracts/governance/Governor.sol";
 
 import "src/interfaces/ISPOGGovernor.sol";
 
-abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
+abstract contract DualGovernorQuorum is ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
     ISPOGVotes public immutable override vote;
