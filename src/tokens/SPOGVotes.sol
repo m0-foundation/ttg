@@ -2,14 +2,13 @@
 
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
-
-import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "src/interfaces/tokens/ISPOGVotes.sol";
 
 /// @title SPOGVotes: voting token for the SPOG governor
-contract SPOGVotes is ERC20Votes, ISPOGVotes, AccessControlEnumerable {
+contract SPOGVotes is ERC20Votes, AccessControlEnumerable, ISPOGVotes {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public spogAddress;
 

@@ -13,7 +13,7 @@ contract ProtocolConfigurator is IProtocolConfigurator {
     // hashed name => ConfigContract
     mapping(bytes32 => ConfigContract) private config;
 
-    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public virtual {
+    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public virtual override {
         if (configName == bytes32(0)) {
             revert ConfigNameCannotBeZero();
         }
@@ -37,7 +37,7 @@ contract ProtocolConfigurator is IProtocolConfigurator {
         emit ConfigChange(configName, configAddress, interfaceId);
     }
 
-    function getConfig(bytes32 name) public view returns (address, bytes4) {
+    function getConfig(bytes32 name) public view override returns (address, bytes4) {
         return (config[name].contractAddress, config[name].interfaceId);
     }
 }

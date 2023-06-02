@@ -5,11 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import "src/interfaces/ISPOGGovernor.sol";
 import "src/interfaces/tokens/IVoteToken.sol";
 import "src/interfaces/tokens/IValueToken.sol";
-import "src/interfaces/vaults/ISPOGVault.sol";
 import "src/interfaces/IList.sol";
+import "src/interfaces/ISPOG.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 
@@ -199,7 +198,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
 
         voteVault = ISPOGVault(newVoteVault);
-        governor = ISPOGGovernor(newGovernor);
+        governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
         governor.initSPOGAddress(address(this));
 
@@ -274,14 +273,13 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     }
 
     function isGovernedMethod(bytes4 selector) external pure override returns (bool) {
-        // TODO: order by frequence of usage
+        /// @dev ordered by frequence of usage
         if (selector == this.append.selector) return true;
         if (selector == this.addList.selector) return true;
         if (selector == this.changeConfig.selector) return true;
         if (selector == this.remove.selector) return true;
         if (selector == this.changeTax.selector) return true;
         if (selector == this.changeTaxRange.selector) return true;
-
         if (selector == this.emergency.selector) return true;
         if (selector == this.reset.selector) return true;
 

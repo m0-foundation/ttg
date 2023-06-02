@@ -3,15 +3,14 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Checkpoints.sol";
-import "@openzeppelin/contracts/governance/Governor.sol";
 
 import "src/interfaces/ISPOGGovernor.sol";
 
-abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
+abstract contract DualGovernorQuorum is ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
-    ISPOGVotes public immutable vote;
-    ISPOGVotes public immutable value;
+    ISPOGVotes public immutable override vote;
+    ISPOGVotes public immutable override value;
 
     uint256 private _valueQuorumNumerator; // DEPRECATED in favor of _quorumNumeratorHistory
     uint256 private _voteQuorumNumerator; // DEPRECATED in favor of _quorumNumeratorHistory
@@ -36,19 +35,19 @@ abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
         _updateValueQuorumNumerator(valueQuorumNumerator_);
     }
 
-    function voteQuorumNumerator() public view virtual returns (uint256) {
+    function voteQuorumNumerator() public view virtual override returns (uint256) {
         return _voteQuorumNumeratorHistory._checkpoints.length == 0
             ? _voteQuorumNumerator
             : _voteQuorumNumeratorHistory.latest();
     }
 
-    function valueQuorumNumerator() public view virtual returns (uint256) {
+    function valueQuorumNumerator() public view virtual override returns (uint256) {
         return _valueQuorumNumeratorHistory._checkpoints.length == 0
             ? _valueQuorumNumerator
             : _valueQuorumNumeratorHistory.latest();
     }
 
-    function voteQuorumNumerator(uint256 timepoint) public view virtual returns (uint256) {
+    function voteQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _voteQuorumNumeratorHistory._checkpoints.length;
         if (length == 0) {
@@ -66,7 +65,7 @@ abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
         return _voteQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 
-    function valueQuorumNumerator(uint256 timepoint) public view virtual returns (uint256) {
+    function valueQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _valueQuorumNumeratorHistory._checkpoints.length;
         if (length == 0) {
@@ -84,15 +83,15 @@ abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
         return _valueQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 
-    function quorumDenominator() public view virtual returns (uint256) {
+    function quorumDenominator() public view virtual override returns (uint256) {
         return 100;
     }
 
-    function voteQuorum(uint256 timepoint) public view virtual returns (uint256) {
+    function voteQuorum(uint256 timepoint) public view virtual override returns (uint256) {
         return (vote.getPastTotalSupply(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
-    function valueQuorum(uint256 timepoint) public view virtual returns (uint256) {
+    function valueQuorum(uint256 timepoint) public view virtual override returns (uint256) {
         return (value.getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
@@ -100,7 +99,7 @@ abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
         return voteQuorum(timepoint);
     }
 
-    function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual onlyGovernance {
+    function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual override onlyGovernance {
         _updateVoteQuorumNumerator(newVoteQuorumNumerator);
     }
 
@@ -125,7 +124,7 @@ abstract contract DualGovernorQuorum is Governor, ISPOGGovernor {
         emit VoteQuorumNumeratorUpdated(oldVoteQuorumNumerator, newVoteQuorumNumerator);
     }
 
-    function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual onlyGovernance {
+    function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual override onlyGovernance {
         _updateValueQuorumNumerator(newValueQuorumNumerator);
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
-import {ISPOGVotes} from "src/interfaces/tokens/ISPOGVotes.sol";
+import "src/interfaces/tokens/ISPOGVotes.sol";
 
 interface IVoteToken is ISPOGVotes {
     // Errors

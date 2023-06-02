@@ -4,8 +4,8 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/governance/IGovernor.sol";
 
+import "src/interfaces/ISPOGGovernor.sol";
 import "src/interfaces/IERC20PricelessAuction.sol";
 import "src/interfaces/vaults/IVoteVault.sol";
 import "src/periphery/vaults/ValueVault.sol";
@@ -75,7 +75,7 @@ contract VoteVault is ValueVault, IVoteVault {
 
         IERC20(token).approve(auction, numTokensToSell);
         address paymentToken = address(governor.spog().cash());
-        uint256 duration = IGovernor(address(governor)).votingPeriod();
+        uint256 duration = governor.votingPeriod();
         IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, numTokensToSell);
 
         emit VoteTokenAuction(token, epochs, auction, numTokensToSell);
