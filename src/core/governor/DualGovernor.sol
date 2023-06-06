@@ -225,7 +225,21 @@ contract DualGovernor is DualGovernorQuorum {
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
         // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
         if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
-            return ProposalState.Succeeded;
+            status = ProposalState.Succeeded;
+        }
+
+        // If the proposal is not executed before expiration, set status to `Expired`.
+        if (status == ProposalState.Succeeded) {
+            // proposal deadline is for voting in block.number
+            uint256 deadline = proposalDeadline(proposalId);
+
+            // expires is for execution in block.number
+            uint256 expires = deadline + _votingPeriod;
+
+            // Set state to Expired if it can no longer be executed.
+            if (expires <= block.number) {
+                return ProposalState.Expired;
+            }
         }
 
         return status;

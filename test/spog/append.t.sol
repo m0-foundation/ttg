@@ -30,7 +30,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         ISPOG(spog).append(listToAddAddressTo, addressToAdd);
     }
 
-    function test_SPOGProposalToAppedToAList() public {
+    function test_SPOGProposalToAppendToAList() public {
         // create proposal to append address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -58,6 +58,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
 
         // cast vote on proposal
         uint8 yesVote = 1;
+
         governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
