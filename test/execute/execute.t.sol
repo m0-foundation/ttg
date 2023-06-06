@@ -45,7 +45,9 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         // do not execute
 
         // fast forward to next voting period
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        // Note: No extra +1 here.
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Proposal is not in an expired state");
 
         // execute proposal
         vm.expectRevert("Governor: proposal not successful");

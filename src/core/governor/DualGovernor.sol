@@ -222,7 +222,7 @@ contract DualGovernor is DualGovernorQuorum {
             uint256 expires = deadline + _votingPeriod;
 
             // Set state to Expired if it can no longer be executed.
-            if (expires < block.number) {
+            if (expires <= block.number) {
                 return ProposalState.Expired;
             }
         }
