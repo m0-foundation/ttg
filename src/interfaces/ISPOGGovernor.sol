@@ -28,6 +28,7 @@ interface IDualGovernor {
     error AlreadyInitialized();
     error AlreadyVoted();
     error ZeroSPOGAddress();
+    error ZeroVotingPeriod();
     error ZeroVoteAddress();
     error ZeroValueAddress();
     error ZeroVoteQuorumNumerator();

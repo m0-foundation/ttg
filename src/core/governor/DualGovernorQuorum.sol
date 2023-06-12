@@ -34,6 +34,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         uint256 voteQuorumNumerator_,
         uint256 valueQuorumNumerator_
     ) Governor(name_) {
+        // TODO: check that vote and value are connected ?
         // Sanity checks
         if (vote_ == address(0)) revert ZeroVoteAddress();
         if (value_ == address(0)) revert ZeroValueAddress();
