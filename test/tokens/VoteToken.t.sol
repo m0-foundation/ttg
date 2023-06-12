@@ -16,7 +16,7 @@ contract VoteTokenTest is SPOG_Base {
     ValueToken valueToken;
     VoteToken voteToken;
 
-    event ResetInitialized(uint256 indexed proposalSnapshotId);
+    event ResetInitialized(uint256 indexed resetSnapshotId);
     event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
 
     // Setup function, add test-specific initializations here
@@ -56,12 +56,13 @@ contract VoteTokenTest is SPOG_Base {
 
     function resetGovernance() private {
         vm.startPrank(address(spog));
+
+        uint256 snapshotId = valueToken.snapshot();
+
         // Reset VoteToken by SPOG
-        // @dev do not check emitted snapshot id, just confirm that event happened
+        // Do not check emitted snapshot id, just confirm that event happened
         vm.expectEmit(false, false, false, false);
         emit ResetInitialized(0);
-        // Take snapshot and update reset snapshot ID
-        uint256 snapshotId = valueToken.snapshot();
         voteToken.initReset(snapshotId);
         vm.stopPrank();
 
