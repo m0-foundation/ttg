@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Checkpoints.sol";
 
 import "src/interfaces/ISPOGGovernor.sol";
 
+/// @title Governor contract to track quorum for both value and vote tokens
+/// @notice Governor adjusted to track double quorums for SPOG proposals
+/// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
 abstract contract DualGovernorQuorum is ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
+    /// @notice The vote token of SPOG governance
     ISPOGVotes public immutable override vote;
+
+    /// @notice The value token of SPOG governance
     ISPOGVotes public immutable override value;
 
     uint256 private _valueQuorumNumerator; // DEPRECATED in favor of _quorumNumeratorHistory
@@ -19,9 +24,12 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
     Checkpoints.Trace224 private _voteQuorumNumeratorHistory;
 
-    event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
-    event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
-
+    /// @notice Constructs a new governor instance with Double quorum logic
+    /// @param name_ Governor name
+    /// @param vote_ Vote token address
+    /// @param value_ Value token address
+    /// @param voteQuorumNumerator_ Vote quorum numerator
+    /// @param valueQuorumNumerator_ Value quorum numerator
     constructor(
         string memory name_,
         address vote_,
@@ -29,24 +37,28 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         uint256 voteQuorumNumerator_,
         uint256 valueQuorumNumerator_
     ) Governor(name_) {
+        // Sanity checks here
         vote = ISPOGVotes(vote_);
         value = ISPOGVotes(value_);
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
         _updateValueQuorumNumerator(valueQuorumNumerator_);
     }
 
+    /// @notice Returns the latest vote quorum numerator
     function voteQuorumNumerator() public view virtual override returns (uint256) {
         return _voteQuorumNumeratorHistory._checkpoints.length == 0
             ? _voteQuorumNumerator
             : _voteQuorumNumeratorHistory.latest();
     }
 
+    /// @notice Returns the latest value quorum numerator
     function valueQuorumNumerator() public view virtual override returns (uint256) {
         return _valueQuorumNumeratorHistory._checkpoints.length == 0
             ? _valueQuorumNumerator
             : _valueQuorumNumeratorHistory.latest();
     }
 
+    /// @notice Returns the vote quorum numerator at the given timepoint
     function voteQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _voteQuorumNumeratorHistory._checkpoints.length;
@@ -65,6 +77,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         return _voteQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 
+    /// @notice Returns the value quorum numerator at the given timepoint
     function valueQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _valueQuorumNumeratorHistory._checkpoints.length;
@@ -83,26 +96,34 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         return _valueQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 
+    /// @notice Returns the quorum denominator
     function quorumDenominator() public view virtual override returns (uint256) {
         return 100;
     }
 
+    /// @notice Returns the vote quorum at the given timepoint
     function voteQuorum(uint256 timepoint) public view virtual override returns (uint256) {
         return (vote.getPastTotalSupply(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
+    /// @notice Returns the value quorum at the given timepoint
     function valueQuorum(uint256 timepoint) public view virtual override returns (uint256) {
         return (value.getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
+    /// @notice Returns the vote quorum at the given timepoint
+    /// @dev Added to be compatible with standard OZ Governor interface
     function quorum(uint256 timepoint) public view virtual override returns (uint256) {
         return voteQuorum(timepoint);
     }
 
+    /// @notice Updates the vote quorum numerator
+    /// @param newVoteQuorumNumerator New vote quorum numerator
     function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual override onlyGovernance {
         _updateVoteQuorumNumerator(newVoteQuorumNumerator);
     }
 
+    /// @dev Updates the vote quorum numerator
     function _updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) internal virtual {
         require(
             newVoteQuorumNumerator <= quorumDenominator(),
@@ -124,10 +145,13 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         emit VoteQuorumNumeratorUpdated(oldVoteQuorumNumerator, newVoteQuorumNumerator);
     }
 
+    /// @notice Updates the value quorum numerator
+    /// @param newValueQuorumNumerator New value quorum numerator
     function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual override onlyGovernance {
         _updateValueQuorumNumerator(newValueQuorumNumerator);
     }
 
+    /// @dev Updates the value quorum numerator
     function _updateValueQuorumNumerator(uint256 newValueQuorumNumerator) internal virtual {
         require(
             newValueQuorumNumerator <= quorumDenominator(),
@@ -149,6 +173,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         emit ValueQuorumNumeratorUpdated(oldValueQuorumNumerator, newValueQuorumNumerator);
     }
 
+    /// @dev Returns vote votes for the account at the given timepoint
     function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
         view
@@ -158,6 +183,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         return vote.getPastVotes(account, timepoint);
     }
 
+    /// @dev Returns value votes for the account at the given timepoint
     function _getValueVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
         view
@@ -167,6 +193,8 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         return value.getPastVotes(account, timepoint);
     }
 
+    /// @dev Returns vote votes for the account at the given timepoint
+    /// @dev Added to be compatible with standard OZ Governor interface
     function _getVotes(address account, uint256 timepoint, bytes memory params)
         internal
         view

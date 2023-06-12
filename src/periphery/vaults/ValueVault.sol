@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -20,6 +19,7 @@ contract ValueVault is ISPOGVault {
         ACTIVE_PARTICIPANTS_PRO_RATA
     }
 
+    /// @notice governor contract
     ISPOGGovernor public immutable governor;
 
     uint256 public constant PRECISION_FACTOR = 1e18;
@@ -31,6 +31,7 @@ contract ValueVault is ISPOGVault {
     mapping(address => mapping(uint256 => uint256)) public epochTokenDeposit;
     mapping(address => mapping(uint256 => uint256)) public epochTokenTotalWithdrawn;
 
+    /// @notice Constructs new instance of value vault
     constructor(address _governor) {
         governor = ISPOGGovernor(payable(_governor));
     }
@@ -70,6 +71,7 @@ contract ValueVault is ISPOGVault {
     }
 
     /// @dev Withdraw rewards per epoch base on strategy
+    /// @param epoch The epoch to claim rewards for
     function _claimRewards(uint256 epoch, address token, RewardsSharingStrategy strategy)
         internal
         virtual

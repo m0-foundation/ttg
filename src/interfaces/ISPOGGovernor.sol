@@ -19,6 +19,8 @@ interface IDualGovernor {
 
     // Events
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
+    event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
+    event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
     enum ProposalType {
         Vote,

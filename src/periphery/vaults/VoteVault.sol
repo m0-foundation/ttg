@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,22 +9,27 @@ import "src/interfaces/IERC20PricelessAuction.sol";
 import "src/interfaces/vaults/IVoteVault.sol";
 import "src/periphery/vaults/ValueVault.sol";
 
-/// @title Vault
-/// @notice contract that will hold the SPOG assets. It has rules for transferring ERC20 tokens out of the smart contract.
+/// @title Vault for vote holders to claim their pro rata share of vote inflation and value rewards
 contract VoteVault is ValueVault, IVoteVault {
     using SafeERC20 for IERC20;
 
+    /// @notice Auction contract to sell inactive voters inflation rewards
     IERC20PricelessAuction public immutable auctionContract;
+
+    /// @notice Auction count
     uint256 public auctionCount;
 
+    /// @notice Auction per epoch
     mapping(uint256 => address) public auctionForEpoch;
 
+    /// @notice Constructs new instance of vote vault
     constructor(address governor, address _auctionContract) ValueVault(governor) {
         auctionContract = IERC20PricelessAuction(_auctionContract);
     }
 
     /// @notice Sell inactive voters inflation rewards
     /// @param epochs Epoch to sell tokens from
+    /// @return auction Auction address and amount of tokens to sell
     function sellInactiveVoteInflation(uint256[] calldata epochs) external override returns (address, uint256) {
         address token = address(governor.vote());
         uint256 numTokensToSell;
@@ -83,6 +87,10 @@ contract VoteVault is ValueVault, IVoteVault {
         return (auction, numTokensToSell);
     }
 
+    /// @notice Withdraw rewards for given epochs
+    /// @param epochs Epochs to withdraw rewards
+    /// @param token Token to withdraw rewards
+    /// @return totalRewards Total rewards withdrawn
     function withdraw(uint256[] memory epochs, address token) external virtual override returns (uint256) {
         address valueToken = address(governor.value());
         uint256 currentEpoch = governor.currentEpoch();
