@@ -32,14 +32,14 @@ contract ListFactory {
         return list;
     }
 
-    /// @dev This function is used to get the bytecode of the SPOG contract to be deployed
+    /// @notice This function is used to get the bytecode of the SPOG contract to be deployed
     function getBytecode(string memory _name) public pure returns (bytes memory) {
         bytes memory bytecode = type(List).creationCode;
 
         return abi.encodePacked(bytecode, abi.encode(_name));
     }
 
-    /// @dev Compute the address of the List contract to be deployed
+    /// @notice Compute the address of the List contract to be deployed
     /// @param bytecode The bytecode of the contract to be deployed
     /// @param _salt is a random number used to create an address
     function predictListAddress(bytes memory bytecode, uint256 _salt) public view returns (address) {

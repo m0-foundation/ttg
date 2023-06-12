@@ -7,7 +7,7 @@ import "./SPOGVotes.sol";
 import "src/interfaces/tokens/IVoteToken.sol";
 
 /// @title VoteToken
-/// @dev Main token of vote governance.
+/// @notice Main token of vote governance.
 /// @dev It relies of snapshotted balances of Value token holders at the moment of reset.
 /// @dev Snapshot is taken at the moment of reset by SPOG.
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves.

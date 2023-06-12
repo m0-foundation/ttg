@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
-import {IList} from "src/interfaces/IList.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
+import "src/interfaces/IList.sol";
+import "src/interfaces/ISPOG.sol";
 
 /**
  * @title SPOGGoverned
- * @dev An abstract contract that provides a function for getting a list contract instance.
+ * @notice An abstract contract that provides a function for getting a list contract instance.
  */
 abstract contract SPOGGoverned {
-    error InvalidList(address listAddress);
+    error InvalidList(address list);
 
     ISPOG public spog;
 
     /**
-     * @dev Initializes the SPOG contract address.
+     * @notice Initializes the SPOG contract address.
      * @param _spog The address of the SPOG contract.
      */
     constructor(address _spog) {
@@ -22,18 +22,21 @@ abstract contract SPOGGoverned {
     }
 
     /**
-     * @dev Returns the list contract instance for a given address.
-     * @param listAddress The address of the list contract.
+     * @notice Returns the list contract instance for a given address.
+     * @param list The address of the list contract.
      * @return The list contract instance.
      */
-    function getListByAddress(address listAddress) public view returns (IList) {
-        if (!spog.isListInMasterList(listAddress)) {
-            revert InvalidList(listAddress);
-        }
+    function getListByAddress(address list) public view returns (IList) {
+        if (!spog.isListInMasterList(list)) revert InvalidList(list);
 
-        return IList(listAddress);
+        return IList(list);
     }
 
+    /**
+     * @notice Returns the address and ERC165 interface id of config.
+     * @param name The name of config.
+     * @return Config address and interface identifier.
+     */
     function getConfigByName(bytes32 name) public view returns (address, bytes4) {
         return spog.getConfig(name);
     }
