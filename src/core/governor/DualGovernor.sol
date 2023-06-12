@@ -376,9 +376,8 @@ contract DualGovernor is DualGovernorQuorum {
     ) internal virtual {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        if (proposalVote.hasVoted[account]) {
-            revert AlreadyVoted(proposalId, account);
-        }
+        if (proposalVote.hasVoted[account]) revert AlreadyVoted();
+
         proposalVote.hasVoted[account] = true;
 
         if (support == uint8(VoteType.No)) {
