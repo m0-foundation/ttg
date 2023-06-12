@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
+
 import "src/interfaces/tokens/ISPOGVotes.sol";
 import "src/interfaces/ISPOG.sol";
 
@@ -14,8 +15,13 @@ interface IDualGovernor {
     error ListAdminIsNotSPOG();
     error AlreadyInitialized();
     error AlreadyVoted(uint256 proposalId, address account);
-    error EpochInThePast(uint256 epoch, uint256 currentEpoch);
     error ZeroSPOGAddress();
+    error ZeroVoteAddress();
+    error ZeroValueAddress();
+    error ZeroVoteQuorumNumerator();
+    error ZeroValueQuorumNumerator();
+    error InvalidVoteQuorumNumerator();
+    error InvalidValueQuorumNumerator();
 
     // Events
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);

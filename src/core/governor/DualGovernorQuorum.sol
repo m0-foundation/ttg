@@ -17,9 +17,6 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     /// @notice The value token of SPOG governance
     ISPOGVotes public immutable override value;
 
-    uint256 private _valueQuorumNumerator; // DEPRECATED in favor of _quorumNumeratorHistory
-    uint256 private _voteQuorumNumerator; // DEPRECATED in favor of _quorumNumeratorHistory
-
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
     Checkpoints.Trace224 private _voteQuorumNumeratorHistory;
@@ -37,7 +34,13 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         uint256 voteQuorumNumerator_,
         uint256 valueQuorumNumerator_
     ) Governor(name_) {
-        // Sanity checks here
+        // Sanity checks
+        if (vote_ == address(0)) revert ZeroVoteAddress();
+        if (value_ == address(0)) revert ZeroValueAddress();
+        if (voteQuorumNumerator_ == 0) revert ZeroVoteQuorumNumerator();
+        if (valueQuorumNumerator_ == 0) revert ZeroValueQuorumNumerator();
+
+        // Set configuration for tokens and quorums
         vote = ISPOGVotes(vote_);
         value = ISPOGVotes(value_);
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
@@ -46,25 +49,18 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @notice Returns the latest vote quorum numerator
     function voteQuorumNumerator() public view virtual override returns (uint256) {
-        return _voteQuorumNumeratorHistory._checkpoints.length == 0
-            ? _voteQuorumNumerator
-            : _voteQuorumNumeratorHistory.latest();
+        return _voteQuorumNumeratorHistory.latest();
     }
 
     /// @notice Returns the latest value quorum numerator
     function valueQuorumNumerator() public view virtual override returns (uint256) {
-        return _valueQuorumNumeratorHistory._checkpoints.length == 0
-            ? _valueQuorumNumerator
-            : _valueQuorumNumeratorHistory.latest();
+        return _valueQuorumNumeratorHistory.latest();
     }
 
     /// @notice Returns the vote quorum numerator at the given timepoint
     function voteQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _voteQuorumNumeratorHistory._checkpoints.length;
-        if (length == 0) {
-            return _voteQuorumNumerator;
-        }
 
         // Optimistic search, check the latest checkpoint
         Checkpoints.Checkpoint224 memory latest = _voteQuorumNumeratorHistory._checkpoints[length - 1];
@@ -73,7 +69,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         }
 
         // Otherwise, do the binary search
-        // TODO: `upperLookupRecent` vs `upperLookup`, check that we use latest OZ libs
+        // TODO: `upperLookupRecent` vs `upperLookup`, upgrade to use the latest OZ libs
         return _voteQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 
@@ -81,9 +77,6 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     function valueQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _valueQuorumNumeratorHistory._checkpoints.length;
-        if (length == 0) {
-            return _valueQuorumNumerator;
-        }
 
         // Optimistic search, check the latest checkpoint
         Checkpoints.Checkpoint224 memory latest = _valueQuorumNumeratorHistory._checkpoints[length - 1];
@@ -92,7 +85,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         }
 
         // Otherwise, do the binary search
-        // TODO:
+        // TODO: `upperLookupRecent` vs `upperLookup`, upgrade to use the latest OZ libs
         return _valueQuorumNumeratorHistory.upperLookup(SafeCast.toUint32(timepoint));
     }
 
@@ -125,19 +118,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @dev Updates the vote quorum numerator
     function _updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) internal virtual {
-        require(
-            newVoteQuorumNumerator <= quorumDenominator(),
-            "GovernorVotesQuorumFraction: quorumNumerator over quorumDenominator"
-        );
+        if (newVoteQuorumNumerator > quorumDenominator()) revert InvalidVoteQuorumNumerator();
 
         uint256 oldVoteQuorumNumerator = voteQuorumNumerator();
-
-        // Make sure we keep track of the original numerator in contracts upgraded from a version without checkpoints.
-        if (oldVoteQuorumNumerator != 0 && _voteQuorumNumeratorHistory._checkpoints.length == 0) {
-            _voteQuorumNumeratorHistory._checkpoints.push(
-                Checkpoints.Checkpoint224({_key: 0, _value: SafeCast.toUint224(oldVoteQuorumNumerator)})
-            );
-        }
 
         // Set new quorum for future proposals
         _voteQuorumNumeratorHistory.push(SafeCast.toUint32(block.number), SafeCast.toUint224(newVoteQuorumNumerator));
@@ -153,19 +136,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @dev Updates the value quorum numerator
     function _updateValueQuorumNumerator(uint256 newValueQuorumNumerator) internal virtual {
-        require(
-            newValueQuorumNumerator <= quorumDenominator(),
-            "GovernorVotesQuorumFraction: quorumNumerator over quorumDenominator"
-        );
+        if (newValueQuorumNumerator > quorumDenominator()) revert InvalidValueQuorumNumerator();
 
         uint256 oldValueQuorumNumerator = voteQuorumNumerator();
-
-        // Make sure we keep track of the original numerator in contracts upgraded from a version without checkpoints.
-        if (oldValueQuorumNumerator != 0 && _valueQuorumNumeratorHistory._checkpoints.length == 0) {
-            _valueQuorumNumeratorHistory._checkpoints.push(
-                Checkpoints.Checkpoint224({_key: 0, _value: SafeCast.toUint224(oldValueQuorumNumerator)})
-            );
-        }
 
         // Set new quorum for future proposals
         _valueQuorumNumeratorHistory.push(SafeCast.toUint32(block.number), SafeCast.toUint224(newValueQuorumNumerator));
