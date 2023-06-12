@@ -16,7 +16,7 @@ contract SPOGVotes is ERC20Votes, AccessControlEnumerable, ISPOGVotes {
     error CallerIsNotSPOG();
     error SPOGAddressAlreadySet();
 
-    /// @dev Initializes the contract by creating the token
+    /// @notice Initializes the contract by creating the token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
     constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
@@ -24,7 +24,7 @@ contract SPOGVotes is ERC20Votes, AccessControlEnumerable, ISPOGVotes {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /// @dev sets the spog address. Can only be called once.
+    /// @notice sets the spog address. Can only be called once.
     /// @param _spogAddress the address of the spog
     function initSPOGAddress(address _spogAddress) external {
         if (spogAddress != address(0)) revert SPOGAddressAlreadySet();
@@ -33,7 +33,7 @@ contract SPOGVotes is ERC20Votes, AccessControlEnumerable, ISPOGVotes {
         _setupRole(MINTER_ROLE, _spogAddress);
     }
 
-    /// @dev Restricts minting to address with MINTER_ROLE
+    /// @notice Restricts minting to address with MINTER_ROLE
     /// @param to The address to mint to
     /// @param amount The amount to mint
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
