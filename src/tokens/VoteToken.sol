@@ -7,21 +7,29 @@ import "./SPOGVotes.sol";
 import "src/interfaces/tokens/IVoteToken.sol";
 
 /// @title VoteToken
-/// @notice Main token of vote governance.
-/// @dev It relies of snapshotted balances of Value token holders at the moment of reset.
-/// @dev Snapshot is taken at the moment of reset by SPOG.
-/// @dev Previous value holders can mint new supply of Vote tokens to themselves.
+/// @dev It relies of snapshotted balances of Value token holders at the moment of reset
+/// @dev Snapshot is taken at the moment of reset by SPOG
+/// @dev Previous value holders can mint new supply of Vote tokens to themselves
 contract VoteToken is SPOGVotes, IVoteToken {
+    /// @notice value token to take snapshot from
     address public immutable valueToken;
+
+    /// @notice snapshot id of the moment of reset
     uint256 public resetSnapshotId;
+
+    /// @notice check that balances are claimed only once
     mapping(address => bool) public alreadyClaimed;
 
+    /// @notice Constructs the vote token
+    /// @param name Name of the token
+    /// @param symbol Symbol of the token
+    /// @param _valueToken Address of the value token for reset
     constructor(string memory name, string memory symbol, address _valueToken) SPOGVotes(name, symbol) {
         valueToken = _valueToken;
     }
 
-    /// @dev SPOG initializes reset snapshot.
-    /// @param _resetSnapshotId Snapshot id of the moment of reset.
+    /// @notice SPOG initializes reset snapshot
+    /// @param _resetSnapshotId Snapshot id of the moment of reset
     function initReset(uint256 _resetSnapshotId) external override {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
         if (msg.sender != spogAddress) revert CallerIsNotSPOG();
@@ -31,7 +39,7 @@ contract VoteToken is SPOGVotes, IVoteToken {
         emit ResetInitialized(_resetSnapshotId);
     }
 
-    /// @dev Previous value holders can claim their share of new Vote tokens.
+    /// @notice Claim share of new vote tokens by previous value holders
     function claimPreviousSupply() external override {
         if (resetSnapshotId == 0) revert ResetNotInitialized();
         if (alreadyClaimed[msg.sender]) revert ResetTokensAlreadyClaimed();
@@ -49,8 +57,8 @@ contract VoteToken is SPOGVotes, IVoteToken {
         emit PreviousResetSupplyClaimed(msg.sender, claimBalance);
     }
 
-    /// @dev Returns balance of the user at the moment of reset.
-    /// @notice Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
+    /// @notice Returns balance of the user at the moment of reset.
+    /// @dev Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
     function resetBalanceOf(address account) public view override returns (uint256) {
         return ERC20Snapshot(valueToken).balanceOfAt(account, resetSnapshotId);
     }
