@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity 0.8.19;
 
 import "src/interfaces/IList.sol";
 import "src/core/governor/DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
-/// @notice This contract is used to govern the SPOG protocol. It is a modified version of the Governor contract from OpenZeppelin.
+/// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
 contract DualGovernor is DualGovernorQuorum {
     struct EpochBasic {
         uint256 numProposals;
@@ -22,25 +21,34 @@ contract DualGovernor is DualGovernorQuorum {
         mapping(address => bool) hasVoted;
     }
 
-    // @note minimum voting delay in blocks
-
+    /// @notice Minimum voting delay in blocks for emergency proposals
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
+    /// @notice The SPOG contract
     ISPOG public override spog;
+
+    /// @notice The list cof emergency proposals, (proposalId => true)
     mapping(uint256 => bool) public override emergencyProposals;
 
+    /// @dev The voting period in blocks
     uint256 private immutable _votingPeriod;
+
+    /// @dev The start of counting epochs
     uint256 private immutable _start;
 
-    // @note voting with no delay is required for certain proposals
+    /// @dev The indicator of voting with `MINIMUM_VOTING_DELAY` delay is required proposal
     bool private _emergencyVotingIsOn;
 
-    // private mappings
+    /// @dev Voting results for proposal: (proposalId => ProposalVote)
     mapping(uint256 => ProposalVote) private _proposalVotes;
+
+    /// @dev Proposal types: (proposalId => ProposalType)
     mapping(uint256 => ProposalType) private _proposalTypes;
-    // epoch => proposals info
+
+    /// @dev Basic information about epoch (epoch number => EpochBasic)
     mapping(uint256 => EpochBasic) private _epochBasic;
 
+    /// @notice Constructs a new governor instance
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
     /// @param value The address of the $VALUE token
@@ -62,6 +70,9 @@ contract DualGovernor is DualGovernorQuorum {
         _start = block.number;
     }
 
+    /// @notice Initializes SPOG address
+    /// @dev Adds additional intialization for tokens
+    /// @param _spog The address of the SPOG contract
     function initSPOGAddress(address _spog) external override {
         if (address(spog) != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
@@ -74,22 +85,22 @@ contract DualGovernor is DualGovernorQuorum {
         try value.initSPOGAddress(_spog) {} catch {}
     }
 
-    /// @dev get current epoch number - 0, 1, 2, 3, .. etc
+    /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
+    /// @return current epoch number
     function currentEpoch() public view override returns (uint256) {
         return (block.number - _start) / _votingPeriod;
     }
 
-    /// @dev get `block.number` of the start of the given epoch
-    /// we can correctly calculate start of epochs only for current and future epochs
-    /// it happens because epoch voting time can be changed more than once
+    /// @notice Gets the start block number of the given epoch
+    /// @param epoch The epoch number
+    /// @return `block.number` of the start of the epoch
     function startOf(uint256 epoch) public view override returns (uint256) {
         return _start + epoch * _votingPeriod;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            PUBLIC FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
+    /// @dev Returns proposal type for given function selector
+    /// @param func The function selector
+    /// @return type of proposals
     function _getProposalType(bytes4 func) internal view virtual returns (ProposalType) {
         if (
             func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector
@@ -105,10 +116,22 @@ contract DualGovernor is DualGovernorQuorum {
         return ProposalType.Vote;
     }
 
+    /// @dev Returns whether the given function selector is a governed method
+    /// @param func The function selector
+    /// @return true if the function is governed, false otherwise
     function isGovernedMethod(bytes4 func) public pure override returns (bool) {
         return func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector;
     }
 
+    /// @notice Creates a new proposal
+    /// @dev One of main overriden methods of OZ governor interface, adjusted for SPOG needs
+    /// @param targets The ordered list of target addresses for calls to be made
+    /// @dev only one target is allowed and target address can be only SPOG or governor contract
+    /// @param values The ordered list of values (i.e amounts) to be passed to the calls to be made
+    /// @dev only one value is allowed and it should be 0
+    /// @param calldatas The ordered list of function signatures and encoded parameters to be passed to each call
+    /// @param description The proposal description field
+    /// @return proposalId The id of the newly created proposal
     function propose(
         address[] memory targets,
         uint256[] memory values,
@@ -126,7 +149,7 @@ contract DualGovernor is DualGovernorQuorum {
         // prevent proposing a list that can be changed before execution
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
-            address list = _extractAddressTypeParamsFromCalldata(calldatas[0]);
+            address list = _extractFuncParams(calldatas[0]);
             if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
         }
 
@@ -159,7 +182,13 @@ contract DualGovernor is DualGovernorQuorum {
         return proposalId;
     }
 
-    /// @notice override to count user activity in epochs
+    /// @dev Cast vote to count user activity in epochs
+    /// @dev Overriden method of OZ governor interface adjusted for double governance nature of voting process
+    /// @param proposalId The id of the proposal
+    /// @param account The address of the account to vote for
+    /// @param support The support value of the vote - 0 or 1
+    /// @param reason The reason given for the vote by the voter
+    /// @param params The parameters of the vote
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual
@@ -180,7 +209,7 @@ contract DualGovernor is DualGovernorQuorum {
         _countVote(proposalId, account, support, voteWeight, valueWeight, params);
 
         if (voteWeight > 0) {
-            _updateAccountEpochVotes(voteWeight);
+            _updateAccountEpochVotes(account, voteWeight);
         }
 
         // TODO: adjust weight we need to return ?
@@ -193,32 +222,42 @@ contract DualGovernor is DualGovernorQuorum {
         return voteWeight;
     }
 
-    /// @dev update number of proposals account voted for and cumulative vote weight casted in epoch
-    function _updateAccountEpochVotes(uint256 weight) internal virtual {
+    /// @dev Update number of proposals account voted for and cumulative vote weight for the epoch
+    /// @param account The the account that voted on proposals
+    /// @param weight The vote weight of the account
+    function _updateAccountEpochVotes(address account, uint256 weight) internal virtual {
         uint256 epoch = currentEpoch();
 
         EpochBasic storage epochBasic = _epochBasic[epoch];
         // update number of proposals account voted for in current epoch
-        epochBasic.numVotedOn[msg.sender] += 1;
+        epochBasic.numVotedOn[account] += 1;
 
-        // update cumulative vote weight for epoch if user voted in all proposals
-        if (epochBasic.numVotedOn[msg.sender] == epochBasic.numProposals) {
+        // update cumulative vote weight for epoch if user voted for all proposals
+        if (epochBasic.numVotedOn[account] == epochBasic.numProposals) {
             epochBasic.totalVotesWeight += weight;
         }
     }
 
+    /// @notice Gets total vote weight power for the epoch
+    /// @param epoch The epoch number to get total vote weight for
+    /// @return The total vote weight power for the epoch
     function epochTotalVotesWeight(uint256 epoch) external view override returns (uint256) {
         return _epochBasic[epoch].totalVotesWeight;
     }
 
+    /// @notice Checks if account voted on all proposals in the epoch
+    /// @param epoch The epoch number to check
+    /// @param account The account to check
+    /// @return True if account voted on all proposals in the epoch
     function isActiveParticipant(uint256 epoch, address account) external view override returns (bool) {
         EpochBasic storage epochBasic = _epochBasic[epoch];
         return epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
 
-    /**
-     * @dev Overridden version of the {Governor-state} function with added support for emergency proposals.
-     */
+    /// @notice Returns state of proposal
+    /// @param proposalId The id of the proposal
+    /// @return The state of the proposal
+    /// @dev One of main overriden methods of OZ governor interface, adjusted for SPOG needs
     function state(uint256 proposalId) public view override returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
@@ -245,22 +284,21 @@ contract DualGovernor is DualGovernorQuorum {
         return status;
     }
 
+    /// @notice Returns the voting delay for proposal
     function votingDelay() public view override returns (uint256) {
         return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOf(currentEpoch() + 1) - block.number;
     }
 
+    /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
         return _votingPeriod;
     }
 
-    /// @notice extract address params from the call data
-    /// @param callData The call data with selector in first 4 bytes
-    /// @dev used to inspect params before allowing proposal
-    function _extractAddressTypeParamsFromCalldata(bytes memory callData)
-        internal
-        pure
-        returns (address targetParams)
-    {
+    /// @dev Extracts address params from the call data
+    /// @param callData The call data with function selector in the first 4 bytes
+    /// @dev Used to inspect params before allowing proposal
+    /// @return targetParams The params of function call
+    function _extractFuncParams(bytes memory callData) internal pure returns (address targetParams) {
         assembly {
             // byte offset to represent function call data. 4 bytes funcSelector plus address 32 bytes
             let offset := 36
@@ -275,30 +313,31 @@ contract DualGovernor is DualGovernorQuorum {
                             COUNTING MODULE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See {GovernorBase-COUNTING_MODE}.
+    /// @notice Implements OZ Governor counting module interface
     // solhint-disable-next-line func-name-mixedcase
     function COUNTING_MODE() public pure override returns (string memory) {
         return "support=alpha&quorum=alpha";
     }
 
-    /// @dev See {GovernorBase-hasVoted}.
+    /// @notice Implements OZ Governor counting module interface
     function hasVoted(uint256 proposalId, address account) public view override returns (bool) {
         return _proposalVotes[proposalId].hasVoted[account];
     }
 
-    /// @dev Accessor to the internal vote counts.
+    /// @notice Implements OZ Governor counting module interface
     function proposalVotes(uint256 proposalId) public view override returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.voteNoVotes, proposalVote.voteYesVotes);
     }
 
-    /// @dev Accessor to the internal vote counts.
+    /// @notice Retuns total value votes for proposal
     function proposalValueVotes(uint256 proposalId) public view override returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.valueNoVotes, proposalVote.valueYesVotes);
     }
 
-    /// @dev See {Governor-_quorumReached}.
+    /// @notice Checks if quorum was reached taking into account type of proposals and vote and value votes
+    /// @dev See {OZ Governor-_quorumReached} adjusted for double-governance nature of SPOG.
     function _quorumReached(uint256 proposalId) internal view override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
@@ -319,11 +358,13 @@ contract DualGovernor is DualGovernorQuorum {
         return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0;
     }
 
+    /// @notice Checks if proposal is succeessful
     /// @dev See {Governor-_voteSucceeded}.
     function _voteSucceeded(uint256 proposalId) internal view override returns (bool) {
         return _quorumReached(proposalId);
     }
 
+    /// @dev Counts both value and vote votes for proposal
     /// @dev See {Governor-_countVote}.
     function _countVote(
         uint256 proposalId,
@@ -349,6 +390,7 @@ contract DualGovernor is DualGovernorQuorum {
         }
     }
 
+    /// @dev See {Governor-_countVote}.
     function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
         internal
         virtual
@@ -357,6 +399,7 @@ contract DualGovernor is DualGovernorQuorum {
         _countVote(proposalId, account, support, votes, 0, "");
     }
 
+    /// TODO: do we really need it ?
     fallback() external {
         revert("DualGovernor: non-existent function");
     }

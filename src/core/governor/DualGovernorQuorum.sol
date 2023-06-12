@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/Checkpoints.sol";
@@ -22,6 +21,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
+    /// @notice Construct a new governor instance with Double quorum logic
     constructor(
         string memory name_,
         address vote_,
