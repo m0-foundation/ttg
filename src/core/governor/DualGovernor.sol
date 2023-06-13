@@ -63,10 +63,12 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 valueQuorum,
         uint256 votingPeriod_
     ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
-        // TODO: sanity checks
-        // TODO: check that vote and value are connected ?
-        _votingPeriod = votingPeriod_;
         // TODO: should setting SPOG be start of counting epochs ?
+        // Sanity checks
+        if (votingPeriod_ == 0) revert ZeroVotingPeriod();
+
+        // Set governor configuration
+        _votingPeriod = votingPeriod_;
         _start = block.number;
     }
 
@@ -376,9 +378,8 @@ contract DualGovernor is DualGovernorQuorum {
     ) internal virtual {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        if (proposalVote.hasVoted[account]) {
-            revert AlreadyVoted(proposalId, account);
-        }
+        if (proposalVote.hasVoted[account]) revert AlreadyVoted();
+
         proposalVote.hasVoted[account] = true;
 
         if (support == uint8(VoteType.No)) {
