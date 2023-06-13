@@ -14,7 +14,7 @@ contract VoteToken is SPOGVotes, IVoteToken {
     /// @notice value token to take snapshot from
     address public immutable valueToken;
 
-    /// @notice snapshot id of the moment of reset
+    /// @notice snapshot id at the moment of reset
     uint256 public resetSnapshotId;
 
     /// @notice check that balances are claimed only once
@@ -30,9 +30,9 @@ contract VoteToken is SPOGVotes, IVoteToken {
 
     /// @notice SPOG initializes reset snapshot
     /// @param _resetSnapshotId Snapshot id of the moment of reset
-    function initReset(uint256 _resetSnapshotId) external override {
+    function reset(uint256 _resetSnapshotId) external override {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
-        if (msg.sender != spogAddress) revert CallerIsNotSPOG();
+        if (msg.sender != spog) revert CallerIsNotSPOG();
 
         resetSnapshotId = _resetSnapshotId;
 

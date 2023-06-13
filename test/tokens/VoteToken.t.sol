@@ -36,7 +36,7 @@ contract VoteTokenTest is SPOG_Base {
         valueToken = new ValueToken("SPOGValue", "value");
         IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
 
-        valueToken.initSPOGAddress(address(spog));
+        valueToken.initializeSPOG(address(spog));
 
         // Mint initial balances to users
         valueToken.mint(alice, aliceStartBalance);
@@ -51,7 +51,7 @@ contract VoteTokenTest is SPOG_Base {
 
         // Create new VoteToken
         voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
-        voteToken.initSPOGAddress(address(spog));
+        voteToken.initializeSPOG(address(spog));
     }
 
     function resetGovernance() private {
@@ -63,7 +63,7 @@ contract VoteTokenTest is SPOG_Base {
         // Do not check emitted snapshot id, just confirm that event happened
         vm.expectEmit(false, false, false, false);
         emit ResetInitialized(0);
-        voteToken.initReset(snapshotId);
+        voteToken.reset(snapshotId);
         vm.stopPrank();
 
         // Check initial Vote balances after reset
@@ -75,25 +75,25 @@ contract VoteTokenTest is SPOG_Base {
     /**
      * Test Functions
      */
-    function test_Revert_InitReset_WhenCallerIsNotSPOG() public {
+    function test_Revert_reset_WhenCallerIsNotSPOG() public {
         initTokens();
 
         uint256 randomSnapshotId = 10000;
         vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
-        voteToken.initReset(randomSnapshotId);
+        voteToken.reset(randomSnapshotId);
     }
 
-    function test_Revert_InitReset_WhenResetWasInitialized() public {
+    function test_Revert_reset_WhenResetWasInitialized() public {
         initTokens();
 
         uint256 randomSnapshotId = 10000;
         vm.startPrank(address(spog));
-        voteToken.initReset(randomSnapshotId);
+        voteToken.reset(randomSnapshotId);
 
         assertEq(voteToken.resetSnapshotId(), randomSnapshotId);
 
         vm.expectRevert(IVoteToken.ResetAlreadyInitialized.selector);
-        voteToken.initReset(randomSnapshotId);
+        voteToken.reset(randomSnapshotId);
     }
 
     function test_Revert_ClaimPreviousSupply_WhenAlreadyClaimed() public {

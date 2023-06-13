@@ -14,7 +14,7 @@ contract ValueTokenTest is SPOG_Base {
         super.setUp();
 
         valueToken = new ValueToken("SPOGValue", "value");
-        valueToken.initSPOGAddress(address(spog));
+        valueToken.initializeSPOG(address(spog));
 
         // grant mint role to this contract
         IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));

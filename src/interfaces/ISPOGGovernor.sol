@@ -16,6 +16,7 @@ interface IDualGovernor {
     error AlreadyVoted(uint256 proposalId, address account);
     error EpochInThePast(uint256 epoch, uint256 currentEpoch);
     error ZeroSPOGAddress();
+    error ZeroStart();
 
     // Events
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
@@ -38,7 +39,7 @@ interface IDualGovernor {
     function vote() external view returns (ISPOGVotes);
     function value() external view returns (ISPOGVotes);
 
-    function initSPOGAddress(address) external;
+    function initializeSPOG(address spog) external;
     function emergencyProposals(uint256 proposalId) external view returns (bool);
     function isGovernedMethod(bytes4 func) external pure returns (bool);
 

@@ -63,7 +63,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 valueQuorum,
         uint256 votingPeriod_
     ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
-        // TODO: sanity checks
+        // Sanity checks
         // TODO: check that vote and value are connected ?
         _votingPeriod = votingPeriod_;
         // TODO: should setting SPOG be start of counting epochs ?
@@ -73,16 +73,18 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice Initializes SPOG address
     /// @dev Adds additional intialization for tokens
     /// @param _spog The address of the SPOG contract
-    function initSPOGAddress(address _spog) external override {
+    function initializeSPOG(address _spog) external override {
         if (address(spog) != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
+        // @dev should never happen, precaution
+        if (_start == 0) revert ZeroStart();
 
         spog = ISPOG(_spog);
         // initialize tokens
-        vote.initSPOGAddress(_spog);
-        // TODO: find the way to avoid mistake with initialization
-        // TODO: do not fall if spog address has been already initialized for value token
-        try value.initSPOGAddress(_spog) {} catch {}
+        vote.initializeSPOG(_spog);
+        // TODO: find the way to avoid mistake with initialization for reset
+        // TODO: do not fail if spog address has been already initialized for value token
+        try value.initializeSPOG(_spog) {} catch {}
     }
 
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc

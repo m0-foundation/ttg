@@ -99,7 +99,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // Set configuration data
         governor = ISPOGGovernor(config.governor);
         // Initialize governor
-        governor.initSPOGAddress(address(this));
+        governor.initializeSPOG(address(this));
 
         voteVault = ISPOGVault(config.voteVault);
         valueVault = ISPOGVault(config.valueVault);
@@ -194,14 +194,14 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         voteVault = ISPOGVault(newVoteVault);
         governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
-        governor.initSPOGAddress(address(this));
+        governor.initializeSPOG(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetSnapshotId = IValueToken(address(governor.value())).snapshot();
-        IVoteToken(address(governor.vote())).initReset(resetSnapshotId);
+        uint256 resetId = IValueToken(address(governor.value())).snapshot();
+        IVoteToken(address(governor.vote())).reset(resetId);
 
-        emit ResetExecuted(newGovernor, newVoteVault, resetSnapshotId);
+        emit ResetExecuted(newGovernor, newVoteVault, resetId);
     }
 
     /// @notice Change the tax rate which is used to calculate the proposal fee
