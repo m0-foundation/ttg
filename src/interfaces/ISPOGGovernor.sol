@@ -3,7 +3,8 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
 
-import "src/interfaces/tokens/ISPOGVotes.sol";
+import "src/interfaces/tokens/IVote.sol";
+import "src/interfaces/tokens/IValue.sol";
 import "src/interfaces/ISPOG.sol";
 
 interface IDualGovernor {
@@ -36,6 +37,7 @@ interface IDualGovernor {
     error InvalidVoteQuorumNumerator();
     error InvalidValueQuorumNumerator();
     error ZeroStart();
+    error VoteValueMistmatch();
 
     // Events
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
@@ -44,8 +46,8 @@ interface IDualGovernor {
 
     // Accessors for vote, value tokens and spog contract
     function spog() external view returns (ISPOG);
-    function vote() external view returns (ISPOGVotes);
-    function value() external view returns (ISPOGVotes);
+    function vote() external view returns (IVote);
+    function value() external view returns (IValue);
 
     // Utility functions
     function initializeSPOG(address spog) external;
