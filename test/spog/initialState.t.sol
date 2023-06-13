@@ -153,9 +153,12 @@ contract SPOG_InitialState is SPOG_Base {
     }
 
     function test_fallback_SPOG() public {
-        vm.expectRevert("SPOG: non-existent function");
+        vm.expectRevert();
         (bool success,) = address(spog).call(abi.encodeWithSignature("doesNotExist()"));
+        assertEq(success, true);
 
+        vm.expectRevert();
+        (success,) = address(spog).call{value: 10000}("");
         assertEq(success, true);
     }
 }

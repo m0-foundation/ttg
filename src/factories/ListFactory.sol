@@ -48,8 +48,4 @@ contract ListFactory {
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));
     }
-
-    fallback() external {
-        revert("ListFactory: non-existent function");
-    }
 }
