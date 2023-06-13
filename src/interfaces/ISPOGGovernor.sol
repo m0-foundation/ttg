@@ -2,10 +2,23 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
+
 import "src/interfaces/tokens/ISPOGVotes.sol";
 import "src/interfaces/ISPOG.sol";
 
 interface IDualGovernor {
+    // Enums
+    enum ProposalType {
+        Vote,
+        Double,
+        Value
+    }
+
+    enum VoteType {
+        No,
+        Yes
+    }
+
     // Errors
     error TooManyTargets();
     error InvalidTarget();
@@ -13,9 +26,15 @@ interface IDualGovernor {
     error InvalidMethod();
     error ListAdminIsNotSPOG();
     error AlreadyInitialized();
-    error AlreadyVoted(uint256 proposalId, address account);
-    error EpochInThePast(uint256 epoch, uint256 currentEpoch);
+    error AlreadyVoted();
     error ZeroSPOGAddress();
+    error ZeroVotingPeriod();
+    error ZeroVoteAddress();
+    error ZeroValueAddress();
+    error ZeroVoteQuorumNumerator();
+    error ZeroValueQuorumNumerator();
+    error InvalidVoteQuorumNumerator();
+    error InvalidValueQuorumNumerator();
     error ZeroStart();
 
     // Events
@@ -23,29 +42,21 @@ interface IDualGovernor {
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
-    enum ProposalType {
-        Vote,
-        Double,
-        Value
-    }
-
-    /// @dev Supported vote types.
-    enum VoteType {
-        No,
-        Yes
-    }
-
+    // Accessors for vote, value tokens and spog contract
     function spog() external view returns (ISPOG);
     function vote() external view returns (ISPOGVotes);
     function value() external view returns (ISPOGVotes);
 
+    // Utility functions
     function initializeSPOG(address spog) external;
-    function emergencyProposals(uint256 proposalId) external view returns (bool);
     function isGovernedMethod(bytes4 func) external pure returns (bool);
+    function emergencyProposals(uint256 proposalId) external view returns (bool);
 
+    // Vote and value votes results
     function proposalVotes(uint256 proposalId) external view returns (uint256, uint256);
     function proposalValueVotes(uint256 proposalId) external view returns (uint256, uint256);
 
+    // Vote and value quorums
     function voteQuorumNumerator() external view returns (uint256);
     function valueQuorumNumerator() external view returns (uint256);
     function quorumDenominator() external view returns (uint256);
@@ -56,6 +67,7 @@ interface IDualGovernor {
     function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external;
     function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external;
 
+    // Epochs logic
     function currentEpoch() external view returns (uint256);
     function startOf(uint256 epoch) external view returns (uint256);
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);

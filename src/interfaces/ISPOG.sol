@@ -9,6 +9,7 @@ import "src/interfaces/vaults/ISPOGVault.sol";
 import "src/interfaces/ISPOGGovernor.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
+    // Enums
     enum EmergencyType {
         Remove,
         Append,
