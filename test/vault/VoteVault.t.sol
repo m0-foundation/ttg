@@ -63,11 +63,4 @@ contract VoteVaultTest is BaseTest {
 
         assertEq(voteToken.balanceOf(address(vault)), 1000e18);
     }
-
-    function test_fallback() public {
-        vm.expectRevert("Vault: non-existent function");
-        (bool success,) = address(vault).call(abi.encodeWithSignature("doesNotExist()"));
-
-        assertEq(success, true);
-    }
 }

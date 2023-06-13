@@ -401,9 +401,4 @@ contract DualGovernor is DualGovernorQuorum {
     {
         _countVote(proposalId, account, support, votes, 0, "");
     }
-
-    /// TODO: do we really need it ?
-    fallback() external {
-        revert("DualGovernor: non-existent function");
-    }
 }

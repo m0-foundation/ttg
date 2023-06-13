@@ -308,9 +308,4 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
-
-    /// TODO: do we really need this ?
-    fallback() external {
-        revert("SPOG: non-existent function");
-    }
 }

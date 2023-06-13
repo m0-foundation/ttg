@@ -111,8 +111,4 @@ contract ValueVault is ISPOGVault {
 
         return amountToWithdraw;
     }
-
-    fallback() external {
-        revert("Vault: non-existent function");
-    }
 }
