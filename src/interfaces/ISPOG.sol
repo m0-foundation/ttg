@@ -38,6 +38,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ListIsNotInMasterList();
     error EmergencyMethodNotSupported();
     error ValueTokenMistmatch();
+    error InvalidTaxRange();
 
     // Info functions about double governance and SPOG parameters
     function governor() external view returns (ISPOGGovernor);

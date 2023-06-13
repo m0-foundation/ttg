@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface ISPOGVotes is IVotes, IERC20 {
-    function initSPOGAddress(address _spogAddress) external;
+    function initializeSPOG(address _spog) external;
 
     function mint(address account, uint256 amount) external;
 

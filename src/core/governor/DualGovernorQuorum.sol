@@ -12,10 +12,10 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
-    ISPOGVotes public immutable override vote;
+    IVote public immutable override vote;
 
     /// @notice The value token of SPOG governance
-    ISPOGVotes public immutable override value;
+    IValue public immutable override value;
 
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
@@ -34,16 +34,18 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         uint256 voteQuorumNumerator_,
         uint256 valueQuorumNumerator_
     ) Governor(name_) {
-        // TODO: check that vote and value are connected ?
         // Sanity checks
         if (vote_ == address(0)) revert ZeroVoteAddress();
         if (value_ == address(0)) revert ZeroValueAddress();
         if (voteQuorumNumerator_ == 0) revert ZeroVoteQuorumNumerator();
         if (valueQuorumNumerator_ == 0) revert ZeroValueQuorumNumerator();
 
-        // Set configuration for tokens and quorums
-        vote = ISPOGVotes(vote_);
-        value = ISPOGVotes(value_);
+        // Set tokens and check that they are properly linked together
+        vote = IVote(vote_);
+        value = IValue(value_);
+        if (vote.valueToken() != value_) revert VoteValueMistmatch();
+
+        // Set initial vote and value quorums
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
         _updateValueQuorumNumerator(valueQuorumNumerator_);
     }

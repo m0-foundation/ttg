@@ -36,7 +36,7 @@ contract VoteTokenTest is SPOG_Base {
         valueToken = new ValueToken("SPOGValue", "value");
         IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
 
-        valueToken.initSPOGAddress(address(spog));
+        valueToken.initializeSPOG(address(spog));
 
         // Mint initial balances to users
         valueToken.mint(alice, aliceStartBalance);
@@ -51,7 +51,7 @@ contract VoteTokenTest is SPOG_Base {
 
         // Create new VoteToken
         voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
-        voteToken.initSPOGAddress(address(spog));
+        voteToken.initializeSPOG(address(spog));
     }
 
     function resetGovernance() private {
@@ -63,7 +63,7 @@ contract VoteTokenTest is SPOG_Base {
         // Do not check emitted snapshot id, just confirm that event happened
         vm.expectEmit(false, false, false, false);
         emit ResetInitialized(0);
-        voteToken.initReset(snapshotId);
+        voteToken.reset(snapshotId);
         vm.stopPrank();
 
         // Check initial Vote balances after reset
@@ -75,25 +75,25 @@ contract VoteTokenTest is SPOG_Base {
     /**
      * Test Functions
      */
-    function test_Revert_InitReset_WhenCallerIsNotSPOG() public {
+    function test_Revert_reset_WhenCallerIsNotSPOG() public {
         initTokens();
 
         uint256 randomSnapshotId = 10000;
         vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
-        voteToken.initReset(randomSnapshotId);
+        voteToken.reset(randomSnapshotId);
     }
 
-    function test_Revert_InitReset_WhenResetWasInitialized() public {
+    function test_Revert_reset_WhenResetWasInitialized() public {
         initTokens();
 
         uint256 randomSnapshotId = 10000;
         vm.startPrank(address(spog));
-        voteToken.initReset(randomSnapshotId);
+        voteToken.reset(randomSnapshotId);
 
         assertEq(voteToken.resetSnapshotId(), randomSnapshotId);
 
-        vm.expectRevert(IVoteToken.ResetAlreadyInitialized.selector);
-        voteToken.initReset(randomSnapshotId);
+        vm.expectRevert(IVote.ResetAlreadyInitialized.selector);
+        voteToken.reset(randomSnapshotId);
     }
 
     function test_Revert_ClaimPreviousSupply_WhenAlreadyClaimed() public {
@@ -109,7 +109,7 @@ contract VoteTokenTest is SPOG_Base {
         assertEq(voteToken.balanceOf(alice), aliceStartBalance, "Alice should have 50e18 tokens");
 
         // Alice attempts to claim again
-        vm.expectRevert(IVoteToken.ResetTokensAlreadyClaimed.selector);
+        vm.expectRevert(IVote.ResetTokensAlreadyClaimed.selector);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice), aliceStartBalance, "Alice should have 50e18 tokens");
@@ -120,7 +120,7 @@ contract VoteTokenTest is SPOG_Base {
 
         // Alice claims her tokens
         vm.startPrank(alice);
-        vm.expectRevert(IVoteToken.ResetNotInitialized.selector);
+        vm.expectRevert(IVote.ResetNotInitialized.selector);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice), 0, "Alice should have 0 tokens");
@@ -139,7 +139,7 @@ contract VoteTokenTest is SPOG_Base {
 
         // Nothing attempts to claim their tokens
         vm.startPrank(nothing);
-        vm.expectRevert(IVoteToken.NoResetTokensToClaim.selector);
+        vm.expectRevert(IVote.NoResetTokensToClaim.selector);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(nothing), 0, "Balance stays 0");

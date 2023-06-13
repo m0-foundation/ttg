@@ -5,18 +5,18 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import "src/interfaces/tokens/IVoteToken.sol";
-import "src/interfaces/tokens/IValueToken.sol";
+import "src/interfaces/tokens/IVote.sol";
+import "src/interfaces/tokens/IValue.sol";
 import "src/interfaces/IList.sol";
 import "src/interfaces/ISPOG.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 
 /// @title SPOG
-/// @notice Contracts for governing lists and managing communal property through token voting.
+/// @notice Contracts for governing lists and managing communal property through token voting
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
-/// @notice SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property.
-/// @notice SPOG is used for **permissioning actors**  and optimized for token holder participation.
+/// @notice SPOG, "Simple Participation Optimized Governance"
+/// @notice SPOG is used for permissioning actors and optimized for token holder participation
 contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
@@ -77,7 +77,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @dev (epoch number => bool)
     mapping(uint256 => bool) private _epochRewardsMinted;
 
-    /// @dev Modifier check if caller is governor address
+    /// @dev Modifier checks if caller is a governor address
     modifier onlyGovernance() {
         if (msg.sender != address(governor)) revert OnlyGovernor();
 
@@ -99,7 +99,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // Set configuration data
         governor = ISPOGGovernor(config.governor);
         // Initialize governor
-        governor.initSPOGAddress(address(this));
+        governor.initializeSPOG(address(this));
 
         voteVault = ISPOGVault(config.voteVault);
         valueVault = ISPOGVault(config.valueVault);
@@ -181,27 +181,22 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         emit EmergencyExecuted(emergencyType, callData);
     }
 
-    /// @notice Reset current governor, spesial value governance method
+    /// @notice Reset current governor, special value governance method
     /// @param newGovernor The address of the new governor
     /// @param newVoteVault The address of the new vault for inflation rewards
     function reset(address newGovernor, address newVoteVault) external override onlyGovernance {
         // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
-        // TODO: checks should be in governor itself
-        // IVoteToken newVote = IVoteToken(address(_newGovernor.vote()));
-        // IValueToken valueToken = IValueToken(address(_newGovernor.value()));
-        // if (address(valueToken) != newVoteToken.valueToken()) revert ValueTokenMistmatch();
-
         voteVault = ISPOGVault(newVoteVault);
         governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
-        governor.initSPOGAddress(address(this));
+        governor.initializeSPOG(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetSnapshotId = IValueToken(address(governor.value())).snapshot();
-        IVoteToken(address(governor.vote())).initReset(resetSnapshotId);
+        uint256 resetId = governor.value().snapshot();
+        governor.vote().reset(resetId);
 
-        emit ResetExecuted(newGovernor, newVoteVault, resetSnapshotId);
+        emit ResetExecuted(newGovernor, newVoteVault, resetId);
     }
 
     /// @notice Change the tax rate which is used to calculate the proposal fee
@@ -217,7 +212,8 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param newTaxLowerBound The new lower bound of the tax range
     /// @param newTaxUpperBound The new upper bound of the tax range
     function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external override onlyGovernance {
-        // TODO: add adequate sanity checks
+        if (newTaxLowerBound > newTaxUpperBound) revert InvalidTaxRange();
+
         emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
 
         taxLowerBound = newTaxLowerBound;

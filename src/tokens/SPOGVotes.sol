@@ -9,13 +9,13 @@ import "src/interfaces/tokens/ISPOGVotes.sol";
 /// @title SPOGVotes: voting token for the SPOG governor
 contract SPOGVotes is ERC20Votes, AccessControlEnumerable, ISPOGVotes {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    address public spogAddress;
+    address public spog;
 
     // Errors
     error CallerIsNotSPOG();
-    error SPOGAddressAlreadySet();
+    error AlreadyInitialized();
 
-    /// @notice Initializes the contract by creating the token
+    /// @notice Constructs governance voting token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
     constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
@@ -23,13 +23,13 @@ contract SPOGVotes is ERC20Votes, AccessControlEnumerable, ISPOGVotes {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /// @notice sets the spog address. Can only be called once.
-    /// @param _spogAddress the address of the spog
-    function initSPOGAddress(address _spogAddress) external {
-        if (spogAddress != address(0)) revert SPOGAddressAlreadySet();
+    /// @notice Sets the spog address. Can only be called once.
+    /// @param _spog the address of the spog
+    function initializeSPOG(address _spog) external {
+        if (spog != address(0)) revert AlreadyInitialized();
 
-        spogAddress = _spogAddress;
-        _setupRole(MINTER_ROLE, _spogAddress);
+        spog = _spog;
+        _setupRole(MINTER_ROLE, _spog);
     }
 
     /// @notice Restricts minting to address with MINTER_ROLE

@@ -3,6 +3,6 @@ pragma solidity 0.8.19;
 
 import "src/interfaces/tokens/ISPOGVotes.sol";
 
-interface IValueToken is ISPOGVotes {
+interface IValue is ISPOGVotes {
     function snapshot() external returns (uint256);
 }
