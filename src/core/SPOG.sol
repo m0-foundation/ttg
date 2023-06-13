@@ -13,10 +13,10 @@ import "src/interfaces/ISPOG.sol";
 import "src/config/ProtocolConfigurator.sol";
 
 /// @title SPOG
-/// @notice Contracts for governing lists and managing communal property through token voting.
+/// @notice Contracts for governing lists and managing communal property through token voting
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
-/// @notice SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property.
-/// @notice SPOG is used for **permissioning actors**  and optimized for token holder participation.
+/// @notice SPOG, "Simple Participation Optimized Governance"
+/// @notice SPOG is used for permissioning actors and optimized for token holder participation
 contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
@@ -77,7 +77,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @dev (epoch number => bool)
     mapping(uint256 => bool) private _epochRewardsMinted;
 
-    /// @dev Modifier check if caller is governor address
+    /// @dev Modifier checks if caller is a governor address
     modifier onlyGovernance() {
         if (msg.sender != address(governor)) revert OnlyGovernor();
 
@@ -212,7 +212,8 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param newTaxLowerBound The new lower bound of the tax range
     /// @param newTaxUpperBound The new upper bound of the tax range
     function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external override onlyGovernance {
-        // TODO: add adequate sanity checks
+        if (newTaxLowerBound > newTaxUpperBound) revert InvalidTaxRange();
+
         emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
 
         taxLowerBound = newTaxLowerBound;
