@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 
-contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
+contract SPOG_SellInactiveVoteInflation is SPOG_Base {
     function test_sellInactiveVoteInflation() public {
         uint256 initialBalance = governor.vote().totalSupply();
 
@@ -15,9 +15,9 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         uint256 adminBalance = vote.balanceOf(address(this));
         uint256 aliceBalance = vote.balanceOf(alice);
         uint256 bobBalance = vote.balanceOf(bob);
-        uint256 carolBalance = vote.balanceOf(carol);
+        uint256 charlieBalance = vote.balanceOf(charlie);
 
-        assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + carolBalance);
+        assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + charlieBalance);
 
         // alice votes
         vm.startPrank(alice);
@@ -29,7 +29,7 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         governor.castVote(proposalId, noVote);
         vm.stopPrank();
 
-        //admin and carol do not vote
+        //admin and charlie do not vote
 
         // inflation should have happened
         uint256 inflatedBalance = governor.vote().totalSupply();
@@ -106,9 +106,9 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         uint256 adminBalance = vote.balanceOf(address(this));
         uint256 aliceBalance = vote.balanceOf(alice);
         uint256 bobBalance = vote.balanceOf(bob);
-        uint256 carolBalance = vote.balanceOf(carol);
+        uint256 charlieBalance = vote.balanceOf(charlie);
 
-        assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + carolBalance + daveBalance + ernieBalance);
+        assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + charlieBalance + daveBalance + ernieBalance);
 
         // alice votes
         vm.startPrank(alice);
@@ -120,7 +120,7 @@ contract SPOG_SellInactiveVoteInflation is Vault_IntegratedWithSPOG {
         governor.castVote(proposalId, noVote);
         vm.stopPrank();
 
-        //admin and carol do not vote
+        //admin and charlie do not vote
 
         // dave does not vote with fuzz balance
 

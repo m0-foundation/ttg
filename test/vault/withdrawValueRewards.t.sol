@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.19;
 
-import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 
-contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
+contract Vault_WithdrawValueTokenRewards is SPOG_Base {
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
@@ -73,8 +73,8 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         governor.castVote(proposalId3, noVote);
         vm.stopPrank();
 
-        // carol doen't vote in all proposals
-        vm.startPrank(carol);
+        // charlie doen't vote in all proposals
+        vm.startPrank(charlie);
         governor.castVote(proposalId3, noVote);
         vm.stopPrank();
 
@@ -130,17 +130,17 @@ contract Vault_WithdrawValueTokenRewards is Vault_IntegratedWithSPOG {
         // alice and bob have received the same amount of inflation rewards so their balance are the same
         assertEq(value.balanceOf(alice), value.balanceOf(bob), "Alice and Bob should have same vote balance");
 
-        vm.startPrank(carol);
+        vm.startPrank(charlie);
 
-        uint256 carolValueBalanceBefore = value.balanceOf(carol);
+        uint256 charlieValueBalanceBefore = value.balanceOf(charlie);
 
-        // carol fails to withdraw value token rewards because she has not voted in all proposals
+        // charlie fails to withdraw value token rewards because she has not voted in all proposals
         vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
         voteVault.withdraw(epochsToClaimRewards, address(value));
         vm.stopPrank();
 
-        // carol remains with the same balance
-        assertEq(value.balanceOf(carol), carolValueBalanceBefore, "Carol should have same value balance");
+        // charlie remains with the same balance
+        assertEq(value.balanceOf(charlie), charlieValueBalanceBefore, "Carol should have same value balance");
 
         // voteVault should have zero remaining inflationary rewards from epoch 1
         assertEq(

@@ -17,8 +17,6 @@ contract MockConfig is IMockConfig, ERC165 {
 
 contract SPOG_emergency is SPOG_Base {
     address internal addressToChange;
-    uint8 internal yesVote;
-    uint8 internal noVote;
     uint256 emergencyTaxMultiplier;
 
     event NewEmergencyProposal(uint256 indexed proposalId);

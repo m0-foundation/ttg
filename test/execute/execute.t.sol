@@ -36,7 +36,6 @@ contract SPOG_AppendAddressToList is SPOG_Base {
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
 
         // cast vote on proposal
-        uint8 yesVote = 1;
         governor.castVote(proposalId, yesVote);
 
         // fast forward to next voting period

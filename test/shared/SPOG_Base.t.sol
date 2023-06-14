@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/IGovernor.sol";
+import "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 
 import "test/Base.t.sol";
 import "script/SPOGDeploy.s.sol";
@@ -10,6 +11,8 @@ import "src/periphery/List.sol";
 import "src/interfaces/tokens/ISPOGVotes.sol";
 
 contract SPOG_Base is BaseTest {
+    string public constant _TEST_MNEMONIC = "test test test test test test test test test test test junk";
+
     SPOGDeployScript public deployScript;
 
     ISPOG public spog;
@@ -19,8 +22,18 @@ contract SPOG_Base is BaseTest {
     VoteVault public voteVault;
     ValueVault public valueVault;
     IList public list;
+    ERC20Mock public cash;
 
     uint256 public tax;
+
+    uint8 noVote = 0;
+    uint8 yesVote = 1;
+
+    address admin;
+    address alice;
+    address bob;
+    address charlie;
+    address dave;
 
     enum VoteType {
         No,
@@ -38,21 +51,27 @@ contract SPOG_Base is BaseTest {
         voteVault = VoteVault(deployScript.voteVault());
         valueVault = ValueVault(deployScript.valueVault());
         tax = deployScript.tax();
+        cash = ERC20Mock(deployScript.cash());
 
-        // mint vote tokens and self-delegate
-        vm.prank(address(spog));
-        ISPOGVotes(vote).mint(address(this), 100e18);
-        ISPOGVotes(vote).delegate(address(this));
-
-        // mint value tokens and self-delegate
-        vm.prank(address(spog));
-        ISPOGVotes(value).mint(address(this), 100e18);
-        ISPOGVotes(value).delegate(address(this));
+        // msg.sender can propose with cash
+        cash.mint(address(this), 100e18);
 
         // deploy list and change admin to spog
         List newList = new List("SPOG List");
         newList.changeAdmin(address(spog));
         list = IList(address(newList));
+
+        // setup test users
+        admin = getUser(0);
+        alice = getUser(1);
+        bob = getUser(2);
+        charlie = getUser(3);
+        dave = getUser(4);
+    }
+
+    function getUser(uint32 index) internal returns (address) {
+        (address user,) = deriveRememberKey({mnemonic: _TEST_MNEMONIC, index: index});
+        return user;
     }
 
     /* Helper functions */
@@ -83,8 +102,6 @@ contract SPOG_Base is BaseTest {
 
         // create new proposal
         cash.approve(address(spog), tax);
-        // expectEmit();
-        // emit NewVoteQuorumProposal(proposalId);
         governor.propose(targets, values, calldatas, description);
 
         return (proposalId, targets, values, calldatas, hashedDescription);
@@ -104,8 +121,16 @@ contract SPOG_Base is BaseTest {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        uint8 yesVote = 1;
+
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
+        governor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
@@ -139,7 +164,6 @@ contract SPOG_Base is BaseTest {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        uint8 yesVote = 1;
         governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);

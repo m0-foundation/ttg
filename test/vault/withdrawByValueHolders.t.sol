@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.19;
 
-import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 
-contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
+contract Vault_WithdrawRewardsForValueHolders is SPOG_Base {
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
@@ -61,7 +61,7 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         // advance to next epoch so msg.sender can take rewards from previous epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        // rewards is divvied up equally among value holders (alice, bob, carol, and address(this))
+        // rewards is divvied up equally among value holders (alice, bob, charlie, and address(this))
         uint256 rewardAmountToReceive = epochCashRewards / 4;
 
         // first value holder withdraws rewards
@@ -103,12 +103,12 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         vm.stopPrank();
 
         // last value holder withdraws rewards
-        vm.startPrank(carol);
-        uint256 initialCarolBalanceOfCash = cash.balanceOf(address(carol));
+        vm.startPrank(charlie);
+        uint256 initialCarolBalanceOfCash = cash.balanceOf(address(charlie));
 
         valueVault.withdraw(epochsToGetRewardsFor, address(cash));
 
-        uint256 finalCarolBalanceOfCash = cash.balanceOf(address(carol));
+        uint256 finalCarolBalanceOfCash = cash.balanceOf(address(charlie));
         assertEq(
             finalCarolBalanceOfCash,
             initialCarolBalanceOfCash + rewardAmountToReceive,

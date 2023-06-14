@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 
 contract ValueTokenTest is SPOG_Base {
-    address alice = createUser("alice");
     uint256 aliceStartBalance = 50e18;
 
     ValueToken valueToken;

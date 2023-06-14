@@ -4,12 +4,8 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 
 contract VoteSPOGGovernorTest is SPOG_Base {
-    address alice = createUser("alice");
     uint256 signerPrivateKey = 0xA11CE;
     address signer = vm.addr(signerPrivateKey);
-
-    uint8 noVote = 0;
-    uint8 yesVote = 1;
 
     event NewVoteQuorumProposal(uint256 indexed proposalId);
 
@@ -288,8 +284,8 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         values[0] = 0;
         values[1] = 0;
         bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
-        calldatas[1] = abi.encodeWithSignature("append(address,address)", users.bob, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
+        calldatas[1] = abi.encodeWithSignature("append(address,address)", bob, list);
         string memory description = "add 2 merchants to spog";
 
         // approve cash spend for proposal
@@ -306,7 +302,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 1 ether;
         bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -324,7 +320,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -357,7 +353,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal

@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.19;
 
-import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 
-contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
+contract Vault_WithdrawVoteTokenRewards is SPOG_Base {
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
@@ -31,6 +31,8 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
     //////////////////////////////////////////////////////////////*/
 
     function test_UsersGetsVoteTokenInflationAfterVotingOnAllProposals() public {
+        uint256 initialBalance = vote.balanceOf(alice);
+        console.log("Initial balance for user", initialBalance);
         // balance of vote for voteVault should be 0 before proposals
         uint256 voteInitialBalanceForVault = vote.balanceOf(address(voteVault));
         assertEq(voteInitialBalanceForVault, 0, "voteVault should have 0 vote balance");
@@ -57,9 +59,6 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         uint256[] memory relevantEpochs = new uint256[](1);
         relevantEpochs[0] = nextEpoch;
 
-        // epochProposalsCount for epoch 0 should be 3
-        // assertEq(governor.epochProposalsCount(nextEpoch), 3, "current epoch should have 3 proposals");
-
         // cannot vote in epoch 0
         vm.expectRevert("DualGovernor: vote not currently active");
         governor.castVote(proposalId, yesVote);
@@ -77,15 +76,9 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         governor.castVote(proposalId, noVote);
         vm.stopPrank();
 
-        // check that both have voted once in epoch 1
-        // assertEq(
-        //     governor.accountEpochNumProposalsVotedOn(alice, nextEpoch), 1, "Alice should have voted once in epoch 1"
-        // );
-        // assertEq(governor.accountEpochNumProposalsVotedOn(bob, nextEpoch), 1, "Bob should have voted once in epoch 1");
-
         // alice and bobs vote token balance should be the same as before voting
-        assertEq(vote.balanceOf(alice), amountToMint, "Alice should have same vote balance");
-        assertEq(vote.balanceOf(bob), amountToMint, "Bob should have same vote balance");
+        assertEq(vote.balanceOf(alice), initialBalance, "Alice should have same vote balance");
+        assertEq(vote.balanceOf(bob), initialBalance, "Bob should have same vote balance");
 
         // alice votes on proposal 2 and 3
         vm.startPrank(alice);
@@ -98,21 +91,6 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         governor.castVote(proposalId2, noVote);
         governor.castVote(proposalId3, noVote);
         vm.stopPrank();
-
-        // check that both alice and bob have voted 3 times in relevant epoch
-        // assertEq(
-        //     governor.accountEpochNumProposalsVotedOn(alice, nextEpoch), 3, "Alice should have voted 3 times in epoch 1"
-        // );
-        // assertEq(
-        //     governor.accountEpochNumProposalsVotedOn(bob, nextEpoch), 3, "Bob should have voted 3 times in epoch 1"
-        // );
-
-        // // and carol has not voted at all
-        // assertEq(
-        //     governor.accountEpochNumProposalsVotedOn(carol, nextEpoch), 0, "Carol should have voted 0 times in epoch 1"
-        // );
-
-        // assertEq(governor.epochProposalsCount(nextEpoch), 3, "current epoch should have 3 proposals");
 
         assertFalse(
             voteVault.hasClaimedTokenRewardsForEpoch(alice, nextEpoch, address(vote)),
@@ -158,28 +136,21 @@ contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
         // alice and bob have received the same amount of inflation rewards so their balance are the same
         assertEq(vote.balanceOf(alice), vote.balanceOf(bob), "Alice and Bob should have same vote balance");
 
-        // carol votes on proposal 3 only
-        vm.startPrank(carol);
+        // charlie votes on proposal 3 only
+        vm.startPrank(charlie);
         governor.castVote(proposalId3, noVote);
 
-        // carol fails to withdraw vote rewards because she has not voted in all proposals
+        // charlie fails to withdraw vote rewards because he has not voted in all proposals
         vm.expectRevert(IVoteVault.NotVotedOnAllProposals.selector);
         voteVault.withdraw(relevantEpochs, address(vote));
 
         vm.stopPrank();
 
-        // carol voted in 1 proposal
-        // assertEq(
-        //     governor.accountEpochNumProposalsVotedOn(carol, relevantEpochs[0]),
-        //     1,
-        //     "Carol should have voted 1 times in epoch 1"
-        // );
-
         // voting epoch 1 finished, epoch 2 started
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        // carol remains with the same balance
-        assertEq(vote.balanceOf(carol), amountToMint, "Carol should have same vote balance");
+        // charlie remains with the same balance
+        assertEq(vote.balanceOf(charlie), initialBalance, "Charlie should have same vote balance");
 
         // voteVault should have received the remaining inflationary rewards from epoch 1
         assertGt(

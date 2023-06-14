@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "src/periphery/List.sol";
-import "test/Base.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 import "src/interfaces/ISPOG.sol";
 
 contract MockSPOG is ERC165 {
@@ -14,77 +14,71 @@ contract MockSPOG is ERC165 {
     }
 }
 
-contract ListTest is BaseTest {
-    List public list;
+contract ListTest is SPOG_Base {
+    List public listContract = new List("SPOG Collateral Managers List");
 
     // Events to test
     event AddressAdded(address indexed _address);
     event AddressRemoved(address indexed _address);
     event AdminChanged(address indexed _newAdmin);
 
-    function setUp() public {
-        vm.startPrank(msg.sender);
-        createUsers();
-        list = new List("SPOG Collateral Managers List");
-    }
-
     function test_Constructor() public {
-        assertEq(list.admin(), users.admin);
-        assertEq(list.name(), "SPOG Collateral Managers List");
+        assertEq(listContract.admin(), address(this));
+        assertEq(listContract.name(), "SPOG Collateral Managers List");
     }
 
     function test_AddUsers() public {
         // add Alice and check that event `AddressAdded` is emitted
         expectEmit();
-        emit AddressAdded(users.alice);
-        list.add(users.alice);
+        emit AddressAdded(alice);
+        listContract.add(alice);
 
         // list contains only Alice
-        assertTrue(list.contains(users.alice), "Alice is not in the list");
-        assertFalse(list.contains(users.bob), "Bob is in the list");
+        assertTrue(listContract.contains(alice), "Alice is not in the list");
+        assertFalse(listContract.contains(bob), "Bob is in the list");
 
         // add Bob and check that event `AddressAdded` is emitted
         expectEmit();
-        emit AddressAdded(users.bob);
-        list.add(users.bob);
+        emit AddressAdded(bob);
+        listContract.add(bob);
 
         // list contains both Alice and Bob now
-        assertTrue(list.contains(users.alice), "Alice is not in the list");
-        assertTrue(list.contains(users.bob), "Bob is not in the list");
+        assertTrue(listContract.contains(alice), "Alice is not in the list");
+        assertTrue(listContract.contains(bob), "Bob is not in the list");
     }
 
     function test_RemoveUsers() public {
         // add Alice and Bob
-        list.add(users.alice);
-        list.add(users.bob);
+        listContract.add(alice);
+        listContract.add(bob);
 
         // remove Alice and check that event `AddressRemoved` is emitted
         expectEmit();
-        emit AddressRemoved(address(users.alice));
-        list.remove(users.alice);
+        emit AddressRemoved(address(alice));
+        listContract.remove(alice);
 
         // list contains only Bob
-        assertFalse(list.contains(users.alice), "Alice is still in the list");
-        assertTrue(list.contains(users.bob), "Bob is not in the list");
+        assertFalse(listContract.contains(alice), "Alice is still in the list");
+        assertTrue(listContract.contains(bob), "Bob is not in the list");
 
         // remove Bob and check that event `AddressRemoved` is emitted
         expectEmit();
-        emit AddressRemoved(address(users.bob));
-        list.remove(users.bob);
+        emit AddressRemoved(address(bob));
+        listContract.remove(bob);
 
         // list doesn't have users now
-        assertFalse(list.contains(users.alice), "Alice is still in the list");
-        assertFalse(list.contains(users.bob), "Bob is still in the list");
+        assertFalse(listContract.contains(alice), "Alice is still in the list");
+        assertFalse(listContract.contains(bob), "Bob is still in the list");
     }
 
     function test_RemoveUsers_WhenListIsEmpty_OrUserIsNotInTheList() public {
         // list is empty
-        assertFalse(list.contains(users.charlie), "Charlie is in the list");
+        assertFalse(listContract.contains(charlie), "Charlie is in the list");
 
         bytes memory expectedError = abi.encodeWithSignature("AddressIsNotInList()");
 
         vm.expectRevert(expectedError);
-        list.remove(users.charlie);
+        listContract.remove(charlie);
     }
 
     function test_ChangeAdmin() public {
@@ -93,55 +87,55 @@ contract ListTest is BaseTest {
 
         expectEmit();
         emit AdminChanged(newSPOG);
-        list.changeAdmin(newSPOG);
+        listContract.changeAdmin(newSPOG);
 
-        assertEq(list.admin(), newSPOG);
+        assertEq(listContract.admin(), newSPOG);
     }
 
     function test_Revert_ChangeAdmin_WhenNewAdminIsNotSPOG() public {
         // revert when trying to set new admin to non-SPOG address
         vm.expectRevert(ERC165CheckerSPOG.InvalidSPOGInterface.selector);
-        list.changeAdmin(users.alice);
+        listContract.changeAdmin(alice);
 
-        assertEq(list.admin(), users.admin);
+        assertEq(listContract.admin(), address(this));
     }
 
     function test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() public {
-        // Make Alice the default caller instead of admin
-        changePrank({who: users.alice});
         address newSPOG = address(new MockSPOG());
 
         // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
-        list.changeAdmin(newSPOG);
+        // Make Alice the default caller instead of admin
+        vm.prank(alice);
+        listContract.changeAdmin(newSPOG);
 
-        assertEq(list.admin(), users.admin);
+        assertEq(listContract.admin(), address(this));
     }
 
     function test_Revert_Add_WhenCallerIsNotAdmin() public {
         // Make Alice the default caller instead of admin
-        changePrank({who: users.alice});
+        vm.prank(alice);
 
         // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
-        list.add(users.alice);
+        listContract.add(alice);
     }
 
     function test_Revert_Remove_WhenCallerIsNotAdmin() public {
         // Make Alice the default caller instead of admin
-        changePrank({who: users.alice});
+        vm.prank(alice);
 
         // revert when called not by an admin
         vm.expectRevert(NotAdmin.selector);
-        list.remove(users.alice);
+        listContract.remove(alice);
     }
 
     function test_Revert_addWhenAlreadyInList() public {
-        list.add(users.alice);
+        listContract.add(alice);
 
         bytes memory expectedError = abi.encodeWithSignature("AddressIsAlreadyInList()");
 
         vm.expectRevert(expectedError);
-        list.add(users.alice);
+        listContract.add(alice);
     }
 }

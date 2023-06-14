@@ -4,14 +4,11 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 
 contract VoteTokenTest is SPOG_Base {
-    address alice = createUser("alice");
-    address bob = createUser("bob");
-    address carol = createUser("carol");
     address nothing = createUser("nothing");
 
     uint256 aliceStartBalance = 50e18;
     uint256 bobStartBalance = 60e18;
-    uint256 carolStartBalance = 30e18;
+    uint256 charlieStartBalance = 30e18;
 
     ValueToken valueToken;
     VoteToken voteToken;
@@ -23,10 +20,10 @@ contract VoteTokenTest is SPOG_Base {
     function setUp() public override {
         super.setUp();
 
-        // Make sure alice, bob and carol can interact with blockchain
+        // Make sure alice, bob and charlie can interact with blockchain
         vm.deal({account: alice, newBalance: 10 ether});
         vm.deal({account: bob, newBalance: 10 ether});
-        vm.deal({account: carol, newBalance: 10 ether});
+        vm.deal({account: charlie, newBalance: 10 ether});
     }
 
     /**
@@ -38,14 +35,14 @@ contract VoteTokenTest is SPOG_Base {
         // Mint initial balances to users
         valueToken.mint(alice, aliceStartBalance);
         valueToken.mint(bob, bobStartBalance);
-        valueToken.mint(carol, carolStartBalance);
+        valueToken.mint(charlie, charlieStartBalance);
 
         valueToken.transferOwnership(address(spog));
 
         // Check initial balances
         assertEq(valueToken.balanceOf(alice), aliceStartBalance);
         assertEq(valueToken.balanceOf(bob), bobStartBalance);
-        assertEq(valueToken.balanceOf(carol), carolStartBalance);
+        assertEq(valueToken.balanceOf(charlie), charlieStartBalance);
         assertEq(valueToken.totalSupply(), 140e18);
 
         // Create new VoteToken

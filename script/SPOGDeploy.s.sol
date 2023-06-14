@@ -91,6 +91,7 @@ contract SPOGDeployScript is BaseScript {
         taxLowerBound = 0;
         taxUpperBound = 6e18;
 
+        // use existing token or deploy new one
         cash = vm.envOr("WETH_ADDRESS", deployCash());
 
         value = address(new ValueToken("SPOG Value", "VALUE"));
@@ -120,7 +121,7 @@ contract SPOGDeployScript is BaseScript {
                 console.log("Deploying and minting tokens using provided mnemonic in env $MNEMONIC");
             }
 
-            for (uint32 i = 1; i <= 20; i++) {
+            for (uint32 i; i <= 5; i++) {
                 (address user,) = deriveRememberKey(_mnemonic, i);
                 // self delegates when using mnemonic
                 mintTokensAndDelegate(user, 100_000e18, user);

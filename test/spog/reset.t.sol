@@ -4,14 +4,10 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 
 contract SPOG_reset is SPOG_Base {
-    uint8 internal yesVote;
-
     event ResetExecuted(address indexed newVoteToken, address indexed newVoteGovernor, uint256 indexed snapshotId);
 
     function setUp() public override {
         super.setUp();
-
-        yesVote = 1;
     }
 
     /*//////////////////////////////////////////////////////////////
