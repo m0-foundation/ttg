@@ -34,11 +34,13 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error TaxOutOfRange();
     error ZeroInflator();
     error ZeroValueInflation();
-    error ListAdminIsNotSPOG();
+    error AdminIsNotSPOG(address contractAddress);
     error ListIsNotInMasterList();
     error EmergencyMethodNotSupported();
     error ValueTokenMistmatch();
     error InvalidTaxRange();
+
+    function initialize() external;
 
     // Info functions about double governance and SPOG parameters
     function governor() external view returns (ISPOGGovernor);

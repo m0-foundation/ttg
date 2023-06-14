@@ -72,21 +72,19 @@ contract DualGovernor is DualGovernorQuorum {
         _start = block.number;
     }
 
-    /// @notice Initializes SPOG address
-    /// @dev Adds additional intialization for tokens
+    /// @notice Initializes governor, setting SPOG address
+    /// @dev Adds additional checks for tokens because spog is deployed after tokens and governor
     /// @param _spog The address of the SPOG contract
-    function initializeSPOG(address _spog) external override {
+    function initGovernor(address _spog) external override {
         if (address(spog) != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
         // @dev should never happen, precaution
         if (_start == 0) revert ZeroStart();
 
+        if (vote.owner() != _spog) revert AdminIsNotSPOG(address(vote));
+        if (value.owner() != _spog) revert AdminIsNotSPOG(address(value));
+
         spog = ISPOG(_spog);
-        // initialize tokens
-        vote.initializeSPOG(_spog);
-        // TODO: find the way to avoid mistake with initialization for reset
-        // TODO: do not fail if spog address has been already initialized for value token
-        try value.initializeSPOG(_spog) {} catch {}
     }
 
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
@@ -154,7 +152,7 @@ contract DualGovernor is DualGovernorQuorum {
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
             address list = _extractFuncParams(calldatas[0]);
-            if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
+            if (IList(list).admin() != address(spog)) revert AdminIsNotSPOG(list);
         }
 
         spog.chargeFee(msg.sender, func);

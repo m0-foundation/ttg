@@ -2,12 +2,12 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/mocks/ERC20Mock.sol";
-import "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import "script/shared/Base.s.sol";
 
 import "src/core/SPOG.sol";
 import "src/core/governor/DualGovernor.sol";
+import "src/factories/ListFactory.sol";
 import "src/interfaces/tokens/ISPOGVotes.sol";
 import "src/periphery/ERC20PricelessAuction.sol";
 import "src/periphery/vaults/ValueVault.sol";
@@ -15,7 +15,18 @@ import "src/periphery/vaults/VoteVault.sol";
 import "src/tokens/VoteToken.sol";
 import "src/tokens/ValueToken.sol";
 
+import "forge-std/StdJson.sol";
+
 contract SPOGDeployScript is BaseScript {
+    using stdJson for string;
+
+    // must be in alphabetical order
+    struct DistributionList {
+        string balance;
+        address delegate;
+        address recipient;
+    }
+
     address public governor;
     address public spog;
 
@@ -34,14 +45,42 @@ contract SPOGDeployScript is BaseScript {
     address public voteVault;
     address public valueVault;
     address public auction;
+    address public listFactory;
 
-    function setUp() public override {
-        super.setUp();
+    bool public cashDeployed;
 
-        vm.startBroadcast(deployer);
+    function strToUint(string memory _str) public pure returns (uint256 res, bool err) {
+        for (uint256 i = 0; i < bytes(_str).length; i++) {
+            if ((uint8(bytes(_str)[i]) - 48) < 0 || (uint8(bytes(_str)[i]) - 48) > 9) {
+                return (0, false);
+            }
+            res += (uint8(bytes(_str)[i]) - 48) * 10 ** (bytes(_str).length - i - 1);
+        }
 
-        cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18));
+        return (res, true);
+    }
 
+    function deployCash() public returns (address) {
+        cashDeployed = true;
+        return address(new ERC20Mock("Fake WETH", "WETH", msg.sender, 0));
+    }
+
+    function mintTokensAndDelegate(address user, uint256 amount, address delegate) public {
+        console.log("Minting", amount, "tokens for ", user);
+
+        if (cashDeployed) {
+            ERC20Mock(cash).mint(user, amount);
+        }
+        ISPOGVotes(value).mint(user, amount);
+        ISPOGVotes(vote).mint(user, amount);
+
+        console.log("Delegating on behalf of", user, "to ", delegate);
+
+        ISPOGVotes(value).setInitialDelegate(user, delegate);
+        ISPOGVotes(vote).setInitialDelegate(user, delegate);
+    }
+
+    function run() public broadcaster {
         inflator = 10; // 10%
         valueFixedInflation = 100 * 10e18;
 
@@ -52,44 +91,68 @@ contract SPOGDeployScript is BaseScript {
         taxLowerBound = 0;
         taxUpperBound = 6e18;
 
-        value = address(new ValueToken("SPOG Value", "$VALUE"));
-        vote = address(new VoteToken("SPOG Vote", "$VOTE", value));
+        cash = vm.envOr("WETH_ADDRESS", deployCash());
+
+        value = address(new ValueToken("SPOG Value", "VALUE"));
+        vote = address(new VoteToken("SPOG Vote", "VOTE", value));
         auction = address(new ERC20PricelessAuction());
+        listFactory = address(new ListFactory());
+
+        // read distribution list
+        bool distributionListProvided;
+        string memory distributionListText;
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/script/data/distributionList.json");
+        console.log(string.concat("Looking for distribution list at: ", path));
+        try vm.readFile(path) returns (string memory contents) {
+            distributionListProvided = true;
+            distributionListText = contents;
+        } catch {
+            console.log("Could not find distribution list");
+            distributionListText = "";
+        }
+
+        // mint before governor deploy to be in first snapshot
+        if (!distributionListProvided) {
+            if (keccak256(bytes(_mnemonic)) == keccak256(bytes(_TEST_MNEMONIC))) {
+                console.log(string.concat("Deploying and minting tokens using test mnemonic: ", _TEST_MNEMONIC));
+            } else {
+                console.log("Deploying and minting tokens using provided mnemonic in env $MNEMONIC");
+            }
+
+            for (uint32 i = 1; i <= 20; i++) {
+                (address user,) = deriveRememberKey(_mnemonic, i);
+                // self delegates when using mnemonic
+                mintTokensAndDelegate(user, 100_000e18, user);
+            }
+        } else {
+            console.log("Minting tokens using distributionList.json");
+
+            try vm.parseJson(distributionListText) returns (bytes memory json) {
+                console.log("Read distribution json");
+                DistributionList[] memory distributionList = abi.decode(json, (DistributionList[]));
+                console.log("Parsed distribution json");
+                for (uint32 i = 0; i < distributionList.length; i++) {
+                    (uint256 amount, bool success) = strToUint(distributionList[i].balance);
+                    if (!success) {
+                        console.log(
+                            "Could not mint tokens for ", distributionList[i].recipient, "due to invalid balance"
+                        );
+                    } else {
+                        mintTokensAndDelegate(distributionList[i].recipient, amount, distributionList[i].delegate);
+                        console.log("Minted tokens", distributionList[i].balance);
+                        console.log("Delegating to ", distributionList[i].delegate);
+                    }
+                }
+            } catch {
+                console.log("Could not parse distribution list");
+            }
+        }
 
         // deploy governor and vaults
         governor = address(new DualGovernor("SPOG Governor", vote, value, voteQuorum, valueQuorum, time));
         voteVault = address(new VoteVault(governor, auction));
         valueVault = address(new ValueVault(governor));
-
-        // grant minter role for test runner
-        IAccessControl(vote).grantRole(ISPOGVotes(vote).MINTER_ROLE(), msg.sender);
-        IAccessControl(value).grantRole(ISPOGVotes(value).MINTER_ROLE(), msg.sender);
-
-        vm.stopBroadcast();
-    }
-
-    function run() public {
-        setUp();
-
-        vm.startBroadcast(deployer);
-
-        spog = address(createSpog(false));
-
-        console.log("SPOG address: ", spog);
-        console.log("SPOGVote token address: ", vote);
-        console.log("SPOGValue token address: ", value);
-        console.log("DualGovernor address: ", governor);
-        console.log("Cash address: ", cash);
-        console.log("Vote holders vault address: ", voteVault);
-        console.log("Value holders vault address: ", valueVault);
-
-        vm.stopBroadcast();
-    }
-
-    function createSpog(bool runSetup) public returns (SPOG) {
-        if (runSetup) {
-            setUp();
-        }
 
         SPOG.Configuration memory config = SPOG.Configuration(
             payable(address(governor)),
@@ -103,8 +166,23 @@ contract SPOGDeployScript is BaseScript {
             valueFixedInflation
         );
 
-        SPOG newSpog = new SPOG(config);
+        spog = address(new SPOG(config));
 
-        return newSpog;
+        // transfer ownership of tokens to spog
+        VoteToken(vote).transferOwnership(spog);
+        ValueToken(value).transferOwnership(spog);
+
+        SPOG(address(spog)).initialize();
+
+        console.log("SPOG address: ", spog);
+        console.log("SPOGVote token address: ", vote);
+        console.log("SPOGValue token address: ", value);
+        console.log("DualGovernor address: ", governor);
+        console.log("Vote token vault address: ", voteVault);
+        console.log("Value token vault address: ", valueVault);
+        console.log("List Factory address: ", listFactory);
+        if (cashDeployed) {
+            console.log("Cash address: ", cash);
+        }
     }
 }

@@ -14,17 +14,13 @@ contract ValueTokenTest is SPOG_Base {
         super.setUp();
 
         valueToken = new ValueToken("SPOGValue", "value");
-        valueToken.initializeSPOG(address(spog));
-
-        // grant mint role to this contract
-        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
 
         // Alice can interact with blockchain
         vm.deal({account: alice, newBalance: 10 ether});
     }
 
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {
-        vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
+        vm.expectRevert("Ownable: caller is not the owner");
         valueToken.snapshot();
     }
 

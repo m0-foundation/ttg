@@ -40,8 +40,19 @@ contract ValueToken is SPOGVotes, ERC20Snapshot, IValue {
 
     /// @notice Takes a snapshot of account balances and returns snapshot id
     /// @return The snapshot id
-    function snapshot() external override returns (uint256) {
-        if (msg.sender != spog) revert CallerIsNotSPOG();
+    function snapshot() external override onlyOwner returns (uint256) {
         return _snapshot();
+    }
+
+    function owner() public view override(SPOGVotes, ISPOGVotes) returns (address) {
+        return super.owner();
+    }
+
+    function renounceOwnership() public override(SPOGVotes, ISPOGVotes) onlyOwner {
+        super.renounceOwnership();
+    }
+
+    function transferOwnership(address newOwner) public override(SPOGVotes, ISPOGVotes) onlyOwner {
+        super.transferOwnership(newOwner);
     }
 }

@@ -98,9 +98,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // Set configuration data
         governor = ISPOGGovernor(config.governor);
-        // Initialize governor
-        governor.initializeSPOG(address(this));
-
         voteVault = ISPOGVault(config.voteVault);
         valueVault = ISPOGVault(config.valueVault);
         cash = IERC20(config.cash);
@@ -111,10 +108,16 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         valueFixedInflation = config.valueFixedInflation;
     }
 
+    /// @notice Initializes governor contract
+    function initialize() public {
+        // Initialize governor
+        governor.initGovernor(address(this));
+    }
+
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
     function addList(address list) external override onlyGovernance {
-        if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
+        if (IList(list).admin() != address(this)) revert AdminIsNotSPOG(list);
 
         // add the list to the master list
         _masterlist.set(list, inMasterList);
@@ -189,7 +192,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         voteVault = ISPOGVault(newVoteVault);
         governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
-        governor.initializeSPOG(address(this));
+        governor.initGovernor(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token

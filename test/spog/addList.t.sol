@@ -9,20 +9,19 @@ contract SPOG_AddNewList is SPOG_Base {
         spog.addList(address(list));
     }
 
-    function test_Revert_AddNewList_WhenListAdminIsNotSPOG() external {
+    function test_Revert_AddNewList_WhenAdminIsNotSPOG() external {
         // set list admin to different spog
-        SPOG spog2 = deployScript.createSpog(true);
         vm.prank(address(spog));
-        list.changeAdmin(address(spog2));
+        list.changeAdmin(address(0x1));
 
-        bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
+        bytes memory expectedError = abi.encodeWithSignature("AdminIsNotSPOG(address contractAddress)");
 
         vm.expectRevert(expectedError);
         vm.prank(address(governor));
         spog.addList(address(list));
     }
 
-    function test_Revert_DuringProposal_WhenListAdminIsNotSPOG() public {
+    function test_Revert_DuringProposal_WhenAdminIsNotSPOG() public {
         address user = createUser("someUser");
         vm.prank(user);
         List newList = new List("Blah");
@@ -38,7 +37,7 @@ contract SPOG_AddNewList is SPOG_Base {
 
         cash.approve(address(spog), tax);
 
-        bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
+        bytes memory expectedError = abi.encodeWithSignature("AdminIsNotSPOG(address contractAddress)");
         vm.expectRevert(expectedError);
         governor.propose(targets, values, calldatas, description);
     }

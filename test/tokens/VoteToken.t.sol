@@ -34,14 +34,13 @@ contract VoteTokenTest is SPOG_Base {
      */
     function initTokens() private {
         valueToken = new ValueToken("SPOGValue", "value");
-        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
-
-        valueToken.initializeSPOG(address(spog));
 
         // Mint initial balances to users
         valueToken.mint(alice, aliceStartBalance);
         valueToken.mint(bob, bobStartBalance);
         valueToken.mint(carol, carolStartBalance);
+
+        valueToken.transferOwnership(address(spog));
 
         // Check initial balances
         assertEq(valueToken.balanceOf(alice), aliceStartBalance);
@@ -51,7 +50,6 @@ contract VoteTokenTest is SPOG_Base {
 
         // Create new VoteToken
         voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
-        voteToken.initializeSPOG(address(spog));
     }
 
     function resetGovernance() private {
@@ -79,7 +77,7 @@ contract VoteTokenTest is SPOG_Base {
         initTokens();
 
         uint256 randomSnapshotId = 10000;
-        vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
+        vm.expectRevert("Ownable: caller is not the owner");
         voteToken.reset(randomSnapshotId);
     }
 

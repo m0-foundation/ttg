@@ -54,16 +54,13 @@ abstract contract BaseTest is Test {
                                      CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    uint256 internal constant ONE_MILLION_DAI = 1_000_000e18;
-    uint256 internal constant ONE_MILLION_USDC = 1_000_000e6;
+    uint256 internal constant ONE_MILLION_TOKENS = 1_000_000e18;
 
     /*//////////////////////////////////////////////////////////////////////////
                                  TESTING CONTRACTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    ERC20GodMode internal tkn0 = new ERC20GodMode("Token 0", "TKN0", 0);
-    ERC20GodMode internal dai = new ERC20GodMode("Dai Stablecoin", "DAI", 18);
-    ERC20GodMode internal usdc = new ERC20GodMode("USD Coin", "USDC", 6);
+    ERC20GodMode internal cash = new ERC20GodMode("Wrapped ETH", "ETH", 18);
     Users internal users;
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -120,8 +117,7 @@ abstract contract BaseTest is Test {
     function createUser(string memory name) internal returns (address payable addr) {
         addr = payable(makeAddr(name));
         vm.deal({account: addr, newBalance: 1000 ether});
-        dai.mint({account: addr, amount: ONE_MILLION_DAI});
-        usdc.mint({account: addr, amount: ONE_MILLION_USDC});
+        cash.mint({account: addr, amount: ONE_MILLION_TOKENS});
     }
 
     /// @dev Expects an event to be emitted by checking all three topics and the data. As mentioned in the Foundry

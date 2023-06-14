@@ -8,21 +8,6 @@ A SPOG, "Simple Participation Optimized Governance," is a governance mechanism t
 
 ![](assets/SC-architecture-June2023-v1.png)
 
-## Using the NPM Package
-
-```bash
-npm i @mzero-labs/spog
-```
-
-This installs the contract artifacts as a node module for use in Javascript projects.
-
-Example:
-
-```
-const ListABI = require("@mzero-labs/spog").List;
-```
-
-For Typescript bindings, consider adding [TypeChain](https://github.com/dethcrypto/TypeChain) to your project. It can parse the artifacts found in `node_modules/@mzero-labs/spog/out` as a `postinstall` step.
 
 ## Dev Setup
 
@@ -101,3 +86,21 @@ make deploy-spog-local
 ```
 
 You can now do local development and testing against the RPC endpoint http://localhost:8545
+
+
+## Deployment
+
+The deployment script uses an environment variable `MNEMONIC` to derive the deployment account. 
+
+* For development, a test mnemonic is used by default. The wallet will have ETH on Hardhat or Anvil.
+* For testnet or mainnet deployments, you will want to use a private mnemonic.
+
+The deployment script also uses an environment variable `WETH_ADDRESS`. If this is provided, it is used as the internal payment token for proposals. If it is not provided, the script deploys a mock ERC20 and mints tokens (for mnemonics only. See next section)
+
+### Minting and delegation during deployment 
+
+The deployment script first checks for `script/data/distributionList.json` and if the file exists, it uses it for the initial distribution and delegation
+
+If the distribution file does not exist, it falls back to using a Mnemonic.
+
+When using a mnemonic, it generates 20 accounts and mints 100_000e18 tokens for all of them.

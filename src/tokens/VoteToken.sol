@@ -30,9 +30,8 @@ contract VoteToken is SPOGVotes, IVote {
 
     /// @notice SPOG initializes reset snapshot
     /// @param _resetSnapshotId Snapshot id of the moment of reset
-    function reset(uint256 _resetSnapshotId) external override {
+    function reset(uint256 _resetSnapshotId) external override onlyOwner {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
-        if (msg.sender != spog) revert CallerIsNotSPOG();
 
         resetSnapshotId = _resetSnapshotId;
 
@@ -61,5 +60,17 @@ contract VoteToken is SPOGVotes, IVote {
     /// @dev Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
     function resetBalanceOf(address account) public view override returns (uint256) {
         return ERC20Snapshot(valueToken).balanceOfAt(account, resetSnapshotId);
+    }
+
+    function owner() public view override(SPOGVotes, ISPOGVotes) returns (address) {
+        return super.owner();
+    }
+
+    function renounceOwnership() public override(SPOGVotes, ISPOGVotes) onlyOwner {
+        super.renounceOwnership();
+    }
+
+    function transferOwnership(address newOwner) public override(SPOGVotes, ISPOGVotes) onlyOwner {
+        super.transferOwnership(newOwner);
     }
 }

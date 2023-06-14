@@ -42,9 +42,6 @@ contract VoteVaultTest is BaseTest {
         vault = new VoteVault(address(voteGovernor), address(auctionImplementation));
         spogAddress = address(vault.governor().spog());
         voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
-
-        // mint tokens to vault
-        deal({token: address(dai), to: address(vault), give: 1000e18, adjust: true});
     }
 
     function test_deposit() public {

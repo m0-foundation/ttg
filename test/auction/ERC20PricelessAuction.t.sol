@@ -27,7 +27,7 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
         mintAndApproveVoteTokens(1000e18);
 
         vm.prank(fakeVault);
-        IERC20PricelessAuction(auction).initialize(address(voteToken), address(usdc), auctionDuration, 1000e18);
+        IERC20PricelessAuction(auction).initialize(address(voteToken), address(cash), auctionDuration, 1000e18);
     }
 
     function mintAndApproveVoteTokens(uint256 amount) internal {
@@ -41,7 +41,7 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
     }
 
     function test_getCurrentPrice() public {
-        assertEq(auction.getCurrentPrice(), usdc.totalSupply() / 1000);
+        assertEq(auction.getCurrentPrice(), cash.totalSupply() / 1000);
 
         for (uint256 i = 0; i < 30 * 24; i++) {
             vm.roll(block.number + 1);
@@ -62,9 +62,9 @@ contract ERC20PricelessAuctionTest is SPOG_Base {
 
             uint256 buy = 10e18;
             if (price <= 1000e6 && voteToken.balanceOf(address(auction)) >= buy) {
-                usdc.mint(buyer, buy);
+                cash.mint(buyer, buy);
                 vm.prank(buyer);
-                usdc.approve(address(auction), buy);
+                cash.approve(address(auction), buy);
 
                 vm.prank(buyer);
                 auction.buyTokens(buy);

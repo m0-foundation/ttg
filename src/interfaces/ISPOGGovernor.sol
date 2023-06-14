@@ -25,7 +25,7 @@ interface IDualGovernor {
     error InvalidTarget();
     error InvalidValue();
     error InvalidMethod();
-    error ListAdminIsNotSPOG();
+    error AdminIsNotSPOG(address contractAddress);
     error AlreadyInitialized();
     error AlreadyVoted();
     error ZeroSPOGAddress();
@@ -50,7 +50,7 @@ interface IDualGovernor {
     function value() external view returns (IValue);
 
     // Utility functions
-    function initializeSPOG(address spog) external;
+    function initGovernor(address) external;
     function isGovernedMethod(bytes4 func) external pure returns (bool);
     function emergencyProposals(uint256 proposalId) external view returns (bool);
 

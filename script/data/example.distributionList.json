@@ -1,0 +1,12 @@
+[
+  {
+    "balance": "100000000000000000000",
+    "delegate": "0x8320899ACd9621C8BeAe48D12c2308661AAAAD9D",
+    "recipient": "0x55780786Cb31220f14F733121fbd6e9EbbFA60A7"
+  },
+  {
+    "balance": "100000000000000000000",
+    "delegate": "0x55780786Cb31220f14F733121fbd6e9EbbFA60A7",
+    "recipient": "0x8320899ACd9621C8BeAe48D12c2308661AAAAD9D"
+  }
+]
