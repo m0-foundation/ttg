@@ -25,7 +25,7 @@ interface IDualGovernor {
     error InvalidTarget();
     error InvalidValue();
     error InvalidMethod();
-    error AdminIsNotSPOG(address contractAddress);
+    error AdminIsNotSPOG();
     error AlreadyInitialized();
     error AlreadyVoted();
     error ZeroSPOGAddress();

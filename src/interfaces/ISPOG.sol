@@ -34,7 +34,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error TaxOutOfRange();
     error ZeroInflator();
     error ZeroValueInflation();
-    error AdminIsNotSPOG(address contractAddress);
+    error AdminIsNotSPOG();
     error ListIsNotInMasterList();
     error EmergencyMethodNotSupported();
     error ValueTokenMistmatch();

@@ -12,12 +12,17 @@ contract SPOG_SellInactiveVoteInflation is SPOG_Base {
         // deposit rewards for previous epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 adminBalance = vote.balanceOf(address(this));
+        uint256 adminBalance = vote.balanceOf(admin);
         uint256 aliceBalance = vote.balanceOf(alice);
         uint256 bobBalance = vote.balanceOf(bob);
         uint256 charlieBalance = vote.balanceOf(charlie);
+        uint256 daveBalance = vote.balanceOf(dave);
 
-        assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + charlieBalance);
+        uint256 userBalances = adminBalance + aliceBalance + bobBalance + charlieBalance + daveBalance;
+
+        console.log("balances", initialBalance, userBalances);
+
+        assertEq(initialBalance, userBalances);
 
         // alice votes
         vm.startPrank(alice);
@@ -29,7 +34,12 @@ contract SPOG_SellInactiveVoteInflation is SPOG_Base {
         governor.castVote(proposalId, noVote);
         vm.stopPrank();
 
-        //admin and charlie do not vote
+        // charlie votes
+        vm.startPrank(charlie);
+        governor.castVote(proposalId, noVote);
+        vm.stopPrank();
+
+        //admin and dave do not vote
 
         // inflation should have happened
         uint256 inflatedBalance = governor.vote().totalSupply();
@@ -47,8 +57,8 @@ contract SPOG_SellInactiveVoteInflation is SPOG_Base {
         // anyone can call
         voteVault.sellInactiveVoteInflation(epochs);
 
-        // hard coded scenario uses half of voting weight
-        uint256 inactiveCoinsInflation = totalInflation / 2;
+        // scenario uses 3/5 voting weight
+        uint256 inactiveCoinsInflation = totalInflation / 5 * 2;
 
         assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation - inactiveCoinsInflation);
     }
@@ -76,21 +86,14 @@ contract SPOG_SellInactiveVoteInflation is SPOG_Base {
         voteVault.sellInactiveVoteInflation(epochs);
     }
 
-    function test_sellInactiveVoteInflation_withFuzzBalances(uint256 daveBalance, uint256 ernieBalance) public {
-        vm.assume(daveBalance > 0);
+    function test_sellInactiveVoteInflation_withFuzzBalances(uint256 ernieBalance) public {
         vm.assume(ernieBalance > 0);
 
-        vm.assume(daveBalance < 1_000_000_000_000e18); // less than a billion
         vm.assume(ernieBalance < 1_000_000_000_000e18); // less than a billion
 
-        address dave = createUser("dave");
         address ernie = createUser("ernie");
 
-        vote.mint(dave, daveBalance);
-        vm.startPrank(dave);
-        vote.delegate(dave);
-        vm.stopPrank();
-
+        vm.prank(address(spog));
         vote.mint(ernie, ernieBalance);
         vm.startPrank(ernie);
         vote.delegate(ernie);
@@ -103,10 +106,11 @@ contract SPOG_SellInactiveVoteInflation is SPOG_Base {
         // deposit rewards for previous epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 adminBalance = vote.balanceOf(address(this));
+        uint256 adminBalance = vote.balanceOf(admin);
         uint256 aliceBalance = vote.balanceOf(alice);
         uint256 bobBalance = vote.balanceOf(bob);
         uint256 charlieBalance = vote.balanceOf(charlie);
+        uint256 daveBalance = vote.balanceOf(dave);
 
         assertEq(initialBalance, adminBalance + aliceBalance + bobBalance + charlieBalance + daveBalance + ernieBalance);
 
@@ -121,8 +125,6 @@ contract SPOG_SellInactiveVoteInflation is SPOG_Base {
         vm.stopPrank();
 
         //admin and charlie do not vote
-
-        // dave does not vote with fuzz balance
 
         // ernie votes with fuzz balance
         vm.startPrank(ernie);

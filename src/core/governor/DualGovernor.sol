@@ -81,8 +81,8 @@ contract DualGovernor is DualGovernorQuorum {
         // @dev should never happen, precaution
         if (_start == 0) revert ZeroStart();
 
-        if (vote.owner() != _spog) revert AdminIsNotSPOG(address(vote));
-        if (value.owner() != _spog) revert AdminIsNotSPOG(address(value));
+        if (vote.owner() != _spog) revert AdminIsNotSPOG();
+        if (value.owner() != _spog) revert AdminIsNotSPOG();
 
         spog = ISPOG(_spog);
     }
@@ -152,7 +152,7 @@ contract DualGovernor is DualGovernorQuorum {
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
             address list = _extractFuncParams(calldatas[0]);
-            if (IList(list).admin() != address(spog)) revert AdminIsNotSPOG(list);
+            if (IList(list).admin() != address(spog)) revert AdminIsNotSPOG();
         }
 
         spog.chargeFee(msg.sender, func);

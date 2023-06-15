@@ -64,21 +64,39 @@ contract SPOG_change is SPOG_Base {
         uint256 taxLowerBound = spog.taxLowerBound();
         uint256 taxUpperBound = spog.taxUpperBound();
 
-        // give alice vote power
-        ISPOGVotes(vote).mint(alice, 95e18);
-        vm.startPrank(alice);
-        ISPOGVotes(vote).delegate(alice);
+        // burn value tokens
+        vm.prank(admin);
+        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(admin));
+
+        vm.prank(alice);
+        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(alice));
+
+        vm.prank(bob);
+        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(bob));
+
+        vm.prank(charlie);
+        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(charlie));
+
+        vm.prank(dave);
+        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(dave));
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
+        // cast vote on proposal
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
+        governor.castVote(proposalId, yesVote);
 
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
 
-        assertTrue(yesVoteVotes == 95e18, "Yes vote votes should be 95");
+        assertTrue(yesVoteVotes == 300_000e18, "Yes vote votes should match");
         assertTrue(noVoteVotes == 0, "No vote votes should be 0");
         assertTrue(yesValueVotes == 0, "Yes value votes should be 0");
         assertTrue(noValueVotes == 0, "No value votes should be 0");
@@ -109,16 +127,34 @@ contract SPOG_change is SPOG_Base {
         uint256 taxLowerBound = spog.taxLowerBound();
         uint256 taxUpperBound = spog.taxUpperBound();
 
-        // give alice vote power
-        ISPOGVotes(value).mint(alice, 95e18);
-        vm.startPrank(alice);
-        ISPOGVotes(value).delegate(alice);
+        // burn vote tokens
+        vm.prank(admin);
+        ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(admin));
+
+        vm.prank(alice);
+        ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(alice));
+
+        vm.prank(bob);
+        ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(bob));
+
+        vm.prank(charlie);
+        ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(charlie));
+
+        vm.prank(dave);
+        ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(dave));
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
+        // cast vote on proposal
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
+        governor.castVote(proposalId, yesVote);
 
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
@@ -182,6 +218,13 @@ contract SPOG_change is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote and value holders vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -230,6 +273,13 @@ contract SPOG_change is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote and value holders vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -274,6 +324,13 @@ contract SPOG_change is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote and value holders vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period

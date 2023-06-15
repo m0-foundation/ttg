@@ -24,6 +24,11 @@ contract SPOG_Base is BaseTest {
     IList public list;
     ERC20Mock public cash;
 
+    uint256 public taxLowerBound;
+    uint256 public taxUpperBound;
+    uint256 public inflator;
+    uint256 public valueFixedInflation;
+
     uint256 public tax;
 
     uint8 noVote = 0;
@@ -52,6 +57,11 @@ contract SPOG_Base is BaseTest {
         valueVault = ValueVault(deployScript.valueVault());
         tax = deployScript.tax();
         cash = ERC20Mock(deployScript.cash());
+
+        taxLowerBound = deployScript.taxLowerBound();
+        taxUpperBound = deployScript.taxUpperBound();
+        inflator = deployScript.inflator();
+        valueFixedInflation = deployScript.valueFixedInflation();
 
         // msg.sender can propose with cash
         cash.mint(address(this), 100e18);

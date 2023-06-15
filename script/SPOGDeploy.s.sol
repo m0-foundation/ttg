@@ -121,7 +121,7 @@ contract SPOGDeployScript is BaseScript {
                 console.log("Deploying and minting tokens using provided mnemonic in env $MNEMONIC");
             }
 
-            for (uint32 i; i <= 5; i++) {
+            for (uint32 i; i < 5; i++) {
                 (address user,) = deriveRememberKey(_mnemonic, i);
                 // self delegates when using mnemonic
                 mintTokensAndDelegate(user, 100_000e18, user);

@@ -117,7 +117,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
     function addList(address list) external override onlyGovernance {
-        if (IList(list).admin() != address(this)) revert AdminIsNotSPOG(list);
+        if (IList(list).admin() != address(this)) revert AdminIsNotSPOG();
 
         // add the list to the master list
         _masterlist.set(list, inMasterList);

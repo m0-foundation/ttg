@@ -3,6 +3,8 @@ pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
 
+import "script/SPOGDeploy.s.sol";
+
 contract SPOG_AddNewList is SPOG_Base {
     function test_Revert_AddNewList_WhenCallerIsNotSPOG() external {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
@@ -10,11 +12,16 @@ contract SPOG_AddNewList is SPOG_Base {
     }
 
     function test_Revert_AddNewList_WhenAdminIsNotSPOG() external {
+        SPOGDeployScript deployScript = new SPOGDeployScript();
+        deployScript.run();
+
+        ISPOG newSpog = ISPOG(deployScript.spog());
+
         // set list admin to different spog
         vm.prank(address(spog));
-        list.changeAdmin(address(0x1));
+        list.changeAdmin(address(newSpog));
 
-        bytes memory expectedError = abi.encodeWithSignature("AdminIsNotSPOG(address contractAddress)");
+        bytes memory expectedError = abi.encodeWithSignature("AdminIsNotSPOG()");
 
         vm.expectRevert(expectedError);
         vm.prank(address(governor));
@@ -37,7 +44,7 @@ contract SPOG_AddNewList is SPOG_Base {
 
         cash.approve(address(spog), tax);
 
-        bytes memory expectedError = abi.encodeWithSignature("AdminIsNotSPOG(address contractAddress)");
+        bytes memory expectedError = abi.encodeWithSignature("AdminIsNotSPOG()");
         vm.expectRevert(expectedError);
         governor.propose(targets, values, calldatas, description);
     }
