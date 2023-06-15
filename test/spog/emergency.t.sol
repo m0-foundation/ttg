@@ -231,12 +231,6 @@ contract SPOG_emergency is SPOG_Base {
         vm.prank(alice);
         governor.castVote(proposalId, yesVote);
 
-        vm.prank(bob);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(charlie);
-        governor.castVote(proposalId, yesVote);
-
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
@@ -267,12 +261,6 @@ contract SPOG_emergency is SPOG_Base {
 
         // cast vote on proposal
         vm.prank(alice);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(bob);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -327,12 +315,6 @@ contract SPOG_emergency is SPOG_Base {
         vm.prank(alice);
         governor.castVote(proposalId, yesVote);
 
-        vm.prank(bob);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(charlie);
-        governor.castVote(proposalId, yesVote);
-
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
@@ -363,12 +345,6 @@ contract SPOG_emergency is SPOG_Base {
 
         // cast vote on proposal
         vm.prank(alice);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(bob);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -424,12 +400,6 @@ contract SPOG_emergency is SPOG_Base {
         vm.prank(alice);
         governor.castVote(proposalId, yesVote);
 
-        vm.prank(bob);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(charlie);
-        governor.castVote(proposalId, yesVote);
-
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
@@ -462,12 +432,6 @@ contract SPOG_emergency is SPOG_Base {
 
         // cast vote on proposal
         vm.prank(alice);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(bob);
-        governor.castVote(proposalId, yesVote);
-
-        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period

@@ -11,8 +11,6 @@ contract SPOG_change is SPOG_Base {
 
     function setUp() public override {
         super.setUp();
-
-        alice = payable(makeAddr("alice"));
     }
 
     function proposeTaxRangeChange(string memory proposalDescription)
@@ -65,38 +63,42 @@ contract SPOG_change is SPOG_Base {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // burn value tokens
-        vm.prank(admin);
+        vm.startPrank(admin);
         ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(admin));
+        vm.stopPrank();
 
-        vm.prank(alice);
+        vm.startPrank(alice);
         ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(alice));
+        vm.stopPrank();
 
-        vm.prank(bob);
+        vm.startPrank(bob);
         ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(bob));
+        vm.stopPrank();
 
-        vm.prank(charlie);
-        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(charlie));
-
-        vm.prank(dave);
-        ISPOGVotes(value).burn(ISPOGVotes(value).balanceOf(dave));
+        // do not burn charlie or dave's value tokens
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
+        console.log(ISPOGVotes(vote).balanceOf(admin));
+        vm.prank(admin);
+        governor.castVote(proposalId, yesVote);
+
+        console.log(ISPOGVotes(vote).balanceOf(alice));
         vm.prank(alice);
         governor.castVote(proposalId, yesVote);
 
+        console.log(ISPOGVotes(vote).balanceOf(bob));
         vm.prank(bob);
         governor.castVote(proposalId, yesVote);
 
-        vm.prank(charlie);
-        governor.castVote(proposalId, yesVote);
+        // charlie and dave hold value but do not vote
 
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
 
-        assertTrue(yesVoteVotes == 300_000e18, "Yes vote votes should match");
+        assertEq(yesVoteVotes, 300_000e18);
         assertTrue(noVoteVotes == 0, "No vote votes should be 0");
         assertTrue(yesValueVotes == 0, "Yes value votes should be 0");
         assertTrue(noValueVotes == 0, "No value votes should be 0");
@@ -128,20 +130,25 @@ contract SPOG_change is SPOG_Base {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // burn vote tokens
-        vm.prank(admin);
+        vm.startPrank(admin);
         ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(admin));
+        vm.stopPrank();
 
-        vm.prank(alice);
+        vm.startPrank(alice);
         ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(alice));
+        vm.stopPrank();
 
-        vm.prank(bob);
+        vm.startPrank(bob);
         ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(bob));
+        vm.stopPrank();
 
-        vm.prank(charlie);
+        vm.startPrank(charlie);
         ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(charlie));
+        vm.stopPrank();
 
-        vm.prank(dave);
+        vm.startPrank(dave);
         ISPOGVotes(vote).burn(ISPOGVotes(vote).balanceOf(dave));
+        vm.stopPrank();
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -161,7 +168,7 @@ contract SPOG_change is SPOG_Base {
 
         assertTrue(yesVoteVotes == 0, "Yes vote votes should be 0");
         assertTrue(noVoteVotes == 0, "No vote votes should be 0");
-        assertTrue(yesValueVotes == 95e18, "Yes value votes should be 95e18");
+        assertEq(yesValueVotes, 300_000e18);
         assertTrue(noValueVotes == 0, "No value votes should be 0");
 
         // fast forward to end of voting period

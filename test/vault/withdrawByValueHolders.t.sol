@@ -61,15 +61,16 @@ contract Vault_WithdrawRewardsForValueHolders is SPOG_Base {
         // advance to next epoch so msg.sender can take rewards from previous epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        // rewards is divvied up equally among value holders (alice, bob, charlie, and address(this))
-        uint256 rewardAmountToReceive = epochCashRewards / 4;
+        // rewards is divvied up equally among 5 default value holders
+        uint256 rewardAmountToReceive = epochCashRewards / 5;
 
         // first value holder withdraws rewards
-        uint256 initialBalanceOfCash = cash.balanceOf(address(this));
+        uint256 initialBalanceOfCash = cash.balanceOf(address(admin));
 
+        vm.prank(admin);
         valueVault.withdraw(epochsToGetRewardsFor, address(cash));
 
-        uint256 finalBalanceOfCash = cash.balanceOf(address(this));
+        uint256 finalBalanceOfCash = cash.balanceOf(address(admin));
         assertEq(
             finalBalanceOfCash, initialBalanceOfCash + rewardAmountToReceive, "Vault should have balance of Cash value"
         );
@@ -153,13 +154,14 @@ contract Vault_WithdrawRewardsForValueHolders is SPOG_Base {
         // advance to next epoch so msg.sender can withdraw rewards
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 initialBalanceOfCash = cash.balanceOf(address(this));
+        uint256 initialBalanceOfCash = cash.balanceOf(address(admin));
 
         uint256 balanceOfValueVaultBefore = cash.balanceOf(address(valueVault));
 
+        vm.prank(admin);
         valueVault.withdraw(epochsToGetRewardsFor, address(cash));
 
-        uint256 finalBalanceOfCash = cash.balanceOf(address(this));
+        uint256 finalBalanceOfCash = cash.balanceOf(address(admin));
 
         uint256 balanceOfValueVaultAfter = cash.balanceOf(address(valueVault));
 
