@@ -41,7 +41,15 @@ contract SPOG_changeTax is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
+        governor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
@@ -75,7 +83,15 @@ contract SPOG_changeTax is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
+        governor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 

@@ -120,6 +120,13 @@ contract SPOG_reset is SPOG_Base {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // value holders vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period

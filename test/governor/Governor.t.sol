@@ -187,6 +187,14 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         // fast forward to an active voting period. epoch 1
         vm.roll(block.number + governor.votingDelay() + 1);
+
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         uint256 voteSupplyAfterVoting = vote.totalSupply();
@@ -260,6 +268,13 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + governor.votingDelay() + 1);
 
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period

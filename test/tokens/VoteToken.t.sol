@@ -16,16 +16,6 @@ contract VoteTokenTest is SPOG_Base {
     event ResetInitialized(uint256 indexed resetSnapshotId);
     event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
 
-    // Setup function, add test-specific initializations here
-    function setUp() public override {
-        super.setUp();
-
-        // Make sure alice, bob and charlie can interact with blockchain
-        vm.deal({account: alice, newBalance: 10 ether});
-        vm.deal({account: bob, newBalance: 10 ether});
-        vm.deal({account: charlie, newBalance: 10 ether});
-    }
-
     /**
      * Helpers
      */
@@ -47,6 +37,8 @@ contract VoteTokenTest is SPOG_Base {
 
         // Create new VoteToken
         voteToken = new VoteToken("SPOGVote", "vote", address(valueToken));
+
+        voteToken.transferOwnership(address(spog));
     }
 
     function resetGovernance() private {

@@ -12,9 +12,6 @@ contract SPOG_change is SPOG_Base {
     function setUp() public override {
         super.setUp();
 
-        yesVote = 1;
-        noVote = 0;
-
         alice = payable(makeAddr("alice"));
     }
 

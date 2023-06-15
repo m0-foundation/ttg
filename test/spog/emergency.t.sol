@@ -26,9 +26,6 @@ contract SPOG_emergency is SPOG_Base {
 
         emergencyTaxMultiplier = 12;
 
-        noVote = 0;
-        yesVote = 1;
-
         // Initial state - list contains 1 merchant
         addNewListToSpogAndAppendAnAddressToIt();
         addressToChange = address(0x1234);
@@ -231,6 +228,13 @@ contract SPOG_emergency is SPOG_Base {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // cast vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // check proposal is succeeded
@@ -262,6 +266,13 @@ contract SPOG_emergency is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -313,6 +324,13 @@ contract SPOG_emergency is SPOG_Base {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // cast vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // check proposal is succeeded
@@ -344,6 +362,13 @@ contract SPOG_emergency is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period
@@ -396,6 +421,13 @@ contract SPOG_emergency is SPOG_Base {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // cast vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // check proposal is succeeded
@@ -429,6 +461,13 @@ contract SPOG_emergency is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
+        vm.prank(alice);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
 
         // fast forward to end of voting period

@@ -75,8 +75,15 @@ contract SPOG_AddNewList is SPOG_Base {
         assertFalse(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Already in succeeded state");
 
         // cast vote on proposal
-        uint8 yesVote = uint8(VoteType.Yes);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
+
+        vm.prank(bob);
+        governor.castVote(proposalId, yesVote);
+
+        vm.prank(charlie);
+        governor.castVote(proposalId, yesVote);
+
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 

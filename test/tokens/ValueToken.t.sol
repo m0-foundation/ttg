@@ -13,9 +13,7 @@ contract ValueTokenTest is SPOG_Base {
         super.setUp();
 
         valueToken = new ValueToken("SPOGValue", "value");
-
-        // Alice can interact with blockchain
-        vm.deal({account: alice, newBalance: 10 ether});
+        valueToken.transferOwnership(address(spog));
     }
 
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {
@@ -25,6 +23,7 @@ contract ValueTokenTest is SPOG_Base {
 
     function test_snapshot() public {
         // Mint initial balance for alice
+        vm.prank(address(spog));
         valueToken.mint(alice, aliceStartBalance);
         assertEq(valueToken.balanceOf(alice), aliceStartBalance);
 
@@ -40,6 +39,7 @@ contract ValueTokenTest is SPOG_Base {
         address user = createUser("user");
 
         // test mint
+        vm.prank(address(spog));
         valueToken.mint(user, 100);
 
         assertEq(valueToken.balanceOf(user), 100);
