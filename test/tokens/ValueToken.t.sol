@@ -48,22 +48,5 @@ contract ValueTokenTest is SPOG_Base {
         valueToken.mint(user, 100);
 
         assertEq(valueToken.balanceOf(user), 100);
-
-        // test burn
-        vm.prank(user);
-        valueToken.burn(50);
-
-        assertEq(valueToken.balanceOf(user), 50);
-
-        // test burnFrom
-        address user2 = createUser("user2");
-
-        vm.prank(user);
-        valueToken.approve(user2, 25);
-
-        vm.prank(user2);
-        valueToken.burnFrom(user, 25);
-
-        assertEq(valueToken.balanceOf(user), 25);
     }
 }

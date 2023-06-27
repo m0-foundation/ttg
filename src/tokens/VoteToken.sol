@@ -3,14 +3,14 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 
-import "./SPOGVotes.sol";
+import "./InflationaryVotes.sol";
 import "src/interfaces/tokens/IVote.sol";
 
 /// @title VoteToken
 /// @dev It relies of snapshotted balances of Value token holders at the moment of reset
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
-contract VoteToken is SPOGVotes, IVote {
+contract VoteToken is InflationaryVotes, IVote {
     /// @notice value token to take snapshot from
     address public immutable valueToken;
 
@@ -24,7 +24,7 @@ contract VoteToken is SPOGVotes, IVote {
     /// @param name Name of the token
     /// @param symbol Symbol of the token
     /// @param _valueToken Address of the value token for reset
-    constructor(string memory name, string memory symbol, address _valueToken) SPOGVotes(name, symbol) {
+    constructor(string memory name, string memory symbol, address _valueToken) InflationaryVotes(name, symbol) {
         valueToken = _valueToken;
     }
 

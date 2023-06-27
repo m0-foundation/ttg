@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import "src/interfaces/IList.sol";
 import "src/core/governor/DualGovernorQuorum.sol";
+import "src/tokens/InflationaryVotes.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
@@ -29,6 +30,12 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice The list cof emergency proposals, (proposalId => true)
     mapping(uint256 => bool) public override emergencyProposals;
+
+    /// @notice The list of epochs in which delegate voted on all proposals
+    mapping(address => uint256) public override numActiveEpochs;
+
+    // /// @notice The number of active epochs that inflate voting power and token supply
+    // uint256 public numActiveEpochs;
 
     /// @dev The voting period in blocks
     uint256 private immutable _votingPeriod;
@@ -167,6 +174,7 @@ contract DualGovernor is DualGovernorQuorum {
         } else {
             // do not inflate tokens for emergency and reset proposals
             spog.inflateRewardTokens();
+            // numActiveEpochs++;
             proposalId = super.propose(targets, values, calldatas, description);
         }
 
@@ -239,6 +247,14 @@ contract DualGovernor is DualGovernorQuorum {
         // update cumulative vote weight for epoch if user voted for all proposals
         if (epochBasic.numVotedOn[account] == epochBasic.numProposals) {
             epochBasic.totalVotesWeight += weight;
+            numActiveEpochs[account] += 1;
+
+            // calculate and mint voting power reward
+            uint256 epochVotes = vote.getPastVotes(account, startOf(epoch));
+            // TODO: move 100 in denominator constant
+            uint256 reward = spog.inflator() * epochVotes / 100;
+            // TODO: do better conversion here
+            InflationaryVotes(address(vote)).mintVotingPowerReward(account, reward);
         }
     }
 
