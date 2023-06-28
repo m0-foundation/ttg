@@ -17,7 +17,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     }
 
     // Events
-    event ListAdded(address indexed list);
+    event ListAdded(address indexed list, string name);
     event AddressAppendedToList(address indexed list, address indexed account);
     event AddressRemovedFromList(address indexed list, address indexed account);
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
