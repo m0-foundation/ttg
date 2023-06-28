@@ -279,6 +279,47 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         proposeAddingNewListToSpog("new list to spog 2");
     }
 
+    function test_CanVoteOnMultipleProposals() public {
+        // propose adding a new list to spog
+        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Add another new list to spog");
+
+        // vote balance of voter
+        uint256 voteBalance = vote.balanceOf(address(this));
+
+        // fast forward to an active voting period
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        // cast vote on both proposals
+        uint256[] memory proposalIds = new uint256[](2);
+        proposalIds[0] = proposalId;
+        proposalIds[1] = proposalId2;
+
+        uint8[] memory badVotes = new uint8[](1);
+        badVotes[0] = yesVote;
+
+        vm.expectRevert("DualGovernor: proposalIds and votes length mismatch");
+        governor.castVotes(proposalIds, badVotes);
+
+        uint8[] memory votes = new uint8[](2);
+        votes[0] = yesVote;
+        votes[1] = yesVote;
+
+        governor.castVotes(proposalIds, votes);
+
+        // check that proposal 1 has 1 vote
+        (uint256 proposalNoVotes, uint256 proposalYesVotes) = governor.proposalVotes(proposalId);
+
+        assertEq(proposalYesVotes, voteBalance, "Proposal does not have expected yes vote");
+        assertEq(proposalNoVotes, 0, "Proposal does not have 0 no vote");
+
+        // check that proposal 2 has 1 vote
+        (uint256 proposal2NoVotes, uint256 proposal2YesVotes) = governor.proposalVotes(proposalId2);
+
+        assertEq(proposal2YesVotes, voteBalance, "Proposal does not have expected yes vote");
+        assertEq(proposal2NoVotes, 0, "Proposal does not have 0 no vote");
+    }
+
     function test_Revert_Propose_WhenMoreThanOneProposalPassed() public {
         // set data for 2 proposals at once
         address[] memory targets = new address[](2);
