@@ -73,7 +73,7 @@ interface IDualGovernor {
     function currentEpoch() external view returns (uint256);
     function startOf(uint256 epoch) external view returns (uint256);
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
-    function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
+    function isActive(uint256 epoch, address account) external view returns (bool);
     function delegateActivity(address account) external view returns (uint256);
 }
 

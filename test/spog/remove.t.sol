@@ -47,7 +47,7 @@ contract SPOG_RemoveAddressFromList is SPOG_Base {
 
         // assert that vault has cash balance paid for proposals
         assertTrue(
-            cash.balanceOf(address(valueVault)) == tax * 3,
+            cash.balanceOf(address(vault)) == tax * 3,
             "Balance of SPOG should be 3x tax, one from adding the list to the SPOG, one from append an address to the list,  and one from the current proposal"
         );
 

@@ -16,8 +16,7 @@ contract SPOG_InitialState is SPOG_Base {
 
     function test_SPOGHasSetInitialValuesCorrectly() public {
         assertEq(address(spog.governor()), deployScript.governor(), "governor not set correctly");
-        assertEq(address(spog.voteVault()), deployScript.voteVault(), "voteVault not set correctly");
-        assertEq(address(spog.valueVault()), deployScript.valueVault(), "valueVault not set correctly");
+        assertEq(address(spog.vault()), deployScript.vault(), "vault not set correctly");
         assertEq(address(spog.cash()), deployScript.cash(), "cash not set correctly");
         assertEq(spog.inflator(), deployScript.inflator(), "inflator not set correctly");
         assertEq(
@@ -35,60 +34,27 @@ contract SPOG_InitialState is SPOG_Base {
     }
 
     function test_Revert_WhenSettingIncorrectInitialValues() public {
-        address _voteVault = makeAddr("VoteVault");
-        address _valueVault = makeAddr("ValueVault");
+        address _vault = makeAddr("Vault");
         address _governor = makeAddr("SPOGGovernor");
 
         // if (config.governor == address(0)) revert ZeroGovernorAddress();
         SPOG.Configuration memory configInvalidGovernor = SPOG.Configuration(
-            payable(address(0)),
-            _voteVault,
-            _valueVault,
-            _cash,
-            _tax,
-            _taxLowerBound,
-            _taxUpperBound,
-            _inflator,
-            _valueFixedInflation
+            payable(address(0)), _vault, _cash, _tax, _taxLowerBound, _taxUpperBound, _inflator, _valueFixedInflation
         );
         vm.expectRevert(ISPOG.ZeroGovernorAddress.selector);
         new SPOG(configInvalidGovernor);
 
-        // if (config.voteVault == address(0)) revert ZeroVaultAddress();
-        SPOG.Configuration memory configInvalidVoteVault = SPOG.Configuration(
-            payable(_governor),
-            address(0),
-            _valueVault,
-            _cash,
-            _tax,
-            _taxLowerBound,
-            _taxUpperBound,
-            _inflator,
-            _valueFixedInflation
+        // if (config.vault == address(0)) revert ZeroVaultAddress();
+        SPOG.Configuration memory configInvalidVault = SPOG.Configuration(
+            payable(_governor), address(0), _cash, _tax, _taxLowerBound, _taxUpperBound, _inflator, _valueFixedInflation
         );
         vm.expectRevert(ISPOG.ZeroVaultAddress.selector);
-        new SPOG(configInvalidVoteVault);
-
-        // if (config.valueVault == address(0)) revert ZeroVaultAddress();
-        SPOG.Configuration memory configInvalidValueVault = SPOG.Configuration(
-            payable(_governor),
-            _voteVault,
-            address(0),
-            _cash,
-            _tax,
-            _taxLowerBound,
-            _taxUpperBound,
-            _inflator,
-            _valueFixedInflation
-        );
-        vm.expectRevert(ISPOG.ZeroVaultAddress.selector);
-        new SPOG(configInvalidValueVault);
+        new SPOG(configInvalidVault);
 
         // if (config.cash == address(0)) revert ZeroCashAddress();
         SPOG.Configuration memory configInvalidCash = SPOG.Configuration(
             payable(_governor),
-            _voteVault,
-            _valueVault,
+            _vault,
             address(0),
             _tax,
             _taxLowerBound,
@@ -101,15 +67,7 @@ contract SPOG_InitialState is SPOG_Base {
 
         // if (config.tax == 0) revert ZeroTax();
         SPOG.Configuration memory configInvalidTax = SPOG.Configuration(
-            payable(_governor),
-            _voteVault,
-            _valueVault,
-            _cash,
-            0,
-            _taxLowerBound,
-            _taxUpperBound,
-            _inflator,
-            _valueFixedInflation
+            payable(_governor), _vault, _cash, 0, _taxLowerBound, _taxUpperBound, _inflator, _valueFixedInflation
         );
         vm.expectRevert(ISPOG.ZeroTax.selector);
         new SPOG(configInvalidTax);
@@ -117,8 +75,7 @@ contract SPOG_InitialState is SPOG_Base {
         // if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
         SPOG.Configuration memory configTaxOutOfRange = SPOG.Configuration(
             payable(_governor),
-            _voteVault,
-            _valueVault,
+            _vault,
             _cash,
             _taxUpperBound + 1,
             _taxLowerBound,
@@ -131,23 +88,14 @@ contract SPOG_InitialState is SPOG_Base {
 
         // if (config.inflator == 0) revert ZeroInflator();
         SPOG.Configuration memory configInvalidInflator = SPOG.Configuration(
-            payable(_governor),
-            _voteVault,
-            _valueVault,
-            _cash,
-            _tax,
-            _taxLowerBound,
-            _taxUpperBound,
-            0,
-            _valueFixedInflation
+            payable(_governor), _vault, _cash, _tax, _taxLowerBound, _taxUpperBound, 0, _valueFixedInflation
         );
         vm.expectRevert(ISPOG.ZeroInflator.selector);
         new SPOG(configInvalidInflator);
 
         // if (config.valueFixedInflation == 0) revert ZeroValueInflation();
-        SPOG.Configuration memory configInvalidInflation = SPOG.Configuration(
-            payable(_governor), _voteVault, _valueVault, _cash, _tax, _taxLowerBound, _taxUpperBound, _inflator, 0
-        );
+        SPOG.Configuration memory configInvalidInflation =
+            SPOG.Configuration(payable(_governor), _vault, _cash, _tax, _taxLowerBound, _taxUpperBound, _inflator, 0);
         vm.expectRevert(ISPOG.ZeroValueInflation.selector);
         new SPOG(configInvalidInflation);
     }

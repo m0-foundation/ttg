@@ -61,7 +61,7 @@ contract SPOG_AddNewList is SPOG_Base {
         governor.propose(targets, values, calldatas, description);
 
         // assert that spog has cash balance
-        assertEq(cash.balanceOf(address(valueVault)), tax);
+        assertEq(cash.balanceOf(address(vault)), tax);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");

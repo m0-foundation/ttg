@@ -100,7 +100,7 @@ contract VoteVault is ValueVault, IVoteVault {
         for (uint256 i; i < length;) {
             uint256 epoch = epochs[i];
             if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
-            if (!governor.isActiveParticipant(epoch, msg.sender)) revert NotVotedOnAllProposals();
+            if (!governor.isActive(epoch, msg.sender)) revert NotVotedOnAllProposals();
 
             // TODO: should we allow to withdraw any token or vote and value ?
             RewardsSharingStrategy strategy = (token == valueToken)

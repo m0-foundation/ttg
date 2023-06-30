@@ -23,8 +23,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     struct Configuration {
         address payable governor;
-        address voteVault;
-        address valueVault;
+        address vault;
         address cash;
         uint256 tax;
         uint256 taxLowerBound;
@@ -42,11 +41,8 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Multiplier in cash for `reset` proposal
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
-    /// @notice Vault for vote holders vote and value inflation rewards
-    ISPOGVault public override voteVault;
-
     /// @notice Vault for value holders assets
-    ISPOGVault public immutable override valueVault;
+    ISPOGVault public immutable override vault;
 
     /// @notice Cash token used for proposal fee payments
     IERC20 public immutable override cash;
@@ -73,10 +69,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @dev (address => uint256) 0 = not in masterlist, 1 = in masterlist
     EnumerableMap.AddressToUintMap private _masterlist;
 
-    /// @notice Indicator if token rewards were minted for an epoch,
-    /// @dev (epoch number => bool)
-    mapping(uint256 => bool) private _epochRewardsMinted;
-
     /// @dev Modifier checks if caller is a governor address
     modifier onlyGovernance() {
         if (msg.sender != address(governor)) revert OnlyGovernor();
@@ -89,7 +81,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     constructor(Configuration memory config) {
         // Sanity checks
         if (config.governor == address(0)) revert ZeroGovernorAddress();
-        if (config.voteVault == address(0) || config.valueVault == address(0)) revert ZeroVaultAddress();
+        if (config.vault == address(0)) revert ZeroVaultAddress();
         if (config.cash == address(0)) revert ZeroCashAddress();
         if (config.tax == 0) revert ZeroTax();
         if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
@@ -101,8 +93,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // Initialize governor
         governor.initializeSPOG(address(this));
 
-        voteVault = ISPOGVault(config.voteVault);
-        valueVault = ISPOGVault(config.valueVault);
+        vault = ISPOGVault(config.vault);
         cash = IERC20(config.cash);
         tax = config.tax;
         taxLowerBound = config.taxLowerBound;
@@ -183,10 +174,8 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Reset current governor, special value governance method
     /// @param newGovernor The address of the new governor
-    /// @param newVoteVault The address of the new vault for inflation rewards
-    function reset(address newGovernor, address newVoteVault) external override onlyGovernance {
+    function reset(address newGovernor) external override onlyGovernance {
         // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
-        voteVault = ISPOGVault(newVoteVault);
         governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
         governor.initializeSPOG(address(this));
@@ -196,7 +185,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         uint256 resetId = governor.value().snapshot();
         governor.vote().reset(resetId);
 
-        emit ResetExecuted(newGovernor, newVoteVault, resetId);
+        emit ResetExecuted(newGovernor, resetId);
     }
 
     /// @notice Change the tax rate which is used to calculate the proposal fee
@@ -230,30 +219,10 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // slither-disable-next-line arbitrary-send-erc20
         cash.safeTransferFrom(account, address(this), fee);
         // approve amount to be sent to the vault
-        cash.approve(address(valueVault), fee);
+        cash.approve(address(vault), fee);
 
         // deposit the amount to the vault
-        valueVault.deposit(governor.currentEpoch(), address(cash), fee);
-    }
-
-    /// @notice Inflate vote and value tokens and deposit rewards into vote vault
-    /// @dev Called once per epoch by governor when the first reward-accruing proposal is submitted,
-    /// @dev RESET and emergency proposals do not trigger this function
-    function inflateRewardTokens() external override onlyGovernance {
-        uint256 nextEpoch = governor.currentEpoch() + 1;
-
-        // Epoch reward tokens already minted, silently return
-        if (_epochRewardsMinted[nextEpoch]) return;
-
-        _epochRewardsMinted[nextEpoch] = true;
-
-        // Mint and deposit Vote and Value rewards to vault
-        // TODO: move denominator into constant, figure out correct precision
-        // TODO: figure out how to use epoch correctly here
-        // uint256 voteInflation = (governor.vote().getPastTotalSupply(nextEpoch - 1) * inflator) / 100;
-        uint256 voteInflation = governor.vote().totalSupply() * inflator / 100;
-        _mintRewardsAndDepositToVault(nextEpoch, governor.vote(), voteInflation);
-        _mintRewardsAndDepositToVault(nextEpoch, governor.value(), valueFixedInflation);
+        vault.deposit(governor.currentEpoch(), address(cash), fee);
     }
 
     /// @notice Getter for finding whether a list is in a masterlist
@@ -291,16 +260,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
             return RESET_TAX_MULTIPLIER * tax;
         }
         return tax;
-    }
-
-    /// @notice mint reward token into the vault
-    /// @param epoch The epoch for which rewards become claimable
-    /// @param token The reward token, only vote or value tokens
-    /// @param amount The amount to mint and deposit into the vault
-    function _mintRewardsAndDepositToVault(uint256 epoch, ISPOGVotes token, uint256 amount) private {
-        token.mint(address(this), amount);
-        token.approve(address(voteVault), amount);
-        voteVault.deposit(epoch, address(token), amount);
     }
 
     /// @dev check SPOG interface support

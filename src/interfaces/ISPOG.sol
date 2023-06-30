@@ -23,7 +23,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 oldTax, uint256 newTax);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
-    event ResetExecuted(address indexed newGovernor, address indexed newVoteVault, uint256 indexed resetSnapshotId);
+    event ResetExecuted(address indexed newGovernor, uint256 indexed resetSnapshotId);
 
     // Errors
     error OnlyGovernor();
@@ -42,8 +42,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     // Info functions about double governance and SPOG parameters
     function governor() external view returns (ISPOGGovernor);
-    function voteVault() external view returns (ISPOGVault);
-    function valueVault() external view returns (ISPOGVault);
+    function vault() external view returns (ISPOGVault);
     function cash() external view returns (IERC20);
     function tax() external view returns (uint256);
     function taxLowerBound() external view returns (uint256);
@@ -56,13 +55,13 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function append(address list, address account) external;
     function remove(address list, address account) external;
     function emergency(uint8 emergencyType, bytes calldata callData) external;
-    function reset(address newGovernor, address newVoteVault) external;
-    function changeTax(uint256 _tax) external;
-    function changeTaxRange(uint256 lowerBound, uint256 upperBound) external;
+    function reset(address newGovernor) external;
+    function changeTax(uint256 newTax) external;
+    function changeTaxRange(uint256 newLowerBound, uint256 newUpperBound) external;
 
     function isGovernedMethod(bytes4 func) external pure returns (bool);
     function chargeFee(address account, bytes4 func) external;
-    function inflateRewardTokens() external;
+    // function inflateRewardTokens() external;
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);

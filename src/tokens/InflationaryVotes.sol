@@ -258,8 +258,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         cycle.startEpoch = epoch;
         cycle.delegateActivity = governor.delegateActivity(delegatee);
         cycle.previousDelegate = currentDelegate;
-        cycle.previousDelegateRewardAdjusted = governor.isActiveParticipant(epoch, currentDelegate);
-        cycle.currentDelegateRewardAdjusted = governor.isActiveParticipant(epoch, delegatee);
+        cycle.previousDelegateRewardAdjusted = governor.isActive(epoch, currentDelegate);
+        cycle.currentDelegateRewardAdjusted = governor.isActive(epoch, delegatee);
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -327,17 +327,11 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         DelegationCycle storage cycle = _delegationCycles[delegator];
 
         uint256 delta = activeEpochs - cycle.delegateActivity;
-        if (
-            cycle.currentDelegateRewardAdjusted == false
-                && governor.isActiveParticipant(cycle.startEpoch, currentDelegate)
-        ) {
+        if (!cycle.currentDelegateRewardAdjusted && governor.isActive(cycle.startEpoch, currentDelegate)) {
             cycle.currentDelegateRewardAdjusted = true;
             delta -= 1;
         }
-        if (
-            cycle.previousDelegateRewardAdjusted == false
-                && governor.isActiveParticipant(cycle.startEpoch, cycle.previousDelegate)
-        ) {
+        if (!cycle.previousDelegateRewardAdjusted && governor.isActive(cycle.startEpoch, cycle.previousDelegate)) {
             cycle.previousDelegateRewardAdjusted = true;
             delta += 1;
         }

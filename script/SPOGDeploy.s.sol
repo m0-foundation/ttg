@@ -8,10 +8,8 @@ import "script/shared/Base.s.sol";
 
 import "src/core/SPOG.sol";
 import "src/core/governor/DualGovernor.sol";
-import "src/interfaces/tokens/ISPOGVotes.sol";
 import "src/periphery/ERC20PricelessAuction.sol";
 import "src/periphery/vaults/ValueVault.sol";
-import "src/periphery/vaults/VoteVault.sol";
 import "src/tokens/VoteToken.sol";
 import "src/tokens/ValueToken.sol";
 
@@ -31,8 +29,7 @@ contract SPOGDeployScript is BaseScript {
 
     address public vote;
     address public value;
-    address public voteVault;
-    address public valueVault;
+    address public vault;
     address public auction;
 
     function setUp() public override {
@@ -52,14 +49,13 @@ contract SPOGDeployScript is BaseScript {
         taxLowerBound = 0;
         taxUpperBound = 6e18;
 
-        value = address(new ValueToken("SPOG Value", "$VALUE"));
-        vote = address(new VoteToken("SPOG Vote", "$VOTE", value));
+        value = address(new ValueToken("SPOG Value", "VALUE"));
+        vote = address(new VoteToken("SPOG Vote", "VOTE", value));
         auction = address(new ERC20PricelessAuction());
 
         // deploy governor and vaults
-        governor = address(new DualGovernor("SPOG Governor", vote, value, voteQuorum, valueQuorum, time));
-        voteVault = address(new VoteVault(governor, auction));
-        valueVault = address(new ValueVault(governor));
+        governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum, time));
+        vault = address(new ValueVault(governor));
 
         // grant minter role for test runner
         IAccessControl(vote).grantRole(ISPOGVotes(vote).MINTER_ROLE(), msg.sender);
@@ -76,12 +72,11 @@ contract SPOGDeployScript is BaseScript {
         spog = address(createSpog(false));
 
         console.log("SPOG address: ", spog);
-        console.log("SPOGVote token address: ", vote);
-        console.log("SPOGValue token address: ", value);
+        console.log("VOTE token address: ", vote);
+        console.log("VALUE token address: ", value);
         console.log("DualGovernor address: ", governor);
         console.log("Cash address: ", cash);
-        console.log("Vote holders vault address: ", voteVault);
-        console.log("Value holders vault address: ", valueVault);
+        console.log("Vault address: ", vault);
 
         vm.stopBroadcast();
     }
@@ -93,8 +88,7 @@ contract SPOGDeployScript is BaseScript {
 
         SPOG.Configuration memory config = SPOG.Configuration(
             payable(address(governor)),
-            address(voteVault),
-            address(valueVault),
+            address(vault),
             address(cash),
             tax,
             taxLowerBound,

@@ -160,97 +160,97 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         assertEq(yesVotes3, 0, "Proposal3 does not have 0 yes vote");
     }
 
-    function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
-        // epoch 0
-        uint256 voteSupplyBefore = vote.totalSupply();
-        uint256 vaultVoteTokenBalanceBefore = vote.balanceOf(address(voteVault));
-        (
-            uint256 proposalId,
-            address[] memory targets,
-            uint256[] memory values,
-            bytes[] memory calldatas,
-            bytes32 hashedDescription
-        ) = proposeAddingNewListToSpog("new list to spog");
+    // function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
+    //     // epoch 0
+    //     // uint256 voteSupplyBefore = vote.totalSupply();
+    //     // uint256 vaultVoteTokenBalanceBefore = vote.balanceOf(address(voteVault));
+    //     (
+    //         uint256 proposalId,
+    //         address[] memory targets,
+    //         uint256[] memory values,
+    //         bytes[] memory calldatas,
+    //         bytes32 hashedDescription
+    //     ) = proposeAddingNewListToSpog("new list to spog");
 
-        uint256 voteSupplyAfterFirstInflation = vote.totalSupply();
-        uint256 amountAddedByInflation = (voteSupplyBefore * deployScript.inflator()) / 100;
+    //     uint256 voteSupplyAfterFirstInflation = vote.totalSupply();
+    //     uint256 amountAddedByInflation = (voteSupplyBefore * deployScript.inflator()) / 100;
 
-        assertEq(
-            voteSupplyAfterFirstInflation,
-            voteSupplyBefore + amountAddedByInflation,
-            "Vote token supply didn't inflate correctly"
-        );
+    //     assertEq(
+    //         voteSupplyAfterFirstInflation,
+    //         voteSupplyBefore + amountAddedByInflation,
+    //         "Vote token supply didn't inflate correctly"
+    //     );
 
-        // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstInflation = vote.balanceOf(address(voteVault));
-        assertEq(
-            vaultVoteTokenBalanceAfterFirstInflation,
-            vaultVoteTokenBalanceBefore + amountAddedByInflation,
-            "Vault did not receive the accurate vote inflationary supply"
-        );
+    //     // check that vault has received the vote inflationary supply
+    //     uint256 vaultVoteTokenBalanceAfterFirstInflation = vote.balanceOf(address(voteVault));
+    //     assertEq(
+    //         vaultVoteTokenBalanceAfterFirstInflation,
+    //         vaultVoteTokenBalanceBefore + amountAddedByInflation,
+    //         "Vault did not receive the accurate vote inflationary supply"
+    //     );
 
-        // fast forward to an active voting period. epoch 1
-        vm.roll(block.number + governor.votingDelay() + 1);
-        governor.castVote(proposalId, yesVote);
+    //     // fast forward to an active voting period. epoch 1
+    //     vm.roll(block.number + governor.votingDelay() + 1);
+    //     governor.castVote(proposalId, yesVote);
 
-        uint256 voteSupplyAfterVoting = vote.totalSupply();
+    //     uint256 voteSupplyAfterVoting = vote.totalSupply();
 
-        assertEq(voteSupplyAfterFirstInflation, voteSupplyAfterVoting, "Vote token supply got inflated by voting");
+    //     assertEq(voteSupplyAfterFirstInflation, voteSupplyAfterVoting, "Vote token supply got inflated by voting");
 
-        // start of new epoch 2
-        vm.roll(block.number + governor.votingPeriod() + 1);
+    //     // start of new epoch 2
+    //     vm.roll(block.number + governor.votingPeriod() + 1);
 
-        // execute proposal
-        governor.execute(targets, values, calldatas, hashedDescription);
-        uint256 voteSupplyAfterExecution = vote.totalSupply();
+    //     // execute proposal
+    //     governor.execute(targets, values, calldatas, hashedDescription);
+    //     uint256 voteSupplyAfterExecution = vote.totalSupply();
 
-        assertEq(voteSupplyAfterFirstInflation, voteSupplyAfterExecution, "Vote token supply got inflated by execution");
+    //     assertEq(voteSupplyAfterFirstInflation, voteSupplyAfterExecution, "Vote token supply got inflated by execution");
 
-        // new proposal, inflate supply
-        proposeAddingNewListToSpog("new list to spog, again");
+    //     // new proposal, inflate supply
+    //     proposeAddingNewListToSpog("new list to spog, again");
 
-        uint256 voteSupplyAfterSecondInflation = vote.totalSupply();
-        uint256 amountAddedBySecondInflation = (voteSupplyAfterFirstInflation * deployScript.inflator()) / 100;
+    //     uint256 voteSupplyAfterSecondInflation = vote.totalSupply();
+    //     uint256 amountAddedBySecondInflation = (voteSupplyAfterFirstInflation * deployScript.inflator()) / 100;
 
-        assertEq(
-            voteSupplyAfterSecondInflation,
-            voteSupplyAfterFirstInflation + amountAddedBySecondInflation,
-            "Vote token supply didn't inflate correctly during the second inflation"
-        );
-    }
+    //     assertEq(
+    //         voteSupplyAfterSecondInflation,
+    //         voteSupplyAfterFirstInflation + amountAddedBySecondInflation,
+    //         "Vote token supply didn't inflate correctly during the second inflation"
+    //     );
+    // }
 
-    function test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() public {
-        uint256 valueSupplyBefore = value.totalSupply();
+    // function test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() public {
+    //     uint256 valueSupplyBefore = value.totalSupply();
 
-        uint256 vaultVoteTokenBalanceBefore = value.balanceOf(address(voteVault));
+    //     uint256 vaultVoteTokenBalanceBefore = value.balanceOf(address(voteVault));
 
-        // fast forward to an active voting period. Inflate vote token supply
-        vm.roll(block.number + governor.votingDelay() + 1);
+    //     // fast forward to an active voting period. Inflate vote token supply
+    //     vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 valueSupplyAfterFirstPeriod = value.totalSupply();
+    //     uint256 valueSupplyAfterFirstPeriod = value.totalSupply();
 
-        assertEq(valueSupplyAfterFirstPeriod, valueSupplyBefore, "Vote token supply inflated incorrectly");
+    //     assertEq(valueSupplyAfterFirstPeriod, valueSupplyBefore, "Vote token supply inflated incorrectly");
 
-        // check that vault has received the vote inflationary supply
-        // TODO: clean up names here
-        uint256 vaultVoteTokenBalanceAfterFirstPeriod = value.balanceOf(address(voteVault));
-        assertEq(
-            vaultVoteTokenBalanceAfterFirstPeriod,
-            vaultVoteTokenBalanceBefore,
-            "Vault received an inaccurate vote inflationary supply"
-        );
+    //     // check that vault has received the vote inflationary supply
+    //     // TODO: clean up names here
+    //     uint256 vaultVoteTokenBalanceAfterFirstPeriod = value.balanceOf(address(voteVault));
+    //     assertEq(
+    //         vaultVoteTokenBalanceAfterFirstPeriod,
+    //         vaultVoteTokenBalanceBefore,
+    //         "Vault received an inaccurate vote inflationary supply"
+    //     );
 
-        // start of new epoch inflation is triggered
-        vm.roll(block.number + governor.votingPeriod() + 1);
+    //     // start of new epoch inflation is triggered
+    //     vm.roll(block.number + governor.votingPeriod() + 1);
 
-        uint256 valueSupplyAfterSecondPeriod = value.totalSupply();
+    //     uint256 valueSupplyAfterSecondPeriod = value.totalSupply();
 
-        assertEq(
-            valueSupplyAfterSecondPeriod,
-            valueSupplyAfterFirstPeriod,
-            "Vote token supply inflated incorrectly in the second period"
-        );
-    }
+    //     assertEq(
+    //         valueSupplyAfterSecondPeriod,
+    //         valueSupplyAfterFirstPeriod,
+    //         "Vote token supply inflated incorrectly in the second period"
+    //     );
+    // }
 
     function test_ProposalsShouldBeAllowedAfterInactiveEpoch() public {
         (

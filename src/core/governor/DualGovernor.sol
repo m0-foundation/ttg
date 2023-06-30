@@ -12,6 +12,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 numProposals;
         uint256 totalVotesWeight;
         mapping(address => uint256) numVotedOn;
+        bool withRewards;
     }
 
     struct ProposalVote {
@@ -166,6 +167,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         spog.chargeFee(msg.sender, func);
 
+        uint256 nextEpoch = currentEpoch() + 1;
         uint256 proposalId;
         if (func == ISPOG.reset.selector || func == ISPOG.emergency.selector) {
             _emergencyVotingIsOn = true;
@@ -174,7 +176,14 @@ contract DualGovernor is DualGovernorQuorum {
         } else {
             // do not inflate tokens for emergency and reset proposals
             // spog.inflateRewardTokens();
-            // numActiveEpochs++;
+
+            // TODO increase number of active epochs if needed
+
+            /// @dev proposals are voted on in the next epoch
+            EpochBasic storage epochBasic = _epochBasic[nextEpoch];
+            epochBasic.withRewards = true;
+            epochBasic.numProposals += 1;
+
             proposalId = super.propose(targets, values, calldatas, description);
         }
 
@@ -185,10 +194,6 @@ contract DualGovernor is DualGovernorQuorum {
         // Save proposal type
         ProposalType proposalType = _getProposalType(func);
         _proposalTypes[proposalId] = proposalType;
-
-        /// @dev proposals are voted on in the next epoch
-        uint256 nextEpoch = currentEpoch() + 1;
-        _epochBasic[nextEpoch].numProposals += 1;
 
         emit Proposal(nextEpoch, proposalId, proposalType);
         return proposalId;
@@ -220,8 +225,9 @@ contract DualGovernor is DualGovernorQuorum {
 
         _countVote(proposalId, account, support, voteWeight, valueWeight, params);
 
-        if (voteWeight > 0) {
-            _updateAccountEpochVotes(account, voteWeight);
+        // TODO: BUG update weight only for non-emergency, non-reset proposals
+        if (voteWeight > 0 && !emergencyProposals[proposalId]) {
+            _registerVotes(account, voteWeight);
         }
 
         // TODO: adjust weight we need to return ?
@@ -237,27 +243,33 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev Update number of proposals account voted for and cumulative vote weight for the epoch
     /// @param account The the account that voted on proposals
     /// @param weight The vote weight of the account
-    function _updateAccountEpochVotes(address account, uint256 weight) internal virtual {
+    function _registerVotes(address account, uint256 weight) internal virtual {
         uint256 epoch = currentEpoch();
-
         EpochBasic storage epochBasic = _epochBasic[epoch];
+
         // update number of proposals account voted for in current epoch
         epochBasic.numVotedOn[account] += 1;
 
-        // update cumulative vote weight for epoch if user voted for all proposals
-        if (epochBasic.numVotedOn[account] == epochBasic.numProposals) {
-            epochBasic.totalVotesWeight += weight;
-            delegateActivity[account] += 1;
+        // if user voted for all proposals, update cululative weight and give rewards
+        if (!_isActive(epochBasic, account)) return;
 
-            // calculate and mint voting power reward
-            uint256 epochVotes = vote.getPastVotes(account, startOf(epoch));
-            // TODO: move 100 in denominator constant
-            // TODO: prevent overflow
-            uint256 reward = epochVotes * spog.inflator() / 100;
-            InflationaryVotes(address(vote)).addVotingPower(account, reward);
+        // update cumulative vote weight for epoch
+        epochBasic.totalVotesWeight += weight;
+        // update number of active voting epochs per delegate
+        delegateActivity[account] += 1;
 
-            // TODO add claiming of value tokens here
-        }
+        // calculate and mint VOTE voting power reward
+        uint256 epochStart = startOf(epoch);
+        uint256 epochVotes = vote.getPastVotes(account, epochStart);
+        // TODO: move 100 in denominator constant
+        // TODO: prevent overflow, precision loss ?
+        uint256 reward = epochVotes * spog.inflator() / 100;
+        InflationaryVotes(address(vote)).addVotingPower(account, reward);
+
+        // claim VALUE token reward by delegate
+        uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalSupply(epochStart);
+        // TODO: make sure governor can mint here
+        value.mint(account, valueReward);
     }
 
     /// @notice Gets total vote weight power for the epoch
@@ -271,10 +283,14 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param epoch The epoch number to check
     /// @param account The account to check
     /// @return True if account voted on all proposals in the epoch
-    function isActiveParticipant(uint256 epoch, address account) external view override returns (bool) {
-        if (account == address(0)) return false;
+    function isActive(uint256 epoch, address account) external view override returns (bool) {
         EpochBasic storage epochBasic = _epochBasic[epoch];
-        return epochBasic.numVotedOn[account] == epochBasic.numProposals;
+        return _isActive(epochBasic, account);
+    }
+
+    function _isActive(EpochBasic storage epochBasic, address account) internal view returns (bool) {
+        if (account == address(0)) return false;
+        return epochBasic.withRewards && epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
 
     /// @notice Returns state of proposal
