@@ -39,7 +39,7 @@ contract SPOGDeployScript is BaseScript {
 
         cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18));
 
-        inflator = 10; // 10%
+        inflator = 20; // 20%
         valueFixedInflation = 100 * 10e18;
 
         time = 100; // in blocks

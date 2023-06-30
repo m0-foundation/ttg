@@ -149,7 +149,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
         require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
 
-        _mintVotingPower(account, amount);
+        _mintVotingPower(_delegates[account], amount);
     }
 
     function _burn(address account, uint256 amount) internal virtual override {
@@ -323,6 +323,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         _voteRewards[delegator] += reward;
 
         cycle.delegateActivity = activeEpochs;
+
+        // TODO emit events here
     }
 
     // TODO: primitive implementation for demonstartion purposes only

@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
 
-contract VoteSPOGGovernorTest is SPOG_Base {
+contract DualGovernorTest is SPOG_Base {
     address alice = createUser("alice");
     uint256 signerPrivateKey = 0xA11CE;
     address signer = vm.addr(signerPrivateKey);
@@ -65,7 +65,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         }
     }
 
-    function test_CanOnlyVoteOnAProposalAfterItsVotingDelay() public {
+    function test_CanOnlyVoteOnProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
 
