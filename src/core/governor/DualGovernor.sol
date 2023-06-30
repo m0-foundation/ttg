@@ -31,8 +31,8 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice The list cof emergency proposals, (proposalId => true)
     mapping(uint256 => bool) public override emergencyProposals;
 
-    /// @notice The list of epochs in which delegate voted on all proposals
-    mapping(address => uint256) public override numActiveEpochs;
+    /// @notice The number of active epochs per delegate
+    mapping(address => uint256) public override delegateActivity;
 
     // /// @notice The number of active epochs that inflate voting power and token supply
     // uint256 public numActiveEpochs;
@@ -173,7 +173,7 @@ contract DualGovernor is DualGovernorQuorum {
             _emergencyVotingIsOn = false;
         } else {
             // do not inflate tokens for emergency and reset proposals
-            spog.inflateRewardTokens();
+            // spog.inflateRewardTokens();
             // numActiveEpochs++;
             proposalId = super.propose(targets, values, calldatas, description);
         }
@@ -247,14 +247,16 @@ contract DualGovernor is DualGovernorQuorum {
         // update cumulative vote weight for epoch if user voted for all proposals
         if (epochBasic.numVotedOn[account] == epochBasic.numProposals) {
             epochBasic.totalVotesWeight += weight;
-            numActiveEpochs[account] += 1;
+            delegateActivity[account] += 1;
 
             // calculate and mint voting power reward
             uint256 epochVotes = vote.getPastVotes(account, startOf(epoch));
             // TODO: move 100 in denominator constant
-            uint256 reward = spog.inflator() * epochVotes / 100;
-            // TODO: do better conversion here
-            InflationaryVotes(address(vote)).mintVotingPowerReward(account, reward);
+            // TODO: prevent overflow
+            uint256 reward = epochVotes * spog.inflator() / 100;
+            InflationaryVotes(address(vote)).addVotingPower(account, reward);
+
+            // TODO add claiming of value tokens here
         }
     }
 
@@ -270,6 +272,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param account The account to check
     /// @return True if account voted on all proposals in the epoch
     function isActiveParticipant(uint256 epoch, address account) external view override returns (bool) {
+        if (account == address(0)) return false;
         EpochBasic storage epochBasic = _epochBasic[epoch];
         return epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
