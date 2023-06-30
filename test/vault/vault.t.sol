@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity 0.8.19;
 
-import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 
-contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
+contract VaultTest is SPOG_Base {
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
@@ -183,4 +182,19 @@ contract Vault_WithdrawRewardsForValueHolders is Vault_IntegratedWithSPOG {
         assertLt(balanceOfVaultAfterAlice, balanceOfVaultBeforeAlice, "Vault should have less balance of Cash value");
         vm.stopPrank();
     }
+
+    // function test_deposit() public {
+    //     // deposit rewards for previous epoch
+    //     uint256 epoch = 1;
+    //     voteToken.mint(spogAddress, 1000e18);
+    //     vm.startPrank(spogAddress);
+    //     voteToken.approve(address(vault), 1000e18);
+
+    //     expectEmit();
+    //     emit EpochRewardsDeposit(epoch, address(voteToken), 1000e18);
+    //     vault.deposit(epoch, address(voteToken), 1000e18);
+    //     vm.stopPrank();
+
+    //     assertEq(voteToken.balanceOf(address(vault)), 1000e18);
+    // }
 }

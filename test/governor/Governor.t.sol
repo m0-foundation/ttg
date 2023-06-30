@@ -4,13 +4,6 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 
 contract DualGovernorTest is SPOG_Base {
-    address alice = createUser("alice");
-    uint256 signerPrivateKey = 0xA11CE;
-    address signer = vm.addr(signerPrivateKey);
-
-    uint8 noVote = 0;
-    uint8 yesVote = 1;
-
     event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here

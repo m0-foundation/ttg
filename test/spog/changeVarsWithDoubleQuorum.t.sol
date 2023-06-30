@@ -4,10 +4,6 @@ pragma solidity 0.8.19;
 import "test/shared/SPOG_Base.t.sol";
 
 contract SPOG_change is SPOG_Base {
-    uint8 internal yesVote;
-    uint8 internal noVote;
-    address internal alice;
-
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
@@ -15,11 +11,6 @@ contract SPOG_change is SPOG_Base {
 
     function setUp() public override {
         super.setUp();
-
-        yesVote = 1;
-        noVote = 0;
-
-        alice = payable(makeAddr("alice"));
     }
 
     function proposeTaxRangeChange(string memory proposalDescription)

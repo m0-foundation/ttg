@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity 0.8.19;
 
-import "test/vault/helper/Vault_IntegratedWithSPOG.t.sol";
+import "test/shared/SPOG_Base.t.sol";
 import "forge-std/console.sol";
 
-contract Vault_WithdrawVoteTokenRewards is Vault_IntegratedWithSPOG {
+contract InflationRewardsTest is SPOG_Base {
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/

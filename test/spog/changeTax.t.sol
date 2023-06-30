@@ -5,14 +5,12 @@ import "test/shared/SPOG_Base.t.sol";
 
 contract SPOG_changeTax is SPOG_Base {
     uint256 internal newTaxValue;
-    uint8 internal yesVote;
 
     event TaxChanged(uint256 indexed tax);
 
     function setUp() public override {
         super.setUp();
         newTaxValue = deployScript.taxUpperBound();
-        yesVote = 1;
     }
 
     function test_Revert_ChangeTaxWhenNotCalledFromGovernance() public {
