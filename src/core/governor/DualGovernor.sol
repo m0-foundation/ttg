@@ -267,9 +267,9 @@ contract DualGovernor is DualGovernorQuorum {
         InflationaryVotes(address(vote)).addVotingPower(account, reward);
 
         // claim VALUE token reward by delegate
-        uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalSupply(epochStart);
+        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalSupply(epochStart);
         // TODO: make sure governor can mint here
-        value.mint(account, valueReward);
+        // value.mint(account, valueReward);
     }
 
     /// @notice Gets total vote weight power for the epoch
