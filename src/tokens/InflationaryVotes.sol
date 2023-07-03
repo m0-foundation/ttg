@@ -210,9 +210,13 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
             INFLATIONARY VOTES UNIQUE TOKEN INTERFACE
     //////////////////////////////////////////////////////////////*/
 
-    function _totalVotes() internal view virtual returns (uint256) {
+    function totalVotes() public view virtual returns (uint256) {
         uint256 pos = _totalSupplyCheckpoints.length;
         return pos == 0 ? 0 : _totalSupplyCheckpoints[pos - 1].votes;
+    }
+
+    function getUnclaimedVoteRewards(address account) public view virtual returns (uint256) {
+        return _voteRewards[account];
     }
 
     /// @dev Performs ERC20 transfer with delegation tracking.
@@ -265,7 +269,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     function _mintVotingPower(address account, uint256 amount) internal virtual {
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
-        require(_totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
+        require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
         _moveVotingPower(address(0), account, amount);
     }
 

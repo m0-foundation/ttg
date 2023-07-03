@@ -48,11 +48,11 @@ contract SPOG_Base is BaseTest {
         tax = deployScript.tax();
 
         // mint vote tokens and self-delegate
-        ISPOGVotes(vote).mint(address(this), 100e18);
+        ISPOGVotes(vote).mint(address(this), amountToMint);
         ISPOGVotes(vote).delegate(address(this));
 
         // mint value tokens and self-delegate
-        ISPOGVotes(value).mint(address(this), 100e18);
+        ISPOGVotes(value).mint(address(this), amountToMint);
         ISPOGVotes(value).delegate(address(this));
 
         // deploy list and change admin to spog
