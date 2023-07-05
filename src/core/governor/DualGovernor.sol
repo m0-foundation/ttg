@@ -12,6 +12,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 numProposals;
         uint256 totalVotesWeight;
         mapping(address => uint256) numVotedOn;
+        mapping(address => uint256) votingFinalizedAt;
         bool withRewards;
     }
 
@@ -249,10 +250,11 @@ contract DualGovernor is DualGovernorQuorum {
 
         // update cumulative vote weight for epoch
         epochBasic.totalVotesWeight += weight;
+        epochBasic.votingFinalizedAt[account] = block.number;
 
         // calculate and mint VOTE voting power reward
         uint256 epochStart = startOf(epoch);
-        uint256 epochVotes = vote.getPastVotes(account, epochStart);
+        uint256 epochVotes = _min(vote.getPastVotes(account, epochStart), vote.getVotes(account));
         // TODO: move 100 in denominator constant
         // TODO: prevent overflow, precision loss ?
         uint256 reward = epochVotes * spog.inflator() / 100;
@@ -269,6 +271,10 @@ contract DualGovernor is DualGovernorQuorum {
     /// @return The total vote weight power for the epoch
     function epochTotalVotesWeight(uint256 epoch) external view override returns (uint256) {
         return _epochBasic[epoch].totalVotesWeight;
+    }
+
+    function votingFinalizedAt(uint256 epoch, address account) external view override returns (uint256) {
+        return _epochBasic[epoch].votingFinalizedAt[account];
     }
 
     /// @notice Checks if account voted on all proposals in the epoch
@@ -338,6 +344,10 @@ contract DualGovernor is DualGovernorQuorum {
             // load the address params
             targetParams := mload(addressPosition)
         }
+    }
+
+    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -26,25 +26,17 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         address delegate;
     }
 
-    struct DelegationCycle {
-        address previousDelegate;
-        bool previousDelegateRewardAccrued;
-        uint256 switchEpoch;
-        uint256 previousDelegateReward;
-    }
-
     bytes32 private constant _DELEGATION_TYPEHASH =
         keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
+    mapping(address => uint256) private _delegationSwitchEpoch;
 
     mapping(address => Checkpoint[]) private _votesCheckpoints;
     Checkpoint[] private _totalVotesCheckpoints;
 
     mapping(address => Checkpoint[]) private _balancesCheckpoints;
     Checkpoint[] private _totalSupplyCheckpoints;
-
-    mapping(address => DelegationCycle) private _delegationCycles;
 
     // owner => current delegation cycle
     // combine together
@@ -92,8 +84,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     //TODO add override
     function getPastBalance(address account, uint256 blockNumber) public view virtual returns (uint256) {
-        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
-        return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
+        // require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
     }
 
     function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
@@ -309,13 +301,6 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         // TODO does not account for delayed reward
         _burnVotingPower(currentDelegate, reward);
 
-        uint256 previousDelegateReward = _delegationCycles[msg.sender].previousDelegateReward;
-        if (previousDelegateReward > 0) {
-            _mint(msg.sender, previousDelegateReward);
-            _delegationCycles[msg.sender].previousDelegateReward = 0;
-            _burnVotingPower(_delegationCycles[msg.sender].previousDelegate, previousDelegateReward);
-        }
-
         // emit VoteRewardClaimed(msg.sender, reward);
 
         return reward;
@@ -336,36 +321,15 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         // cash out your rewards
         _accrueRewards(delegator);
 
-        // start new delegation cycle for delegator
-        ISPOGGovernor governor = ISPOG(spog).governor();
-        uint256 currentEpoch = governor.currentEpoch();
         address currentDelegate = delegates(delegator);
-
-        DelegationCycle storage cycle = _delegationCycles[delegator];
-        if (currentEpoch != cycle.switchEpoch) {
-            cycle.switchEpoch = currentEpoch;
-            cycle.previousDelegate = currentDelegate;
-            cycle.previousDelegateRewardAccrued = governor.isActive(currentEpoch, currentDelegate);
-        }
-
         uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
 
+        _delegationSwitchEpoch[delegator] = ISPOG(spog).governor().currentEpoch();
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
         _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
-    }
-
-    function _accrueRewardsForSwitchEpoch(address delegator) internal virtual {
-        DelegationCycle storage cycle = _delegationCycles[delegator];
-        ISPOGGovernor governor = ISPOG(spog).governor();
-
-        if (!cycle.previousDelegateRewardAccrued && governor.isActive(cycle.switchEpoch, cycle.previousDelegate)) {
-            uint256 reward = getPastBalance(delegator, epochStart) * ISPOG(spog).inflator() / 100;
-            _voteRewards[delegator] += reward;
-            cycle.previousDelegateRewardAccrued = true;
-        }
     }
 
     function _accrueRewards(address delegator) internal virtual {
@@ -374,21 +338,20 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         uint256 currentEpoch = governor.currentEpoch();
         // no rewards are available for epoch 0
         if (currentEpoch == 0) return;
-
-        if (!cycle.previousDelegateRewardAccrued && governor.isActive(cycle.switchEpoch, cycle.previousDelegate)) {
-            uint256 reward = getPastBalance(delegator, epochStart) * ISPOG(spog).inflator() / 100;
-            // _voteRewards[delegator] += reward;
-            cycle.previousDelegateRewardAccrued = true;
-            cycle.previousDelegateReward = reward;
-        }
+        address currentDelegate = delegates(delegator);
 
         uint256 reward;
         uint256 startEpoch = lastEpochRewardsAccrued[delegator];
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
             uint256 epochStart = governor.startOf(epoch);
-            address epochDelegate = getPastDelegate(delegator, epochStart);
-            if (governor.isActive(epoch, epochDelegate)) {
-                reward += getPastBalance(delegator, epochStart) * ISPOG(spog).inflator() / 100;
+            if (epoch != _delegationSwitchEpoch[delegator] && governor.isActive(epoch, currentDelegate)) {
+                uint256 balanceAtEpochStart = getPastBalance(delegator, epochStart);
+                uint256 votingFinalized = governor.votingFinalizedAt(epoch, currentDelegate);
+                uint256 balanceAtTheEndOfVoting =
+                    getPastBalance(delegator, governor.votingFinalizedAt(epoch, currentDelegate));
+                uint256 rewardableBalance = _min(balanceAtEpochStart, balanceAtTheEndOfVoting) + reward;
+
+                reward += rewardableBalance * ISPOG(spog).inflator() / 100;
             }
             unchecked {
                 ++epoch;
@@ -396,11 +359,10 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         }
 
         _voteRewards[delegator] += reward;
-        address currentEpochStartDelegate = getPastDelegate(delegator, governor.startOf(currentEpoch));
 
         // TODO: see if it can be written better
         lastEpochRewardsAccrued[delegator] =
-            governor.isActive(currentEpoch, currentEpochStartDelegate) ? currentEpoch : currentEpoch - 1;
+            governor.isActive(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
 
         // TODO emit events here
     }
@@ -410,5 +372,9 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     /// @param amount The amount to mint
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
+    }
+
+    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
     }
 }

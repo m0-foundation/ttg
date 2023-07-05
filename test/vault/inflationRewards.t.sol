@@ -183,7 +183,6 @@ contract InflationRewardsTest is SPOG_Base {
         vm.startPrank(bob);
         // bob transfers tokens to alice
         vote.transfer(alice, 10e18);
-        assertEq(InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 0);
         vm.stopPrank();
 
         vm.startPrank(alice);
@@ -192,22 +191,22 @@ contract InflationRewardsTest is SPOG_Base {
         vm.stopPrank();
 
         assertEq(vote.getVotes(alice), 130e18);
-        assertEq(vote.getVotes(bob), 90e18);
         assertEq(vote.balanceOf(alice), 130e18);
         assertEq(vote.balanceOf(bob), 90e18);
+        assertEq(vote.getVotes(bob), 90e18);
 
         // bob votes too
         vm.startPrank(bob);
         governor.castVote(proposal1Id, yesVote);
-        assertEq(vote.getVotes(bob), 110e18);
+        assertEq(vote.getVotes(bob), 108e18);
         uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
-        assertEq(bobRewards, 20e18, "Incorrect alice rewards");
+        assertEq(bobRewards, 18e18, "Incorrect bob rewards");
         vm.stopPrank();
 
         assertEq(vote.getVotes(alice), 130e18);
-        assertEq(vote.getVotes(bob), 110e18);
+        assertEq(vote.getVotes(bob), 108e18);
         assertEq(vote.balanceOf(alice), 130e18);
-        assertEq(vote.balanceOf(bob), 110e18);
+        assertEq(vote.balanceOf(bob), 108e18);
     }
 
     function test_UserGetRewardOnlyOncePerEpochIfRedelegating() public {
@@ -250,7 +249,7 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.getVotes(bob), vote.balanceOf(bob) + vote.balanceOf(alice));
     }
 
-    function test_UserGetDelayedRewardWhileRedelegating() public {
+    function test_UserDoesNotGetDelayedRewardWhileRedelegating() public {
         assertEq(vote.balanceOf(alice), 100e18);
 
         // epoch - set up proposals
@@ -277,8 +276,8 @@ contract InflationRewardsTest is SPOG_Base {
 
         governor.castVote(proposal1Id, yesVote);
         uint256 aliceRewards2 = InflationaryVotes(address(vote)).claimVoteRewards();
-        assertEq(aliceRewards2, 20e18, "Incorrect alice rewards");
-        assertEq(vote.balanceOf(alice), 120e18, "Alice balance was not updated");
+        assertEq(aliceRewards2, 0, "Incorrect alice rewards");
+        assertEq(vote.balanceOf(alice), 100e18, "Alice balance was not updated");
         vm.stopPrank();
     }
 
@@ -308,9 +307,9 @@ contract InflationRewardsTest is SPOG_Base {
         // bob votes on proposal 1
         governor.castVote(proposal1Id, yesVote);
         // takes into account voting power at the beginning of epoch
-        assertEq(vote.getVotes(bob), 70e18);
+        assertEq(vote.getVotes(bob), 60e18);
         uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
-        assertEq(bobRewards, 20e18, "Incorrect bob rewards");
+        assertEq(bobRewards, 10e18, "Incorrect bob rewards");
         vm.stopPrank();
 
         vm.startPrank(carol);
@@ -328,6 +327,7 @@ contract InflationRewardsTest is SPOG_Base {
         );
     }
 
+    // TODO: make sure test is still needed
     function test_VotingInflationWithRedelegationInTheSameEpoch() public {
         // epoch - set up proposals
         (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
@@ -336,22 +336,14 @@ contract InflationRewardsTest is SPOG_Base {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         vm.startPrank(alice);
-        console.log("alice votes before delegation to bob = ", vote.getVotes(alice));
         vote.delegate(bob);
-        console.log("alice votes after delegation to bob = ", vote.getVotes(alice));
 
         governor.castVote(proposal1Id, yesVote);
-        console.log("alice votes = ", vote.getVotes(alice));
 
         // start new epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
         uint256 aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
-        assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
-
-        console.log("Bob votes     = ", vote.getVotes(bob));
-        console.log("Bob balance   = ", vote.balanceOf(bob));
-        console.log("Alice votes   = ", vote.getVotes(alice));
-        console.log("Alice balance = ", vote.balanceOf(alice));
+        assertEq(aliceRewards, 0e18, "Incorrect alice rewards");
     }
 }
