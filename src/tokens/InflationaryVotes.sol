@@ -21,10 +21,9 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         uint224 amount;
     }
 
-    struct DelegationCycle {
-        uint256 startEpoch;
-        address previousDelegate;
-        bool previousDelegateRewardAccrued;
+    struct DelegateCheckpoint {
+        uint32 fromBlock;
+        address delegate;
     }
 
     bytes32 private constant _DELEGATION_TYPEHASH =
@@ -38,9 +37,12 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     mapping(address => Checkpoint[]) private _balancesCheckpoints;
     Checkpoint[] private _totalSupplyCheckpoints;
 
+    mapping(address => DelegateCheckpoint[]) private _delegatesCheckpoints;
+
     // owner => current delegation cycle
-    mapping(address => DelegationCycle) private _delegationCycles;
+    // combine together
     mapping(address => uint256) private _voteRewards;
+    mapping(address => uint256) private lastEpochRewardsAccrued;
 
     /// @notice Constructs governance voting token
     /// @param name The name of the token
@@ -98,6 +100,11 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
+    function getPastDelegate(address account, uint256 blockNumber) public view virtual returns (address) {
+        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        return _delegateCheckpointsLookup(_delegatesCheckpoints[account], blockNumber);
+    }
+
     function _checkpointsLookup(Checkpoint[] storage ckpts, uint256 blockNumber) private view returns (uint256) {
         // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
         //
@@ -135,6 +142,49 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         }
 
         return high == 0 ? 0 : _unsafeAccess(ckpts, high - 1).amount;
+    }
+
+    function _delegateCheckpointsLookup(DelegateCheckpoint[] storage ckpts, uint256 blockNumber)
+        private
+        view
+        returns (address)
+    {
+        // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
+        //
+        // Initially we check if the block is recent to narrow the search range.
+        // During the loop, the index of the wanted checkpoint remains in the range [low-1, high).
+        // With each iteration, either `low` or `high` is moved towards the middle of the range to maintain the invariant.
+        // - If the middle checkpoint is after `blockNumber`, we look in [low, mid)
+        // - If the middle checkpoint is before or equal to `blockNumber`, we look in [mid+1, high)
+        // Once we reach a single value (when low == high), we've found the right checkpoint at the index high-1, if not
+        // out of bounds (in which case we're looking too far in the past and the result is 0).
+        // Note that if the latest checkpoint available is exactly for `blockNumber`, we end up with an index that is
+        // past the end of the array, so we technically don't find a checkpoint after `blockNumber`, but it works out
+        // the same.
+        uint256 length = ckpts.length;
+
+        uint256 low = 0;
+        uint256 high = length;
+
+        if (length > 5) {
+            uint256 mid = length - Math.sqrt(length);
+            if (_unsafeDelegateAccess(ckpts, mid).fromBlock > blockNumber) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+
+        while (low < high) {
+            uint256 mid = Math.average(low, high);
+            if (_unsafeDelegateAccess(ckpts, mid).fromBlock > blockNumber) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+
+        return high == 0 ? address(0) : _unsafeDelegateAccess(ckpts, high - 1).delegate;
     }
 
     function delegate(address delegatee) public virtual override {
@@ -226,6 +276,19 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         }
     }
 
+    function _writeDelegateCheckpoint(DelegateCheckpoint[] storage ckpts, address newDelegate) private {
+        uint256 pos = ckpts.length;
+
+        DelegateCheckpoint memory oldCkpt =
+            pos == 0 ? DelegateCheckpoint(0, address(0)) : _unsafeDelegateAccess(ckpts, pos - 1);
+
+        if (pos > 0 && oldCkpt.fromBlock == block.number) {
+            _unsafeDelegateAccess(ckpts, pos - 1).delegate = newDelegate;
+        } else {
+            ckpts.push(DelegateCheckpoint({fromBlock: SafeCast.toUint32(block.number), delegate: newDelegate}));
+        }
+    }
+
     function _add(uint256 a, uint256 b) private pure returns (uint256) {
         return a + b;
     }
@@ -235,6 +298,17 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function _unsafeAccess(Checkpoint[] storage ckpts, uint256 pos) private pure returns (Checkpoint storage result) {
+        assembly {
+            mstore(0, ckpts.slot)
+            result.slot := add(keccak256(0, 0x20), pos)
+        }
+    }
+
+    function _unsafeDelegateAccess(DelegateCheckpoint[] storage ckpts, uint256 pos)
+        private
+        pure
+        returns (DelegateCheckpoint storage result)
+    {
         assembly {
             mstore(0, ckpts.slot)
             result.slot := add(keccak256(0, 0x20), pos)
@@ -297,7 +371,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         _mint(msg.sender, reward);
         /// @dev Voting power of currentDelegate was already updated when vote was casted, no need for double upgrade
         address currentDelegate = delegates(msg.sender);
-        _burnVotingPower(currentDelegate, reward);
+        // TODO does not account for delayed reward
+        // _burnVotingPower(currentDelegate, reward);
 
         // emit VoteRewardClaimed(msg.sender, reward);
 
@@ -316,6 +391,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function _delegate(address delegator, address delegatee) internal virtual {
+        _writeDelegateCheckpoint(_delegatesCheckpoints[delegator], delegatee);
+
         // cash out your rewards
         _accrueRewards(delegator);
 
@@ -326,15 +403,6 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
 
         _delegates[delegator] = delegatee;
-        DelegationCycle storage cycle = _delegationCycles[delegator];
-
-        // safe against re-delegation multiple times in the same epoch
-        // TODO: make sure
-        if (cycle.startEpoch == 0 || currentEpoch != cycle.startEpoch - 1) {
-            cycle.startEpoch = currentEpoch + 1;
-            cycle.previousDelegate = currentDelegate;
-            cycle.previousDelegateRewardAccrued = governor.isActive(currentEpoch, currentDelegate);
-        }
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -342,33 +410,19 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function _accrueRewards(address delegator) internal virtual {
-        address currentDelegate = delegates(delegator);
-        if (currentDelegate == address(0)) return;
-
-        // uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
-
         // calculate rewards for number of active epochs (delegate voted on all proposals in these epochs)
         ISPOGGovernor governor = ISPOG(spog).governor();
         uint256 currentEpoch = governor.currentEpoch();
-
-        DelegationCycle storage cycle = _delegationCycles[delegator];
+        // no rewards are available for epoch 0
+        if (currentEpoch == 0) return;
 
         uint256 reward;
-        // Adjust reward for last epoch of previous delegate
-        // TODO: should we check that previousDelegate is not 0x0?
-        if (!cycle.previousDelegateRewardAccrued && currentEpoch >= cycle.startEpoch) {
-            cycle.previousDelegateRewardAccrued = true;
-            uint256 rewardEpoch = cycle.startEpoch - 1;
-            if (governor.isActive(rewardEpoch, cycle.previousDelegate)) {
-                uint256 blockStart = governor.startOf(rewardEpoch);
-                reward += getPastBalance(delegator, blockStart) * ISPOG(spog).inflator() / 100;
-            }
-        }
-
-        for (uint256 epoch = cycle.startEpoch; epoch <= currentEpoch;) {
-            if (governor.isActive(epoch, currentDelegate)) {
-                uint256 blockStart = governor.startOf(epoch);
-                reward += getPastBalance(delegator, blockStart) * ISPOG(spog).inflator() / 100;
+        uint256 startEpoch = lastEpochRewardsAccrued[delegator];
+        for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
+            uint256 epochStart = governor.startOf(epoch);
+            address epochDelegate = getPastDelegate(delegator, epochStart);
+            if (governor.isActive(epoch, epochDelegate)) {
+                reward += getPastBalance(delegator, epochStart) * ISPOG(spog).inflator() / 100;
             }
             unchecked {
                 ++epoch;
@@ -376,9 +430,11 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         }
 
         _voteRewards[delegator] += reward;
+        address currentEpochStartDelegate = getPastDelegate(delegator, governor.startOf(currentEpoch));
 
-        // see if we need two different vars for epochs
-        cycle.startEpoch = governor.isActive(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch + 1;
+        // TODO: see if it can be written better
+        lastEpochRewardsAccrued[delegator] =
+            governor.isActive(currentEpoch, currentEpochStartDelegate) ? currentEpoch : currentEpoch - 1;
 
         // TODO emit events here
     }

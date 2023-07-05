@@ -327,4 +327,31 @@ contract InflationRewardsTest is SPOG_Base {
             InflationaryVotes(address(vote)).totalVotes() - extraTotalVotes
         );
     }
+
+    function test_VotingInflationWithRedelegationInTheSameEpoch() public {
+        // epoch - set up proposals
+        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+
+        // voting period started
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        vm.startPrank(alice);
+        console.log("alice votes before delegation to bob = ", vote.getVotes(alice));
+        vote.delegate(bob);
+        console.log("alice votes after delegation to bob = ", vote.getVotes(alice));
+
+        governor.castVote(proposal1Id, yesVote);
+        console.log("alice votes = ", vote.getVotes(alice));
+
+        // start new epoch
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        uint256 aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
+
+        console.log("Bob votes     = ", vote.getVotes(bob));
+        console.log("Bob balance   = ", vote.balanceOf(bob));
+        console.log("Alice votes   = ", vote.getVotes(alice));
+        console.log("Alice balance = ", vote.balanceOf(alice));
+    }
 }
