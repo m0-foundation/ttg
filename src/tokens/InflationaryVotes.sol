@@ -18,22 +18,24 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     struct Checkpoint {
         uint32 fromBlock;
-        uint224 votes;
+        uint224 amount;
     }
 
     struct DelegationCycle {
-        address previousDelegate;
-        uint256 delegateActivity;
         uint256 startEpoch;
-        bool previousDelegateRewardAdjusted;
-        bool currentDelegateRewardAdjusted;
+        address previousDelegate;
+        bool previousDelegateRewardAccrued;
     }
 
     bytes32 private constant _DELEGATION_TYPEHASH =
         keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
-    mapping(address => Checkpoint[]) private _checkpoints;
+
+    mapping(address => Checkpoint[]) private _votesCheckpoints;
+    Checkpoint[] private _totalVotesCheckpoints;
+
+    mapping(address => Checkpoint[]) private _balancesCheckpoints;
     Checkpoint[] private _totalSupplyCheckpoints;
 
     // owner => current delegation cycle
@@ -58,11 +60,11 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function checkpoints(address account, uint32 pos) public view virtual returns (Checkpoint memory) {
-        return _checkpoints[account][pos];
+        return _votesCheckpoints[account][pos];
     }
 
     function numCheckpoints(address account) public view virtual returns (uint32) {
-        return SafeCast.toUint32(_checkpoints[account].length);
+        return SafeCast.toUint32(_votesCheckpoints[account].length);
     }
 
     function delegates(address account) public view virtual override returns (address) {
@@ -70,16 +72,28 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function getVotes(address account) public view virtual override returns (uint256) {
-        uint256 pos = _checkpoints[account].length;
-        return pos == 0 ? 0 : _checkpoints[account][pos - 1].votes;
+        uint256 pos = _votesCheckpoints[account].length;
+        return pos == 0 ? 0 : _votesCheckpoints[account][pos - 1].amount;
     }
 
     function getPastVotes(address account, uint256 blockNumber) public view virtual override returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
-        return _checkpointsLookup(_checkpoints[account], blockNumber);
+        return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
+    }
+
+    //TODO add override
+    function getPastBalance(address account, uint256 blockNumber) public view virtual returns (uint256) {
+        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
     function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
+        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
+    }
+
+    //TODO add override
+    function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
@@ -120,7 +134,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
             }
         }
 
-        return high == 0 ? 0 : _unsafeAccess(ckpts, high - 1).votes;
+        return high == 0 ? 0 : _unsafeAccess(ckpts, high - 1).amount;
     }
 
     function delegate(address delegatee) public virtual override {
@@ -150,24 +164,45 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
 
         _mintVotingPower(_delegates[account], amount);
+
+        _moveBalance(address(0), account, amount);
+        _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
     }
 
     function _burn(address account, uint256 amount) internal virtual override {
         super._burn(account, amount);
 
+        // TODO burn from account
+        _burnVotingPower(account, amount);
+
+        _moveBalance(account, address(0), amount);
         _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
     }
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {
         if (src != dst && amount > 0) {
             if (src != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_checkpoints[src], _subtract, amount);
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[src], _subtract, amount);
                 emit DelegateVotesChanged(src, oldWeight, newWeight);
             }
 
             if (dst != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_checkpoints[dst], _add, amount);
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[dst], _add, amount);
                 emit DelegateVotesChanged(dst, oldWeight, newWeight);
+            }
+        }
+    }
+
+    function _moveBalance(address src, address dst, uint256 amount) private {
+        if (src != dst && amount > 0) {
+            if (src != address(0)) {
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_balancesCheckpoints[src], _subtract, amount);
+                // emit DelegateVotesChanged(src, oldWeight, newWeight);
+            }
+
+            if (dst != address(0)) {
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_balancesCheckpoints[dst], _add, amount);
+                // emit DelegateVotesChanged(dst, oldWeight, newWeight);
             }
         }
     }
@@ -181,13 +216,13 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
         Checkpoint memory oldCkpt = pos == 0 ? Checkpoint(0, 0) : _unsafeAccess(ckpts, pos - 1);
 
-        oldWeight = oldCkpt.votes;
+        oldWeight = oldCkpt.amount;
         newWeight = op(oldWeight, delta);
 
         if (pos > 0 && oldCkpt.fromBlock == block.number) {
-            _unsafeAccess(ckpts, pos - 1).votes = SafeCast.toUint224(newWeight);
+            _unsafeAccess(ckpts, pos - 1).amount = SafeCast.toUint224(newWeight);
         } else {
-            ckpts.push(Checkpoint({fromBlock: SafeCast.toUint32(block.number), votes: SafeCast.toUint224(newWeight)}));
+            ckpts.push(Checkpoint({fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight)}));
         }
     }
 
@@ -211,8 +246,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     //////////////////////////////////////////////////////////////*/
 
     function totalVotes() public view virtual returns (uint256) {
-        uint256 pos = _totalSupplyCheckpoints.length;
-        return pos == 0 ? 0 : _totalSupplyCheckpoints[pos - 1].votes;
+        uint256 pos = _totalVotesCheckpoints.length;
+        return pos == 0 ? 0 : _totalVotesCheckpoints[pos - 1].amount;
     }
 
     function getUnclaimedVoteRewards(address account) public view virtual returns (uint256) {
@@ -222,9 +257,10 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     /// @dev Performs ERC20 transfer with delegation tracking.
     function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
         // cash out rewards
-        _accrueRewards(msg.sender);
-        _accrueRewards(to);
+        // _accrueRewards(msg.sender);
+        // _accrueRewards(to);
 
+        _moveBalance(msg.sender, to, amount);
         _moveVotingPower(_delegates[msg.sender], _delegates[to], amount);
 
         return super.transfer(to, amount);
@@ -237,9 +273,10 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         override(ERC20, IERC20)
         returns (bool)
     {
-        _accrueRewards(from);
-        _accrueRewards(to);
+        // _accrueRewards(from);
+        // _accrueRewards(to);
 
+        _moveBalance(from, to, amount);
         _moveVotingPower(_delegates[from], _delegates[to], amount);
 
         return super.transferFrom(from, to, amount);
@@ -252,9 +289,9 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     function claimVoteRewards() external returns (uint256) {
         _accrueRewards(msg.sender);
+
         uint256 reward = _voteRewards[msg.sender];
         if (reward == 0) return 0;
-        // require(reward > 0, "No rewards to claim");
 
         _voteRewards[msg.sender] = 0;
         _mint(msg.sender, reward);
@@ -268,13 +305,13 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function _mintVotingPower(address account, uint256 amount) internal virtual {
-        _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
+        _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
         require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
         _moveVotingPower(address(0), account, amount);
     }
 
     function _burnVotingPower(address account, uint256 amount) internal virtual {
-        _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
+        _writeCheckpoint(_totalVotesCheckpoints, _subtract, amount);
         _moveVotingPower(account, address(0), amount);
     }
 
@@ -282,20 +319,22 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         // cash out your rewards
         _accrueRewards(delegator);
 
+        // start new delegation cycle for delegator
+        ISPOGGovernor governor = ISPOG(spog).governor();
+        uint256 currentEpoch = governor.currentEpoch();
         address currentDelegate = delegates(delegator);
         uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
 
         _delegates[delegator] = delegatee;
         DelegationCycle storage cycle = _delegationCycles[delegator];
 
-        // start new delegation cycle for delegator
-        ISPOGGovernor governor = ISPOG(spog).governor();
-        uint256 epoch = governor.currentEpoch();
-        cycle.startEpoch = epoch;
-        cycle.delegateActivity = governor.delegateActivity(delegatee);
-        cycle.previousDelegate = currentDelegate;
-        cycle.previousDelegateRewardAdjusted = governor.isActive(epoch, currentDelegate);
-        cycle.currentDelegateRewardAdjusted = governor.isActive(epoch, delegatee);
+        // safe against re-delegation multiple times in the same epoch
+        // TODO: make sure
+        if (cycle.startEpoch == 0 || currentEpoch != cycle.startEpoch - 1) {
+            cycle.startEpoch = currentEpoch + 1;
+            cycle.previousDelegate = currentDelegate;
+            cycle.previousDelegateRewardAccrued = governor.isActive(currentEpoch, currentDelegate);
+        }
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -304,42 +343,44 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     function _accrueRewards(address delegator) internal virtual {
         address currentDelegate = delegates(delegator);
-        uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
+        if (currentDelegate == address(0)) return;
+
+        // uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
 
         // calculate rewards for number of active epochs (delegate voted on all proposals in these epochs)
         ISPOGGovernor governor = ISPOG(spog).governor();
-        uint256 activeEpochs = governor.delegateActivity(currentDelegate);
+        uint256 currentEpoch = governor.currentEpoch();
+
         DelegationCycle storage cycle = _delegationCycles[delegator];
 
-        uint256 delta = activeEpochs - cycle.delegateActivity;
-        if (!cycle.currentDelegateRewardAdjusted && governor.isActive(cycle.startEpoch, currentDelegate)) {
-            cycle.currentDelegateRewardAdjusted = true;
-            delta -= 1;
-        }
-        if (!cycle.previousDelegateRewardAdjusted && governor.isActive(cycle.startEpoch, cycle.previousDelegate)) {
-            cycle.previousDelegateRewardAdjusted = true;
-            delta += 1;
-        }
-        if (delta == 0) return;
-
-        uint256 delegatorBalanceWithReward = _compound(delegatorBalance, ISPOG(spog).inflator(), delta);
-        uint256 reward = delegatorBalanceWithReward - delegatorBalance;
-        _voteRewards[delegator] += reward;
-
-        cycle.delegateActivity = activeEpochs;
-
-        // TODO emit events here
-    }
-
-    // TODO: primitive implementation for demonstartion purposes only
-    function _compound(uint256 principal, uint256 inflator, uint256 epochs) private pure returns (uint256) {
-        for (uint256 i; i < epochs;) {
-            principal += principal * inflator / 100;
-            unchecked {
-                ++i;
+        uint256 reward;
+        // Adjust reward for last epoch of previous delegate
+        // TODO: should we check that previousDelegate is not 0x0?
+        if (!cycle.previousDelegateRewardAccrued && currentEpoch >= cycle.startEpoch) {
+            cycle.previousDelegateRewardAccrued = true;
+            uint256 rewardEpoch = cycle.startEpoch - 1;
+            if (governor.isActive(rewardEpoch, cycle.previousDelegate)) {
+                uint256 blockStart = governor.startOf(rewardEpoch);
+                reward += getPastBalance(delegator, blockStart) * ISPOG(spog).inflator() / 100;
             }
         }
-        return principal;
+
+        for (uint256 epoch = cycle.startEpoch; epoch <= currentEpoch;) {
+            if (governor.isActive(epoch, currentDelegate)) {
+                uint256 blockStart = governor.startOf(epoch);
+                reward += getPastBalance(delegator, blockStart) * ISPOG(spog).inflator() / 100;
+            }
+            unchecked {
+                ++epoch;
+            }
+        }
+
+        _voteRewards[delegator] += reward;
+
+        // see if we need two different vars for epochs
+        cycle.startEpoch = governor.isActive(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch + 1;
+
+        // TODO emit events here
     }
 
     /// @notice Restricts minting to address with MINTER_ROLE

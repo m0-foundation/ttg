@@ -166,33 +166,7 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.totalSupply(), InflationaryVotes(address(vote)).totalVotes());
     }
 
-    function test_UsersVoteInflationUpgradeOnTransferForFrom() public {
-        assertEq(vote.balanceOf(alice), 100e18);
-
-        // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
-        // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
-        // alice votes on proposal 1
-        vm.startPrank(alice);
-        governor.castVote(proposal1Id, yesVote);
-        assertEq(vote.getVotes(alice), 120e18);
-        assertEq(InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 0);
-
-        // alice transfer part of her tokens
-        vote.transfer(bob, 50e18);
-        // alice unclaimed balance is updated on `transfer`
-        uint256 aliceUnclaimedRewards = InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice);
-        assertEq(aliceUnclaimedRewards, 20e18);
-        assertEq(vote.getVotes(alice), 70e18);
-        assertEq(vote.getVotes(bob), 150e18);
-        assertEq(vote.balanceOf(alice), 50e18);
-        assertEq(vote.balanceOf(bob), 150e18);
-
-        assertEq(vote.totalSupply() + aliceUnclaimedRewards, InflationaryVotes(address(vote)).totalVotes());
-    }
-
-    function test_UsersVoteInflationUpgradeOnTransferForTo() public {
+    function test_UsersVoteInflationWorksWithTransfer() public {
         assertEq(vote.balanceOf(alice), 100e18);
 
         // epoch - set up proposals
@@ -207,16 +181,33 @@ contract InflationRewardsTest is SPOG_Base {
         vm.stopPrank();
 
         vm.startPrank(bob);
-        // bob transfers tokens to alice, alice unclaimed rewards balance is updated
+        // bob transfers tokens to alice
         vote.transfer(alice, 10e18);
-        uint256 aliceUnclaimedRewards = InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice);
-        assertEq(aliceUnclaimedRewards, 20e18);
+        assertEq(InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 0);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        uint256 aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
+        vm.stopPrank();
+
         assertEq(vote.getVotes(alice), 130e18);
         assertEq(vote.getVotes(bob), 90e18);
-        assertEq(vote.balanceOf(alice), 110e18);
+        assertEq(vote.balanceOf(alice), 130e18);
         assertEq(vote.balanceOf(bob), 90e18);
 
-        assertEq(vote.totalSupply() + aliceUnclaimedRewards, InflationaryVotes(address(vote)).totalVotes());
+        // bob votes too
+        vm.startPrank(bob);
+        governor.castVote(proposal1Id, yesVote);
+        assertEq(vote.getVotes(bob), 110e18);
+        uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(bobRewards, 20e18, "Incorrect alice rewards");
+        vm.stopPrank();
+
+        assertEq(vote.getVotes(alice), 130e18);
+        assertEq(vote.getVotes(bob), 110e18);
+        assertEq(vote.balanceOf(alice), 130e18);
+        assertEq(vote.balanceOf(bob), 110e18);
     }
 
     function test_UserGetRewardOnlyOncePerEpochIfRedelegating() public {
@@ -296,6 +287,7 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.getVotes(alice), 100e18);
         assertEq(vote.getVotes(bob), 100e18);
         assertEq(vote.getVotes(carol), 100e18);
+        uint256 extraTotalVotes = InflationaryVotes(address(vote)).totalVotes() - 300e18;
 
         // epoch - set up proposals
         (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
@@ -318,7 +310,7 @@ contract InflationRewardsTest is SPOG_Base {
         // takes into account voting power at the beginning of epoch
         assertEq(vote.getVotes(bob), 70e18);
         uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
-        assertEq(bobRewards, 10e18, "Incorrect bob rewards");
+        assertEq(bobRewards, 20e18, "Incorrect bob rewards");
         vm.stopPrank();
 
         vm.startPrank(carol);
@@ -326,11 +318,13 @@ contract InflationRewardsTest is SPOG_Base {
         governor.castVote(proposal1Id, yesVote);
         // takes into account voting power at the beginning of epoch
         assertEq(vote.getVotes(carol), 170e18);
-
         uint256 carolRewards = InflationaryVotes(address(vote)).claimVoteRewards();
-        assertEq(carolRewards, 30e18, "Incorrect carol rewards");
-        console.log("Carol balance = ", vote.balanceOf(carol));
-        console.log("Carol votes = ", vote.getVotes(carol));
+        assertEq(carolRewards, 20e18, "Incorrect carol rewards");
         vm.stopPrank();
+
+        assertEq(
+            vote.balanceOf(alice) + vote.balanceOf(bob) + vote.balanceOf(carol),
+            InflationaryVotes(address(vote)).totalVotes() - extraTotalVotes
+        );
     }
 }

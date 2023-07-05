@@ -32,12 +32,6 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice The list cof emergency proposals, (proposalId => true)
     mapping(uint256 => bool) public override emergencyProposals;
 
-    /// @notice The number of active epochs per delegate
-    mapping(address => uint256) public override delegateActivity;
-
-    // /// @notice The number of active epochs that inflate voting power and token supply
-    // uint256 public numActiveEpochs;
-
     /// @dev The voting period in blocks
     uint256 private immutable _votingPeriod;
 
@@ -255,8 +249,6 @@ contract DualGovernor is DualGovernorQuorum {
 
         // update cumulative vote weight for epoch
         epochBasic.totalVotesWeight += weight;
-        // update number of active voting epochs per delegate
-        delegateActivity[account] += 1;
 
         // calculate and mint VOTE voting power reward
         uint256 epochStart = startOf(epoch);
