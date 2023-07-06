@@ -24,7 +24,6 @@ contract InflationRewardsTest is SPOG_Base {
         // alice votes on proposal 1
         vm.startPrank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         uint256 aliceVotesAfterFirstVote = governor.vote().getVotes(alice);
         assertEq(aliceVotesAfterFirstVote, aliceVotes, "No rewards yet, alice has not voted on all proposals");
@@ -34,7 +33,6 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.balanceOf(bob), amountToMint, "Bob should have same vote balance");
 
         // alice votes on proposal 2 and 3
-        vm.startPrank(alice);
         governor.castVote(proposalId2, yesVote);
         governor.castVote(proposalId3, noVote);
 
