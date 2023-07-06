@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import "test/shared/SPOG_Base.t.sol";
-import "forge-std/console.sol";
 
 contract InflationRewardsTest is SPOG_Base {
     function test_UserVoteInflationAfterVotingOnAllProposals() public {
@@ -505,6 +504,7 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.getVotes(carol), 110e18);
         // bob votes on proposal 1
         governor.castVote(proposal1Id, yesVote);
+        // we account for min (balance at the start of epoch,  at the moment of voting)
         assertEq(vote.getVotes(bob), 96e18);
         vm.stopPrank();
 
