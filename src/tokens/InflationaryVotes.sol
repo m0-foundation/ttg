@@ -347,8 +347,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
             if (epoch != _delegationSwitchEpoch[delegator] && governor.isActive(epoch, currentDelegate)) {
                 uint256 balanceAtEpochStart = getPastBalance(delegator, epochStart);
                 uint256 votingFinalized = governor.votingFinalizedAt(epoch, currentDelegate);
-                uint256 balanceAtTheEndOfVoting =
-                    getPastBalance(delegator, governor.votingFinalizedAt(epoch, currentDelegate));
+                uint256 balanceAtTheEndOfVoting = getPastBalance(delegator, votingFinalized);
                 uint256 rewardableBalance = _min(balanceAtEpochStart, balanceAtTheEndOfVoting) + reward;
 
                 reward += rewardableBalance * ISPOG(spog).inflator() / 100;

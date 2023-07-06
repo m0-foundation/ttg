@@ -346,4 +346,142 @@ contract InflationRewardsTest is SPOG_Base {
         uint256 aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
         assertEq(aliceRewards, 0e18, "Incorrect alice rewards");
     }
+
+    function test_UsersVoteInflationForMultipleEpochsWithRedelegation() public {
+        // epoch - set up proposals
+        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+
+        /// EPOCH 1
+
+        // voting period started
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        vm.startPrank(alice);
+        // alice votes on proposal 1
+        governor.castVote(proposal1Id, yesVote);
+        assertEq(vote.getVotes(alice), 120e18);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        // bob votes on proposal 1
+        governor.castVote(proposal1Id, yesVote);
+        assertEq(vote.getVotes(bob), 120e18);
+        vm.stopPrank();
+
+        vm.startPrank(carol);
+        // carol votes on proposal 1
+        governor.castVote(proposal1Id, yesVote);
+        assertEq(vote.getVotes(carol), 120e18, "incorrect carol votes");
+        vm.stopPrank();
+
+        // fast forward to end of voting period
+        vm.roll(block.number + governor.votingPeriod() + 1);
+
+        /// EPOCH 2
+
+        (uint256 proposal2Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 2");
+
+        // voting period started
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        vm.startPrank(alice);
+        // alice votes on proposal 2
+        governor.castVote(proposal2Id, yesVote);
+        assertEq(vote.getVotes(alice), 144e18);
+        uint256 aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(aliceRewards, 44e18, "Incorrect alice rewards");
+        assertEq(vote.getVotes(bob), 120e18);
+        vote.delegate(bob);
+        assertEq(vote.getVotes(bob), 264e18);
+        vm.stopPrank();
+
+        vm.startPrank(carol);
+        // carol redelegates to bob
+        assertEq(vote.getVotes(bob), 264e18);
+        vote.delegate(bob);
+        assertEq(vote.getVotes(bob), 384e18);
+        // carol votes on proposal 2
+        governor.castVote(proposal2Id, yesVote);
+        assertEq(vote.getVotes(carol), 0e18);
+        uint256 carolRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        // carol doesn't get rewards for this epoch, she voted after re-delegation
+        // @note compare carol to alice, alice got rewards for 2 epochs, carol only 1
+        assertEq(carolRewards, 20e18, "Incorrect carol rewards");
+        assertEq(vote.balanceOf(carol), 120e18, "Incorrect carol balance");
+        assertEq(
+            vote.getVotes(bob),
+            vote.balanceOf(bob) + 20e18 + vote.balanceOf(alice) + vote.balanceOf(carol),
+            "Incorrect bob votes"
+        );
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        // bob votes on proposal 2
+        // 120 from bob, 144 from alice, 120 from carol
+        assertEq(vote.getVotes(bob), 384e18);
+        governor.castVote(proposal2Id, yesVote);
+        // 144 from bob, 144 from alice, 120 from carol
+        // alice and carol delegated during this epoch, do they votes do not account for voting power inflation
+        assertEq(vote.getVotes(bob), 408e18);
+        // uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        // console.log("bobRewards", bobRewards);
+        vm.stopPrank();
+
+        vm.startPrank(carol);
+        carolRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        // carol doesn't get rewards for bob voting
+        assertEq(carolRewards, 0e18, "Incorrect carol rewards");
+        vm.stopPrank();
+
+        // fast forward to end of voting period
+        vm.roll(block.number + governor.votingPeriod() + 1);
+
+        // epoch - set up proposals
+        (uint256 proposal3Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 3");
+
+        // voting period started
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        /// EPOCH 3
+
+        vm.startPrank(alice);
+        // alice votes on proposal 3
+        governor.castVote(proposal3Id, yesVote);
+        assertEq(vote.getVotes(alice), 0);
+        // no rewards for alice, her voting power is 0
+        aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(aliceRewards, 0, "Incorrect alice rewards");
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        // bob votes on proposal 3
+        assertEq(vote.getVotes(bob), 408e18);
+        governor.castVote(proposal3Id, yesVote);
+        assertEq(vote.getVotes(bob), 4896e17);
+        uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(bobRewards, 728e17, "Incorrect bob rewards");
+        vm.stopPrank();
+        assertEq(vote.balanceOf(bob), 100e18 * 120 * 120 * 120 / 100 / 100 / 100);
+        assertEq(vote.balanceOf(alice), 100e18 * 120 * 120 / 100 / 100);
+
+        vm.startPrank(alice);
+        aliceRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(aliceRewards, 288e17, "Incorrect alice rewards");
+        assertEq(vote.balanceOf(alice), 100e18 * 120 * 120 * 120 / 100 / 100 / 100);
+        vm.stopPrank();
+
+        vm.startPrank(carol);
+        carolRewards = InflationaryVotes(address(vote)).claimVoteRewards();
+        assertEq(carolRewards, 24e18, "Incorrect carol rewards");
+        // carol missed 1 epoch on redelegation
+        assertEq(vote.balanceOf(carol), 100e18 * 120 * 120 / 100 / 100);
+        vm.stopPrank();
+
+        // Main assumption of our voting system
+        assertEq(
+            vote.getVotes(bob),
+            vote.balanceOf(bob) + vote.balanceOf(alice) + vote.balanceOf(carol),
+            "Incorrect bob votes"
+        );
+    }
 }
