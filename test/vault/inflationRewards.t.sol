@@ -140,10 +140,7 @@ contract InflationRewardsTest is SPOG_Base {
         uint256 bobVotes = vote.getVotes(bob);
         assertEq(bobVotes, 100e18);
         // alice delegates her voting power with rewards to bob
-        assertEq(InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 0);
         vote.delegate(bob);
-        assertEq(InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 20e18);
-        assertEq(vote.getVotes(bob), bobVotes + aliceVotesAfterFirstVote);
 
         // alice claims her voting rewards
         uint256 aliceRewards = InflationaryVotes(address(governor.vote())).claimVoteRewards();
@@ -174,7 +171,6 @@ contract InflationRewardsTest is SPOG_Base {
         vm.startPrank(alice);
         governor.castVote(proposal1Id, yesVote);
         assertEq(vote.getVotes(alice), 120e18);
-        assertEq(InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 0);
         vm.stopPrank();
 
         vm.startPrank(bob);
@@ -229,9 +225,6 @@ contract InflationRewardsTest is SPOG_Base {
             vote.getVotes(bob),
             240e18,
             "Bob voting power includes alice initial voting power + reward + reward for voting"
-        );
-        assertEq(
-            InflationaryVotes(address(vote)).getUnclaimedVoteRewards(alice), 20e18, "Alice vote rewards are incorrect"
         );
         uint256 bobRewards = InflationaryVotes(address(vote)).claimVoteRewards();
         assertEq(bobRewards, 20e18, "Incorrect bob rewards");

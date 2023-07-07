@@ -38,9 +38,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     mapping(address => Checkpoint[]) private _balancesCheckpoints;
     Checkpoint[] private _totalSupplyCheckpoints;
 
-    // owner => current delegation cycle
-    // combine together
     mapping(address => uint256) private _voteRewards;
+    // mapping(address => uint256) private _valueRewards;
     mapping(address => uint256) private lastEpochRewardsAccrued;
 
     /// @notice Constructs governance voting token
@@ -197,13 +196,11 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     function _moveBalance(address src, address dst, uint256 amount) private {
         if (src != dst && amount > 0) {
             if (src != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_balancesCheckpoints[src], _subtract, amount);
-                // emit DelegateVotesChanged(src, oldWeight, newWeight);
+                _writeCheckpoint(_balancesCheckpoints[src], _subtract, amount);
             }
 
             if (dst != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_balancesCheckpoints[dst], _add, amount);
-                // emit DelegateVotesChanged(dst, oldWeight, newWeight);
+                _writeCheckpoint(_balancesCheckpoints[dst], _add, amount);
             }
         }
     }
@@ -251,9 +248,9 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         return pos == 0 ? 0 : _totalVotesCheckpoints[pos - 1].amount;
     }
 
-    function getUnclaimedVoteRewards(address account) public view virtual returns (uint256) {
-        return _voteRewards[account];
-    }
+    // function getUnclaimedRewards(address account) public view virtual returns (uint256, uint256) {
+    //     return (_voteRewards[account], _valueRewards[account]);
+    // }
 
     /// @dev Performs ERC20 transfer with delegation tracking.
     function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
@@ -340,7 +337,8 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         if (currentEpoch == 0) return;
         address currentDelegate = delegates(delegator);
 
-        uint256 reward;
+        uint256 voteReward;
+        // uint256 valueReward;
         uint256 startEpoch = lastEpochRewardsAccrued[delegator];
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
             uint256 epochStart = governor.startOf(epoch);
@@ -348,16 +346,18 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
                 uint256 balanceAtEpochStart = getPastBalance(delegator, epochStart);
                 uint256 votingFinalized = governor.votingFinalizedAt(epoch, currentDelegate);
                 uint256 balanceAtTheEndOfVoting = getPastBalance(delegator, votingFinalized);
-                uint256 rewardableBalance = _min(balanceAtEpochStart, balanceAtTheEndOfVoting) + reward;
-
-                reward += rewardableBalance * ISPOG(spog).inflator() / 100;
+                uint256 rewardableBalance = _min(balanceAtEpochStart, balanceAtTheEndOfVoting) + voteReward;
+                voteReward += rewardableBalance * ISPOG(spog).inflator() / 100;
+                // valueReward +=
+                //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
             }
             unchecked {
                 ++epoch;
             }
         }
 
-        _voteRewards[delegator] += reward;
+        _voteRewards[delegator] += voteReward;
+        // _valueRewards[delegator] += valueReward;
 
         // TODO: see if it can be written better
         lastEpochRewardsAccrued[delegator] =
