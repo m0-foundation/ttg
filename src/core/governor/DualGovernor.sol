@@ -198,7 +198,7 @@ contract DualGovernor is DualGovernorQuorum {
         ProposalType proposalType = _getProposalType(func);
         _proposalTypes[proposalId] = proposalType;
 
-        emit Proposal(nextEpoch, proposalId, proposalType);
+        emit Proposal(nextEpoch, proposalId, proposalType, targets[0], calldatas[0], description);
 
         return proposalId;
     }
