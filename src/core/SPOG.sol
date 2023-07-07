@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import "src/interfaces/ISPOG.sol";
 import "src/interfaces/ITokens.sol";
-import "src/interfaces/IList.sol";
+import "src/interfaces/periphery/IList.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 

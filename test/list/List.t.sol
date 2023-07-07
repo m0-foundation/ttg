@@ -112,7 +112,7 @@ contract ListTest is BaseTest {
         address newSPOG = address(new MockSPOG());
 
         // revert when called not by an admin
-        vm.expectRevert(NotAdmin.selector);
+        vm.expectRevert(IList.NotAdmin.selector);
         list.changeAdmin(newSPOG);
 
         assertEq(list.admin(), users.admin);
@@ -123,7 +123,7 @@ contract ListTest is BaseTest {
         changePrank({who: users.alice});
 
         // revert when called not by an admin
-        vm.expectRevert(NotAdmin.selector);
+        vm.expectRevert(IList.NotAdmin.selector);
         list.add(users.alice);
     }
 
@@ -132,7 +132,7 @@ contract ListTest is BaseTest {
         changePrank({who: users.alice});
 
         // revert when called not by an admin
-        vm.expectRevert(NotAdmin.selector);
+        vm.expectRevert(IList.NotAdmin.selector);
         list.remove(users.alice);
     }
 

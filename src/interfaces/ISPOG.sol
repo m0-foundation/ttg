@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "src/interfaces/IProtocolConfigurator.sol";
-import "src/interfaces/ISPOGVault.sol";
 import "src/interfaces/ISPOGGovernor.sol";
+import "src/interfaces/periphery/ISPOGVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
     // Enums

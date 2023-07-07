@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "src/interfaces/ISPOGGovernor.sol";
-import "src/interfaces/ISPOGVault.sol";
+import "src/interfaces/periphery/ISPOGVault.sol";
 
 /// @title Vault
 /// @notice contract that will hold inflation rewards and the SPOG assets.

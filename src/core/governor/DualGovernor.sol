@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/interfaces/IList.sol";
+import "src/interfaces/periphery/IList.sol";
 import "src/core/governor/DualGovernorQuorum.sol";
 import "src/tokens/InflationaryVotes.sol";
 

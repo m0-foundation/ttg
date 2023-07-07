@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {IList} from "src/interfaces/IList.sol";
-import {List} from "src/periphery/List.sol";
+import "src/periphery/List.sol";
 
 /// @title ListFactory
 /// @notice This contract is used to deploy List contracts

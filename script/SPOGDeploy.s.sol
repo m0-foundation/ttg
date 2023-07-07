@@ -7,11 +7,11 @@ import "@openzeppelin/contracts/access/IAccessControl.sol";
 import "script/shared/Base.s.sol";
 
 import "src/core/SPOG.sol";
-import "src/core/governor/DualGovernor.sol";
-import "src/periphery/ERC20PricelessAuction.sol";
-import "src/periphery/SPOGVault.sol";
 import "src/tokens/VOTE.sol";
 import "src/tokens/VALUE.sol";
+import "src/core/governor/DualGovernor.sol";
+import "src/periphery/VoteAuction.sol";
+import "src/periphery/SPOGVault.sol";
 
 contract SPOGDeployScript is BaseScript {
     address public governor;
@@ -51,7 +51,7 @@ contract SPOGDeployScript is BaseScript {
 
         value = address(new VALUE("SPOG Value", "VALUE"));
         vote = address(new VOTE("SPOG Vote", "VOTE", value));
-        auction = address(new ERC20PricelessAuction());
+        auction = address(new VoteAuction());
 
         // deploy governor and vaults
         governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum, time));
