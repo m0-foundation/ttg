@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/governance/IGovernor.sol";
 import "test/Base.t.sol";
 import "script/SPOGDeploy.s.sol";
 
+import "src/interfaces/ITokens.sol";
 import "src/periphery/List.sol";
-import "src/interfaces/tokens/ISPOGVotes.sol";
 
 contract SPOG_Base is BaseTest {
     SPOGDeployScript public deployScript;

@@ -2,8 +2,8 @@
 pragma solidity 0.8.19;
 
 import "src/interfaces/ISPOG.sol";
+import "src/interfaces/ITokens.sol";
 import "src/tokens/SPOGVotes.sol";
-import "src/interfaces/tokens/InflationaryVotesI.sol";
 
 // TODO: delete this file
 import "forge-std/console.sol";

@@ -4,8 +4,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import "src/interfaces/tokens/IValue.sol";
-import "./SPOGVotes.sol";
+import "src/tokens/SPOGVotes.sol";
 
 /// @title ValueToken with a built-in snapshot functionality
 /// @dev Snapshot is taken at the moment of reset by SPOG

@@ -4,7 +4,8 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 
 import "./InflationaryVotes.sol";
-import "src/interfaces/tokens/IVote.sol";
+
+import "src/interfaces/ITokens.sol";
 
 /// @title VoteToken
 /// @dev It relies of snapshotted balances of Value token holders at the moment of reset

@@ -3,9 +3,7 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
 
-import "src/interfaces/tokens/IVote.sol";
-import "src/interfaces/tokens/IValue.sol";
-import "src/interfaces/ISPOGControlled.sol";
+import "src/interfaces/ITokens.sol";
 
 interface IDualGovernor {
     // Enums

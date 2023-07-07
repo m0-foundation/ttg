@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import "src/interfaces/tokens/IVote.sol";
-import "src/interfaces/tokens/IValue.sol";
-import "src/interfaces/IList.sol";
 import "src/interfaces/ISPOG.sol";
+import "src/interfaces/ITokens.sol";
+import "src/interfaces/IList.sol";
 
 import "src/config/ProtocolConfigurator.sol";
 

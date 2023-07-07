@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import "src/interfaces/tokens/ISPOGVotes.sol";
+import "src/interfaces/ITokens.sol";
 
 abstract contract SPOGVotes is ERC20Permit, AccessControlEnumerable, ISPOGVotes {
     bytes32 public constant override MINTER_ROLE = keccak256("MINTER_ROLE");
