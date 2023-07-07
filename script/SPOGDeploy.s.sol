@@ -10,8 +10,8 @@ import "src/core/SPOG.sol";
 import "src/core/governor/DualGovernor.sol";
 import "src/periphery/ERC20PricelessAuction.sol";
 import "src/periphery/vaults/ValueVault.sol";
-import "src/tokens/VoteToken.sol";
-import "src/tokens/ValueToken.sol";
+import "src/tokens/VOTE.sol";
+import "src/tokens/VALUE.sol";
 
 contract SPOGDeployScript is BaseScript {
     address public governor;
@@ -49,8 +49,8 @@ contract SPOGDeployScript is BaseScript {
         taxLowerBound = 0;
         taxUpperBound = 6e18;
 
-        value = address(new ValueToken("SPOG Value", "VALUE"));
-        vote = address(new VoteToken("SPOG Vote", "VOTE", value));
+        value = address(new VALUE("SPOG Value", "VALUE"));
+        vote = address(new VOTE("SPOG Vote", "VOTE", value));
         auction = address(new ERC20PricelessAuction());
 
         // deploy governor and vaults
@@ -58,8 +58,8 @@ contract SPOGDeployScript is BaseScript {
         vault = address(new ValueVault(governor));
 
         // grant minter role for test runner
-        IAccessControl(vote).grantRole(ISPOGVotes(vote).MINTER_ROLE(), msg.sender);
-        IAccessControl(value).grantRole(ISPOGVotes(value).MINTER_ROLE(), msg.sender);
+        IVOTE(vote).grantRole(IVOTE(vote).MINTER_ROLE(), msg.sender);
+        IVALUE(value).grantRole(IVALUE(value).MINTER_ROLE(), msg.sender);
 
         vm.stopBroadcast();
     }

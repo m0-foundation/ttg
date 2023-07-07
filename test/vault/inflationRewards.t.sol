@@ -10,6 +10,8 @@ contract InflationRewardsTest is SPOG_Base {
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
+        // console.log("token name = ", vote.symbol());
+
         // cannot vote in epoch 0
         vm.expectRevert("DualGovernor: vote not currently active");
         governor.castVote(proposalId, yesVote);

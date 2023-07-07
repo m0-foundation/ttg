@@ -44,8 +44,8 @@ interface IDualGovernor {
 
     // Accessors for vote, value tokens and spog contract
     // function spog() external view returns (ISPOG);
-    function vote() external view returns (IVote);
-    function value() external view returns (IValue);
+    function vote() external view returns (IVOTE);
+    function value() external view returns (IVALUE);
 
     // Utility functions
     // function initializeSPOG(address spog) external;

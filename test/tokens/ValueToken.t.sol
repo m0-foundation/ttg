@@ -6,13 +6,13 @@ import "test/shared/SPOG_Base.t.sol";
 contract ValueTokenTest is SPOG_Base {
     uint256 aliceStartBalance = 50e18;
 
-    ValueToken valueToken;
+    VALUE valueToken;
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
 
-        valueToken = new ValueToken("SPOGValue", "value");
+        valueToken = new VALUE("SPOGValue", "value");
         valueToken.initializeSPOG(address(spog));
 
         // grant mint role to this contract

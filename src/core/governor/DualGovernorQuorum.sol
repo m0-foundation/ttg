@@ -12,10 +12,10 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
-    IVote public immutable override vote;
+    IVOTE public immutable override vote;
 
     /// @notice The value token of SPOG governance
-    IValue public immutable override value;
+    IVALUE public immutable override value;
 
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
@@ -41,9 +41,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         if (valueQuorumNumerator_ == 0) revert ZeroValueQuorumNumerator();
 
         // Set tokens and check that they are properly linked together
-        vote = IVote(vote_);
-        value = IValue(value_);
-        if (vote.valueToken() != value_) revert VoteValueMistmatch();
+        vote = IVOTE(vote_);
+        value = IVALUE(value_);
+        if (vote.value() != value) revert VoteValueMistmatch();
 
         // Set initial vote and value quorums
         _updateVoteQuorumNumerator(voteQuorumNumerator_);

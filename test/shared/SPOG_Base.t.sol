@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/governance/IGovernor.sol";
-
 import "test/Base.t.sol";
 import "script/SPOGDeploy.s.sol";
 
@@ -13,9 +11,9 @@ contract SPOG_Base is BaseTest {
     SPOGDeployScript public deployScript;
 
     ISPOG public spog;
-    DualGovernor public governor;
-    IVote public vote;
-    IValue public value;
+    ISPOGGovernor public governor;
+    IVOTE public vote;
+    IVALUE public value;
     ValueVault public vault;
     IERC20 public cash;
     IList public list;
@@ -40,10 +38,10 @@ contract SPOG_Base is BaseTest {
         deployScript.run();
 
         spog = ISPOG(deployScript.spog());
-        governor = DualGovernor(payable(deployScript.governor()));
+        governor = ISPOGGovernor(payable(deployScript.governor()));
         cash = IERC20(deployScript.cash());
-        vote = IVote(deployScript.vote());
-        value = IValue(deployScript.value());
+        vote = IVOTE(deployScript.vote());
+        value = IVALUE(deployScript.value());
         vault = ValueVault(deployScript.vault());
         tax = deployScript.tax();
 

@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+
 import "src/interfaces/ISPOG.sol";
 import "src/interfaces/ITokens.sol";
-import "src/tokens/SPOGVotes.sol";
+import "src/tokens/SPOGToken.sol";
 
 // TODO: delete this file
 import "forge-std/console.sol";
 
 /// @notice copy of OZ ERC20Votes which allows more flexible movement of accounts weight
-abstract contract InflationaryVotes is InflationaryVotesI, SPOGVotes {
+abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotesInterface {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 amount;
@@ -32,9 +34,7 @@ abstract contract InflationaryVotes is InflationaryVotesI, SPOGVotes {
     mapping(address => uint256) private _lastEpochRewardsAccrued;
 
     /// @notice Constructs governance voting token
-    /// @param name The name of the token
-    /// @param symbol The symbol of the token
-    constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {}
+    constructor() SPOGToken() {}
 
     function checkpoints(address account, uint32 pos) public view virtual returns (Checkpoint memory) {
         return _votesCheckpoints[account][pos];

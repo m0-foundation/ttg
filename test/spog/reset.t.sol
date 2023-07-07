@@ -16,7 +16,7 @@ contract SPOG_reset is SPOG_Base {
 
     function createNewGovernor(address valueToken) private returns (address) {
         // deploy vote governor from factory
-        VoteToken newVoteToken = new VoteToken("new SPOGVote", "vote", valueToken);
+        VOTE newVoteToken = new VOTE("new SPOGVote", "vote", valueToken);
         // grant minter role to new voteToken deployer
         IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(this));
 
