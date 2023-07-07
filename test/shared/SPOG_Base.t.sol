@@ -14,7 +14,7 @@ contract SPOG_Base is BaseTest {
     ISPOGGovernor public governor;
     IVOTE public vote;
     IVALUE public value;
-    ValueVault public vault;
+    ISPOGVault public vault;
     IERC20 public cash;
     IList public list;
     uint256 public tax;
@@ -42,7 +42,7 @@ contract SPOG_Base is BaseTest {
         cash = IERC20(deployScript.cash());
         vote = IVOTE(deployScript.vote());
         value = IVALUE(deployScript.value());
-        vault = ValueVault(deployScript.vault());
+        vault = ISPOGVault(deployScript.vault());
         tax = deployScript.tax();
 
         // mint vote tokens and self-delegate

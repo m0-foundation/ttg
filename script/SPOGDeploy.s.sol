@@ -9,7 +9,7 @@ import "script/shared/Base.s.sol";
 import "src/core/SPOG.sol";
 import "src/core/governor/DualGovernor.sol";
 import "src/periphery/ERC20PricelessAuction.sol";
-import "src/periphery/vaults/ValueVault.sol";
+import "src/periphery/SPOGVault.sol";
 import "src/tokens/VOTE.sol";
 import "src/tokens/VALUE.sol";
 
@@ -55,7 +55,7 @@ contract SPOGDeployScript is BaseScript {
 
         // deploy governor and vaults
         governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum, time));
-        vault = address(new ValueVault(governor));
+        vault = address(new SPOGVault(governor));
 
         // grant minter role for test runner
         IVOTE(vote).grantRole(IVOTE(vote).MINTER_ROLE(), msg.sender);

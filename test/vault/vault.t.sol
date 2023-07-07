@@ -50,7 +50,7 @@ contract VaultTest is SPOG_Base {
         epochsToGetRewardsFor[0] = epochNumber;
 
         // TODO: use vault interface
-        uint256 epochCashRewardDepositInVault = ValueVault(vault).epochTokenDeposit(address(cash), epochNumber);
+        uint256 epochCashRewardDepositInVault = vault.deposits(epochNumber, address(cash));
         assertEq(
             epochCashRewardDepositInVault,
             epochCashRewards,
@@ -140,7 +140,7 @@ contract VaultTest is SPOG_Base {
         epochsToGetRewardsFor[1] = epochNumber + 1;
         epochsToGetRewardsFor[2] = epochNumber + 2;
 
-        uint256 epochCashRewardDepositInVault = vault.epochTokenDeposit(address(cash), epochNumber) * numberOfEpochs;
+        uint256 epochCashRewardDepositInVault = vault.deposits(epochNumber, address(cash)) * numberOfEpochs;
 
         assertEq(
             epochCashRewardDepositInVault,
