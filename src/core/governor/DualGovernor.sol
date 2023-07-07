@@ -28,7 +28,7 @@ contract DualGovernor is DualGovernorQuorum {
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     /// @notice The SPOG contract
-    ISPOG public override spog;
+    address public override spog;
 
     /// @notice The list cof emergency proposals, (proposalId => true)
     mapping(uint256 => bool) public override emergencyProposals;
@@ -79,12 +79,12 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev Adds additional intialization for tokens
     /// @param _spog The address of the SPOG contract
     function initializeSPOG(address _spog) external override {
-        if (address(spog) != address(0)) revert AlreadyInitialized();
+        if (spog != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
         // @dev should never happen, precaution
         if (_start == 0) revert ZeroStart();
 
-        spog = ISPOG(_spog);
+        spog = _spog;
         // initialize tokens
         vote.initializeSPOG(_spog);
         // TODO: find the way to avoid mistake with initialization for reset
@@ -152,7 +152,7 @@ contract DualGovernor is DualGovernorQuorum {
         bytes4 func = bytes4(calldatas[0]);
         if (target != address(this) && target != address(spog)) revert InvalidTarget();
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
-        if (target == address(spog) && !spog.isGovernedMethod(func)) revert InvalidMethod();
+        if (target == spog && !ISPOG(spog).isGovernedMethod(func)) revert InvalidMethod();
         // prevent proposing a list that can be changed before execution
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
@@ -160,7 +160,7 @@ contract DualGovernor is DualGovernorQuorum {
             if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
         }
 
-        spog.chargeFee(msg.sender, func);
+        ISPOG(spog).chargeFee(msg.sender, func);
 
         uint256 nextEpoch = currentEpoch() + 1;
         uint256 proposalId;
@@ -257,8 +257,8 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 epochVotes = _min(vote.getPastVotes(account, epochStart), vote.getVotes(account));
         // TODO: move 100 in denominator constant
         // TODO: prevent overflow, precision loss ?
-        uint256 reward = epochVotes * spog.inflator() / 100;
-        InflationaryVotes(address(vote)).addVotingPower(account, reward);
+        uint256 reward = epochVotes * ISPOG(spog).inflator() / 100;
+        vote.addVotingPower(account, reward);
 
         // claim VALUE token reward by delegate
         // uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalSupply(epochStart);

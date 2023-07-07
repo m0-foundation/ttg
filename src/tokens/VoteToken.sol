@@ -62,4 +62,11 @@ contract VoteToken is InflationaryVotes, IVote {
     function resetBalanceOf(address account) public view override returns (uint256) {
         return ERC20Snapshot(valueToken).balanceOfAt(account, resetSnapshotId);
     }
+
+    /// @notice Restricts minting to address with MINTER_ROLE
+    /// @param to The address to mint to
+    /// @param amount The amount to mint
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+        _mint(to, amount);
+    }
 }

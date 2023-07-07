@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/governance/Governor.sol";
 
 import "src/interfaces/tokens/IVote.sol";
 import "src/interfaces/tokens/IValue.sol";
-import "src/interfaces/ISPOG.sol";
+import "src/interfaces/ISPOGControlled.sol";
 
 interface IDualGovernor {
     // Enums
@@ -26,7 +26,7 @@ interface IDualGovernor {
     error InvalidValue();
     error InvalidMethod();
     error ListAdminIsNotSPOG();
-    error AlreadyInitialized();
+    // error AlreadyInitialized();
     error AlreadyVoted();
     error ZeroSPOGAddress();
     error ZeroVotingPeriod();
@@ -45,12 +45,12 @@ interface IDualGovernor {
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
     // Accessors for vote, value tokens and spog contract
-    function spog() external view returns (ISPOG);
+    // function spog() external view returns (ISPOG);
     function vote() external view returns (IVote);
     function value() external view returns (IValue);
 
     // Utility functions
-    function initializeSPOG(address spog) external;
+    // function initializeSPOG(address spog) external;
     function isGovernedMethod(bytes4 func) external pure returns (bool);
     function emergencyProposals(uint256 proposalId) external view returns (bool);
 
@@ -77,4 +77,4 @@ interface IDualGovernor {
     function votingFinalizedAt(uint256 epoch, address account) external view returns (uint256);
 }
 
-abstract contract ISPOGGovernor is Governor, IDualGovernor {}
+abstract contract ISPOGGovernor is Governor, IDualGovernor, ISPOGControlled {}

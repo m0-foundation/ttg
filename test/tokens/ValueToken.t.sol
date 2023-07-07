@@ -23,7 +23,7 @@ contract ValueTokenTest is SPOG_Base {
     }
 
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {
-        vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
+        vm.expectRevert(ISPOGControlled.CallerIsNotSPOG.selector);
         valueToken.snapshot();
     }
 

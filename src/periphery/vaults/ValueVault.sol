@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "src/interfaces/ISPOGGovernor.sol";
 import "src/interfaces/vaults/ISPOGVault.sol";
+import "src/tokens/InflationaryVotes.sol";
 
 /// @title Vault
 /// @notice contract that will hold inflation rewards and the SPOG assets.
@@ -92,11 +93,11 @@ contract ValueVault is ISPOGVault {
             // do not take into account rewards inflation for current epoch
             // TODO: fix for one governor!!!!!
             uint256 inflation = epochTokenDeposit[address(governor.vote())][epoch];
-            totalVotesWeight = ISPOGVotes(governor.vote()).getPastTotalSupply(epochStart) - inflation;
+            totalVotesWeight = governor.vote().getPastTotalSupply(epochStart) - inflation;
         }
 
         // account reward = (account votes weight * shared rewards) / total votes weight
-        uint256 accountVotesWeight = ISPOGVotes(governor.vote()).getPastVotes(msg.sender, epochStart);
+        uint256 accountVotesWeight = governor.vote().getPastVotes(msg.sender, epochStart);
         uint256 amountToBeSharedOnProRataBasis = epochTokenDeposit[token][epoch];
 
         uint256 percentageOfTotalSupply = accountVotesWeight * PRECISION_FACTOR / totalVotesWeight;

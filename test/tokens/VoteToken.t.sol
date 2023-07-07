@@ -79,7 +79,7 @@ contract VoteTokenTest is SPOG_Base {
         initTokens();
 
         uint256 randomSnapshotId = 10000;
-        vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
+        vm.expectRevert(ISPOGControlled.CallerIsNotSPOG.selector);
         voteToken.reset(randomSnapshotId);
     }
 

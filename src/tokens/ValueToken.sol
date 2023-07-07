@@ -11,7 +11,7 @@ import "./SPOGVotes.sol";
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev This snapshot is used by new Vote token to set initial supply of tokens
 /// @dev All value holders become vote holders of the new Vote governance
-contract ValueToken is SPOGVotes, ERC20Snapshot, IValue {
+contract ValueToken is SPOGVotes, ERC20Votes, ERC20Snapshot, IValue {
     constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {}
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
@@ -43,5 +43,12 @@ contract ValueToken is SPOGVotes, ERC20Snapshot, IValue {
     function snapshot() external override returns (uint256) {
         if (msg.sender != spog) revert CallerIsNotSPOG();
         return _snapshot();
+    }
+
+    /// @notice Restricts minting to address with MINTER_ROLE
+    /// @param to The address to mint to
+    /// @param amount The amount to mint
+    function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {
+        _mint(to, amount);
     }
 }

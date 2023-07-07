@@ -1,29 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-
 import "src/interfaces/ISPOG.sol";
+import "src/tokens/SPOGVotes.sol";
+import "src/interfaces/tokens/InflationaryVotesI.sol";
+
+// TODO: delete this file
 import "forge-std/console.sol";
 
 /// @notice copy of OZ ERC20Votes which allows more flexible movement of accounts weight
-contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPOGVotes {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    address public spog;
-
-    // Errors
-    error CallerIsNotSPOG();
-    error AlreadyInitialized();
-
+abstract contract InflationaryVotes is InflationaryVotesI, SPOGVotes {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 amount;
-    }
-
-    struct DelegateCheckpoint {
-        uint32 fromBlock;
-        address delegate;
     }
 
     bytes32 private constant _DELEGATION_TYPEHASH =
@@ -40,24 +29,12 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     mapping(address => uint256) private _voteRewards;
     // mapping(address => uint256) private _valueRewards;
-    mapping(address => uint256) private lastEpochRewardsAccrued;
+    mapping(address => uint256) private _lastEpochRewardsAccrued;
 
     /// @notice Constructs governance voting token
     /// @param name The name of the token
     /// @param symbol The symbol of the token
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
-        // TODO: Who will be the admin of this contract?
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
-
-    /// @notice Sets the spog address. Can only be called once.
-    /// @param _spog the address of the spog
-    function initializeSPOG(address _spog) external {
-        if (spog != address(0)) revert AlreadyInitialized();
-
-        spog = _spog;
-        _setupRole(MINTER_ROLE, _spog);
-    }
+    constructor(string memory name, string memory symbol) SPOGVotes(name, symbol) {}
 
     function checkpoints(address account, uint32 pos) public view virtual returns (Checkpoint memory) {
         return _votesCheckpoints[account][pos];
@@ -81,7 +58,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
-    //TODO add override
+    // TODO add override
     function getPastBalance(address account, uint256 blockNumber) public view virtual returns (uint256) {
         // require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
@@ -92,7 +69,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
 
-    //TODO add override
+    // TODO add override
     function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
@@ -254,10 +231,6 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
     /// @dev Performs ERC20 transfer with delegation tracking.
     function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
-        // cash out rewards
-        // _accrueRewards(msg.sender);
-        // _accrueRewards(to);
-
         _moveBalance(msg.sender, to, amount);
         _moveVotingPower(_delegates[msg.sender], _delegates[to], amount);
 
@@ -271,9 +244,6 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         override(ERC20, IERC20)
         returns (bool)
     {
-        // _accrueRewards(from);
-        // _accrueRewards(to);
-
         _moveBalance(from, to, amount);
         _moveVotingPower(_delegates[from], _delegates[to], amount);
 
@@ -281,6 +251,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
     }
 
     function addVotingPower(address account, uint256 amount) external {
+        // TODO: replace msg.sender with _msgSender()
         require(msg.sender == address(ISPOG(spog).governor()), "Caller is not governor");
         _mintVotingPower(account, amount);
     }
@@ -339,7 +310,7 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
 
         uint256 voteReward;
         // uint256 valueReward;
-        uint256 startEpoch = lastEpochRewardsAccrued[delegator];
+        uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
             uint256 epochStart = governor.startOf(epoch);
             if (epoch != _delegationSwitchEpoch[delegator] && governor.isActive(epoch, currentDelegate)) {
@@ -360,17 +331,10 @@ contract InflationaryVotes is IVotes, ERC20Permit, AccessControlEnumerable, ISPO
         // _valueRewards[delegator] += valueReward;
 
         // TODO: see if it can be written better
-        lastEpochRewardsAccrued[delegator] =
+        _lastEpochRewardsAccrued[delegator] =
             governor.isActive(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
 
         // TODO emit events here
-    }
-
-    /// @notice Restricts minting to address with MINTER_ROLE
-    /// @param to The address to mint to
-    /// @param amount The amount to mint
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        _mint(to, amount);
     }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {

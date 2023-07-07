@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface ISPOGVotes is IVotes, IERC20 {
-    function initializeSPOG(address _spog) external;
+import "src/interfaces/ISPOGControlled.sol";
 
-    function mint(address account, uint256 amount) external;
-
+interface ISPOGVotes is ISPOGControlled, IERC20 {
     function MINTER_ROLE() external view returns (bytes32);
+
+    function mint(address to, uint256 amount) external;
 }

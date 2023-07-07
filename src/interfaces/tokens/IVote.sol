@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
+import "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import "src/interfaces/tokens/ISPOGVotes.sol";
+import "src/interfaces/tokens/InflationaryVotesI.sol";
 
-interface IVote is ISPOGVotes {
+interface IVote is InflationaryVotesI, ISPOGVotes {
     // Errors
     error ResetTokensAlreadyClaimed();
     error ResetAlreadyInitialized();

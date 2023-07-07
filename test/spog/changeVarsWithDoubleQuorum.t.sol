@@ -63,9 +63,9 @@ contract SPOG_change is SPOG_Base {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // give alice vote power
-        ISPOGVotes(vote).mint(alice, 95e18);
+        vote.mint(alice, 95e18);
         vm.startPrank(alice);
-        ISPOGVotes(vote).delegate(alice);
+        vote.delegate(alice);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -108,9 +108,9 @@ contract SPOG_change is SPOG_Base {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // give alice vote power
-        ISPOGVotes(value).mint(alice, 95e18);
+        value.mint(alice, 95e18);
         vm.startPrank(alice);
-        ISPOGVotes(value).delegate(alice);
+        value.delegate(alice);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);

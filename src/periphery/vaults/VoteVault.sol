@@ -78,7 +78,7 @@ contract VoteVault is ValueVault, IVoteVault {
         }
 
         IERC20(token).approve(auction, numTokensToSell);
-        address paymentToken = address(governor.spog().cash());
+        address paymentToken = address(ISPOG(governor.spog()).cash());
         uint256 duration = governor.votingPeriod();
         IERC20PricelessAuction(auction).initialize(token, paymentToken, duration, numTokensToSell);
 

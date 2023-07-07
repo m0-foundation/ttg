@@ -14,8 +14,8 @@ contract SPOG_Base is BaseTest {
 
     ISPOG public spog;
     DualGovernor public governor;
-    ISPOGVotes public vote;
-    ISPOGVotes public value;
+    IVote public vote;
+    IValue public value;
     ValueVault public vault;
     IERC20 public cash;
     IList public list;
@@ -42,18 +42,18 @@ contract SPOG_Base is BaseTest {
         spog = ISPOG(deployScript.spog());
         governor = DualGovernor(payable(deployScript.governor()));
         cash = IERC20(deployScript.cash());
-        vote = ISPOGVotes(deployScript.vote());
-        value = ISPOGVotes(deployScript.value());
+        vote = IVote(deployScript.vote());
+        value = IValue(deployScript.value());
         vault = ValueVault(deployScript.vault());
         tax = deployScript.tax();
 
         // mint vote tokens and self-delegate
-        ISPOGVotes(vote).mint(address(this), amountToMint);
-        ISPOGVotes(vote).delegate(address(this));
+        vote.mint(address(this), amountToMint);
+        vote.delegate(address(this));
 
         // mint value tokens and self-delegate
-        ISPOGVotes(value).mint(address(this), amountToMint);
-        ISPOGVotes(value).delegate(address(this));
+        value.mint(address(this), amountToMint);
+        value.delegate(address(this));
 
         // deploy list and change admin to spog
         List newList = new List("SPOG List");
