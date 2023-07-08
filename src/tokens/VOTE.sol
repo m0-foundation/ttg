@@ -18,13 +18,13 @@ contract VOTE is InflationaryVotes, IVOTE {
     /// @notice snapshot id at the moment of reset
     uint256 public override resetSnapshotId;
 
-    /// @notice check that balances are claimed only once
+    /// @dev check that balances are claimed only once
     mapping(address => bool) private _alreadyClaimed;
 
-    /// @notice Constructs the vote token
+    /// @notice Constructs the VOTE token
     /// @param name Name of the token
     /// @param symbol Symbol of the token
-    /// @param _value Address of the value token for reset
+    /// @param _value Address of the VALUE token for reset
     constructor(string memory name, string memory symbol, address _value)
         InflationaryVotes()
         ERC20(name, symbol)

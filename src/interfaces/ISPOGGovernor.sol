@@ -24,7 +24,6 @@ interface IDualGovernor {
     error InvalidValue();
     error InvalidMethod();
     error ListAdminIsNotSPOG();
-    // error AlreadyInitialized();
     error AlreadyVoted();
     error ZeroSPOGAddress();
     error ZeroVotingPeriod();
@@ -43,7 +42,6 @@ interface IDualGovernor {
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
     // Accessors for vote, value tokens and spog contract
-    // function spog() external view returns (ISPOG);
     function vote() external view returns (IVOTE);
     function value() external view returns (IVALUE);
 

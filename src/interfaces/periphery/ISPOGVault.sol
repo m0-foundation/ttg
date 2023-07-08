@@ -4,11 +4,11 @@ pragma solidity 0.8.19;
 import "src/interfaces/ISPOGGovernor.sol";
 
 interface ISPOGVault {
-    // events
+    // Events
     event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
     event EpochRewardsWithdrawn(uint256 indexed epoch, address indexed account, address indexed token, uint256 amount);
 
-    // errors
+    // Errors
     error InvalidEpoch(uint256 invalidEpoch, uint256 currentEpoch);
     error EpochWithNoRewards();
     error AlreadyWithdrawn();

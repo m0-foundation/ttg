@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 import "src/interfaces/ISPOG.sol";
-import "src/interfaces/ITokens.sol";
 import "src/tokens/SPOGToken.sol";
 
 // TODO: delete this file
@@ -58,8 +57,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
-    // TODO add override
-    function getPastBalance(address account, uint256 blockNumber) public view virtual returns (uint256) {
+    function getPastBalance(address account, uint256 blockNumber) public view virtual override returns (uint256) {
         // require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
     }
@@ -69,8 +67,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
 
-    // TODO add override
-    function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual returns (uint256) {
+    function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual override returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
@@ -220,7 +217,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
             INFLATIONARY VOTES UNIQUE TOKEN INTERFACE
     //////////////////////////////////////////////////////////////*/
 
-    function totalVotes() public view virtual returns (uint256) {
+    function totalVotes() public view virtual override returns (uint256) {
         uint256 pos = _totalVotesCheckpoints.length;
         return pos == 0 ? 0 : _totalVotesCheckpoints[pos - 1].amount;
     }
@@ -250,13 +247,13 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return super.transferFrom(from, to, amount);
     }
 
-    function addVotingPower(address account, uint256 amount) external {
+    function addVotingPower(address account, uint256 amount) external override {
         // TODO: replace msg.sender with _msgSender()
         require(msg.sender == address(ISPOG(spog).governor()), "Caller is not governor");
         _mintVotingPower(account, amount);
     }
 
-    function claimVoteRewards() external returns (uint256) {
+    function claimVoteRewards() external override returns (uint256) {
         _accrueRewards(msg.sender);
 
         uint256 reward = _voteRewards[msg.sender];
