@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 
 contract ERC20GodMode is ERC20Mock {
     uint8 private _decimals;

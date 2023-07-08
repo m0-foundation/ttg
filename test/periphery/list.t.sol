@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-import "test/shared/Base.t.sol";
+import "test/base/Base.t.sol";
 import "src/periphery/List.sol";
 import "src/interfaces/ISPOG.sol";
 

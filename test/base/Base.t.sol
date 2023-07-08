@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
-import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
+import {ERC20GodMode} from "test/base/ERC20GodMode.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title BaseTest
