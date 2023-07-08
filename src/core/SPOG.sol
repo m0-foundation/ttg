@@ -40,6 +40,9 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Multiplier in cash for `reset` proposal
     uint256 public constant RESET_TAX_MULTIPLIER = 12;
 
+    /// TODO find the right one for better precision
+    uint256 internal constant INFLATOR_SCALE = 100;
+
     /// @notice Vault for value holders assets
     ISPOGVault public immutable override vault;
 
@@ -265,5 +268,11 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param interfaceId The interface ID to check
     function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
         return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    /// @dev
+    function getInflationReward(uint256 amount) external view override returns (uint256) {
+        // TODO: prevent overflow, precision loss ?
+        return amount * inflator / INFLATOR_SCALE;
     }
 }

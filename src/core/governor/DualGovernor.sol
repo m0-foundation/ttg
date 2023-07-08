@@ -254,10 +254,8 @@ contract DualGovernor is DualGovernorQuorum {
 
         // calculate and mint VOTE voting power reward
         uint256 epochStart = startOf(epoch);
-        uint256 epochVotes = _min(vote.getPastVotes(account, epochStart), vote.getVotes(account));
-        // TODO: move 100 in denominator constant
-        // TODO: prevent overflow, precision loss ?
-        uint256 reward = epochVotes * ISPOG(spog).inflator() / 100;
+        uint256 rewardableVotes = _min(vote.getPastVotes(account, epochStart), vote.getVotes(account));
+        uint256 reward = ISPOG(spog).getInflationReward(rewardableVotes);
         vote.addVotingPower(account, reward);
 
         // claim VALUE token reward by delegate

@@ -315,7 +315,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
                 uint256 votingFinalized = governor.votingFinalizedAt(epoch, currentDelegate);
                 uint256 balanceAtTheEndOfVoting = getPastBalance(delegator, votingFinalized);
                 uint256 rewardableBalance = _min(balanceAtEpochStart, balanceAtTheEndOfVoting) + voteReward;
-                voteReward += rewardableBalance * ISPOG(spog).inflator() / 100;
+                voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
                 // valueReward +=
                 //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
             }
