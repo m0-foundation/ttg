@@ -61,7 +61,6 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     function isGovernedMethod(bytes4 func) external pure returns (bool);
     function chargeFee(address account, bytes4 func) external;
-    // function inflateRewardTokens() external;
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);

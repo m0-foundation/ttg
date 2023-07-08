@@ -4,8 +4,8 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-import "src/periphery/List.sol";
 import "test/Base.t.sol";
+import "src/periphery/List.sol";
 import "src/interfaces/ISPOG.sol";
 
 contract MockSPOG is ERC165 {
