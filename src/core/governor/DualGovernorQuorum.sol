@@ -149,14 +149,14 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         emit ValueQuorumNumeratorUpdated(oldValueQuorumNumerator, newValueQuorumNumerator);
     }
 
-    /// @dev Returns vote votes for the account at the given timepoint
+    /// @dev Returns min between vote votes for the account at the given timepoint and current votes
     function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
         view
         virtual
         returns (uint256)
     {
-        return vote.getPastVotes(account, timepoint);
+        return _min(vote.getPastVotes(account, timepoint), vote.getVotes(account));
     }
 
     /// @dev Returns value votes for the account at the given timepoint
@@ -179,5 +179,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         returns (uint256)
     {
         return _getVoteVotes(account, timepoint, params);
+    }
+
+    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
     }
 }

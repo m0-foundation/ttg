@@ -6,9 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "src/interfaces/ISPOG.sol";
 import "src/tokens/SPOGToken.sol";
 
-// TODO: delete this file
-import "forge-std/console.sol";
-
 /// @notice copy of OZ ERC20Votes which allows more flexible movement of accounts weight
 abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotesInterface {
     struct Checkpoint {

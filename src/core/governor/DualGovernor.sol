@@ -222,7 +222,8 @@ contract DualGovernor is DualGovernorQuorum {
 
         // TODO: BUG update weight only for non-emergency, non-reset proposals
         if (voteWeight > 0 && !emergencyProposals[proposalId]) {
-            _registerVotes(account, voteWeight);
+            // TODO: rename
+            _registerVOTEVotes(account, voteWeight);
         }
 
         // TODO: adjust weight we need to return ?
@@ -238,7 +239,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev Update number of proposals account voted for and cumulative vote weight for the epoch
     /// @param account The the account that voted on proposals
     /// @param weight The vote weight of the account
-    function _registerVotes(address account, uint256 weight) internal virtual {
+    function _registerVOTEVotes(address account, uint256 weight) internal virtual {
         uint256 epoch = currentEpoch();
         EpochBasic storage epochBasic = _epochBasic[epoch];
 
@@ -253,9 +254,7 @@ contract DualGovernor is DualGovernorQuorum {
         epochBasic.votingFinalizedAt[account] = block.number;
 
         // calculate and mint VOTE voting power reward
-        uint256 epochStart = startOf(epoch);
-        uint256 rewardableVotes = _min(vote.getPastVotes(account, epochStart), vote.getVotes(account));
-        uint256 reward = ISPOG(spog).getInflationReward(rewardableVotes);
+        uint256 reward = ISPOG(spog).getInflationReward(weight);
         vote.addVotingPower(account, reward);
 
         // claim VALUE token reward by delegate
@@ -342,10 +341,6 @@ contract DualGovernor is DualGovernorQuorum {
             // load the address params
             targetParams := mload(addressPosition)
         }
-    }
-
-    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
     }
 
     /*//////////////////////////////////////////////////////////////
