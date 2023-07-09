@@ -24,6 +24,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     event TaxChanged(uint256 oldTax, uint256 newTax);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     event ResetExecuted(address indexed newGovernor, uint256 indexed resetSnapshotId);
+    event ProposalFeeCharged(address indexed account, uint256 indexed epoch, uint256 fee);
 
     // Errors
     error OnlyGovernor();
@@ -60,7 +61,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function changeTaxRange(uint256 newLowerBound, uint256 newUpperBound) external;
 
     function isGovernedMethod(bytes4 func) external pure returns (bool);
-    function chargeFee(address account, bytes4 func) external;
+    function chargeFee(address account, bytes4 func) external returns (uint256);
     function getInflationReward(uint256 amount) external view returns (uint256);
 
     // List accessor functions

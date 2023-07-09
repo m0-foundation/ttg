@@ -34,14 +34,8 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @dev Indicator that list is in master list
     uint256 private constant inMasterList = 1;
 
-    /// @notice Multiplier in cash for `emergency` proposal
-    uint256 public constant EMERGENCY_TAX_MULTIPLIER = 12;
-
-    /// @notice Multiplier in cash for `reset` proposal
-    uint256 public constant RESET_TAX_MULTIPLIER = 12;
-
     /// TODO find the right one for better precision
-    uint256 internal constant INFLATOR_SCALE = 100;
+    uint256 private constant INFLATOR_SCALE = 100;
 
     /// @notice Vault for value holders assets
     ISPOGVault public immutable override vault;
@@ -213,18 +207,20 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Charge fee for calling a governance function
     /// @param account The address of the caller
-    /// @param func The function selector of proposal function
-    function chargeFee(address account, bytes4 func) external override onlyGovernance {
-        uint256 fee = _getFee(func);
-
+    function chargeFee(address account, bytes4 /*func*/ ) external override onlyGovernance returns (uint256) {
         // transfer the amount from the caller to the SPOG
         // slither-disable-next-line arbitrary-send-erc20
-        cash.safeTransferFrom(account, address(this), fee);
+        cash.safeTransferFrom(account, address(this), tax);
         // approve amount to be sent to the vault
-        cash.approve(address(vault), fee);
+        cash.approve(address(vault), tax);
 
         // deposit the amount to the vault
-        vault.deposit(governor.currentEpoch(), address(cash), fee);
+        uint256 epoch = governor.currentEpoch();
+        vault.deposit(epoch, address(cash), tax);
+
+        emit ProposalFeeCharged(account, epoch, tax);
+
+        return tax;
     }
 
     /// @notice Getter for finding whether a list is in a masterlist
@@ -249,19 +245,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (selector == this.reset.selector) return true;
 
         return false;
-    }
-
-    /// @notice Get fee for calling a governance function
-    /// @dev TODO: Is it still up to date info?
-    /// @dev Pay flat fee for all the operations except emergency and reset
-    function _getFee(bytes4 func) internal view returns (uint256) {
-        if (func == this.emergency.selector) {
-            return EMERGENCY_TAX_MULTIPLIER * tax;
-        }
-        if (func == this.reset.selector) {
-            return RESET_TAX_MULTIPLIER * tax;
-        }
-        return tax;
     }
 
     /// @dev check SPOG interface support
