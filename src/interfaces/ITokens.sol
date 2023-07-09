@@ -16,6 +16,12 @@ interface ISPOGToken is ISPOGControlled, IAccessControl {
 interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
     event RewardsWithdrawn(address indexed account, address indexed delegate, uint256 amount);
 
+    error InvalidFutureLookup();
+    error VotesExpiredSignature(uint256 expiry);
+    error OnlyGovernor();
+    error TotalVotesOverflow();
+    error TotalSupplyOverflow();
+
     function totalVotes() external view returns (uint256);
     function getPastBalance(address account, uint256 blockNumber) external view returns (uint256);
     function getPastTotalBalanceSupply(uint256 blockNumber) external view returns (uint256);
@@ -24,15 +30,15 @@ interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
 }
 
 interface IVOTE is InflationaryVotesInterface {
+    // Events
+    event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
+    event ResetInitialized(uint256 indexed resetSnapshotId);
+
     // Errors
     error ResetTokensAlreadyClaimed();
     error ResetAlreadyInitialized();
     error ResetNotInitialized();
     error NoResetTokensToClaim();
-
-    // Events
-    event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
-    event ResetInitialized(uint256 indexed resetSnapshotId);
 
     function value() external view returns (IVALUE);
     function resetSnapshotId() external view returns (uint256);

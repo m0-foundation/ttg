@@ -6,7 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "src/interfaces/ISPOG.sol";
 import "src/tokens/SPOGToken.sol";
 
-/// @notice copy of OZ ERC20Votes which allows more flexible movement of accounts weight
+/// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
+/// @notice Modified from OpenZeppelin's https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
 abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotesInterface {
     struct Checkpoint {
         uint32 fromBlock;
@@ -50,12 +51,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     }
 
     function getPastVotes(address account, uint256 blockNumber) public view virtual override returns (uint256) {
-        require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
+        if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
     function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
-        require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
+        if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
 
@@ -65,12 +66,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     }
 
     function getPastBalance(address account, uint256 blockNumber) public view virtual override returns (uint256) {
-        // require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
+        // if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
     }
 
     function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual override returns (uint256) {
-        require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
+        if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
@@ -122,7 +123,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         virtual
         override
     {
-        require(block.timestamp <= expiry, "InflationaryVotes: signature expired");
+        if (block.timestamp > expiry) revert VotesExpiredSignature(expiry);
         address signer = ECDSA.recover(
             _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))), v, r, s
         );
@@ -155,21 +156,21 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
 
     function _mint(address account, uint256 amount) internal virtual override {
         super._mint(account, amount);
-        require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
-        require(totalSupply() <= _maxSupply(), "InflationaryVotes: total supply risks overflowing votes");
+        if (totalVotes() > _maxSupply()) revert TotalVotesOverflow();
+        if (totalSupply() > _maxSupply()) revert TotalSupplyOverflow();
 
         _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
     }
 
     function addVotingPower(address account, uint256 amount) external override {
-        require(_msgSender() == address(ISPOG(spog).governor()), "Caller is not governor");
+        if (_msgSender() != address(ISPOG(spog).governor())) revert OnlyGovernor();
         _mintVotingPower(account, amount);
     }
 
     function _mintVotingPower(address account, uint256 amount) internal virtual {
         _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
-        require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
+        if (totalVotes() > _maxSupply()) revert TotalVotesOverflow();
 
         _moveVotingPower(address(0), account, amount);
     }
