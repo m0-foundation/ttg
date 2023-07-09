@@ -14,11 +14,13 @@ interface ISPOGToken is ISPOGControlled, IAccessControl {
 }
 
 interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
+    event RewardsWithdrawn(address indexed account, address indexed delegate, uint256 amount);
+
+    function totalVotes() external view returns (uint256);
     function getPastBalance(address account, uint256 blockNumber) external view returns (uint256);
     function getPastTotalBalanceSupply(uint256 blockNumber) external view returns (uint256);
     function addVotingPower(address account, uint256 amount) external;
-    function claimVoteRewards() external returns (uint256);
-    function totalVotes() external view returns (uint256);
+    function withdrawRewards() external returns (uint256);
 }
 
 interface IVOTE is InflationaryVotesInterface {

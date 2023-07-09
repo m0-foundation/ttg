@@ -46,7 +46,7 @@ contract InflationRewardsTest is SPOG_Base {
             aliceVotesAfterAllProposals, votesAfterVoting, "Alice should have more votes after voting on all proposals"
         );
 
-        uint256 rewards = vote.claimVoteRewards();
+        uint256 rewards = vote.withdrawRewards();
         assertEq(rewards, aliceStartBalance * spog.inflator() / 100, "Alice should have received inflation rewards");
 
         assertEq(vote.balanceOf(alice), aliceStartBalance + rewards, "Alice should have more vote tokens");
@@ -101,15 +101,15 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.getVotes(carol), carolStartVotes);
 
         vm.startPrank(alice);
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         vm.stopPrank();
 
         vm.startPrank(bob);
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         vm.stopPrank();
 
         vm.startPrank(carol);
-        uint256 carolRewards = vote.claimVoteRewards();
+        uint256 carolRewards = vote.withdrawRewards();
         vm.stopPrank();
 
         assertEq(aliceRewards, 44e18, "Incorrect alice rewards");
@@ -143,7 +143,7 @@ contract InflationRewardsTest is SPOG_Base {
         vote.delegate(bob);
 
         // alice claims her voting rewards
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
         assertEq(vote.getVotes(bob), 220e18);
         assertEq(vote.balanceOf(alice), 120e18, "Incorrect alice balance");
@@ -153,7 +153,7 @@ contract InflationRewardsTest is SPOG_Base {
 
         // bob attempts to claim rewards
         vm.startPrank(bob);
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 0, "Incorrect bob rewards");
         assertEq(vote.balanceOf(bob), 100e18, "Incorrect bob balance");
 
@@ -179,7 +179,7 @@ contract InflationRewardsTest is SPOG_Base {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
         vm.stopPrank();
 
@@ -192,7 +192,7 @@ contract InflationRewardsTest is SPOG_Base {
         vm.startPrank(bob);
         governor.castVote(proposal1Id, yesVote);
         assertEq(vote.getVotes(bob), 108e18);
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 18e18, "Incorrect bob rewards");
         vm.stopPrank();
 
@@ -226,12 +226,12 @@ contract InflationRewardsTest is SPOG_Base {
             240e18,
             "Bob voting power includes alice initial voting power + reward + reward for voting"
         );
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 20e18, "Incorrect bob rewards");
         vm.stopPrank();
 
         vm.startPrank(alice);
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
 
         assertEq(vote.balanceOf(alice), 120e18);
@@ -256,16 +256,16 @@ contract InflationRewardsTest is SPOG_Base {
         governor.castVote(proposal1Id, yesVote);
         assertEq(vote.getVotes(bob), 220e18, "Bob voting power includes alice initial voting power + reward for voting");
 
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 20e18, "Incorrect bob rewards");
         vm.stopPrank();
 
         vm.startPrank(alice);
-        uint256 aliceRewards1 = vote.claimVoteRewards();
+        uint256 aliceRewards1 = vote.withdrawRewards();
         assertEq(aliceRewards1, 0, "Incorrect alice rewards");
 
         governor.castVote(proposal1Id, yesVote);
-        uint256 aliceRewards2 = vote.claimVoteRewards();
+        uint256 aliceRewards2 = vote.withdrawRewards();
         assertEq(aliceRewards2, 0, "Incorrect alice rewards");
         assertEq(vote.balanceOf(alice), 100e18, "Alice balance was not updated");
         vm.stopPrank();
@@ -288,7 +288,7 @@ contract InflationRewardsTest is SPOG_Base {
         // alice votes on proposal 1
         governor.castVote(proposal1Id, yesVote);
         assertEq(vote.getVotes(alice), 120e18);
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
         vm.stopPrank();
 
@@ -298,7 +298,7 @@ contract InflationRewardsTest is SPOG_Base {
         governor.castVote(proposal1Id, yesVote);
         // takes into account voting power at the beginning of epoch
         assertEq(vote.getVotes(bob), 60e18);
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 10e18, "Incorrect bob rewards");
         vm.stopPrank();
 
@@ -307,7 +307,7 @@ contract InflationRewardsTest is SPOG_Base {
         governor.castVote(proposal1Id, yesVote);
         // takes into account voting power at the beginning of epoch
         assertEq(vote.getVotes(carol), 170e18);
-        uint256 carolRewards = vote.claimVoteRewards();
+        uint256 carolRewards = vote.withdrawRewards();
         assertEq(carolRewards, 20e18, "Incorrect carol rewards");
         vm.stopPrank();
 
@@ -332,7 +332,7 @@ contract InflationRewardsTest is SPOG_Base {
         // start new epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 0e18, "Incorrect alice rewards");
     }
 
@@ -377,7 +377,7 @@ contract InflationRewardsTest is SPOG_Base {
         // alice votes on proposal 2
         governor.castVote(proposal2Id, yesVote);
         assertEq(vote.getVotes(alice), 144e18);
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 44e18, "Incorrect alice rewards");
         assertEq(vote.getVotes(bob), 120e18);
         vote.delegate(bob);
@@ -392,7 +392,7 @@ contract InflationRewardsTest is SPOG_Base {
         // carol votes on proposal 2
         governor.castVote(proposal2Id, yesVote);
         assertEq(vote.getVotes(carol), 0e18);
-        uint256 carolRewards = vote.claimVoteRewards();
+        uint256 carolRewards = vote.withdrawRewards();
         // carol doesn't get rewards for this epoch, she voted after re-delegation
         // @note compare carol to alice, alice got rewards for 2 epochs, carol only 1
         assertEq(carolRewards, 20e18, "Incorrect carol rewards");
@@ -415,7 +415,7 @@ contract InflationRewardsTest is SPOG_Base {
         vm.stopPrank();
 
         vm.startPrank(carol);
-        carolRewards = vote.claimVoteRewards();
+        carolRewards = vote.withdrawRewards();
         // carol doesn't get rewards for bob voting
         assertEq(carolRewards, 0e18, "Incorrect carol rewards");
         vm.stopPrank();
@@ -436,7 +436,7 @@ contract InflationRewardsTest is SPOG_Base {
         governor.castVote(proposal3Id, yesVote);
         assertEq(vote.getVotes(alice), 0);
         // no rewards for alice, her voting power is 0
-        aliceRewards = vote.claimVoteRewards();
+        aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 0, "Incorrect alice rewards");
         vm.stopPrank();
 
@@ -445,20 +445,20 @@ contract InflationRewardsTest is SPOG_Base {
         assertEq(vote.getVotes(bob), 408e18);
         governor.castVote(proposal3Id, yesVote);
         assertEq(vote.getVotes(bob), 4896e17);
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 728e17, "Incorrect bob rewards");
         vm.stopPrank();
         assertEq(vote.balanceOf(bob), 100e18 * 120 * 120 * 120 / 100 / 100 / 100);
         assertEq(vote.balanceOf(alice), 100e18 * 120 * 120 / 100 / 100);
 
         vm.startPrank(alice);
-        aliceRewards = vote.claimVoteRewards();
+        aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 288e17, "Incorrect alice rewards");
         assertEq(vote.balanceOf(alice), 100e18 * 120 * 120 * 120 / 100 / 100 / 100);
         vm.stopPrank();
 
         vm.startPrank(carol);
-        carolRewards = vote.claimVoteRewards();
+        carolRewards = vote.withdrawRewards();
         assertEq(carolRewards, 24e18, "Incorrect carol rewards");
         // carol missed 1 epoch on redelegation
         assertEq(vote.balanceOf(carol), 100e18 * 120 * 120 / 100 / 100);
@@ -506,19 +506,19 @@ contract InflationRewardsTest is SPOG_Base {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        uint256 aliceRewards = vote.claimVoteRewards();
+        uint256 aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 20e18, "Incorrect alice rewards");
         assertEq(vote.balanceOf(alice), 130e18);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        uint256 bobRewards = vote.claimVoteRewards();
+        uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 16e18, "Incorrect bob rewards");
         assertEq(vote.balanceOf(bob), 96e18);
         vm.stopPrank();
 
         vm.startPrank(carol);
-        uint256 carolRewards = vote.claimVoteRewards();
+        uint256 carolRewards = vote.withdrawRewards();
         assertEq(carolRewards, 20e18, "Incorrect carol rewards");
         assertEq(vote.balanceOf(alice), 130e18);
         vm.stopPrank();
@@ -532,17 +532,17 @@ contract InflationRewardsTest is SPOG_Base {
 
         // Atempt to claim again - no rewards
         vm.startPrank(alice);
-        aliceRewards = vote.claimVoteRewards();
+        aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 0, "Incorrect alice rewards");
         vm.stopPrank();
 
         vm.startPrank(bob);
-        bobRewards = vote.claimVoteRewards();
+        bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 0, "Incorrect bob rewards");
         vm.stopPrank();
 
         vm.startPrank(carol);
-        carolRewards = vote.claimVoteRewards();
+        carolRewards = vote.withdrawRewards();
         assertEq(carolRewards, 0, "Incorrect carol rewards");
         vm.stopPrank();
 
@@ -560,14 +560,14 @@ contract InflationRewardsTest is SPOG_Base {
         // alice votes on proposal 2
         governor.castVote(proposal2Id, yesVote);
         assertEq(vote.getVotes(alice), 156e18);
-        aliceRewards = vote.claimVoteRewards();
+        aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 26e18, "Incorrect alice rewards");
         vm.stopPrank();
 
         vm.startPrank(bob);
         // bob votes on proposal 2
         governor.castVote(proposal2Id, yesVote);
-        bobRewards = vote.claimVoteRewards();
+        bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 192e17, "Incorrect bob rewards");
         assertEq(vote.getVotes(bob), 1152e17);
         vm.stopPrank();
@@ -576,7 +576,7 @@ contract InflationRewardsTest is SPOG_Base {
         // carol votes on proposal 2
         governor.castVote(proposal2Id, yesVote);
         assertEq(vote.getVotes(carol), 156e18);
-        carolRewards = vote.claimVoteRewards();
+        carolRewards = vote.withdrawRewards();
         assertEq(carolRewards, 26e18, "Incorrect carol rewards");
         vm.stopPrank();
 

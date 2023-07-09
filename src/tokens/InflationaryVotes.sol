@@ -50,22 +50,27 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     }
 
     function getPastVotes(address account, uint256 blockNumber) public view virtual override returns (uint256) {
-        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
         return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
-    function getPastBalance(address account, uint256 blockNumber) public view virtual override returns (uint256) {
-        // require(blockNumber < block.number, "ERC20Votes: block not yet mined");
-        return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
-    }
-
     function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
-        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
 
+    function totalVotes() public view virtual override returns (uint256) {
+        uint256 pos = _totalVotesCheckpoints.length;
+        return pos == 0 ? 0 : _totalVotesCheckpoints[pos - 1].amount;
+    }
+
+    function getPastBalance(address account, uint256 blockNumber) public view virtual override returns (uint256) {
+        // require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
+        return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
+    }
+
     function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual override returns (uint256) {
-        require(blockNumber < block.number, "ERC20Votes: block not yet mined");
+        require(blockNumber < block.number, "InflationaryVotes: block not yet mined");
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
@@ -117,12 +122,31 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         virtual
         override
     {
-        require(block.timestamp <= expiry, "ERC20Votes: signature expired");
+        require(block.timestamp <= expiry, "InflationaryVotes: signature expired");
         address signer = ECDSA.recover(
             _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))), v, r, s
         );
-        require(nonce == _useNonce(signer), "ERC20Votes: invalid nonce");
+        require(nonce == _useNonce(signer), "InflationaryVotes: invalid nonce");
         _delegate(signer, delegatee);
+    }
+
+    function withdrawRewards() external override returns (uint256) {
+        address sender = _msgSender();
+        _accrueRewards(sender);
+
+        uint256 reward = _voteRewards[sender];
+        if (reward == 0) return 0;
+
+        _voteRewards[sender] = 0;
+
+        address currentDelegate = delegates(sender);
+        _mint(sender, reward);
+        /// @dev prevents double counting of current delegate's voting power
+        _burnVotingPower(currentDelegate, reward);
+
+        emit RewardsWithdrawn(sender, currentDelegate, reward);
+
+        return reward;
     }
 
     function _maxSupply() internal view virtual returns (uint224) {
@@ -131,23 +155,95 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
 
     function _mint(address account, uint256 amount) internal virtual override {
         super._mint(account, amount);
+        require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
+        require(totalSupply() <= _maxSupply(), "InflationaryVotes: total supply risks overflowing votes");
 
-        require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
-
-        _mintVotingPower(_delegates[account], amount);
-
-        _moveBalance(address(0), account, amount);
+        _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
+    }
+
+    function addVotingPower(address account, uint256 amount) external override {
+        // TODO: replace msg.sender with _msgSender()
+        require(msg.sender == address(ISPOG(spog).governor()), "Caller is not governor");
+        _mintVotingPower(account, amount);
+    }
+
+    function _mintVotingPower(address account, uint256 amount) internal virtual {
+        _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
+        require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
+
+        _moveVotingPower(address(0), account, amount);
     }
 
     function _burn(address account, uint256 amount) internal virtual override {
         super._burn(account, amount);
 
-        // TODO burn from account
-        _burnVotingPower(account, amount);
-
-        _moveBalance(account, address(0), amount);
+        _writeCheckpoint(_totalVotesCheckpoints, _subtract, amount);
         _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
+    }
+
+    function _burnVotingPower(address account, uint256 amount) internal virtual {
+        _writeCheckpoint(_totalVotesCheckpoints, _subtract, amount);
+        _moveVotingPower(account, address(0), amount);
+    }
+
+    function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual override {
+        super._afterTokenTransfer(from, to, amount);
+
+        _moveBalance(from, to, amount);
+        _moveVotingPower(delegates(from), delegates(to), amount);
+    }
+
+    function _delegate(address delegator, address delegatee) internal virtual {
+        // cash out your rewards
+        _accrueRewards(delegator);
+
+        address currentDelegate = delegates(delegator);
+        uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
+
+        _delegationSwitchEpoch[delegator] = ISPOG(spog).governor().currentEpoch();
+        _delegates[delegator] = delegatee;
+
+        emit DelegateChanged(delegator, currentDelegate, delegatee);
+
+        _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
+    }
+
+    function _accrueRewards(address delegator) internal virtual {
+        // calculate rewards for number of active epochs (delegate voted on all active proposals in these epochs)
+        ISPOGGovernor governor = ISPOG(spog).governor();
+        uint256 currentEpoch = governor.currentEpoch();
+        // no rewards are available for epoch 0
+        if (currentEpoch == 0) return;
+        address currentDelegate = delegates(delegator);
+
+        uint256 voteReward;
+        // uint256 valueReward;
+        uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
+        for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
+            uint256 epochStart = governor.startOf(epoch);
+            if (epoch != _delegationSwitchEpoch[delegator] && governor.hasFinishedVoting(epoch, currentDelegate)) {
+                uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
+                uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
+                uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
+                uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
+                voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
+                // valueReward +=
+                //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
+            }
+            unchecked {
+                ++epoch;
+            }
+        }
+
+        _voteRewards[delegator] += voteReward;
+        // _valueRewards[delegator] += valueReward;
+
+        // TODO: see if it can be written better
+        _lastEpochRewardsAccrued[delegator] =
+            governor.hasFinishedVoting(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
+
+        // TODO emit events here
     }
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {
@@ -203,6 +299,10 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return a - b;
     }
 
+    function _min(uint256 a, uint256 b) private pure returns (uint256) {
+        return a < b ? a : b;
+    }
+
     function _unsafeAccess(Checkpoint[] storage ckpts, uint256 pos) private pure returns (Checkpoint storage result) {
         assembly {
             mstore(0, ckpts.slot)
@@ -210,128 +310,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-            INFLATIONARY VOTES UNIQUE TOKEN INTERFACE
-    //////////////////////////////////////////////////////////////*/
-
-    function totalVotes() public view virtual override returns (uint256) {
-        uint256 pos = _totalVotesCheckpoints.length;
-        return pos == 0 ? 0 : _totalVotesCheckpoints[pos - 1].amount;
-    }
-
     // function getUnclaimedRewards(address account) public view virtual returns (uint256, uint256) {
     //     return (_voteRewards[account], _valueRewards[account]);
     // }
-
-    /// @dev Performs ERC20 transfer with delegation tracking.
-    function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
-        _moveBalance(msg.sender, to, amount);
-        _moveVotingPower(_delegates[msg.sender], _delegates[to], amount);
-
-        return super.transfer(to, amount);
-    }
-
-    /// @dev Performs ERC20 transferFrom with delegation tracking.
-    function transferFrom(address from, address to, uint256 amount)
-        public
-        virtual
-        override(ERC20, IERC20)
-        returns (bool)
-    {
-        _moveBalance(from, to, amount);
-        _moveVotingPower(_delegates[from], _delegates[to], amount);
-
-        return super.transferFrom(from, to, amount);
-    }
-
-    function addVotingPower(address account, uint256 amount) external override {
-        // TODO: replace msg.sender with _msgSender()
-        require(msg.sender == address(ISPOG(spog).governor()), "Caller is not governor");
-        _mintVotingPower(account, amount);
-    }
-
-    function claimVoteRewards() external override returns (uint256) {
-        _accrueRewards(msg.sender);
-
-        uint256 reward = _voteRewards[msg.sender];
-        if (reward == 0) return 0;
-
-        _voteRewards[msg.sender] = 0;
-        _mint(msg.sender, reward);
-        /// @dev Voting power of currentDelegate was already updated when vote was casted, no need for double upgrade
-        address currentDelegate = delegates(msg.sender);
-        // TODO does not account for delayed reward
-        _burnVotingPower(currentDelegate, reward);
-
-        // emit VoteRewardClaimed(msg.sender, reward);
-
-        return reward;
-    }
-
-    function _mintVotingPower(address account, uint256 amount) internal virtual {
-        _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
-        require(totalVotes() <= _maxSupply(), "InflationaryVotes: total voting power overflowing risk");
-        _moveVotingPower(address(0), account, amount);
-    }
-
-    function _burnVotingPower(address account, uint256 amount) internal virtual {
-        _writeCheckpoint(_totalVotesCheckpoints, _subtract, amount);
-        _moveVotingPower(account, address(0), amount);
-    }
-
-    function _delegate(address delegator, address delegatee) internal virtual {
-        // cash out your rewards
-        _accrueRewards(delegator);
-
-        address currentDelegate = delegates(delegator);
-        uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
-
-        _delegationSwitchEpoch[delegator] = ISPOG(spog).governor().currentEpoch();
-        _delegates[delegator] = delegatee;
-
-        emit DelegateChanged(delegator, currentDelegate, delegatee);
-
-        _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
-    }
-
-    function _accrueRewards(address delegator) internal virtual {
-        // calculate rewards for number of active epochs (delegate voted on all proposals in these epochs)
-        ISPOGGovernor governor = ISPOG(spog).governor();
-        uint256 currentEpoch = governor.currentEpoch();
-        // no rewards are available for epoch 0
-        if (currentEpoch == 0) return;
-        address currentDelegate = delegates(delegator);
-
-        uint256 voteReward;
-        // uint256 valueReward;
-        uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
-        for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
-            uint256 epochStart = governor.startOf(epoch);
-            if (epoch != _delegationSwitchEpoch[delegator] && governor.hasFinishedVoting(epoch, currentDelegate)) {
-                uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
-                uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
-                uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
-                uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
-                voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
-                // valueReward +=
-                //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
-            }
-            unchecked {
-                ++epoch;
-            }
-        }
-
-        _voteRewards[delegator] += voteReward;
-        // _valueRewards[delegator] += valueReward;
-
-        // TODO: see if it can be written better
-        _lastEpochRewardsAccrued[delegator] =
-            governor.hasFinishedVoting(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
-
-        // TODO emit events here
-    }
-
-    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a < b ? a : b;
-    }
 }
