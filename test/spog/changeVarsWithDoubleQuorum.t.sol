@@ -9,8 +9,12 @@ contract SPOG_change is SPOG_Base {
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
+    address public charlie;
+
     function setUp() public override {
         super.setUp();
+
+        charlie = createUser("charlie");
     }
 
     function proposeTaxRangeChange(string memory proposalDescription)
@@ -62,13 +66,10 @@ contract SPOG_change is SPOG_Base {
         uint256 taxLowerBound = spog.taxLowerBound();
         uint256 taxUpperBound = spog.taxUpperBound();
 
-        // give alice vote power
-        vote.mint(alice, 95e18);
-        vm.startPrank(alice);
-        vote.delegate(alice);
-
-        uint256 aliceVoteVotes = vote.getVotes(alice);
-        uint256 aliceValueVotes = value.getVotes(alice);
+        // give charlie vote power
+        vote.mint(charlie, 95e18);
+        vm.startPrank(charlie);
+        vote.delegate(charlie);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -79,9 +80,9 @@ contract SPOG_change is SPOG_Base {
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
 
-        assertTrue(yesVoteVotes == aliceVoteVotes, "Yes vote votes should be alice vote votes");
+        assertTrue(yesVoteVotes == 95e18, "Yes vote votes should be charlie vote votes");
         assertTrue(noVoteVotes == 0, "No vote votes should be equal to 0");
-        assertTrue(yesValueVotes == aliceValueVotes, "Yes value votes should be alice value votes");
+        assertTrue(yesValueVotes == 0, "Yes value votes should be charlie value votes");
         assertTrue(noValueVotes == 0, "No value votes should be 0");
 
         // fast forward to end of voting period
@@ -110,10 +111,10 @@ contract SPOG_change is SPOG_Base {
         uint256 taxLowerBound = spog.taxLowerBound();
         uint256 taxUpperBound = spog.taxUpperBound();
 
-        // give alice vote power
-        value.mint(alice, 95e18);
-        vm.startPrank(alice);
-        value.delegate(alice);
+        // give charlie vote power
+        value.mint(charlie, 95e18);
+        vm.startPrank(charlie);
+        value.delegate(charlie);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);

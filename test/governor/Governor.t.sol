@@ -62,13 +62,11 @@ contract DualGovernorTest is SPOG_Base {
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
         // Proposal 1 and 2
-
-        // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
 
         // vote balance of voter
-        uint256 voteBalance = vote.balanceOf(address(this));
+        uint256 voteBalance = vote.getVotes(address(this));
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("DualGovernor: vote not currently active");
@@ -103,14 +101,14 @@ contract DualGovernorTest is SPOG_Base {
 
         // Proposal 3
 
-        // Add another proposal and voting can only happen after vote delay
+        // Add another proposal and voting can only happen after voting delay
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // vote balance of voter before casting vote on proposal 3
-        uint256 voteBalanceForProposal3 = vote.balanceOf(address(this));
+        uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
 
-        // vm.expectRevert("Governor: vote not currently active");
-        // governor.castVote(proposalId3, noVote);
+        vm.expectRevert("DualGovernor: vote not currently active");
+        governor.castVote(proposalId3, noVote);
 
         assertTrue(
             governor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
