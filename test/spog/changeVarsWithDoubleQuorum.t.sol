@@ -67,6 +67,9 @@ contract SPOG_change is SPOG_Base {
         vm.startPrank(alice);
         vote.delegate(alice);
 
+        uint256 aliceVoteVotes = vote.getVotes(alice);
+        uint256 aliceValueVotes = value.getVotes(alice);
+
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
@@ -76,9 +79,9 @@ contract SPOG_change is SPOG_Base {
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
 
-        assertTrue(yesVoteVotes == 95e18, "Yes vote votes should be 95");
-        assertTrue(noVoteVotes == 0, "No vote votes should be 0");
-        assertTrue(yesValueVotes == 0, "Yes value votes should be 0");
+        assertTrue(yesVoteVotes == aliceVoteVotes, "Yes vote votes should be alice vote votes");
+        assertTrue(noVoteVotes == 0, "No vote votes should be equal to 0");
+        assertTrue(yesValueVotes == aliceValueVotes, "Yes value votes should be alice value votes");
         assertTrue(noValueVotes == 0, "No value votes should be 0");
 
         // fast forward to end of voting period

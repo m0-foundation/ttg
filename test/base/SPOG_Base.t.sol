@@ -63,8 +63,7 @@ contract SPOG_Base is BaseTest {
     }
 
     function fundUsers() internal {
-        // mint ether and vote and value to alice, bob and carol
-        vm.deal({account: alice, newBalance: 100 ether});
+        // mint VOTE and VALUE tokens to alice, bob and carol
         vote.mint(alice, amountToMint);
         value.mint(alice, amountToMint);
         vm.startPrank(alice);
@@ -72,7 +71,6 @@ contract SPOG_Base is BaseTest {
         value.delegate(alice); // self delegate
         vm.stopPrank();
 
-        vm.deal({account: bob, newBalance: 100 ether});
         vote.mint(bob, amountToMint);
         value.mint(bob, amountToMint);
         vm.startPrank(bob);
@@ -80,7 +78,6 @@ contract SPOG_Base is BaseTest {
         value.delegate(bob); // self delegate
         vm.stopPrank();
 
-        vm.deal({account: carol, newBalance: 100 ether});
         vote.mint(carol, amountToMint);
         value.mint(carol, amountToMint);
         vm.startPrank(carol);

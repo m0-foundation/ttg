@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 import "test/base/SPOG_Base.t.sol";
 
 contract VaultTest is SPOG_Base {
+    event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
+
     /*//////////////////////////////////////////////////////////////
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
@@ -183,18 +185,18 @@ contract VaultTest is SPOG_Base {
         vm.stopPrank();
     }
 
-    // function test_deposit() public {
-    //     // deposit rewards for previous epoch
-    //     uint256 epoch = 1;
-    //     voteToken.mint(spogAddress, 1000e18);
-    //     vm.startPrank(spogAddress);
-    //     voteToken.approve(address(vault), 1000e18);
+    function test_deposit() public {
+        // deposit rewards for previous epoch
+        uint256 epoch = 1;
+        vote.mint(address(spog), 1000e18);
+        vm.startPrank(address(spog));
+        vote.approve(address(vault), 1000e18);
 
-    //     expectEmit();
-    //     emit EpochRewardsDeposit(epoch, address(voteToken), 1000e18);
-    //     vault.deposit(epoch, address(voteToken), 1000e18);
-    //     vm.stopPrank();
+        expectEmit();
+        emit EpochRewardsDeposited(epoch, address(vote), 1000e18);
+        vault.deposit(epoch, address(vote), 1000e18);
+        vm.stopPrank();
 
-    //     assertEq(voteToken.balanceOf(address(vault)), 1000e18);
-    // }
+        assertEq(vote.balanceOf(address(vault)), 1000e18);
+    }
 }
