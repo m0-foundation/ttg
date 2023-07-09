@@ -160,7 +160,7 @@ contract DualGovernor is DualGovernorQuorum {
             if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
         }
 
-        ISPOG(spog).chargeFee(msg.sender, func);
+        ISPOG(spog).chargeFee(_msgSender(), func);
 
         uint256 nextEpoch = currentEpoch() + 1;
         uint256 proposalId;

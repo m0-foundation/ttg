@@ -163,8 +163,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     }
 
     function addVotingPower(address account, uint256 amount) external override {
-        // TODO: replace msg.sender with _msgSender()
-        require(msg.sender == address(ISPOG(spog).governor()), "Caller is not governor");
+        require(_msgSender() == address(ISPOG(spog).governor()), "Caller is not governor");
         _mintVotingPower(account, amount);
     }
 
@@ -220,9 +219,10 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         uint256 voteReward;
         // uint256 valueReward;
         uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
+        // TODO make cycle looping safe
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
-            uint256 epochStart = governor.startOf(epoch);
             if (epoch != _delegationSwitchEpoch[delegator] && governor.hasFinishedVoting(epoch, currentDelegate)) {
+                uint256 epochStart = governor.startOf(epoch);
                 uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
                 uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
                 uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
@@ -309,8 +309,4 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
             result.slot := add(keccak256(0, 0x20), pos)
         }
     }
-
-    // function getUnclaimedRewards(address account) public view virtual returns (uint256, uint256) {
-    //     return (_voteRewards[account], _valueRewards[account]);
-    // }
 }
