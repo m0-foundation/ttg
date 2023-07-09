@@ -6,10 +6,6 @@ import "test/base/SPOG_Base.t.sol";
 contract SPOG_reset is SPOG_Base {
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
 
-    function setUp() public override {
-        super.setUp();
-    }
-
     /*//////////////////////////////////////////////////////////////
                             HELPERS
     //////////////////////////////////////////////////////////////*/
@@ -148,38 +144,4 @@ contract SPOG_reset is SPOG_Base {
         // Make sure governance is functional
         executeValidProposal();
     }
-
-    // function test_Reset_VoteAndValueTokensAreNotInflated() public {
-    //     uint256 voteTokenInitialBalanceForVault = vote.balanceOf(address(voteVault));
-    //     uint256 valueTokenInitialBalanceForVault = value.balanceOf(address(voteVault));
-    //     uint256 voteTotalBalance = vote.totalSupply();
-    //     uint256 valueTotalBalance = value.totalSupply();
-
-    //     proposeGovernanceReset("Propose reset of vote governance", address(value));
-
-    //     uint256 voteTokenBalanceAfterProposal = vote.balanceOf(address(voteVault));
-    //     uint256 valueTokenBalanceAfterProposal = value.balanceOf(address(voteVault));
-    //     uint256 voteTotalBalanceAfterProposal = vote.totalSupply();
-    //     uint256 valueTotalBalanceAfterProposal = value.totalSupply();
-    //     assertEq(
-    //         voteTokenInitialBalanceForVault,
-    //         voteTokenBalanceAfterProposal,
-    //         "vault should have the same balance of vote tokens after reset proposal"
-    //     );
-    //     assertEq(
-    //         valueTokenInitialBalanceForVault,
-    //         valueTokenBalanceAfterProposal,
-    //         "vault should have the same balance of value tokens after reset proposal"
-    //     );
-    //     assertEq(
-    //         voteTotalBalance,
-    //         voteTotalBalanceAfterProposal,
-    //         "total supply of vote tokens should not change after reset proposal"
-    //     );
-    //     assertEq(
-    //         valueTotalBalance,
-    //         valueTotalBalanceAfterProposal,
-    //         "total supply of value tokens should not change after reset proposal"
-    //     );
-    // }
 }
