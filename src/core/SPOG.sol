@@ -105,7 +105,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // add the list to the master list
         _masterlist.set(list, inMasterList);
-        emit ListAdded(list);
+        emit ListAdded(list, IList(list).name());
     }
 
     /// @notice Append an address to a list

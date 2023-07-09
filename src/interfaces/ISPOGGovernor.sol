@@ -73,6 +73,9 @@ interface IDualGovernor {
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
     function hasFinishedVoting(uint256 epoch, address account) external view returns (bool);
     function finishedVotingAt(uint256 epoch, address account) external view returns (uint256);
+
+    // Batch voting
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) external;
 }
 
 abstract contract ISPOGGovernor is Governor, IDualGovernor, ISPOGControlled {}

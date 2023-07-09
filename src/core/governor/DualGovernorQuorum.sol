@@ -141,7 +141,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     function _updateValueQuorumNumerator(uint256 newValueQuorumNumerator) internal virtual {
         if (newValueQuorumNumerator > quorumDenominator()) revert InvalidValueQuorumNumerator();
 
-        uint256 oldValueQuorumNumerator = voteQuorumNumerator();
+        uint256 oldValueQuorumNumerator = valueQuorumNumerator();
 
         // Set new quorum for future proposals
         _valueQuorumNumeratorHistory.push(SafeCast.toUint32(block.number), SafeCast.toUint224(newValueQuorumNumerator));

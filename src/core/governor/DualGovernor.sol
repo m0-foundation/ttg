@@ -189,6 +189,19 @@ contract DualGovernor is DualGovernorQuorum {
         return proposalId;
     }
 
+    /// @notice Cast votes to count user activity in epochs
+    /// @dev Allows batch voting
+    /// @param proposalIds The ids of the proposals
+    /// @param votes The values of the votes
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public override {
+        address voter = _msgSender();
+        require(proposalIds.length == votes.length, "DualGovernor: proposalIds and votes length mismatch");
+
+        for (uint256 i = 0; i < proposalIds.length; i++) {
+            _castVote(proposalIds[i], voter, votes[i], "");
+        }
+    }
+
     /// @dev Cast vote to count user activity in epochs
     /// @dev Overriden method of OZ governor interface adjusted for double governance nature of voting process
     /// @param proposalId The id of the proposal
@@ -196,6 +209,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param support The support value of the vote - 0 or 1
     /// @param reason The reason given for the vote by the voter
     /// @param params The parameters of the vote
+    /// @return voteWeight The weight of vote
     function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
         internal
         virtual

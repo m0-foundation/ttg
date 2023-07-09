@@ -4,6 +4,9 @@ pragma solidity 0.8.19;
 import "test/base/SPOG_Base.t.sol";
 
 contract SPOG_AddNewList is SPOG_Base {
+    // Events to test
+    event ListAdded(address indexed list, string name);
+
     function test_Revert_AddNewList_WhenCallerIsNotSPOG() external {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
         spog.addList(address(list));
@@ -83,6 +86,9 @@ contract SPOG_AddNewList is SPOG_Base {
 
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
+
+        expectEmit();
+        emit ListAdded(address(list), list.name());
 
         // execute proposal
         governor.execute(targets, values, calldatas, hashedDescription);
