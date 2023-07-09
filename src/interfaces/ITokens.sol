@@ -14,7 +14,15 @@ interface ISPOGToken is ISPOGControlled, IAccessControl {
 }
 
 interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
+    event RewardsAccrued(
+        address indexed account,
+        address indexed delegate,
+        uint256 startEpoch,
+        uint256 indexed lastEpoch,
+        uint256 voteReward
+    );
     event RewardsWithdrawn(address indexed account, address indexed delegate, uint256 amount);
+    event VotingPowerAdded(address indexed account, address indexed governor, uint256 amount);
 
     error InvalidFutureLookup();
     error VotesExpiredSignature(uint256 expiry);

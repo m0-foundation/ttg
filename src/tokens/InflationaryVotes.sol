@@ -164,8 +164,11 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     }
 
     function addVotingPower(address account, uint256 amount) external override {
-        if (_msgSender() != address(ISPOG(spog).governor())) revert OnlyGovernor();
+        address governor = address(ISPOG(spog).governor());
+        if (_msgSender() != governor) revert OnlyGovernor();
         _mintVotingPower(account, amount);
+
+        emit VotingPowerAdded(account, governor, amount);
     }
 
     function _mintVotingPower(address account, uint256 amount) internal virtual {
@@ -241,10 +244,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         // _valueRewards[delegator] += valueReward;
 
         // TODO: see if it can be written better
-        _lastEpochRewardsAccrued[delegator] =
-            governor.hasFinishedVoting(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
+        uint256 lastEpoch = governor.hasFinishedVoting(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
+        _lastEpochRewardsAccrued[delegator] = lastEpoch;
 
-        // TODO emit events here
+        emit RewardsAccrued(delegator, currentDelegate, startEpoch, lastEpoch, voteReward);
+
+        // TODO: return vote and value rewards amounts
     }
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {
