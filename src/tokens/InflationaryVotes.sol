@@ -307,11 +307,11 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
             uint256 epochStart = governor.startOf(epoch);
-            if (epoch != _delegationSwitchEpoch[delegator] && governor.isActive(epoch, currentDelegate)) {
-                uint256 balanceAtEpochStart = getPastBalance(delegator, epochStart);
-                uint256 votingFinalized = governor.votingFinalizedAt(epoch, currentDelegate);
-                uint256 balanceAtTheEndOfVoting = getPastBalance(delegator, votingFinalized);
-                uint256 rewardableBalance = _min(balanceAtEpochStart, balanceAtTheEndOfVoting) + voteReward;
+            if (epoch != _delegationSwitchEpoch[delegator] && governor.hasFinishedVoting(epoch, currentDelegate)) {
+                uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
+                uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
+                uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
+                uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
                 voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
                 // valueReward +=
                 //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
@@ -326,7 +326,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
 
         // TODO: see if it can be written better
         _lastEpochRewardsAccrued[delegator] =
-            governor.isActive(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
+            governor.hasFinishedVoting(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
 
         // TODO emit events here
     }

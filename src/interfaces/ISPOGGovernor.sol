@@ -46,7 +46,6 @@ interface IDualGovernor {
     function value() external view returns (IVALUE);
 
     // Utility functions
-    // function initializeSPOG(address spog) external;
     function isGovernedMethod(bytes4 func) external pure returns (bool);
     function emergencyProposals(uint256 proposalId) external view returns (bool);
 
@@ -69,8 +68,8 @@ interface IDualGovernor {
     function currentEpoch() external view returns (uint256);
     function startOf(uint256 epoch) external view returns (uint256);
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
-    function isActive(uint256 epoch, address account) external view returns (bool);
-    function votingFinalizedAt(uint256 epoch, address account) external view returns (uint256);
+    function hasFinishedVoting(uint256 epoch, address account) external view returns (bool);
+    function finishedVotingAt(uint256 epoch, address account) external view returns (uint256);
 }
 
 abstract contract ISPOGGovernor is Governor, IDualGovernor, ISPOGControlled {}

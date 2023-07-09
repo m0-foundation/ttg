@@ -171,14 +171,14 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @dev Returns vote votes for the account at the given timepoint
     /// @dev Added to be compatible with standard OZ Governor interface
-    function _getVotes(address account, uint256 timepoint, bytes memory params)
+    function _getVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
         view
         virtual
         override
         returns (uint256)
     {
-        return _getVoteVotes(account, timepoint, params);
+        return vote.getPastVotes(account, timepoint);
     }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {
