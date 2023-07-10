@@ -7,7 +7,8 @@ import "src/interfaces/ISPOG.sol";
 import "src/tokens/SPOGToken.sol";
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
-/// @notice Modified from OpenZeppelin's https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
+/// @notice Modified from OpenZeppelin https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
+/// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
 abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotesInterface {
     struct Checkpoint {
         uint32 fromBlock;
@@ -30,51 +31,57 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     // mapping(address => uint256) private _valueRewards;
     mapping(address => uint256) private _lastEpochRewardsAccrued;
 
-    /// @notice Constructs governance voting token
     constructor() SPOGToken() {}
 
-    function checkpoints(address account, uint32 pos) public view virtual returns (Checkpoint memory) {
-        return _votesCheckpoints[account][pos];
-    }
-
-    function numCheckpoints(address account) public view virtual returns (uint32) {
-        return SafeCast.toUint32(_votesCheckpoints[account].length);
-    }
-
+    /// @notice Get the address `account` is currently delegating to.
     function delegates(address account) public view virtual override returns (address) {
         return _delegates[account];
     }
 
+    /// @notice Gets the current votes balance for `account`
     function getVotes(address account) public view virtual override returns (uint256) {
         uint256 pos = _votesCheckpoints[account].length;
         return pos == 0 ? 0 : _votesCheckpoints[account][pos - 1].amount;
     }
 
+    /// @notice Retrieve the number of votes for `account` at the end of `blockNumber`.
+    /// @dev `blockNumber` must have been already mined
     function getPastVotes(address account, uint256 blockNumber) public view virtual override returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
+    /// @notice Retrieve the total votes, assuming all votes were delegated.
+    /// TODO: review this line from OZ docs!!!
+    /// @dev It is but NOT the sum of all the delegated votes!
+    /// @dev `blockNumber` must have been already mined
     function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
 
+    /// @notice Return the latest value of total votes.
     function totalVotes() public view virtual override returns (uint256) {
         uint256 pos = _totalVotesCheckpoints.length;
         return pos == 0 ? 0 : _totalVotesCheckpoints[pos - 1].amount;
     }
 
+    /// @notice Retrieve the token balance for `account` at the end of `blockNumber`.
+    /// @dev `blockNumber` must have been already mined
     function getPastBalance(address account, uint256 blockNumber) public view virtual override returns (uint256) {
+        // TODO: address it
         // if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
     }
 
+    /// @notice Retrieve the `totalSupply` at the end of `blockNumber`. Note, this value is the sum of all balances.
+    /// @dev `blockNumber` must have been already mined
     function getPastTotalBalanceSupply(uint256 blockNumber) public view virtual override returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
+    /// @dev Lookup a value in a list of (sorted) checkpoints.
     function _checkpointsLookup(Checkpoint[] storage ckpts, uint256 blockNumber) private view returns (uint256) {
         // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
         //
@@ -114,10 +121,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return high == 0 ? 0 : _unsafeAccess(ckpts, high - 1).amount;
     }
 
+    /// @notice Delegate votes from the sender to `delegatee`.
     function delegate(address delegatee) public virtual override {
         _delegate(_msgSender(), delegatee);
     }
 
+    /// @notice Delegates votes from signer to `delegatee`
     function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s)
         public
         virtual
@@ -131,6 +140,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         _delegate(signer, delegatee);
     }
 
+    /// @notice Witdraw rewards for all the epochs where delegate was active
     function withdrawRewards() external override returns (uint256) {
         address sender = _msgSender();
         _accrueRewards(sender);
@@ -142,7 +152,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
 
         address currentDelegate = delegates(sender);
         _mint(sender, reward);
-        /// @dev prevents double counting of current delegate's voting power
+        /// prevents double counting of current delegate's voting power
         _burnVotingPower(currentDelegate, reward);
 
         emit RewardsWithdrawn(sender, currentDelegate, reward);
@@ -150,10 +160,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return reward;
     }
 
+    /// @dev Maximum token supply. Defaults to `type(uint224).max` (2^224^ - 1).
     function _maxSupply() internal view virtual returns (uint224) {
         return type(uint224).max;
     }
 
+    /// @dev Snapshots the totalSupply and total votes after it has been increased.
     function _mint(address account, uint256 amount) internal virtual override {
         super._mint(account, amount);
         if (totalVotes() > _maxSupply()) revert TotalVotesOverflow();
@@ -163,6 +175,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
     }
 
+    /// @notice Adds voting power to active delegate after voting on all proposals
     function addVotingPower(address account, uint256 amount) external override {
         address governor = address(ISPOG(spog).governor());
         if (_msgSender() != governor) revert OnlyGovernor();
@@ -171,6 +184,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         emit VotingPowerAdded(account, governor, amount);
     }
 
+    /// @dev Adds voting power without changing token balances
     function _mintVotingPower(address account, uint256 amount) internal virtual {
         _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
         if (totalVotes() > _maxSupply()) revert TotalVotesOverflow();
@@ -178,6 +192,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         _moveVotingPower(address(0), account, amount);
     }
 
+    /// @dev Snapshots the totalSupply and total votes after it has been decreased.
     function _burn(address account, uint256 amount) internal virtual override {
         super._burn(account, amount);
 
@@ -185,18 +200,21 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
     }
 
+    /// @dev Removes voting power without changing token balances.
     function _burnVotingPower(address account, uint256 amount) internal virtual {
         _writeCheckpoint(_totalVotesCheckpoints, _subtract, amount);
         _moveVotingPower(account, address(0), amount);
     }
 
+    /// @dev Move voting power and update balance checkpoints when tokens are transferred.
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._afterTokenTransfer(from, to, amount);
 
-        _moveBalance(from, to, amount);
+        _updateBalanceCheckpoints(from, to, amount);
         _moveVotingPower(delegates(from), delegates(to), amount);
     }
 
+    /// @dev Change delegation for `delegator` to `delegatee`.
     function _delegate(address delegator, address delegatee) internal virtual {
         // cash out your rewards
         _accrueRewards(delegator);
@@ -212,6 +230,8 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
     }
 
+    /// @dev Accrue rewards for `delegator` for all the epochs where delegate was active
+    /// @dev Called during redelegation or rewards withdrawal
     function _accrueRewards(address delegator) internal virtual {
         // calculate rewards for number of active epochs (delegate voted on all active proposals in these epochs)
         ISPOGGovernor governor = ISPOG(spog).governor();
@@ -266,7 +286,8 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         }
     }
 
-    function _moveBalance(address src, address dst, uint256 amount) private {
+    /// @dev Save balances sna when tokens are transferred.
+    function _updateBalanceCheckpoints(address src, address dst, uint256 amount) private {
         if (src != dst && amount > 0) {
             if (src != address(0)) {
                 _writeCheckpoint(_balancesCheckpoints[src], _subtract, amount);
@@ -309,6 +330,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         return a < b ? a : b;
     }
 
+    /// @dev Access an element of the array without performing bounds check. The position is assumed to be within bounds.
     function _unsafeAccess(Checkpoint[] storage ckpts, uint256 pos) private pure returns (Checkpoint storage result) {
         assembly {
             mstore(0, ckpts.slot)
