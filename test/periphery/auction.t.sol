@@ -4,30 +4,30 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
-import "src/periphery/ERC20PricelessAuction.sol";
-import "test/shared/SPOG_Base.t.sol";
+import "src/periphery/VoteAuction.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract ERC20PricelessAuctionTest is SPOG_Base {
-    IERC20PricelessAuction public auctionImplementation;
-    IERC20PricelessAuction public auction;
+contract VoteAuctionTest is SPOGBaseTest {
+    IVoteAuction public auctionImplementation;
+    IVoteAuction public auction;
 
     address fakeVault = createUser("vault");
 
-    ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
+    ERC20DecimalsMock internal voteToken = new ERC20DecimalsMock("Vote Token", "VOTE", 18);
 
     function setUp() public override {
         super.setUp();
 
         uint256 auctionDuration = 30 days;
 
-        auctionImplementation = new ERC20PricelessAuction();
+        auctionImplementation = new VoteAuction();
 
-        auction = IERC20PricelessAuction(Clones.cloneDeterministic(address(auctionImplementation), bytes32(0)));
+        auction = IVoteAuction(Clones.cloneDeterministic(address(auctionImplementation), bytes32(0)));
 
         mintAndApproveVoteTokens(1000e18);
 
         vm.prank(fakeVault);
-        IERC20PricelessAuction(auction).initialize(address(voteToken), address(usdc), auctionDuration, 1000e18);
+        IVoteAuction(auction).initialize(address(voteToken), address(usdc), auctionDuration, 1000e18);
     }
 
     function mintAndApproveVoteTokens(uint256 amount) internal {

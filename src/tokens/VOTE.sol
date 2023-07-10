@@ -3,29 +3,34 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 
-import "./SPOGVotes.sol";
-import "src/interfaces/tokens/IVote.sol";
+import "./InflationaryVotes.sol";
 
-/// @title VoteToken
-/// @dev It relies of snapshotted balances of Value token holders at the moment of reset
+import "src/interfaces/ITokens.sol";
+
+/// @title VOTE token with built-in inflation
+/// @dev It relies of snapshotted balances of VALUE token holders at the moment of reset
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
-contract VoteToken is SPOGVotes, IVote {
+contract VOTE is InflationaryVotes, IVOTE {
     /// @notice value token to take snapshot from
-    address public immutable valueToken;
+    IVALUE public immutable override value;
 
     /// @notice snapshot id at the moment of reset
-    uint256 public resetSnapshotId;
+    uint256 public override resetSnapshotId;
 
-    /// @notice check that balances are claimed only once
-    mapping(address => bool) public alreadyClaimed;
+    /// @dev check that balances are claimed only once
+    mapping(address => bool) private _alreadyClaimed;
 
-    /// @notice Constructs the vote token
+    /// @notice Constructs the VOTE token
     /// @param name Name of the token
     /// @param symbol Symbol of the token
-    /// @param _valueToken Address of the value token for reset
-    constructor(string memory name, string memory symbol, address _valueToken) SPOGVotes(name, symbol) {
-        valueToken = _valueToken;
+    /// @param _value Address of the VALUE token for reset
+    constructor(string memory name, string memory symbol, address _value)
+        InflationaryVotes()
+        ERC20(name, symbol)
+        ERC20Permit(name)
+    {
+        value = IVALUE(_value);
     }
 
     /// @notice SPOG initializes reset snapshot
@@ -42,10 +47,10 @@ contract VoteToken is SPOGVotes, IVote {
     /// @notice Claim share of new vote tokens by previous value holders
     function claimPreviousSupply() external override {
         if (resetSnapshotId == 0) revert ResetNotInitialized();
-        if (alreadyClaimed[msg.sender]) revert ResetTokensAlreadyClaimed();
+        if (_alreadyClaimed[msg.sender]) revert ResetTokensAlreadyClaimed();
 
         // Make sure value holders can claim only once
-        alreadyClaimed[msg.sender] = true;
+        _alreadyClaimed[msg.sender] = true;
 
         // Mint new balance of tokens to the user
         uint256 claimBalance = resetBalanceOf(msg.sender);
@@ -60,6 +65,13 @@ contract VoteToken is SPOGVotes, IVote {
     /// @notice Returns balance of the user at the moment of reset.
     /// @dev Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
     function resetBalanceOf(address account) public view override returns (uint256) {
-        return ERC20Snapshot(valueToken).balanceOfAt(account, resetSnapshotId);
+        return ERC20Snapshot(address(value)).balanceOfAt(account, resetSnapshotId);
+    }
+
+    /// @notice Restricts minting to address with MINTER_ROLE
+    /// @param to The address to mint to
+    /// @param amount The amount to mint
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+        _mint(to, amount);
     }
 }

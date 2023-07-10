@@ -1,47 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract VoteSPOGGovernorTest is SPOG_Base {
-    address alice = createUser("alice");
-    uint256 signerPrivateKey = 0xA11CE;
-    address signer = vm.addr(signerPrivateKey);
-
-    uint8 noVote = 0;
-    uint8 yesVote = 1;
-
+contract DualGovernorTest is SPOGBaseTest {
     event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
     }
-
-    /*//////////////////////////////////////////////////////////////
-                                HELPERS
-    //////////////////////////////////////////////////////////////*/
-
-    // calculate vote token inflation rewards for voter
-    function calculateVoteTokenInflationRewardsForVoter(
-        address voter,
-        uint256 proposalId,
-        uint256 amountToBeSharedOnProRataBasis
-    ) private view returns (uint256) {
-        uint256 accountVotingTokenBalance = governor.getVotes(voter, governor.proposalSnapshot(proposalId));
-
-        uint256 totalVotingTokenSupplyApplicable = vote.totalSupply() - amountToBeSharedOnProRataBasis;
-
-        uint256 percentageOfTotalSupply = accountVotingTokenBalance * 100 / totalVotingTokenSupplyApplicable;
-
-        uint256 inflationRewards = percentageOfTotalSupply * amountToBeSharedOnProRataBasis / 100;
-
-        return inflationRewards;
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                                 TESTS
-    //////////////////////////////////////////////////////////////*/
 
     function test_StartOfNextVotingPeriod() public {
         uint256 votingPeriod = governor.votingPeriod();
@@ -65,7 +33,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         }
     }
 
-    function test_CanOnlyVoteOnAProposalAfterItsVotingDelay() public {
+    function test_CanOnlyVoteOnProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
 
@@ -94,13 +62,11 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
         // Proposal 1 and 2
-
-        // propose adding a new list to spog
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
         (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
 
         // vote balance of voter
-        uint256 voteBalance = vote.balanceOf(address(this));
+        uint256 voteBalance = vote.getVotes(address(this));
 
         // revert happens when voting on proposal before voting period has started
         vm.expectRevert("DualGovernor: vote not currently active");
@@ -135,14 +101,14 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         // Proposal 3
 
-        // Add another proposal and voting can only happen after vote delay
+        // Add another proposal and voting can only happen after voting delay
         (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // vote balance of voter before casting vote on proposal 3
-        uint256 voteBalanceForProposal3 = vote.balanceOf(address(this));
+        uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
 
-        // vm.expectRevert("Governor: vote not currently active");
-        // governor.castVote(proposalId3, noVote);
+        vm.expectRevert("DualGovernor: vote not currently active");
+        governor.castVote(proposalId3, noVote);
 
         assertTrue(
             governor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
@@ -158,98 +124,6 @@ contract VoteSPOGGovernorTest is SPOG_Base {
 
         assertEq(noVotes3, voteBalanceForProposal3, "Proposal3 does not have expected no vote");
         assertEq(yesVotes3, 0, "Proposal3 does not have 0 yes vote");
-    }
-
-    function test_VoteTokenSupplyInflatesAtTheBeginningOfEachVotingPeriod() public {
-        // epoch 0
-        uint256 voteSupplyBefore = vote.totalSupply();
-        uint256 vaultVoteTokenBalanceBefore = vote.balanceOf(address(voteVault));
-        (
-            uint256 proposalId,
-            address[] memory targets,
-            uint256[] memory values,
-            bytes[] memory calldatas,
-            bytes32 hashedDescription
-        ) = proposeAddingNewListToSpog("new list to spog");
-
-        uint256 voteSupplyAfterFirstInflation = vote.totalSupply();
-        uint256 amountAddedByInflation = (voteSupplyBefore * deployScript.inflator()) / 100;
-
-        assertEq(
-            voteSupplyAfterFirstInflation,
-            voteSupplyBefore + amountAddedByInflation,
-            "Vote token supply didn't inflate correctly"
-        );
-
-        // check that vault has received the vote inflationary supply
-        uint256 vaultVoteTokenBalanceAfterFirstInflation = vote.balanceOf(address(voteVault));
-        assertEq(
-            vaultVoteTokenBalanceAfterFirstInflation,
-            vaultVoteTokenBalanceBefore + amountAddedByInflation,
-            "Vault did not receive the accurate vote inflationary supply"
-        );
-
-        // fast forward to an active voting period. epoch 1
-        vm.roll(block.number + governor.votingDelay() + 1);
-        governor.castVote(proposalId, yesVote);
-
-        uint256 voteSupplyAfterVoting = vote.totalSupply();
-
-        assertEq(voteSupplyAfterFirstInflation, voteSupplyAfterVoting, "Vote token supply got inflated by voting");
-
-        // start of new epoch 2
-        vm.roll(block.number + governor.votingPeriod() + 1);
-
-        // execute proposal
-        governor.execute(targets, values, calldatas, hashedDescription);
-        uint256 voteSupplyAfterExecution = vote.totalSupply();
-
-        assertEq(voteSupplyAfterFirstInflation, voteSupplyAfterExecution, "Vote token supply got inflated by execution");
-
-        // new proposal, inflate supply
-        proposeAddingNewListToSpog("new list to spog, again");
-
-        uint256 voteSupplyAfterSecondInflation = vote.totalSupply();
-        uint256 amountAddedBySecondInflation = (voteSupplyAfterFirstInflation * deployScript.inflator()) / 100;
-
-        assertEq(
-            voteSupplyAfterSecondInflation,
-            voteSupplyAfterFirstInflation + amountAddedBySecondInflation,
-            "Vote token supply didn't inflate correctly during the second inflation"
-        );
-    }
-
-    function test_ValueTokenSupplyDoesNotInflateAtTheBeginningOfEachVotingPeriodWithoutActivity() public {
-        uint256 valueSupplyBefore = value.totalSupply();
-
-        uint256 vaultVoteTokenBalanceBefore = value.balanceOf(address(voteVault));
-
-        // fast forward to an active voting period. Inflate vote token supply
-        vm.roll(block.number + governor.votingDelay() + 1);
-
-        uint256 valueSupplyAfterFirstPeriod = value.totalSupply();
-
-        assertEq(valueSupplyAfterFirstPeriod, valueSupplyBefore, "Vote token supply inflated incorrectly");
-
-        // check that vault has received the vote inflationary supply
-        // TODO: clean up names here
-        uint256 vaultVoteTokenBalanceAfterFirstPeriod = value.balanceOf(address(voteVault));
-        assertEq(
-            vaultVoteTokenBalanceAfterFirstPeriod,
-            vaultVoteTokenBalanceBefore,
-            "Vault received an inaccurate vote inflationary supply"
-        );
-
-        // start of new epoch inflation is triggered
-        vm.roll(block.number + governor.votingPeriod() + 1);
-
-        uint256 valueSupplyAfterSecondPeriod = value.totalSupply();
-
-        assertEq(
-            valueSupplyAfterSecondPeriod,
-            valueSupplyAfterFirstPeriod,
-            "Vote token supply inflated incorrectly in the second period"
-        );
     }
 
     function test_ProposalsShouldBeAllowedAfterInactiveEpoch() public {
@@ -329,8 +203,8 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         values[0] = 0;
         values[1] = 0;
         bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
-        calldatas[1] = abi.encodeWithSignature("append(address,address)", users.bob, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
+        calldatas[1] = abi.encodeWithSignature("append(address,address)", bob, list);
         string memory description = "add 2 merchants to spog";
 
         // approve cash spend for proposal
@@ -347,7 +221,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 1 ether;
         bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -365,7 +239,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -398,7 +272,7 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", users.alice, list);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -410,5 +284,44 @@ contract VoteSPOGGovernorTest is SPOG_Base {
         cash.approve(address(spog), tax);
         vm.expectRevert("Governor: proposal already exists");
         governor.propose(targets, values, calldatas, description);
+    }
+
+    function test_Revert_Execute_onExpiration() public {
+        // create proposal to append address to list
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
+        string memory description = "Append address to a list";
+
+        (bytes32 hashedDescription, uint256 proposalId) =
+            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+
+        // create proposal
+        cash.approve(address(spog), deployScript.tax());
+        governor.propose(targets, values, calldatas, description);
+
+        // fast forward to next voting period
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        // cast vote on proposal
+        uint8 yesVote = 1;
+        governor.castVote(proposalId, yesVote);
+
+        // fast forward to next voting period
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        // do not execute
+
+        // fast forward to next voting period
+        // Note: No extra +1 here.
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Proposal is not in an expired state");
+
+        // execute proposal
+        vm.expectRevert("Governor: proposal not successful");
+        governor.execute(targets, values, calldatas, hashedDescription);
     }
 }

@@ -3,9 +3,7 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
 
-import "src/interfaces/tokens/IVote.sol";
-import "src/interfaces/tokens/IValue.sol";
-import "src/interfaces/ISPOG.sol";
+import "src/interfaces/ITokens.sol";
 
 interface IDualGovernor {
     // Enums
@@ -26,7 +24,6 @@ interface IDualGovernor {
     error InvalidValue();
     error InvalidMethod();
     error ListAdminIsNotSPOG();
-    error AlreadyInitialized();
     error AlreadyVoted();
     error ZeroSPOGAddress();
     error ZeroVotingPeriod();
@@ -43,14 +40,15 @@ interface IDualGovernor {
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
+    event VotingFinishedAndRewardsAccrued(
+        address indexed account, uint256 indexed epoch, uint256 blockNumber, uint256 votesWeightReward
+    );
 
     // Accessors for vote, value tokens and spog contract
-    function spog() external view returns (ISPOG);
-    function vote() external view returns (IVote);
-    function value() external view returns (IValue);
+    function vote() external view returns (IVOTE);
+    function value() external view returns (IVALUE);
 
     // Utility functions
-    function initializeSPOG(address spog) external;
     function isGovernedMethod(bytes4 func) external pure returns (bool);
     function emergencyProposals(uint256 proposalId) external view returns (bool);
 
@@ -73,10 +71,11 @@ interface IDualGovernor {
     function currentEpoch() external view returns (uint256);
     function startOf(uint256 epoch) external view returns (uint256);
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
-    function isActiveParticipant(uint256 epoch, address account) external view returns (bool);
+    function hasFinishedVoting(uint256 epoch, address account) external view returns (bool);
+    function finishedVotingAt(uint256 epoch, address account) external view returns (uint256);
 
     // Batch voting
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) external returns (uint256);
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) external;
 }
 
-abstract contract ISPOGGovernor is Governor, IDualGovernor {}
+abstract contract ISPOGGovernor is Governor, IDualGovernor, ISPOGControlled {}

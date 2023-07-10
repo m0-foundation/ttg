@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
@@ -15,23 +15,15 @@ contract MockConfig is IMockConfig, ERC165 {
     }
 }
 
-contract SPOG_emergency is SPOG_Base {
+contract SPOG_emergency is SPOGBaseTest {
     address internal addressToChange;
-    uint8 internal yesVote;
-    uint8 internal noVote;
-    uint256 emergencyTaxMultiplier;
 
     event NewEmergencyProposal(uint256 indexed proposalId);
 
     function setUp() public override {
         super.setUp();
 
-        emergencyTaxMultiplier = 12;
-
-        noVote = 0;
-        yesVote = 1;
-
-        // Initial state - list contains 1 merchant
+        // Initial state - list contains 1 participant
         addNewListToSpogAndAppendAnAddressToIt();
         addressToChange = address(0x1234);
     }
@@ -62,8 +54,7 @@ contract SPOG_emergency is SPOG_Base {
         (bytes32 hashedDescription, uint256 proposalId) =
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
-        // emergency propose, 12 * tax price
-        cash.approve(address(spog), emergencyTaxMultiplier * tax);
+        cash.approve(address(spog), tax);
 
         //TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -96,9 +87,7 @@ contract SPOG_emergency is SPOG_Base {
 
         (bytes32 hashedDescription, uint256 proposalId) =
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
-
-        // emergency propose, 12 * tax price
-        cash.approve(address(spog), emergencyTaxMultiplier * tax);
+        cash.approve(address(spog), tax);
 
         // TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -130,8 +119,8 @@ contract SPOG_emergency is SPOG_Base {
         (bytes32 hashedDescription, uint256 proposalId) =
             getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
-        // emergency propose, 12 * tax price
-        cash.approve(address(spog), emergencyTaxMultiplier * tax);
+        // emergency propose, tax price
+        cash.approve(address(spog), tax);
 
         //TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -152,8 +141,8 @@ contract SPOG_emergency is SPOG_Base {
         calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Remove), callData);
         string memory description = "Emergency remove of merchant";
 
-        // emergency propose, 12 * tax price is needed, but only 1 * tax is approved to be paid
-        cash.approve(address(spog), tax);
+        // emergency propose, 1 * tax price is needed, but only 0.5 * tax is approved to be paid
+        cash.approve(address(spog), tax / 2);
         vm.expectRevert("ERC20: insufficient allowance");
         governor.propose(targets, values, calldatas, description);
     }
@@ -199,7 +188,7 @@ contract SPOG_emergency is SPOG_Base {
     function test_EmergencyRemove_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
         uint256 votingPeriodBeforeER = governor.votingPeriod();
-        uint256 balanceBeforeProposal = cash.balanceOf(address(valueVault));
+        uint256 balanceBeforeProposal = cash.balanceOf(address(vault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -209,12 +198,8 @@ contract SPOG_emergency is SPOG_Base {
         ) = createEmergencyRemoveProposal();
 
         // Check that tax was paid
-        uint256 balanceAfterProposal = cash.balanceOf(address(valueVault));
-        assertEq(
-            balanceAfterProposal - balanceBeforeProposal,
-            emergencyTaxMultiplier * tax,
-            "Emergency proposal costs 12x tax"
-        );
+        uint256 balanceAfterProposal = cash.balanceOf(address(vault));
+        assertEq(balanceAfterProposal - balanceBeforeProposal, tax, "Emergency proposal costs 1 * tax");
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -281,7 +266,7 @@ contract SPOG_emergency is SPOG_Base {
     function test_EmergencyAppend_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
         uint256 votingPeriodBeforeER = governor.votingPeriod();
-        uint256 balanceBeforeProposal = cash.balanceOf(address(valueVault));
+        uint256 balanceBeforeProposal = cash.balanceOf(address(vault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -291,12 +276,8 @@ contract SPOG_emergency is SPOG_Base {
         ) = createEmergencyAppendProposal();
 
         // Check that tax was paid
-        uint256 balanceAfterProposal = cash.balanceOf(address(valueVault));
-        assertEq(
-            balanceAfterProposal - balanceBeforeProposal,
-            emergencyTaxMultiplier * tax,
-            "Emergency proposal costs 12x tax"
-        );
+        uint256 balanceAfterProposal = cash.balanceOf(address(vault));
+        assertEq(balanceAfterProposal - balanceBeforeProposal, tax, "Emergency proposal costs 1 * tax");
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -363,7 +344,7 @@ contract SPOG_emergency is SPOG_Base {
     function test_EmergencyChangeConfig_BeforeDeadlineEnd() public {
         // create proposal to emergency remove address from list
         uint256 votingPeriodBeforeER = governor.votingPeriod();
-        uint256 balanceBeforeProposal = cash.balanceOf(address(valueVault));
+        uint256 balanceBeforeProposal = cash.balanceOf(address(vault));
         (
             uint256 proposalId,
             address[] memory targets,
@@ -374,12 +355,8 @@ contract SPOG_emergency is SPOG_Base {
         ) = createEmergencyConfigChangeProposal();
 
         // Check that tax was paid
-        uint256 balanceAfterProposal = cash.balanceOf(address(valueVault));
-        assertEq(
-            balanceAfterProposal - balanceBeforeProposal,
-            emergencyTaxMultiplier * tax,
-            "Emergency proposal costs 12x tax"
-        );
+        uint256 balanceAfterProposal = cash.balanceOf(address(vault));
+        assertEq(balanceAfterProposal - balanceBeforeProposal, tax, "Emergency proposal costs 1 * tax");
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -444,39 +421,5 @@ contract SPOG_emergency is SPOG_Base {
         // assert that config was changed
         (address a,) = spog.getConfig(keccak256("Fake Name"));
         assertEq(a, configAddress, "Config address did not match");
-    }
-
-    function test_Emergency_VoteAndValueTokensAreNotInflated() public {
-        uint256 voteTokenInitialBalanceForVault = vote.balanceOf(address(voteVault));
-        uint256 valueTokenInitialBalanceForVault = value.balanceOf(address(voteVault));
-        uint256 voteTotalBalance = vote.totalSupply();
-        uint256 valueTotalBalance = value.totalSupply();
-
-        createEmergencyRemoveProposal();
-
-        uint256 voteTokenBalanceAfterProposal = vote.balanceOf(address(voteVault));
-        uint256 valueTokenBalanceAfterProposal = value.balanceOf(address(voteVault));
-        uint256 voteTotalBalanceAfterProposal = vote.totalSupply();
-        uint256 valueTotalBalanceAfterProposal = value.totalSupply();
-        assertEq(
-            voteTokenInitialBalanceForVault,
-            voteTokenBalanceAfterProposal,
-            "vault should have the same balance of vote tokens after emergency remove proposal"
-        );
-        assertEq(
-            valueTokenInitialBalanceForVault,
-            valueTokenBalanceAfterProposal,
-            "vault should have the same balance of value tokens after emergency remove proposal"
-        );
-        assertEq(
-            voteTotalBalance,
-            voteTotalBalanceAfterProposal,
-            "total supply of vote tokens should not change after emergency remove proposal"
-        );
-        assertEq(
-            valueTotalBalance,
-            valueTotalBalanceAfterProposal,
-            "total supply of value tokens should not change after emergency remove proposal"
-        );
     }
 }

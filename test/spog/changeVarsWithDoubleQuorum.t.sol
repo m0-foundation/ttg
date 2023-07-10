@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_change is SPOG_Base {
-    uint8 internal yesVote;
-    uint8 internal noVote;
-    address internal alice;
-
+contract SPOG_change is SPOGBaseTest {
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
+    address public charlie;
+
     function setUp() public override {
         super.setUp();
 
-        yesVote = 1;
-        noVote = 0;
-
-        alice = payable(makeAddr("alice"));
+        charlie = createUser("charlie");
     }
 
     function proposeTaxRangeChange(string memory proposalDescription)
@@ -71,10 +66,10 @@ contract SPOG_change is SPOG_Base {
         uint256 taxLowerBound = spog.taxLowerBound();
         uint256 taxUpperBound = spog.taxUpperBound();
 
-        // give alice vote power
-        ISPOGVotes(vote).mint(alice, 95e18);
-        vm.startPrank(alice);
-        ISPOGVotes(vote).delegate(alice);
+        // give charlie vote power
+        vote.mint(charlie, 95e18);
+        vm.startPrank(charlie);
+        vote.delegate(charlie);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -85,9 +80,9 @@ contract SPOG_change is SPOG_Base {
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
 
-        assertTrue(yesVoteVotes == 95e18, "Yes vote votes should be 95");
-        assertTrue(noVoteVotes == 0, "No vote votes should be 0");
-        assertTrue(yesValueVotes == 0, "Yes value votes should be 0");
+        assertTrue(yesVoteVotes == 95e18, "Yes vote votes should be charlie vote votes");
+        assertTrue(noVoteVotes == 0, "No vote votes should be equal to 0");
+        assertTrue(yesValueVotes == 0, "Yes value votes should be charlie value votes");
         assertTrue(noValueVotes == 0, "No value votes should be 0");
 
         // fast forward to end of voting period
@@ -116,10 +111,10 @@ contract SPOG_change is SPOG_Base {
         uint256 taxLowerBound = spog.taxLowerBound();
         uint256 taxUpperBound = spog.taxUpperBound();
 
-        // give alice vote power
-        ISPOGVotes(value).mint(alice, 95e18);
-        vm.startPrank(alice);
-        ISPOGVotes(value).delegate(alice);
+        // give charlie vote power
+        value.mint(charlie, 95e18);
+        vm.startPrank(charlie);
+        value.delegate(charlie);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);

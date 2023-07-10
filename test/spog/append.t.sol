@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_AppendAddressToList is SPOG_Base {
+contract SPOG_AppendAddressToList is SPOGBaseTest {
     address internal listToAddAddressTo;
     address internal addressToAdd;
 
@@ -49,7 +49,7 @@ contract SPOG_AppendAddressToList is SPOG_Base {
 
         // assert that vault has cash balance paid for proposals
         assertTrue(
-            cash.balanceOf(address(valueVault)) == tax * 2,
+            cash.balanceOf(address(vault)) == tax * 2,
             "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
         );
 

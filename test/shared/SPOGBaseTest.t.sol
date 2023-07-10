@@ -1,27 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/governance/IGovernor.sol";
-
-import "test/Base.t.sol";
+import "test/shared/BaseTest.t.sol";
 import "script/SPOGDeploy.s.sol";
 
+import "src/interfaces/ITokens.sol";
 import "src/periphery/List.sol";
-import "src/interfaces/tokens/ISPOGVotes.sol";
 
-contract SPOG_Base is BaseTest {
+contract SPOGBaseTest is BaseTest {
     SPOGDeployScript public deployScript;
 
     ISPOG public spog;
-    DualGovernor public governor;
-    ISPOGVotes public vote;
-    ISPOGVotes public value;
-    VoteVault public voteVault;
-    ValueVault public valueVault;
+    ISPOGGovernor public governor;
+    IVOTE public vote;
+    IVALUE public value;
+    ISPOGVault public vault;
     IERC20 public cash;
     IList public list;
-
     uint256 public tax;
+
+    address public alice = createUser("alice");
+    address public bob = createUser("bob");
+    address public carol = createUser("carol");
+
+    uint256 public amountToMint = 100e18;
+
+    uint8 public noVote = 0;
+    uint8 public yesVote = 1;
 
     enum VoteType {
         No,
@@ -33,26 +38,52 @@ contract SPOG_Base is BaseTest {
         deployScript.run();
 
         spog = ISPOG(deployScript.spog());
-        governor = DualGovernor(payable(deployScript.governor()));
+        governor = ISPOGGovernor(payable(deployScript.governor()));
         cash = IERC20(deployScript.cash());
-        vote = ISPOGVotes(deployScript.vote());
-        value = ISPOGVotes(deployScript.value());
-        voteVault = VoteVault(deployScript.voteVault());
-        valueVault = ValueVault(deployScript.valueVault());
+        vote = IVOTE(deployScript.vote());
+        value = IVALUE(deployScript.value());
+        vault = ISPOGVault(deployScript.vault());
         tax = deployScript.tax();
 
         // mint vote tokens and self-delegate
-        ISPOGVotes(vote).mint(address(this), 100e18);
-        ISPOGVotes(vote).delegate(address(this));
+        vote.mint(address(this), amountToMint);
+        vote.delegate(address(this));
 
         // mint value tokens and self-delegate
-        ISPOGVotes(value).mint(address(this), 100e18);
-        ISPOGVotes(value).delegate(address(this));
+        value.mint(address(this), amountToMint);
+        value.delegate(address(this));
 
         // deploy list and change admin to spog
         List newList = new List("SPOG List");
         newList.changeAdmin(address(spog));
         list = IList(address(newList));
+
+        // Initialize users initial token balances
+        fundUsers();
+    }
+
+    function fundUsers() internal {
+        // mint VOTE and VALUE tokens to alice, bob and carol
+        vote.mint(alice, amountToMint);
+        value.mint(alice, amountToMint);
+        vm.startPrank(alice);
+        vote.delegate(alice); // self delegate
+        value.delegate(alice); // self delegate
+        vm.stopPrank();
+
+        vote.mint(bob, amountToMint);
+        value.mint(bob, amountToMint);
+        vm.startPrank(bob);
+        vote.delegate(bob); // self delegate
+        value.delegate(bob); // self delegate
+        vm.stopPrank();
+
+        vote.mint(carol, amountToMint);
+        value.mint(carol, amountToMint);
+        vm.startPrank(carol);
+        vote.delegate(carol); // self delegate
+        value.delegate(carol); // self delegate
+        vm.stopPrank();
     }
 
     /* Helper functions */
@@ -104,7 +135,6 @@ contract SPOG_Base is BaseTest {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        uint8 yesVote = 1;
         governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
@@ -139,7 +169,6 @@ contract SPOG_Base is BaseTest {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // cast vote on proposal
-        uint8 yesVote = 1;
         governor.castVote(proposalId, yesVote);
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);

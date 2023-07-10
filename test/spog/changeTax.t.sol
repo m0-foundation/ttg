@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_changeTax is SPOG_Base {
+contract SPOG_changeTax is SPOGBaseTest {
     uint256 internal newTaxValue;
-    uint8 internal yesVote;
 
     event TaxChanged(uint256 indexed tax);
 
     function setUp() public override {
         super.setUp();
         newTaxValue = deployScript.taxUpperBound();
-        yesVote = 1;
     }
 
     function test_Revert_ChangeTaxWhenNotCalledFromGovernance() public {

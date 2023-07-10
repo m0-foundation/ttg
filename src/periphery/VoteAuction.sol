@@ -5,11 +5,11 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-import {IERC20PricelessAuction} from "src/interfaces/IERC20PricelessAuction.sol";
+import "src/interfaces/periphery/IVoteAuction.sol";
 
-/// @title ERC20PricelessAuction
+/// @title VoteAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
-contract ERC20PricelessAuction is IERC20PricelessAuction, Initializable {
+contract VoteAuction is IVoteAuction, Initializable {
     using SafeERC20 for IERC20;
 
     error AlreadyInitialized();

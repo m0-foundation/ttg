@@ -2,9 +2,9 @@
 pragma solidity 0.8.19;
 
 import "src/factories/ListFactory.sol";
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract ListFactoryTest is SPOG_Base {
+contract ListFactoryTest is SPOGBaseTest {
     function test_listDeployWithFactory() public {
         ListFactory listFactory = new ListFactory();
 

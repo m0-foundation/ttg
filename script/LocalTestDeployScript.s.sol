@@ -28,8 +28,8 @@ contract LocalTestDeployScript is BaseScript {
 
         for (uint256 i = 0; i < users.length; i++) {
             ERC20Mock(spogDeployScript.cash()).mint(users[i], amount);
-            ISPOGVotes(spogDeployScript.value()).mint(users[i], amount);
-            ISPOGVotes(spogDeployScript.vote()).mint(users[i], amount);
+            IVALUE(spogDeployScript.value()).mint(users[i], amount);
+            IVOTE(spogDeployScript.vote()).mint(users[i], amount);
         }
 
         console.log("Minted 100K cash, value, and vote to each user");

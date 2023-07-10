@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/interfaces/IList.sol";
+import "src/interfaces/periphery/IList.sol";
+import "src/interfaces/ISPOG.sol";
 import "src/core/governor/DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
@@ -11,6 +12,8 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 numProposals;
         uint256 totalVotesWeight;
         mapping(address => uint256) numVotedOn;
+        mapping(address => uint256) finishedVotingAt;
+        bool withRewards;
     }
 
     struct ProposalVote {
@@ -25,7 +28,7 @@ contract DualGovernor is DualGovernorQuorum {
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     /// @notice The SPOG contract
-    ISPOG public override spog;
+    address public override spog;
 
     /// @notice The list cof emergency proposals, (proposalId => true)
     mapping(uint256 => bool) public override emergencyProposals;
@@ -76,12 +79,12 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev Adds additional intialization for tokens
     /// @param _spog The address of the SPOG contract
     function initializeSPOG(address _spog) external override {
-        if (address(spog) != address(0)) revert AlreadyInitialized();
+        if (spog != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
         // @dev should never happen, precaution
         if (_start == 0) revert ZeroStart();
 
-        spog = ISPOG(_spog);
+        spog = _spog;
         // initialize tokens
         vote.initializeSPOG(_spog);
         // TODO: find the way to avoid mistake with initialization for reset
@@ -149,7 +152,7 @@ contract DualGovernor is DualGovernorQuorum {
         bytes4 func = bytes4(calldatas[0]);
         if (target != address(this) && target != address(spog)) revert InvalidTarget();
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
-        if (target == address(spog) && !spog.isGovernedMethod(func)) revert InvalidMethod();
+        if (target == spog && !ISPOG(spog).isGovernedMethod(func)) revert InvalidMethod();
         // prevent proposing a list that can be changed before execution
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
@@ -157,16 +160,20 @@ contract DualGovernor is DualGovernorQuorum {
             if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
         }
 
-        spog.chargeFee(msg.sender, func);
+        ISPOG(spog).chargeFee(_msgSender(), func);
 
+        uint256 nextEpoch = currentEpoch() + 1;
         uint256 proposalId;
         if (func == ISPOG.reset.selector || func == ISPOG.emergency.selector) {
             _emergencyVotingIsOn = true;
             proposalId = super.propose(targets, values, calldatas, description);
             _emergencyVotingIsOn = false;
         } else {
-            // do not inflate tokens for emergency and reset proposals
-            spog.inflateRewardTokens();
+            /// @dev proposals are voted on in the next epoch
+            EpochBasic storage epochBasic = _epochBasic[nextEpoch];
+            epochBasic.withRewards = true;
+            epochBasic.numProposals += 1;
+
             proposalId = super.propose(targets, values, calldatas, description);
         }
 
@@ -178,28 +185,21 @@ contract DualGovernor is DualGovernorQuorum {
         ProposalType proposalType = _getProposalType(func);
         _proposalTypes[proposalId] = proposalType;
 
-        /// @dev proposals are voted on in the next epoch
-        uint256 nextEpoch = currentEpoch() + 1;
-        _epochBasic[nextEpoch].numProposals += 1;
-
         emit Proposal(nextEpoch, proposalId, proposalType);
         return proposalId;
     }
 
-    /// @dev Cast votes to count user activity in epochs
+    /// @notice Cast votes to count user activity in epochs
     /// @dev Allows batch voting
     /// @param proposalIds The ids of the proposals
     /// @param votes The values of the votes
-    /// @return voteWeight The weight of vote
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public virtual returns (uint256) {
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public override {
         address voter = _msgSender();
         require(proposalIds.length == votes.length, "DualGovernor: proposalIds and votes length mismatch");
 
-        uint256 voteWeight;
         for (uint256 i = 0; i < proposalIds.length; i++) {
-            voteWeight = _castVote(proposalIds[i], voter, votes[i], "");
+            _castVote(proposalIds[i], voter, votes[i], "");
         }
-        return voteWeight;
     }
 
     /// @dev Cast vote to count user activity in epochs
@@ -229,8 +229,9 @@ contract DualGovernor is DualGovernorQuorum {
 
         _countVote(proposalId, account, support, voteWeight, valueWeight, params);
 
-        if (voteWeight > 0) {
-            _updateAccountEpochVotes(account, voteWeight);
+        // update total active votes and accrue rewards for non-emergency, non-reset proposals
+        if (voteWeight > 0 && !emergencyProposals[proposalId]) {
+            _registerVotesAndAccrueRewards(account, voteWeight);
         }
 
         // TODO: adjust weight we need to return ?
@@ -243,20 +244,37 @@ contract DualGovernor is DualGovernorQuorum {
         return voteWeight;
     }
 
-    /// @dev Update number of proposals account voted for and cumulative vote weight for the epoch
+    /// @dev Update number of proposals account voted on and cumulative vote weight for the epoch
+    /// @dev If voted on all active proposals, accrue VOTE voting power rewards
     /// @param account The the account that voted on proposals
     /// @param weight The vote weight of the account
-    function _updateAccountEpochVotes(address account, uint256 weight) internal virtual {
+    /// @return The reward vote weight of the account if all mandatory proposals were voted on
+    function _registerVotesAndAccrueRewards(address account, uint256 weight) internal virtual returns (uint256) {
         uint256 epoch = currentEpoch();
-
         EpochBasic storage epochBasic = _epochBasic[epoch];
+
         // update number of proposals account voted for in current epoch
         epochBasic.numVotedOn[account] += 1;
 
-        // update cumulative vote weight for epoch if user voted for all proposals
-        if (epochBasic.numVotedOn[account] == epochBasic.numProposals) {
-            epochBasic.totalVotesWeight += weight;
-        }
+        // if user voted for all proposals, update cululative weight and give rewards
+        if (!_hasFinishedVoting(epochBasic, account)) return 0;
+
+        // update cumulative vote weight and save time when last proposal was voted on
+        epochBasic.totalVotesWeight += weight;
+        epochBasic.finishedVotingAt[account] = block.number;
+
+        // calculate and mint VOTE voting power reward
+        uint256 votesWeightReward = ISPOG(spog).getInflationReward(weight);
+        vote.addVotingPower(account, votesWeightReward);
+
+        // claim VALUE token reward by delegate
+        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalVotes(epochStart);
+        // TODO: make sure governor can mint here
+        // value.mint(account, valueReward);
+
+        emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, votesWeightReward);
+
+        return votesWeightReward;
     }
 
     /// @notice Gets total vote weight power for the epoch
@@ -266,13 +284,22 @@ contract DualGovernor is DualGovernorQuorum {
         return _epochBasic[epoch].totalVotesWeight;
     }
 
+    function finishedVotingAt(uint256 epoch, address account) external view override returns (uint256) {
+        return _epochBasic[epoch].finishedVotingAt[account];
+    }
+
     /// @notice Checks if account voted on all proposals in the epoch
     /// @param epoch The epoch number to check
     /// @param account The account to check
     /// @return True if account voted on all proposals in the epoch
-    function isActiveParticipant(uint256 epoch, address account) external view override returns (bool) {
+    function hasFinishedVoting(uint256 epoch, address account) external view override returns (bool) {
         EpochBasic storage epochBasic = _epochBasic[epoch];
-        return epochBasic.numVotedOn[account] == epochBasic.numProposals;
+        return _hasFinishedVoting(epochBasic, account);
+    }
+
+    function _hasFinishedVoting(EpochBasic storage epochBasic, address account) internal view returns (bool) {
+        if (account == address(0)) return false;
+        return epochBasic.withRewards && epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
 
     /// @notice Returns state of proposal
@@ -367,16 +394,14 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 voteQuorum_ = voteQuorum(snapshot);
         uint256 valueQuorum_ = valueQuorum(snapshot);
 
-        // TODO: fix checks with 0 quorum, do we really need it ?
         if (proposalType == ProposalType.Double) {
-            return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0
-                && valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
+            return voteQuorum_ <= proposalVote.voteYesVotes && valueQuorum_ <= proposalVote.valueYesVotes;
         }
         if (proposalType == ProposalType.Value) {
-            return valueQuorum_ <= proposalVote.valueYesVotes && valueQuorum_ > 0;
+            return valueQuorum_ <= proposalVote.valueYesVotes;
         }
 
-        return voteQuorum_ <= proposalVote.voteYesVotes && voteQuorum_ > 0;
+        return voteQuorum_ <= proposalVote.voteYesVotes;
     }
 
     /// @notice Checks if proposal is succeessful

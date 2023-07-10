@@ -2,8 +2,8 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
-import {ERC20GodMode} from "test/mock/ERC20GodMode.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
 
 /// @title BaseTest
 /// @notice Common contract members needed across test contracts.
@@ -40,17 +40,6 @@ abstract contract BaseTest is Test {
     event LogNamedArray(string key, IERC20[] value);
 
     /*//////////////////////////////////////////////////////////////////////////
-                                      STRUCTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    struct Users {
-        address payable admin;
-        address payable alice;
-        address payable bob;
-        address payable charlie;
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
                                      CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
@@ -61,28 +50,8 @@ abstract contract BaseTest is Test {
                                  TESTING CONTRACTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    ERC20GodMode internal tkn0 = new ERC20GodMode("Token 0", "TKN0", 0);
-    ERC20GodMode internal dai = new ERC20GodMode("Dai Stablecoin", "DAI", 18);
-    ERC20GodMode internal usdc = new ERC20GodMode("USD Coin", "USDC", 6);
-    Users internal users;
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                   SETUP FUNCTION
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @dev A setup function invoked before each test case.
-    function createUsers() public virtual {
-        // Create users for testing.
-        users = Users({
-            admin: createUser("Admin"),
-            alice: createUser("Alice"),
-            bob: createUser("Bob"),
-            charlie: createUser("Charlie")
-        });
-
-        // Make the admin the default caller in all subsequent tests.
-        changePrank({who: users.admin});
-    }
+    ERC20DecimalsMock internal dai = new ERC20DecimalsMock("Dai Stablecoin", "DAI", 18);
+    ERC20DecimalsMock internal usdc = new ERC20DecimalsMock("USD Coin", "USDC", 6);
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL CONSTANT FUNCTIONS

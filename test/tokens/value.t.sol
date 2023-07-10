@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract ValueTokenTest is SPOG_Base {
-    address alice = createUser("alice");
+contract ValueTokenTest is SPOGBaseTest {
     uint256 aliceStartBalance = 50e18;
 
-    ValueToken valueToken;
+    VALUE valueToken;
 
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
 
-        valueToken = new ValueToken("SPOGValue", "value");
+        valueToken = new VALUE("SPOGValue", "value");
         valueToken.initializeSPOG(address(spog));
 
         // grant mint role to this contract
@@ -24,7 +23,7 @@ contract ValueTokenTest is SPOG_Base {
     }
 
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {
-        vm.expectRevert(SPOGVotes.CallerIsNotSPOG.selector);
+        vm.expectRevert(ISPOGControlled.CallerIsNotSPOG.selector);
         valueToken.snapshot();
     }
 
@@ -48,22 +47,5 @@ contract ValueTokenTest is SPOG_Base {
         valueToken.mint(user, 100);
 
         assertEq(valueToken.balanceOf(user), 100);
-
-        // test burn
-        vm.prank(user);
-        valueToken.burn(50);
-
-        assertEq(valueToken.balanceOf(user), 50);
-
-        // test burnFrom
-        address user2 = createUser("user2");
-
-        vm.prank(user);
-        valueToken.approve(user2, 25);
-
-        vm.prank(user2);
-        valueToken.burnFrom(user, 25);
-
-        assertEq(valueToken.balanceOf(user), 25);
     }
 }

@@ -12,10 +12,10 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
-    IVote public immutable override vote;
+    IVOTE public immutable override vote;
 
     /// @notice The value token of SPOG governance
-    IValue public immutable override value;
+    IVALUE public immutable override value;
 
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
@@ -41,9 +41,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         if (valueQuorumNumerator_ == 0) revert ZeroValueQuorumNumerator();
 
         // Set tokens and check that they are properly linked together
-        vote = IVote(vote_);
-        value = IValue(value_);
-        if (vote.valueToken() != value_) revert VoteValueMistmatch();
+        vote = IVOTE(vote_);
+        value = IVALUE(value_);
+        if (vote.value() != value) revert VoteValueMistmatch();
 
         // Set initial vote and value quorums
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
@@ -99,7 +99,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @notice Returns the vote quorum at the given timepoint
     function voteQuorum(uint256 timepoint) public view virtual override returns (uint256) {
-        return (vote.getPastTotalSupply(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
+        return (vote.getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the value quorum at the given timepoint
@@ -149,14 +149,14 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         emit ValueQuorumNumeratorUpdated(oldValueQuorumNumerator, newValueQuorumNumerator);
     }
 
-    /// @dev Returns vote votes for the account at the given timepoint
+    /// @dev Returns min between vote votes for the account at the given timepoint and current votes
     function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
         view
         virtual
         returns (uint256)
     {
-        return vote.getPastVotes(account, timepoint);
+        return _min(vote.getPastVotes(account, timepoint), vote.getVotes(account));
     }
 
     /// @dev Returns value votes for the account at the given timepoint
@@ -171,13 +171,17 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @dev Returns vote votes for the account at the given timepoint
     /// @dev Added to be compatible with standard OZ Governor interface
-    function _getVotes(address account, uint256 timepoint, bytes memory params)
+    function _getVotes(address account, uint256 timepoint, bytes memory /*params*/ )
         internal
         view
         virtual
         override
         returns (uint256)
     {
-        return _getVoteVotes(account, timepoint, params);
+        return vote.getPastVotes(account, timepoint);
+    }
+
+    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a < b ? a : b;
     }
 }
