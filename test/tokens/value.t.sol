@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract ValueTokenTest is SPOG_Base {
+contract ValueTokenTest is SPOGBaseTest {
     uint256 aliceStartBalance = 50e18;
 
     VALUE valueToken;

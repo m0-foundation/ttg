@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_reset is SPOG_Base {
+contract SPOG_reset is SPOGBaseTest {
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
 
     /*//////////////////////////////////////////////////////////////

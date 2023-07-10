@@ -2,19 +2,12 @@
 
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
+import "test/shared/SPOGMock.sol";
 import "src/periphery/List.sol";
 import "src/interfaces/ISPOG.sol";
 
-contract MockSPOG is ERC165 {
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
-    }
-}
-
-contract ListTest is SPOG_Base {
+contract ListTest is SPOGBaseTest {
     address public admin;
 
     // Events to test
@@ -98,7 +91,7 @@ contract ListTest is SPOG_Base {
         vm.startPrank(admin);
 
         // successfully set new admin to SPOG-like contract
-        address newSPOG = address(new MockSPOG());
+        address newSPOG = address(new SPOGMock());
 
         expectEmit();
         emit AdminChanged(newSPOG);
@@ -119,7 +112,7 @@ contract ListTest is SPOG_Base {
 
     function test_Revert_ChangeAdmin_WhenCallerIsNotAdmin() public {
         vm.startPrank(alice);
-        address newSPOG = address(new MockSPOG());
+        address newSPOG = address(new SPOGMock());
 
         // revert when called not by an admin
         vm.expectRevert(IList.NotAdmin.selector);

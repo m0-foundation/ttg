@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_changeTax is SPOG_Base {
+contract SPOG_changeTax is SPOGBaseTest {
     uint256 internal newTaxValue;
 
     event TaxChanged(uint256 indexed tax);

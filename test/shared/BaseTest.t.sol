@@ -2,8 +2,8 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
-import {ERC20GodMode} from "test/base/ERC20GodMode.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
 
 /// @title BaseTest
 /// @notice Common contract members needed across test contracts.
@@ -50,8 +50,8 @@ abstract contract BaseTest is Test {
                                  TESTING CONTRACTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    ERC20GodMode internal dai = new ERC20GodMode("Dai Stablecoin", "DAI", 18);
-    ERC20GodMode internal usdc = new ERC20GodMode("USD Coin", "USDC", 6);
+    ERC20DecimalsMock internal dai = new ERC20DecimalsMock("Dai Stablecoin", "DAI", 18);
+    ERC20DecimalsMock internal usdc = new ERC20DecimalsMock("USD Coin", "USDC", 6);
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL CONSTANT FUNCTIONS

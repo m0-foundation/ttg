@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract DualGovernorTest is SPOG_Base {
+contract DualGovernorTest is SPOGBaseTest {
     event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here

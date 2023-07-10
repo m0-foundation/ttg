@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 interface IMockConfig {
@@ -35,7 +35,7 @@ contract MockConfigWithERC165v2 is IMockConfigV2, ERC165 {
     }
 }
 
-contract SPOG_ChangeConfig is SPOG_Base {
+contract SPOG_ChangeConfig is SPOGBaseTest {
     function test_Revert_WhenContractDoesNotSupportERC165() public {
         MockConfigNoERC165 badConfig = new MockConfigNoERC165();
 

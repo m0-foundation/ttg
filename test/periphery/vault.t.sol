@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract VaultTest is SPOG_Base {
+contract VaultTest is SPOGBaseTest {
     event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
 
     /*//////////////////////////////////////////////////////////////

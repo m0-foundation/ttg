@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_RemoveAddressFromList is SPOG_Base {
+contract SPOG_RemoveAddressFromList is SPOGBaseTest {
     address internal listToRemoveAddressFrom;
     address internal addressToRemove;
 

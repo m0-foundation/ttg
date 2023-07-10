@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/mocks/ERC20Mock.sol";
-import "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import "script/shared/Base.s.sol";
 
@@ -10,8 +9,8 @@ import "src/core/SPOG.sol";
 import "src/tokens/VOTE.sol";
 import "src/tokens/VALUE.sol";
 import "src/core/governor/DualGovernor.sol";
-import "src/periphery/VoteAuction.sol";
 import "src/periphery/SPOGVault.sol";
+import "src/periphery/VoteAuction.sol";
 
 contract SPOGDeployScript is BaseScript {
     address public governor;
@@ -69,23 +68,6 @@ contract SPOGDeployScript is BaseScript {
 
         vm.startBroadcast(deployer);
 
-        spog = address(createSpog(false));
-
-        console.log("SPOG address: ", spog);
-        console.log("VOTE token address: ", vote);
-        console.log("VALUE token address: ", value);
-        console.log("DualGovernor address: ", governor);
-        console.log("Cash address: ", cash);
-        console.log("Vault address: ", vault);
-
-        vm.stopBroadcast();
-    }
-
-    function createSpog(bool runSetup) public returns (SPOG) {
-        if (runSetup) {
-            setUp();
-        }
-
         SPOG.Configuration memory config = SPOG.Configuration(
             payable(address(governor)),
             address(vault),
@@ -96,9 +78,15 @@ contract SPOGDeployScript is BaseScript {
             inflator,
             valueFixedInflation
         );
+        spog = address(new SPOG(config));
 
-        SPOG newSpog = new SPOG(config);
+        console.log("SPOG address: ", spog);
+        console.log("VOTE token address: ", vote);
+        console.log("VALUE token address: ", value);
+        console.log("DualGovernor address: ", governor);
+        console.log("Cash address: ", cash);
+        console.log("Vault address: ", vault);
 
-        return newSpog;
+        vm.stopBroadcast();
     }
 }

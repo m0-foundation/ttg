@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
@@ -15,7 +15,7 @@ contract MockConfig is IMockConfig, ERC165 {
     }
 }
 
-contract SPOG_emergency is SPOG_Base {
+contract SPOG_emergency is SPOGBaseTest {
     address internal addressToChange;
 
     event NewEmergencyProposal(uint256 indexed proposalId);

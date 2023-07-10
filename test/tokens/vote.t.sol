@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract VoteTokenTest is SPOG_Base {
+contract VoteTokenTest is SPOGBaseTest {
     address alice1 = createUser("alice1");
     address bob1 = createUser("bob1");
     address carol1 = createUser("carol1");

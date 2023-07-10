@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
+import "test/shared/SPOGMock.sol";
 
-contract SPOG_AddNewList is SPOG_Base {
+contract SPOG_AddNewList is SPOGBaseTest {
     // Events to test
     event ListAdded(address indexed list, string name);
 
@@ -14,9 +15,9 @@ contract SPOG_AddNewList is SPOG_Base {
 
     function test_Revert_AddNewList_WhenListAdminIsNotSPOG() external {
         // set list admin to different spog
-        SPOG spog2 = deployScript.createSpog(true);
+        address spog2 = address(new SPOGMock());
         vm.prank(address(spog));
-        list.changeAdmin(address(spog2));
+        list.changeAdmin(spog2);
 
         bytes memory expectedError = abi.encodeWithSignature("ListAdminIsNotSPOG()");
 

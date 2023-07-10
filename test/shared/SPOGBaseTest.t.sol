@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/Base.t.sol";
+import "test/shared/BaseTest.t.sol";
 import "script/SPOGDeploy.s.sol";
 
 import "src/interfaces/ITokens.sol";
 import "src/periphery/List.sol";
 
-contract SPOG_Base is BaseTest {
+contract SPOGBaseTest is BaseTest {
     SPOGDeployScript public deployScript;
 
     ISPOG public spog;

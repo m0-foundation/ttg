@@ -5,15 +5,15 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 import "src/periphery/VoteAuction.sol";
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract VoteAuctionTest is SPOG_Base {
+contract VoteAuctionTest is SPOGBaseTest {
     IVoteAuction public auctionImplementation;
     IVoteAuction public auction;
 
     address fakeVault = createUser("vault");
 
-    ERC20GodMode internal voteToken = new ERC20GodMode("Vote Token", "VOTE", 18);
+    ERC20DecimalsMock internal voteToken = new ERC20DecimalsMock("Vote Token", "VOTE", 18);
 
     function setUp() public override {
         super.setUp();

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/base/SPOG_Base.t.sol";
+import "test/shared/SPOGBaseTest.t.sol";
 
-contract SPOG_InitialState is SPOG_Base {
+contract SPOG_InitialState is SPOGBaseTest {
     uint256 _taxLowerBound = 0;
     uint256 _taxUpperBound = 6e18;
     uint256 internal _inflator = 10;
