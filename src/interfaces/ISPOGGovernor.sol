@@ -34,7 +34,7 @@ interface IDualGovernor {
     error InvalidVoteQuorumNumerator();
     error InvalidValueQuorumNumerator();
     error ZeroStart();
-    error VoteValueMistmatch();
+    error VoteValueMismatch();
 
     // Events
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);

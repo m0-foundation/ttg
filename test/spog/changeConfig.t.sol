@@ -44,7 +44,7 @@ contract SPOG_ChangeConfig is SPOGBaseTest {
         ISPOG(spog).changeConfig(keccak256("MockConfigNoERC165"), address(badConfig), type(IMockConfig).interfaceId);
     }
 
-    function test_Revert_WhenContractDoesSupportERC165_ButInterfaceDoesntMatch() public {
+    function test_Revert_WhenContractDoesSupportERC165_ButInterfaceDoesNotMatch() public {
         MockConfigWithERC165 badConfig = new MockConfigWithERC165();
 
         bytes memory expectedError = abi.encodeWithSignature("ConfigERC165Unsupported()");

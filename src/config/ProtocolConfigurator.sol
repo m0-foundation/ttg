@@ -19,7 +19,7 @@ contract ProtocolConfigurator is IProtocolConfigurator {
         }
 
         // check that the contract supports the interfaceId provided
-        // Note: This also protect against adddress(0)
+        // Note: This also protect against address(0)
         if (!ERC165(configAddress).supportsInterface(interfaceId)) {
             revert ConfigERC165Unsupported();
         }

@@ -43,7 +43,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         // Set tokens and check that they are properly linked together
         vote = IVOTE(vote_);
         value = IVALUE(value_);
-        if (vote.value() != value) revert VoteValueMistmatch();
+        if (vote.value() != value) revert VoteValueMismatch();
 
         // Set initial vote and value quorums
         _updateVoteQuorumNumerator(voteQuorumNumerator_);

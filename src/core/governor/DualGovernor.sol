@@ -76,7 +76,7 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @notice Initializes SPOG address
-    /// @dev Adds additional intialization for tokens
+    /// @dev Adds additional initialization for tokens
     /// @param _spog The address of the SPOG contract
     function initializeSPOG(address _spog) external override {
         if (spog != address(0)) revert AlreadyInitialized();
@@ -131,7 +131,7 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @notice Creates a new proposal
-    /// @dev One of main overriden methods of OZ governor interface, adjusted for SPOG needs
+    /// @dev One of main overridden methods of OZ governor interface, adjusted for SPOG needs
     /// @param targets The ordered list of target addresses for calls to be made
     /// @dev only one target is allowed and target address can be only SPOG or governor contract
     /// @param values The ordered list of values (i.e amounts) to be passed to the calls to be made
@@ -203,7 +203,7 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @dev Cast vote to count user activity in epochs
-    /// @dev Overriden method of OZ governor interface adjusted for double governance nature of voting process
+    /// @dev Overridden method of OZ governor interface adjusted for double governance nature of voting process
     /// @param proposalId The id of the proposal
     /// @param account The address of the account to vote for
     /// @param support The support value of the vote - 0 or 1
@@ -256,7 +256,7 @@ contract DualGovernor is DualGovernorQuorum {
         // update number of proposals account voted for in current epoch
         epochBasic.numVotedOn[account] += 1;
 
-        // if user voted for all proposals, update cululative weight and give rewards
+        // if user voted for all proposals, update cumulative weight and give rewards
         if (!_hasFinishedVoting(epochBasic, account)) return 0;
 
         // update cumulative vote weight and save time when last proposal was voted on
@@ -305,7 +305,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice Returns state of proposal
     /// @param proposalId The id of the proposal
     /// @return The state of the proposal
-    /// @dev One of main overriden methods of OZ governor interface, adjusted for SPOG needs
+    /// @dev One of main overridden methods of OZ governor interface, adjusted for SPOG needs
     function state(uint256 proposalId) public view override returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
@@ -378,7 +378,7 @@ contract DualGovernor is DualGovernorQuorum {
         return (proposalVote.voteNoVotes, proposalVote.voteYesVotes);
     }
 
-    /// @notice Retuns total value votes for proposal
+    /// @notice Returns total value votes for proposal
     function proposalValueVotes(uint256 proposalId) public view override returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.valueNoVotes, proposalVote.valueYesVotes);
@@ -404,7 +404,7 @@ contract DualGovernor is DualGovernorQuorum {
         return voteQuorum_ <= proposalVote.voteYesVotes;
     }
 
-    /// @notice Checks if proposal is succeessful
+    /// @notice Checks if proposal is successful
     /// @dev See {Governor-_voteSucceeded}.
     function _voteSucceeded(uint256 proposalId) internal view override returns (bool) {
         return _quorumReached(proposalId);

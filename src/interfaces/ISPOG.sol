@@ -38,7 +38,7 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error ListAdminIsNotSPOG();
     error ListIsNotInMasterList();
     error EmergencyMethodNotSupported();
-    error ValueTokenMistmatch();
+    error ValueTokenMismatch();
     error InvalidTaxRange();
 
     // Info functions about double governance and SPOG parameters

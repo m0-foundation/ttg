@@ -234,7 +234,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param selector The function selector to check
     /// @return Whether the function is supported by governance
     function isGovernedMethod(bytes4 selector) external pure override returns (bool) {
-        /// @dev ordered by frequence of usage
+        /// @dev ordered by frequency of usage
         if (selector == this.append.selector) return true;
         if (selector == this.addList.selector) return true;
         if (selector == this.changeConfig.selector) return true;

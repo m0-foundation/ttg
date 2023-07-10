@@ -530,7 +530,7 @@ contract InflationRewardsTest is SPOGBaseTest {
             "Incorrect total votes and balances"
         );
 
-        // Atempt to claim again - no rewards
+        // Attempt to claim again - no rewards
         vm.startPrank(alice);
         aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 0, "Incorrect alice rewards");

@@ -140,7 +140,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
         _delegate(signer, delegatee);
     }
 
-    /// @notice Witdraw rewards for all the epochs where delegate was active
+    /// @notice Withdraw rewards for all the epochs where delegate was active
     function withdrawRewards() external override returns (uint256) {
         address sender = _msgSender();
         _accrueRewards(sender);

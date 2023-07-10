@@ -197,7 +197,7 @@ contract SPOG_change is SPOGBaseTest {
         uint256 newTaxLowerBound = spog.taxLowerBound();
         uint256 newTaxUpperBound = spog.taxUpperBound();
 
-        // assert that tax hange has been changed
+        // assert that tax range has been changed
         assertTrue(newTaxLowerBound == 10e18, "Tax range lower bound has not changed");
         assertTrue(newTaxUpperBound == 12e18, "Tax range upper bound has not changed");
     }
