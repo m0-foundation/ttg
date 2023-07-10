@@ -52,8 +52,8 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotes
     }
 
     /// @notice Retrieve the total votes, assuming all votes were delegated.
-    /// TODO: review this line from OZ docs!!!
-    /// @dev It is but NOT the sum of all the delegated votes!
+    /// TODO: see if forced self-delegation is required as default option
+    /// @dev We assume it is the sum of all the delegated votes, delegation is incentivised.
     /// @dev `blockNumber` must have been already mined
     function getPastTotalSupply(uint256 blockNumber) public view virtual override returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();

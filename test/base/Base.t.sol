@@ -40,17 +40,6 @@ abstract contract BaseTest is Test {
     event LogNamedArray(string key, IERC20[] value);
 
     /*//////////////////////////////////////////////////////////////////////////
-                                      STRUCTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    struct Users {
-        address payable admin;
-        address payable alice;
-        address payable bob;
-        address payable charlie;
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
                                      CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
@@ -61,28 +50,8 @@ abstract contract BaseTest is Test {
                                  TESTING CONTRACTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    ERC20GodMode internal tkn0 = new ERC20GodMode("Token 0", "TKN0", 0);
     ERC20GodMode internal dai = new ERC20GodMode("Dai Stablecoin", "DAI", 18);
     ERC20GodMode internal usdc = new ERC20GodMode("USD Coin", "USDC", 6);
-    Users internal users;
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                   SETUP FUNCTION
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @dev A setup function invoked before each test case.
-    function createUsers() public virtual {
-        // Create users for testing.
-        users = Users({
-            admin: createUser("Admin"),
-            alice: createUser("Alice"),
-            bob: createUser("Bob"),
-            charlie: createUser("Charlie")
-        });
-
-        // Make the admin the default caller in all subsequent tests.
-        changePrank({who: users.admin});
-    }
 
     /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL CONSTANT FUNCTIONS
