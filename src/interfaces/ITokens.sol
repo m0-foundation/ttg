@@ -34,7 +34,7 @@ interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
 
     function totalVotes() external view returns (uint256);
     function getPastBalance(address account, uint256 blockNumber) external view returns (uint256);
-    function getPastTotalBalanceSupply(uint256 blockNumber) external view returns (uint256);
+    function getPastTotalVotes(uint256 blockNumber) external view returns (uint256);
     function addVotingPower(address account, uint256 amount) external;
     function withdrawRewards() external returns (uint256);
 }

@@ -99,7 +99,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @notice Returns the vote quorum at the given timepoint
     function voteQuorum(uint256 timepoint) public view virtual override returns (uint256) {
-        return (vote.getPastTotalSupply(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
+        return (vote.getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the value quorum at the given timepoint
