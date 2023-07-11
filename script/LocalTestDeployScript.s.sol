@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "script/shared/Base.s.sol";
-import "script/SPOGDeploy.s.sol";
+import { IVALUE, IVOTE } from "../src/interfaces/ITokens.sol";
+
+import { console, ERC20Mock } from "./ImportedContracts.sol";
+import { BaseScript } from "./shared/Base.s.sol";
+import { SPOGDeployScript } from "./SPOGDeploy.s.sol";
 
 contract LocalTestDeployScript is BaseScript {
 
