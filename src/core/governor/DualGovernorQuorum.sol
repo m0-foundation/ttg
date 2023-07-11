@@ -8,7 +8,8 @@ import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 
 /// @title Governor contract to track quorum for both value and vote tokens
 /// @notice Governor adjusted to track double quorums for SPOG proposals
-/// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
+/// @dev Based on
+/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
 abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
 
     using Checkpoints for Checkpoints.Trace224;
@@ -29,13 +30,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     /// @param value_ Value token address
     /// @param voteQuorumNumerator_ Vote quorum numerator
     /// @param valueQuorumNumerator_ Value quorum numerator
-    constructor(
-        string memory name_,
-        address vote_,
-        address value_,
-        uint256 voteQuorumNumerator_,
-        uint256 valueQuorumNumerator_
-    ) Governor(name_) {
+    constructor(string memory name_, address vote_, address value_, uint256 voteQuorumNumerator_, uint256 valueQuorumNumerator_)
+        Governor(name_)
+    {
         // Sanity checks
         if (vote_ == address(0)) revert ZeroVoteAddress();
         if (value_ == address(0)) revert ZeroValueAddress();
@@ -151,34 +148,18 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     }
 
     /// @dev Returns min between vote votes for the account at the given timepoint and current votes
-    function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ )
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
+    function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ ) internal view virtual returns (uint256) {
         return _min(IVOTE(vote).getPastVotes(account, timepoint), IVOTE(vote).getVotes(account));
     }
 
     /// @dev Returns value votes for the account at the given timepoint
-    function _getValueVotes(address account, uint256 timepoint, bytes memory /*params*/ )
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
+    function _getValueVotes(address account, uint256 timepoint, bytes memory /*params*/ ) internal view virtual returns (uint256) {
         return IVALUE(value).getPastVotes(account, timepoint);
     }
 
     /// @dev Returns vote votes for the account at the given timepoint
     /// @dev Added to be compatible with standard OZ Governor interface
-    function _getVotes(address account, uint256 timepoint, bytes memory /*params*/ )
-        internal
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function _getVotes(address account, uint256 timepoint, bytes memory /*params*/ ) internal view virtual override returns (uint256) {
         return IVOTE(vote).getPastVotes(account, timepoint);
     }
 

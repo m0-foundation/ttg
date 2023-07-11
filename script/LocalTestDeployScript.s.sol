@@ -5,6 +5,7 @@ import "script/shared/Base.s.sol";
 import "script/SPOGDeploy.s.sol";
 
 contract LocalTestDeployScript is BaseScript {
+
     SPOGDeployScript public spogDeployScript;
 
     function setUp() public override {
@@ -24,7 +25,7 @@ contract LocalTestDeployScript is BaseScript {
 
         address[2] memory users = [user1, user2];
         // mint tokens to users
-        uint256 amount = 100000e18; // 100K
+        uint256 amount = 100_000e18; // 100K
 
         for (uint256 i = 0; i < users.length; i++) {
             ERC20Mock(spogDeployScript.cash()).mint(users[i], amount);
@@ -36,4 +37,5 @@ contract LocalTestDeployScript is BaseScript {
 
         vm.stopBroadcast();
     }
+
 }

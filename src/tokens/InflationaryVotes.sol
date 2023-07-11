@@ -9,7 +9,8 @@ import { ECDSA, ERC20Permit, Math, SafeCast } from "../ImportedContracts.sol";
 import { SPOGToken } from "./SPOGToken.sol";
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
-/// @notice Modified from OpenZeppelin https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
+/// @notice Modified from OpenZeppelin
+/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
 /// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
 abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVotes {
 
@@ -33,7 +34,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     // mapping(address => uint256) private _valueRewards;
     mapping(address => uint256) private _lastEpochRewardsAccrued;
 
-    constructor() SPOGToken() {}
+    constructor() SPOGToken() { }
 
     /// @notice Get the address `account` is currently delegating to.
     function delegates(address account) public view virtual returns (address) {
@@ -316,11 +317,10 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         }
     }
 
-    function _writeCheckpoint(
-        Checkpoint[] storage ckpts,
-        function(uint256, uint256) view returns (uint256) op,
-        uint256 delta
-    ) private returns (uint256 oldWeight, uint256 newWeight) {
+    function _writeCheckpoint(Checkpoint[] storage ckpts, function(uint256, uint256) view returns (uint256) op, uint256 delta)
+        private
+        returns (uint256 oldWeight, uint256 newWeight)
+    {
         uint256 pos = ckpts.length;
 
         Checkpoint memory oldCkpt = pos == 0 ? Checkpoint(0, 0) : _unsafeAccess(ckpts, pos - 1);
@@ -331,7 +331,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         if (pos > 0 && oldCkpt.fromBlock == block.number) {
             _unsafeAccess(ckpts, pos - 1).amount = SafeCast.toUint224(newWeight);
         } else {
-            ckpts.push(Checkpoint({fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight)}));
+            ckpts.push(Checkpoint({ fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight) }));
         }
     }
 

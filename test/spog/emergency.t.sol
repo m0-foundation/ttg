@@ -42,10 +42,7 @@ contract SPOG_emergency is SPOGBaseTest {
                                 HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    function createEmergencyRemoveProposal()
-        internal
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function createEmergencyRemoveProposal() internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         // assert that address is in the list
         assertTrue(list.contains(addressToChange), "Address is not in the list");
 
@@ -61,8 +58,7 @@ contract SPOG_emergency is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Remove), callData);
         string memory description = "Emergency remove of merchant";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         cash.approve(address(spog), tax);
 
@@ -74,10 +70,7 @@ contract SPOG_emergency is SPOGBaseTest {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function createEmergencyAppendProposal()
-        internal
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function createEmergencyAppendProposal() internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         vm.prank(address(spog));
         list.remove(addressToChange);
         // assert that address is not in the list
@@ -95,8 +88,7 @@ contract SPOG_emergency is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Append), callData);
         string memory description = "Emergency add of merchant";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
         cash.approve(address(spog), tax);
 
         // TODO: Check that `NewEmergencyProposal` event is emitted
@@ -122,12 +114,10 @@ contract SPOG_emergency is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] =
-            abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.ChangeConfig), callData);
+        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.ChangeConfig), callData);
         string memory description = "Emergency change config";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // emergency propose, tax price
         cash.approve(address(spog), tax);

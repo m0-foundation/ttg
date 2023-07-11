@@ -13,6 +13,7 @@ import "src/periphery/SPOGVault.sol";
 import "src/periphery/VoteAuction.sol";
 
 contract SPOGDeployScript is BaseScript {
+
     address public governor;
     address public spog;
 
@@ -69,14 +70,7 @@ contract SPOGDeployScript is BaseScript {
         vm.startBroadcast(deployer);
 
         SPOG.Configuration memory config = SPOG.Configuration(
-            payable(address(governor)),
-            address(vault),
-            address(cash),
-            tax,
-            taxLowerBound,
-            taxUpperBound,
-            inflator,
-            valueFixedInflation
+            payable(address(governor)), address(vault), address(cash), tax, taxLowerBound, taxUpperBound, inflator, valueFixedInflation
         );
         spog = address(new SPOG(config));
 
@@ -89,4 +83,5 @@ contract SPOGDeployScript is BaseScript {
 
         vm.stopBroadcast();
     }
+
 }

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import {Script, console} from "forge-std/Script.sol";
+import { Script, console } from "forge-std/Script.sol";
 
 abstract contract BaseScript is Script {
+
     address public deployer;
 
     function setUp() public virtual {
@@ -13,4 +14,5 @@ abstract contract BaseScript is Script {
 
         console.log("deployer: %s", deployer);
     }
+
 }

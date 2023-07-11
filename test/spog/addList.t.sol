@@ -64,8 +64,7 @@ contract SPOG_AddNewList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("addList(address)", address(list));
         string memory description = "Add new list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         cash.approve(address(spog), tax);

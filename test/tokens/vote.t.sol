@@ -33,9 +33,9 @@ contract VoteTokenTest is SPOGBaseTest {
         super.setUp();
 
         // Make sure alice, bob and carol can interact with blockchain
-        vm.deal({account: alice1, newBalance: 10 ether});
-        vm.deal({account: bob1, newBalance: 10 ether});
-        vm.deal({account: carol1, newBalance: 10 ether});
+        vm.deal({ account: alice1, newBalance: 10 ether });
+        vm.deal({ account: bob1, newBalance: 10 ether });
+        vm.deal({ account: carol1, newBalance: 10 ether });
     }
 
     /**
@@ -87,7 +87,7 @@ contract VoteTokenTest is SPOGBaseTest {
     function test_Revert_reset_WhenCallerIsNotSPOG() public {
         initTokens();
 
-        uint256 randomSnapshotId = 10000;
+        uint256 randomSnapshotId = 10_000;
         vm.expectRevert(ISPOGControlled.CallerIsNotSPOG.selector);
         voteToken.reset(randomSnapshotId);
     }
@@ -95,7 +95,7 @@ contract VoteTokenTest is SPOGBaseTest {
     function test_Revert_reset_WhenResetWasInitialized() public {
         initTokens();
 
-        uint256 randomSnapshotId = 10000;
+        uint256 randomSnapshotId = 10_000;
         vm.startPrank(address(spog));
         voteToken.reset(randomSnapshotId);
 

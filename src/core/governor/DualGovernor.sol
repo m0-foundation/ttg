@@ -64,14 +64,9 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
     /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
-    constructor(
-        string memory name,
-        address vote,
-        address value,
-        uint256 voteQuorum,
-        uint256 valueQuorum,
-        uint256 votingPeriod_
-    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
+    constructor(string memory name, address vote, address value, uint256 voteQuorum, uint256 valueQuorum, uint256 votingPeriod_)
+        DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum)
+    {
         // Sanity checks
         if (votingPeriod_ == 0) revert ZeroVotingPeriod();
 
@@ -88,7 +83,7 @@ contract DualGovernor is DualGovernorQuorum {
     function initializeSPOG(address _spog) external {
         if (spog != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
-        if (_start == 0) revert ZeroStart();  // should never happen, precaution
+        if (_start == 0) revert ZeroStart(); // should never happen, precaution
 
         spog = _spog;
 
@@ -97,7 +92,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         // TODO: find the way to avoid mistake with initialization for reset
         // TODO: do not fail if spog address has been already initialized for value token
-        try IVALUE(value).initializeSPOG(_spog) {} catch {}
+        try IVALUE(value).initializeSPOG(_spog) { } catch { }
     }
 
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
@@ -148,12 +143,11 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param calldatas The ordered list of function signatures and encoded parameters to be passed to each call
     /// @param description The proposal description field
     /// @return proposalId The id of the newly created proposal
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public override(IGovernor, Governor) returns (uint256) {
+    function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
+        public
+        override(IGovernor, Governor)
+        returns (uint256)
+    {
         // Sanity checks
         if (values[0] != 0) revert InvalidValue();
         if (targets.length != 1) revert TooManyTargets();
@@ -427,14 +421,10 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @dev Counts both value and vote votes for proposal
     /// @dev See {Governor-_countVote}.
-    function _countVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        uint256 voteVotes,
-        uint256 valueVotes,
-        bytes memory
-    ) internal virtual {
+    function _countVote(uint256 proposalId, address account, uint8 support, uint256 voteVotes, uint256 valueVotes, bytes memory)
+        internal
+        virtual
+    {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         if (proposalVote.hasVoted[account]) revert AlreadyVoted();

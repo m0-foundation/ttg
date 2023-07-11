@@ -27,7 +27,7 @@ contract ValueTokenTest is SPOGBaseTest {
         IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
 
         // Alice can interact with blockchain
-        vm.deal({account: alice, newBalance: 10 ether});
+        vm.deal({ account: alice, newBalance: 10 ether });
     }
 
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {

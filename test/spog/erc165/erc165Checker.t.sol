@@ -5,7 +5,7 @@ import { ERC165CheckerSPOG } from "../../../src/periphery/ERC165CheckerSPOG.sol"
 
 import { SPOGBaseTest } from "../../shared/SPOGBaseTest.t.sol";
 
-contract MockContract is ERC165CheckerSPOG {}
+contract MockContract is ERC165CheckerSPOG { }
 
 contract TestERC165CheckerSPOG is SPOGBaseTest {
 

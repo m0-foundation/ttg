@@ -89,15 +89,15 @@ abstract contract BaseTest is Test {
     /// and 1 million non-compliant tokens.
     function createUser(string memory name) internal returns (address payable addr) {
         addr = payable(makeAddr(name));
-        vm.deal({account: addr, newBalance: 1000 ether});
-        dai.mint({account: addr, amount: ONE_MILLION_DAI});
-        usdc.mint({account: addr, amount: ONE_MILLION_USDC});
+        vm.deal({ account: addr, newBalance: 1000 ether });
+        dai.mint({ account: addr, amount: ONE_MILLION_DAI });
+        usdc.mint({ account: addr, amount: ONE_MILLION_USDC });
     }
 
     /// @dev Expects an event to be emitted by checking all three topics and the data. As mentioned in the Foundry
     /// Book, the extra `true` arguments don't hurt.
     function expectEmit() internal {
-        vm.expectEmit({checkTopic1: true, checkTopic2: true, checkTopic3: true, checkData: true});
+        vm.expectEmit({ checkTopic1: true, checkTopic2: true, checkTopic3: true, checkData: true });
     }
 
 }

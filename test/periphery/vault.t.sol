@@ -55,9 +55,7 @@ contract VaultTest is SPOGBaseTest {
         // TODO: use vault interface
         uint256 epochCashRewardDepositInVault = vault.deposits(epochNumber, address(cash));
         assertEq(
-            epochCashRewardDepositInVault,
-            epochCashRewards,
-            "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
+            epochCashRewardDepositInVault, epochCashRewards, "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
         );
 
         // advance to next epoch so msg.sender can take rewards from previous epoch
@@ -72,9 +70,7 @@ contract VaultTest is SPOGBaseTest {
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalBalanceOfCash = cash.balanceOf(address(this));
-        assertEq(
-            finalBalanceOfCash, initialBalanceOfCash + rewardAmountToReceive, "Vault should have balance of Cash value"
-        );
+        assertEq(finalBalanceOfCash, initialBalanceOfCash + rewardAmountToReceive, "Vault should have balance of Cash value");
 
         // second value holder withdraws rewards
         vm.startPrank(alice);
@@ -83,11 +79,7 @@ contract VaultTest is SPOGBaseTest {
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalAliceBalanceOfCash = cash.balanceOf(address(alice));
-        assertEq(
-            finalAliceBalanceOfCash,
-            initialAliceBalanceOfCash + rewardAmountToReceive,
-            "Vault should have balance of Cash value"
-        );
+        assertEq(finalAliceBalanceOfCash, initialAliceBalanceOfCash + rewardAmountToReceive, "Vault should have balance of Cash value");
         vm.stopPrank();
 
         // third value holder withdraws rewards
@@ -97,11 +89,7 @@ contract VaultTest is SPOGBaseTest {
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalBobBalanceOfCash = cash.balanceOf(address(bob));
-        assertEq(
-            finalBobBalanceOfCash,
-            initialBobBalanceOfCash + rewardAmountToReceive,
-            "Vault should have balance of Cash value"
-        );
+        assertEq(finalBobBalanceOfCash, initialBobBalanceOfCash + rewardAmountToReceive, "Vault should have balance of Cash value");
         vm.stopPrank();
 
         // last value holder withdraws rewards
@@ -111,11 +99,7 @@ contract VaultTest is SPOGBaseTest {
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalCarolBalanceOfCash = cash.balanceOf(address(carol));
-        assertEq(
-            finalCarolBalanceOfCash,
-            initialCarolBalanceOfCash + rewardAmountToReceive,
-            "Vault should have balance of Cash value"
-        );
+        assertEq(finalCarolBalanceOfCash, initialCarolBalanceOfCash + rewardAmountToReceive, "Vault should have balance of Cash value");
         vm.stopPrank();
     }
 
@@ -146,9 +130,7 @@ contract VaultTest is SPOGBaseTest {
         uint256 epochCashRewardDepositInVault = vault.deposits(epochNumber, address(cash)) * numberOfEpochs;
 
         assertEq(
-            epochCashRewardDepositInVault,
-            epochCashRewards,
-            "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
+            epochCashRewardDepositInVault, epochCashRewards, "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
         );
 
         // advance to next epoch so msg.sender can withdraw rewards

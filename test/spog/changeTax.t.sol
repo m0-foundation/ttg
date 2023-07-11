@@ -33,8 +33,7 @@ contract SPOG_changeTax is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("changeTax(uint256)", outOfBoundsTaxValue);
         string memory description = "Change tax variable in spog";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -67,8 +66,7 @@ contract SPOG_changeTax is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("changeTax(uint256)", newTaxValue);
         string memory description = "Change tax variable in spog";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         cash.approve(address(spog), tax);
