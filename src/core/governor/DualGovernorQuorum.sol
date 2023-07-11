@@ -8,7 +8,7 @@ import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 /// @title Governor contract to track quorum for both value and vote tokens
 /// @notice Governor adjusted to track double quorums for SPOG proposals
 /// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
-abstract contract DualGovernorQuorum is ISPOGGovernor {
+abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance

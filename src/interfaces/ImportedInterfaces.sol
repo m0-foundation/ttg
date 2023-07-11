@@ -5,4 +5,5 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
 import { IVotes } from "@openzeppelin/contracts/governance/utils/IVotes.sol";

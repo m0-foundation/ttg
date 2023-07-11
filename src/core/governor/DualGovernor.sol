@@ -3,6 +3,9 @@ pragma solidity 0.8.19;
 
 import { IList } from "../../interfaces/periphery/IList.sol";
 import { ISPOG } from "../../interfaces/ISPOG.sol";
+import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+
+import { Governor } from "../../ImportedContracts.sol";
 
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 
@@ -145,7 +148,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override returns (uint256) {
+    ) public override(IGovernor, Governor) returns (uint256) {
         // Sanity checks
         if (values[0] != 0) revert InvalidValue();
         if (targets.length != 1) revert TooManyTargets();
@@ -307,7 +310,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param proposalId The id of the proposal
     /// @return The state of the proposal
     /// @dev One of main overridden methods of OZ governor interface, adjusted for SPOG needs
-    function state(uint256 proposalId) public view override returns (ProposalState) {
+    function state(uint256 proposalId) public view override(IGovernor, Governor) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
         // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.

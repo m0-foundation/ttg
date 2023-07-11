@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
+import { IGovernor } from "./ImportedInterfaces.sol";
 import { ISPOGControlled } from "./ISPOGControlled.sol";
 import { IVOTE, IVALUE } from "./ITokens.sol";
-
-// TODO: Should be IGovernor.
-import { Governor } from "../ImportedContracts.sol";
 
 interface IDualGovernor {
     // Enums
@@ -80,5 +78,5 @@ interface IDualGovernor {
     function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) external;
 }
 
-// TODO: ISPOGGovernor should be an interface, and thus extend IGovernor.
-abstract contract ISPOGGovernor is Governor, IDualGovernor, ISPOGControlled {}
+// NOTE: Openzeppelin erroneously declared `IGovernor` as abstract contract, so this needs to follow suit.
+abstract contract ISPOGGovernor is IGovernor, IDualGovernor, ISPOGControlled {}
