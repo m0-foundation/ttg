@@ -7,27 +7,36 @@ import { ERC165 } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
+
     function someValue() external view returns (uint256);
+
 }
 
 interface IMockConfigV2 {
+
     function someValue() external view returns (uint256);
     function someNewAddress() external view returns (address);
+
 }
 
 contract MockConfigNoERC165 is IMockConfig {
+
     uint256 public immutable someValue = 1;
+
 }
 
 contract MockConfigWithERC165 is IMockConfig, ERC165 {
+
     uint256 public immutable someValue = 1;
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IMockConfig).interfaceId || super.supportsInterface(interfaceId);
     }
+
 }
 
 contract MockConfigWithERC165v2 is IMockConfigV2, ERC165 {
+
     uint256 public immutable someValue = 1;
     address public immutable someNewAddress = address(0x123);
 
@@ -35,9 +44,11 @@ contract MockConfigWithERC165v2 is IMockConfigV2, ERC165 {
         return interfaceId == type(IMockConfigV2).interfaceId || interfaceId == type(IMockConfig).interfaceId
             || super.supportsInterface(interfaceId);
     }
+
 }
 
 contract SPOG_ChangeConfig is SPOGBaseTest {
+
     function test_Revert_WhenContractDoesNotSupportERC165() public {
         MockConfigNoERC165 badConfig = new MockConfigNoERC165();
 
@@ -78,4 +89,5 @@ contract SPOG_ChangeConfig is SPOGBaseTest {
         (address configAddress,) = ISPOG(spog).getConfig(keccak256("MockConfigWithERC165"));
         assertTrue(configAddress == address(config), "Config not set");
     }
+
 }

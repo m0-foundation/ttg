@@ -9,6 +9,7 @@ import { Initializable, SafeERC20 } from "../ImportedContracts.sol";
 /// @title VoteAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
 contract VoteAuction is IVoteAuction, Initializable {
+
     using SafeERC20 for IERC20;
 
     error AlreadyInitialized();
@@ -143,4 +144,5 @@ contract VoteAuction is IVoteAuction, Initializable {
 
         emit AuctionWithdrawal(msg.sender, balance);
     }
+
 }

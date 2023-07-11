@@ -11,6 +11,7 @@ import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 import { SPOGMock } from "../shared/SPOGMock.sol";
 
 contract SPOG_AddNewList is SPOGBaseTest {
+
     // Events to test
     event ListAdded(address indexed list, string name);
 
@@ -106,4 +107,5 @@ contract SPOG_AddNewList is SPOGBaseTest {
         // assert that list was added to masterlist
         assertTrue(spog.isListInMasterList(address(list)), "List was not created");
     }
+
 }

@@ -15,6 +15,7 @@ import { ProtocolConfigurator } from "../config/ProtocolConfigurator.sol";
 /// @notice SPOG, "Simple Participation Optimized Governance"
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
 contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
+
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -36,28 +37,28 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     uint256 private constant INFLATOR_SCALE = 100;
 
     /// @notice Vault for value holders assets
-    ISPOGVault public immutable override vault;
+    ISPOGVault public immutable vault;
 
     /// @notice Cash token used for proposal fee payments
-    IERC20 public immutable override cash;
+    IERC20 public immutable cash;
 
     /// @notice Fixed inflation rewards per epoch for value holders
-    uint256 public immutable override valueFixedInflation;
+    uint256 public immutable valueFixedInflation;
 
     /// @notice Inflation rate per epoch for vote holders
-    uint256 public immutable override inflator;
+    uint256 public immutable inflator;
 
     /// @notice Governor, upgradable via `reset` by value holders
-    ISPOGGovernor public override governor;
+    ISPOGGovernor public governor;
 
     /// @notice Tax value for proposal cash fee
-    uint256 public override tax;
+    uint256 public tax;
 
     /// @notice Tax range: lower bound for proposal cash fee
-    uint256 public override taxLowerBound;
+    uint256 public taxLowerBound;
 
     /// @notice Tax range: upper bound for proposal cash fee
-    uint256 public override taxUpperBound;
+    uint256 public taxUpperBound;
 
     /// @dev List of addresses that are part of the masterlist
     /// @dev (address => uint256) 0 = not in masterlist, 1 = in masterlist
@@ -98,7 +99,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
-    function addList(address list) external override onlyGovernance {
+    function addList(address list) external onlyGovernance {
         if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
 
         // add the list to the master list
@@ -109,7 +110,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Append an address to a list
     /// @param list The list to which the address will be appended
     /// @param account The address to be appended to the list
-    function append(address list, address account) public override onlyGovernance {
+    function append(address list, address account) public onlyGovernance {
         if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // add the address to the list
@@ -120,7 +121,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Remove an address from a list
     /// @param list The list from which the address will be removed
     /// @param account The address to be removed from the list
-    function remove(address list, address account) public override onlyGovernance {
+    function remove(address list, address account) public onlyGovernance {
         if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // remove the address from the list
@@ -146,7 +147,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @dev Emergency methods are encoded much like change proposals
     // TODO: IMPORTANT: right now voting period and logic is the same as for other functions
     // TODO: IMPORTANT: implement immediate remove
-    function emergency(uint8 emergencyType, bytes calldata callData) external override onlyGovernance {
+    function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernance {
         EmergencyType _emergencyType = EmergencyType(emergencyType);
 
         if (_emergencyType == EmergencyType.Remove) {
@@ -168,7 +169,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Reset current governor, special value governance method
     /// @param newGovernor The address of the new governor
-    function reset(address newGovernor) external override onlyGovernance {
+    function reset(address newGovernor) external onlyGovernance {
         // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
         governor = ISPOGGovernor(payable(newGovernor));
         // Important: initialize SPOG address in the new vote governor
@@ -184,7 +185,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Change the tax rate which is used to calculate the proposal fee
     /// @param newTax The new tax rate
-    function changeTax(uint256 newTax) external override onlyGovernance {
+    function changeTax(uint256 newTax) external onlyGovernance {
         if (newTax < taxLowerBound || newTax > taxUpperBound) revert TaxOutOfRange();
 
         emit TaxChanged(tax, newTax);
@@ -194,7 +195,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Change the tax range which is used to calculate the proposal fee
     /// @param newTaxLowerBound The new lower bound of the tax range
     /// @param newTaxUpperBound The new upper bound of the tax range
-    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external override onlyGovernance {
+    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external onlyGovernance {
         if (newTaxLowerBound > newTaxUpperBound) revert InvalidTaxRange();
 
         emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
@@ -205,7 +206,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Charge fee for calling a governance function
     /// @param account The address of the caller
-    function chargeFee(address account, bytes4 /*func*/ ) external override onlyGovernance returns (uint256) {
+    function chargeFee(address account, bytes4 /*func*/ ) external onlyGovernance returns (uint256) {
         // transfer the amount from the caller to the SPOG
         // slither-disable-next-line arbitrary-send-erc20
         cash.safeTransferFrom(account, address(this), tax);
@@ -224,14 +225,14 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Getter for finding whether a list is in a masterlist
     /// @param list The list address to check
     /// @return Whether the list is in the masterlist
-    function isListInMasterList(address list) external view override returns (bool) {
+    function isListInMasterList(address list) external view returns (bool) {
         return _masterlist.contains(list);
     }
 
     /// @notice Check is proposed change is supported by governance
     /// @param selector The function selector to check
     /// @return Whether the function is supported by governance
-    function isGovernedMethod(bytes4 selector) external pure override returns (bool) {
+    function isGovernedMethod(bytes4 selector) external pure returns (bool) {
         /// @dev ordered by frequency of usage
         if (selector == this.append.selector) return true;
         if (selector == this.addList.selector) return true;
@@ -252,8 +253,9 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     }
 
     /// @dev
-    function getInflationReward(uint256 amount) external view override returns (uint256) {
+    function getInflationReward(uint256 amount) external view returns (uint256) {
         // TODO: prevent overflow, precision loss ?
         return amount * inflator / INFLATOR_SCALE;
     }
+
 }

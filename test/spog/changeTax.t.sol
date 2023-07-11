@@ -6,6 +6,7 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_changeTax is SPOGBaseTest {
+
     uint256 internal newTaxValue;
 
     event TaxChanged(uint256 indexed tax);
@@ -88,4 +89,5 @@ contract SPOG_changeTax is SPOGBaseTest {
         // assert that tax was modified
         assertTrue(tax == newTaxValue, "Tax wasn't changed");
     }
+
 }

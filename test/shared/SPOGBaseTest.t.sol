@@ -14,6 +14,7 @@ import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
 import { BaseTest } from "./BaseTest.t.sol";
 
 contract SPOGBaseTest is BaseTest {
+
     SPOGDeployScript public deployScript;
 
     ISPOG public spog;
@@ -182,4 +183,5 @@ contract SPOGBaseTest is BaseTest {
         // execute proposal
         governor.execute(targets, values, calldatas, hashedDescription);
     }
+
 }

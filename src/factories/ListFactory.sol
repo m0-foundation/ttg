@@ -8,6 +8,7 @@ import { List } from "../periphery/List.sol";
 /// @title ListFactory
 /// @notice This contract is used to deploy List contracts
 contract ListFactory {
+
     event ListDeployed(address indexed addr, uint256 salt);
 
     /// @notice Create a new List
@@ -49,4 +50,5 @@ contract ListFactory {
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));
     }
+
 }

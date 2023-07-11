@@ -9,6 +9,7 @@ import { Clones, ERC20DecimalsMock } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VoteAuctionTest is SPOGBaseTest {
+
     IVoteAuction public auctionImplementation;
     IVoteAuction public auction;
 
@@ -100,4 +101,5 @@ contract VoteAuctionTest is SPOGBaseTest {
 
         assertEq(voteToken.balanceOf(address(auction)), 0);
     }
+
 }

@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import { SPOGBaseTest } from "./shared/SPOGBaseTest.t.sol";
 
 contract InflationRewardsTest is SPOGBaseTest {
+
     function test_UserVoteInflationAfterVotingOnAllProposals() public {
         // set up proposals
         (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
@@ -587,4 +588,5 @@ contract InflationRewardsTest is SPOGBaseTest {
             "Incorrect total votes and balances"
         );
     }
+
 }

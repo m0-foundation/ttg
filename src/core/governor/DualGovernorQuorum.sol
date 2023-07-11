@@ -9,13 +9,14 @@ import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 /// @notice Governor adjusted to track double quorums for SPOG proposals
 /// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
 abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
+
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
-    IVOTE public immutable override vote;
+    IVOTE public immutable vote;
 
     /// @notice The value token of SPOG governance
-    IVALUE public immutable override value;
+    IVALUE public immutable value;
 
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
@@ -51,17 +52,17 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     }
 
     /// @notice Returns the latest vote quorum numerator
-    function voteQuorumNumerator() public view virtual override returns (uint256) {
+    function voteQuorumNumerator() public view virtual returns (uint256) {
         return _voteQuorumNumeratorHistory.latest();
     }
 
     /// @notice Returns the latest value quorum numerator
-    function valueQuorumNumerator() public view virtual override returns (uint256) {
+    function valueQuorumNumerator() public view virtual returns (uint256) {
         return _valueQuorumNumeratorHistory.latest();
     }
 
     /// @notice Returns the vote quorum numerator at the given timepoint
-    function voteQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
+    function voteQuorumNumerator(uint256 timepoint) public view virtual returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _voteQuorumNumeratorHistory._checkpoints.length;
 
@@ -77,7 +78,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     }
 
     /// @notice Returns the value quorum numerator at the given timepoint
-    function valueQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
+    function valueQuorumNumerator(uint256 timepoint) public view virtual returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _valueQuorumNumeratorHistory._checkpoints.length;
 
@@ -93,17 +94,17 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     }
 
     /// @notice Returns the quorum denominator
-    function quorumDenominator() public view virtual override returns (uint256) {
+    function quorumDenominator() public view virtual returns (uint256) {
         return 100;
     }
 
     /// @notice Returns the vote quorum at the given timepoint
-    function voteQuorum(uint256 timepoint) public view virtual override returns (uint256) {
+    function voteQuorum(uint256 timepoint) public view virtual returns (uint256) {
         return (vote.getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the value quorum at the given timepoint
-    function valueQuorum(uint256 timepoint) public view virtual override returns (uint256) {
+    function valueQuorum(uint256 timepoint) public view virtual returns (uint256) {
         return (value.getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
@@ -115,7 +116,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
 
     /// @notice Updates the vote quorum numerator
     /// @param newVoteQuorumNumerator New vote quorum numerator
-    function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual override onlyGovernance {
+    function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual onlyGovernance {
         _updateVoteQuorumNumerator(newVoteQuorumNumerator);
     }
 
@@ -133,7 +134,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
 
     /// @notice Updates the value quorum numerator
     /// @param newValueQuorumNumerator New value quorum numerator
-    function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual override onlyGovernance {
+    function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual onlyGovernance {
         _updateValueQuorumNumerator(newValueQuorumNumerator);
     }
 
@@ -184,4 +185,5 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }
+
 }

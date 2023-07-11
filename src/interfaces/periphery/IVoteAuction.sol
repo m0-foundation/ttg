@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 interface IVoteAuction {
+
     event AuctionPurchase(address indexed buyer, uint256 amount, uint256 price);
     event AuctionWithdrawal(address indexed taker, uint256 amount);
 
@@ -32,4 +33,5 @@ interface IVoteAuction {
     function buyTokens(uint256 amountToBuy) external;
 
     function withdraw() external;
+
 }

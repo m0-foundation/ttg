@@ -9,6 +9,7 @@ import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_change is SPOGBaseTest {
+
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
@@ -294,4 +295,5 @@ contract SPOG_change is SPOGBaseTest {
         uint256 newValueQuorumNumerator = governor.valueQuorumNumerator();
         assertTrue(newValueQuorumNumerator == 16, "Value quorum numerator has not changed");
     }
+
 }

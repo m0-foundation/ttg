@@ -7,6 +7,7 @@ import { IERC165, IGovernor } from "../interfaces/ImportedInterfaces.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract DualGovernorTest is SPOGBaseTest {
+
     event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here
@@ -327,4 +328,5 @@ contract DualGovernorTest is SPOGBaseTest {
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
     }
+
 }

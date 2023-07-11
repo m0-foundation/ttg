@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IList {
+
     // events
     event AddressAdded(address indexed _address);
     event AddressRemoved(address indexed _address);
@@ -18,4 +19,5 @@ interface IList {
     function remove(address _address) external;
     function contains(address _address) external view returns (bool);
     function changeAdmin(address _newAdmin) external;
+
 }

@@ -9,18 +9,23 @@ import { ERC165 } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
+
     function someValue() external view returns (uint256);
+
 }
 
 contract MockConfig is IMockConfig, ERC165 {
+
     uint256 public immutable someValue = 1;
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IMockConfig).interfaceId || super.supportsInterface(interfaceId);
     }
+
 }
 
 contract SPOG_emergency is SPOGBaseTest {
+
     address internal addressToChange;
 
     event NewEmergencyProposal(uint256 indexed proposalId);
@@ -427,4 +432,5 @@ contract SPOG_emergency is SPOGBaseTest {
         (address a,) = spog.getConfig(keccak256("Fake Name"));
         assertEq(a, configAddress, "Config address did not match");
     }
+
 }

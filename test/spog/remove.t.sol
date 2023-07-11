@@ -7,6 +7,7 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_RemoveAddressFromList is SPOGBaseTest {
+
     address internal listToRemoveAddressFrom;
     address internal addressToRemove;
 
@@ -69,4 +70,5 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
         // assert that address was added to list
         assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");
     }
+
 }

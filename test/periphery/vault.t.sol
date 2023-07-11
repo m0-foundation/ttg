@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VaultTest is SPOGBaseTest {
+
     event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
 
     /*//////////////////////////////////////////////////////////////
@@ -199,4 +200,5 @@ contract VaultTest is SPOGBaseTest {
 
         assertEq(vote.balanceOf(address(vault)), 1000e18);
     }
+
 }

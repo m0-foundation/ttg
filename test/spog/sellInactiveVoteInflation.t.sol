@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_SellInactiveVoteInflation is SPOGBaseTest {
+//
 // function test_sellInactiveVoteInflation() public {
 //     uint256 initialBalance = governor.vote().totalSupply();
 
@@ -169,4 +170,5 @@ contract SPOG_SellInactiveVoteInflation is SPOGBaseTest {
 
 //     assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation - activeInflatedAmount - amountToSell);
 // }
+//
 }

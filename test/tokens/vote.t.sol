@@ -12,6 +12,7 @@ import { IAccessControl } from "../interfaces/ImportedInterfaces.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VoteTokenTest is SPOGBaseTest {
+
     address alice1 = createUser("alice1");
     address bob1 = createUser("bob1");
     address carol1 = createUser("carol1");
@@ -190,4 +191,5 @@ contract VoteTokenTest is SPOGBaseTest {
         vm.expectRevert("ERC20: transfer amount exceeds balance");
         voteToken.transfer(alice1, 20e18);
     }
+
 }

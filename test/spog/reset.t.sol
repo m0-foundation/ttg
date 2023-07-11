@@ -11,6 +11,7 @@ import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol"
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_reset is SPOGBaseTest {
+
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
 
     /*//////////////////////////////////////////////////////////////
@@ -147,4 +148,5 @@ contract SPOG_reset is SPOGBaseTest {
         // Make sure governance is functional
         executeValidProposal();
     }
+
 }

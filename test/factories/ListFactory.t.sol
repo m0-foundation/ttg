@@ -8,6 +8,7 @@ import { ListFactory } from "../../src/factories/ListFactory.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract ListFactoryTest is SPOGBaseTest {
+
     function test_listDeployWithFactory() public {
         ListFactory listFactory = new ListFactory();
 
@@ -39,4 +40,5 @@ contract ListFactoryTest is SPOGBaseTest {
         assertTrue(listAddress != address(0), "listAddress should not be 0x0");
         assertTrue(listAddress == address(list), "listAddress should be the same as the list address");
     }
+
 }

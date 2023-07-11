@@ -11,11 +11,12 @@ import { InflationaryVotes } from "./InflationaryVotes.sol";
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
 contract VOTE is InflationaryVotes, IVOTE {
+
     /// @notice value token to take snapshot from
-    IVALUE public immutable override value;
+    IVALUE public immutable value;
 
     /// @notice snapshot id at the moment of reset
-    uint256 public override resetSnapshotId;
+    uint256 public resetSnapshotId;
 
     /// @dev check that balances are claimed only once
     mapping(address => bool) private _alreadyClaimed;
@@ -34,7 +35,7 @@ contract VOTE is InflationaryVotes, IVOTE {
 
     /// @notice SPOG initializes reset snapshot
     /// @param _resetSnapshotId Snapshot id of the moment of reset
-    function reset(uint256 _resetSnapshotId) external override {
+    function reset(uint256 _resetSnapshotId) external {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
         if (msg.sender != spog) revert CallerIsNotSPOG();
 
@@ -44,7 +45,7 @@ contract VOTE is InflationaryVotes, IVOTE {
     }
 
     /// @notice Claim share of new vote tokens by previous value holders
-    function claimPreviousSupply() external override {
+    function claimPreviousSupply() external {
         if (resetSnapshotId == 0) revert ResetNotInitialized();
         if (_alreadyClaimed[msg.sender]) revert ResetTokensAlreadyClaimed();
 
@@ -63,7 +64,7 @@ contract VOTE is InflationaryVotes, IVOTE {
 
     /// @notice Returns balance of the user at the moment of reset.
     /// @dev Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
-    function resetBalanceOf(address account) public view override returns (uint256) {
+    function resetBalanceOf(address account) public view returns (uint256) {
         return ERC20Snapshot(address(value)).balanceOfAt(account, resetSnapshotId);
     }
 
@@ -73,4 +74,5 @@ contract VOTE is InflationaryVotes, IVOTE {
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
+
 }

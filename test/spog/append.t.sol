@@ -9,6 +9,7 @@ import { List } from "../../src/periphery/List.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_AppendAddressToList is SPOGBaseTest {
+
     address internal listToAddAddressTo;
     address internal addressToAdd;
 
@@ -74,4 +75,5 @@ contract SPOG_AppendAddressToList is SPOGBaseTest {
         // assert that address was added to list
         assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");
     }
+
 }

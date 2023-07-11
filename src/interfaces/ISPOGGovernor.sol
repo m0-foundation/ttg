@@ -6,6 +6,7 @@ import { ISPOGControlled } from "./ISPOGControlled.sol";
 import { IVOTE, IVALUE } from "./ITokens.sol";
 
 interface IDualGovernor {
+
     // Enums
     enum ProposalType {
         Vote,
@@ -76,6 +77,7 @@ interface IDualGovernor {
 
     // Batch voting
     function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) external;
+
 }
 
 // NOTE: Openzeppelin erroneously declared `IGovernor` as abstract contract, so this needs to follow suit.

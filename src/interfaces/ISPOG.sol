@@ -7,6 +7,7 @@ import { ISPOGGovernor } from "./ISPOGGovernor.sol";
 import { ISPOGVault } from "./periphery/ISPOGVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
+
     // Enums
     enum EmergencyType {
         Remove,
@@ -64,4 +65,5 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
+
 }
