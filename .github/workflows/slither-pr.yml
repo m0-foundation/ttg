@@ -37,6 +37,6 @@ jobs:
 
       - name: Run Slither
         run: |
-          slither --compile-force-framework foundry --sarif results.sarif --fail-high .
+          forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json --fail-high .
           echo "sarif=results.sarif" >> "$GITHUB_OUTPUT"
         id: slither
