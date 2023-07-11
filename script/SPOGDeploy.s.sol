@@ -71,8 +71,9 @@ contract SPOGDeployScript is BaseScript {
         vm.startBroadcast(deployer);
 
         SPOG.Configuration memory config = SPOG.Configuration(
-            payable(address(governor)), address(vault), address(cash), tax, taxLowerBound, taxUpperBound, inflator, valueFixedInflation
+            payable(governor), vault, cash, tax, taxLowerBound, taxUpperBound, inflator, valueFixedInflation
         );
+
         spog = address(new SPOG(config));
 
         console.log("SPOG address: ", spog);

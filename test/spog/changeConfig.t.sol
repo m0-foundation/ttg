@@ -64,7 +64,12 @@ contract SPOG_ChangeConfig is SPOGBaseTest {
 
         vm.expectRevert(expectedError);
         vm.prank(address(governor));
-        ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(badConfig), type(IMockConfigV2).interfaceId);
+
+        ISPOG(spog).changeConfig(
+            keccak256("MockConfigWithERC165"),
+            address(badConfig),
+            type(IMockConfigV2).interfaceId
+        );
     }
 
     function test_Revert_WhenNewContractDoesNotMatchExistingContract() public {

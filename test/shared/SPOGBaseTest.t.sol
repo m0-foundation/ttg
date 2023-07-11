@@ -167,7 +167,10 @@ contract SPOGBaseTest is BaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         cash.approve(address(spog), tax);

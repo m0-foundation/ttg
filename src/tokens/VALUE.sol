@@ -14,11 +14,27 @@ contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
 
     constructor(string memory name, string memory symbol) SPOGToken() ERC20(name, symbol) ERC20Permit(name) { }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20, ERC20Snapshot) {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    )
+        internal
+        virtual
+        override(ERC20, ERC20Snapshot)
+    {
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20, ERC20Votes) {
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    )
+        internal
+        virtual
+        override(ERC20, ERC20Votes)
+    {
         super._afterTokenTransfer(from, to, amount);
     }
 

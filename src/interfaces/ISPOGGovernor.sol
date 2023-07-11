@@ -40,7 +40,13 @@ interface IDualGovernor {
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
-    event VotingFinishedAndRewardsAccrued(address indexed account, uint256 indexed epoch, uint256 blockNumber, uint256 votesWeightReward);
+
+    event VotingFinishedAndRewardsAccrued(
+        address indexed account,
+        uint256 indexed epoch,
+        uint256 blockNumber,
+        uint256 votesWeightReward
+    );
 
     // Accessors for vote, value tokens and spog contract
     function vote() external view returns (address);

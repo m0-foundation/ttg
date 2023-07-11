@@ -49,7 +49,10 @@ contract DualGovernorTest is SPOGBaseTest {
         governor.castVote(proposalId, yesVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Pending,
+            "Proposal is not in an pending state"
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -80,9 +83,15 @@ contract DualGovernorTest is SPOGBaseTest {
         governor.castVote(proposalId2, noVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Pending,
+            "Proposal is not in an pending state"
+        );
 
-        assertTrue(governor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state");
+        assertTrue(
+            governor.state(proposalId2) == IGovernor.ProposalState.Pending,
+            "Proposal2 is not in an pending state"
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -112,7 +121,10 @@ contract DualGovernorTest is SPOGBaseTest {
         vm.expectRevert("DualGovernor: vote not currently active");
         governor.castVote(proposalId3, noVote);
 
-        assertTrue(governor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state");
+        assertTrue(
+            governor.state(proposalId3) == IGovernor.ProposalState.Pending,
+            "Proposal3 is not in an pending state"
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -296,7 +308,10 @@ contract DualGovernorTest is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "Append address to a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // create proposal
         cash.approve(address(spog), deployScript.tax());
@@ -317,7 +332,11 @@ contract DualGovernorTest is SPOGBaseTest {
         // fast forward to next voting period
         // Note: No extra +1 here.
         vm.roll(governor.startOf(governor.currentEpoch() + 1));
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Proposal is not in an expired state");
+
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Expired,
+            "Proposal is not in an expired state"
+        );
 
         // execute proposal
         vm.expectRevert("Governor: proposal not successful");

@@ -30,7 +30,13 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     /// @param value_ Value token address
     /// @param voteQuorumNumerator_ Vote quorum numerator
     /// @param valueQuorumNumerator_ Value quorum numerator
-    constructor(string memory name_, address vote_, address value_, uint256 voteQuorumNumerator_, uint256 valueQuorumNumerator_)
+    constructor(
+        string memory name_,
+        address vote_,
+        address value_,
+        uint256 voteQuorumNumerator_,
+        uint256 valueQuorumNumerator_
+    )
         Governor(name_)
     {
         // Sanity checks
@@ -148,18 +154,46 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     }
 
     /// @dev Returns min between vote votes for the account at the given timepoint and current votes
-    function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ ) internal view virtual returns (uint256) {
+    function _getVoteVotes(
+        address account,
+        uint256 timepoint,
+        bytes memory /*params*/
+    )
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
         return _min(IVOTE(vote).getPastVotes(account, timepoint), IVOTE(vote).getVotes(account));
     }
 
     /// @dev Returns value votes for the account at the given timepoint
-    function _getValueVotes(address account, uint256 timepoint, bytes memory /*params*/ ) internal view virtual returns (uint256) {
+    function _getValueVotes(
+        address account,
+        uint256 timepoint,
+        bytes memory /*params*/
+    )
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
         return IVALUE(value).getPastVotes(account, timepoint);
     }
 
     /// @dev Returns vote votes for the account at the given timepoint
     /// @dev Added to be compatible with standard OZ Governor interface
-    function _getVotes(address account, uint256 timepoint, bytes memory /*params*/ ) internal view virtual override returns (uint256) {
+    function _getVotes(
+        address account,
+        uint256 timepoint,
+        bytes memory /*params*/
+    )
+        internal
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return IVOTE(vote).getPastVotes(account, timepoint);
     }
 

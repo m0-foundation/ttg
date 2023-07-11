@@ -42,7 +42,10 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("remove(address,address)", listToRemoveAddressFrom, addressToRemove);
         string memory description = "Remove address from a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (
+            bytes32 hashedDescription,
+            uint256 proposalId
+        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
         cash.approve(address(spog), tax);

@@ -99,7 +99,10 @@ contract SPOG_change is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax range has not been changed
-        assertTrue(spog.taxLowerBound() == taxLowerBound && spog.taxUpperBound() == taxUpperBound, "Tax range should not have been changed");
+        assertTrue(
+            spog.taxLowerBound() == taxLowerBound && spog.taxUpperBound() == taxUpperBound,
+            "Tax range should not have been changed"
+        );
     }
 
     function test_Revert_Change_WhenVoteHoldersDoNotVote() public {
@@ -141,7 +144,10 @@ contract SPOG_change is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that tax range has not been changed
-        assertTrue(spog.taxLowerBound() == taxLowerBound && spog.taxUpperBound() == taxUpperBound, "Tax range should not have been changed");
+        assertTrue(
+            spog.taxLowerBound() == taxLowerBound && spog.taxUpperBound() == taxUpperBound,
+            "Tax range should not have been changed"
+        );
     }
 
     function test_Revert_ChangeTaxRange_WhenVoteValueHoldersDoNotAgree() public {

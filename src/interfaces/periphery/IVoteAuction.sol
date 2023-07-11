@@ -21,7 +21,12 @@ interface IVoteAuction {
     function lastBuyPrice() external returns (uint256);
 
     // functions
-    function initialize(address _auctionToken, address _paymentToken, uint256 _auctionDuration, uint256 _auctionTokenAmount) external;
+    function initialize(
+        address _auctionToken,
+        address _paymentToken,
+        uint256 _auctionDuration,
+        uint256 _auctionTokenAmount
+    ) external;
 
     function getCurrentPrice() external returns (uint256);
 

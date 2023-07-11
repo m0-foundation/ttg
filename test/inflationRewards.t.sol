@@ -37,11 +37,20 @@ contract InflationRewardsTest is SPOGBaseTest {
         governor.castVote(proposalId2, yesVote);
         governor.castVote(proposalId3, noVote);
 
-        assertEq(vote.balanceOf(alice), amountToMint, "Alice should have same vote balance, she didn't claim rewards yet");
+        assertEq(
+            vote.balanceOf(alice),
+            amountToMint,
+            "Alice should have same vote balance, she didn't claim rewards yet"
+        );
 
         uint256 aliceVotesAfterAllProposals = vote.getVotes(alice);
         uint256 votesAfterVoting = aliceVotes + spog.inflator() * aliceVotes / 100;
-        assertEq(aliceVotesAfterAllProposals, votesAfterVoting, "Alice should have more votes after voting on all proposals");
+
+        assertEq(
+            aliceVotesAfterAllProposals,
+            votesAfterVoting,
+            "Alice should have more votes after voting on all proposals"
+        );
 
         uint256 rewards = vote.withdrawRewards();
         assertEq(rewards, aliceStartBalance * spog.inflator() / 100, "Alice should have received inflation rewards");
@@ -218,7 +227,13 @@ contract InflationRewardsTest is SPOGBaseTest {
 
         vm.startPrank(bob);
         governor.castVote(proposal1Id, yesVote);
-        assertEq(vote.getVotes(bob), 240e18, "Bob voting power includes alice initial voting power + reward + reward for voting");
+
+        assertEq(
+            vote.getVotes(bob),
+            240e18,
+            "Bob voting power includes alice initial voting power + reward + reward for voting"
+        );
+
         uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 20e18, "Incorrect bob rewards");
         vm.stopPrank();
@@ -247,7 +262,12 @@ contract InflationRewardsTest is SPOGBaseTest {
 
         vm.startPrank(bob);
         governor.castVote(proposal1Id, yesVote);
-        assertEq(vote.getVotes(bob), 220e18, "Bob voting power includes alice initial voting power + reward for voting");
+
+        assertEq(
+            vote.getVotes(bob),
+            220e18,
+            "Bob voting power includes alice initial voting power + reward for voting"
+        );
 
         uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 20e18, "Incorrect bob rewards");
@@ -304,7 +324,10 @@ contract InflationRewardsTest is SPOGBaseTest {
         assertEq(carolRewards, 20e18, "Incorrect carol rewards");
         vm.stopPrank();
 
-        assertEq(vote.balanceOf(alice) + vote.balanceOf(bob) + vote.balanceOf(carol), vote.totalVotes() - extraTotalVotes);
+        assertEq(
+            vote.balanceOf(alice) + vote.balanceOf(bob) + vote.balanceOf(carol),
+            vote.totalVotes() - extraTotalVotes
+        );
     }
 
     // TODO: make sure test is still needed
@@ -388,7 +411,13 @@ contract InflationRewardsTest is SPOGBaseTest {
         // @note compare carol to alice, alice got rewards for 2 epochs, carol only 1
         assertEq(carolRewards, 20e18, "Incorrect carol rewards");
         assertEq(vote.balanceOf(carol), 120e18, "Incorrect carol balance");
-        assertEq(vote.getVotes(bob), vote.balanceOf(bob) + 20e18 + vote.balanceOf(alice) + vote.balanceOf(carol), "Incorrect bob votes");
+
+        assertEq(
+            vote.getVotes(bob),
+            vote.balanceOf(bob) + 20e18 + vote.balanceOf(alice) + vote.balanceOf(carol),
+            "Incorrect bob votes"
+        );
+
         vm.stopPrank();
 
         vm.startPrank(bob);
@@ -452,7 +481,11 @@ contract InflationRewardsTest is SPOGBaseTest {
         vm.stopPrank();
 
         // Main assumption of our voting system
-        assertEq(vote.getVotes(bob), vote.balanceOf(bob) + vote.balanceOf(alice) + vote.balanceOf(carol), "Incorrect bob votes");
+        assertEq(
+            vote.getVotes(bob),
+            vote.balanceOf(bob) + vote.balanceOf(alice) + vote.balanceOf(carol),
+            "Incorrect bob votes"
+        );
     }
 
     function test_UsersVoteInflationForMultipleEpochsWithTransfers() public {

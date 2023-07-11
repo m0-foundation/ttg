@@ -19,7 +19,8 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         uint224 amount;
     }
 
-    bytes32 private constant _DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
+    bytes32 private constant _DELEGATION_TYPEHASH =
+        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
     mapping(address => uint256) private _delegationSwitchEpoch;
@@ -135,7 +136,17 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     }
 
     /// @notice Delegates votes from signer to `delegatee`
-    function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) public virtual {
+    function delegateBySig(
+        address delegatee,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        public
+        virtual
+    {
         if (block.timestamp > expiry) revert VotesExpiredSignature(expiry);
 
         address signer = ECDSA.recover(
@@ -266,13 +277,16 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
         // TODO make cycle looping safe
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch; ++epoch) {
-            if (epoch == _delegationSwitchEpoch[delegator] || !governor.hasFinishedVoting(epoch, currentDelegate)) continue;
+            if (epoch == _delegationSwitchEpoch[delegator] || !governor.hasFinishedVoting(epoch, currentDelegate)) {
+                continue;
+            }
 
             uint256 epochStart = governor.startOf(epoch);
             uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
             uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
             uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
             uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
+
             voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
             // valueReward +=
             //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
@@ -317,7 +331,11 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         }
     }
 
-    function _writeCheckpoint(Checkpoint[] storage checkpoints, function(uint256, uint256) view returns (uint256) op, uint256 delta)
+    function _writeCheckpoint(
+        Checkpoint[] storage checkpoints,
+        function(uint256, uint256) view returns (uint256) op,
+        uint256 delta
+    )
         private
         returns (uint256 oldWeight, uint256 newWeight)
     {
@@ -331,7 +349,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         if (pos > 0 && oldCheckpoint.fromBlock == block.number) {
             _unsafeAccess(checkpoints, pos - 1).amount = SafeCast.toUint224(newWeight);
         } else {
-            checkpoints.push(Checkpoint({ fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight) }));
+            checkpoints.push(
+                Checkpoint({
+                    fromBlock: SafeCast.toUint32(block.number),
+                    amount: SafeCast.toUint224(newWeight)
+                })
+            );
         }
     }
 
@@ -347,8 +370,16 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         return a < b ? a : b;
     }
 
-    /// @dev Access an element of the array without performing bounds check. The position is assumed to be within bounds.
-    function _unsafeAccess(Checkpoint[] storage checkpoints, uint256 pos) private pure returns (Checkpoint storage result) {
+    /// @dev Access an element of the array without performing bounds check.
+    ///      The position is assumed to be within bounds.
+    function _unsafeAccess(
+        Checkpoint[] storage checkpoints,
+        uint256 pos
+    )
+        private
+        pure
+        returns (Checkpoint storage result)
+    {
         assembly {
             mstore(0, checkpoints.slot)
             result.slot := add(keccak256(0, 0x20), pos)

@@ -62,9 +62,16 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param vote The address of the $VOTE token
     /// @param value The address of the $VALUE token
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
-    /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
+    /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a `VALUE QUORUM`
     /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
-    constructor(string memory name, address vote, address value, uint256 voteQuorum, uint256 valueQuorum, uint256 votingPeriod_)
+    constructor(
+        string memory name,
+        address vote,
+        address value,
+        uint256 voteQuorum,
+        uint256 valueQuorum,
+        uint256 votingPeriod_
+    )
         DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum)
     {
         // Sanity checks
@@ -143,7 +150,12 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param calldatas The ordered list of function signatures and encoded parameters to be passed to each call
     /// @param description The proposal description field
     /// @return proposalId The id of the newly created proposal
-    function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    )
         public
         override(IGovernor, Governor)
         returns (uint256)
@@ -321,7 +333,8 @@ contract DualGovernor is DualGovernorQuorum {
     function state(uint256 proposalId) public view override(IGovernor, Governor) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
-        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
+        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not
+        // passed yet.
         // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
         if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
             status = ProposalState.Succeeded;
@@ -367,9 +380,9 @@ contract DualGovernor is DualGovernorQuorum {
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            COUNTING MODULE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** COUNTING MODULE FUNCTIONS                                                                                  ***/
+    /******************************************************************************************************************/
 
     /// @notice Implements OZ Governor counting module interface
     // solhint-disable-next-line func-name-mixedcase

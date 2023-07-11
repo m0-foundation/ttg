@@ -50,7 +50,12 @@ contract VoteAuction is IVoteAuction, Initializable {
     /// @param _paymentToken The address of the ERC20 token used as payment
     /// @param _auctionDuration The duration of the auction in seconds
     /// @param _auctionTokenAmount The amount of tokens to be auctioned
-    function initialize(address _auctionToken, address _paymentToken, uint256 _auctionDuration, uint256 _auctionTokenAmount)
+    function initialize(
+        address _auctionToken,
+        address _paymentToken,
+        uint256 _auctionDuration,
+        uint256 _auctionTokenAmount
+    )
         public
         initializer
     {
@@ -70,7 +75,10 @@ contract VoteAuction is IVoteAuction, Initializable {
 
         auctionTokenAmount = _auctionTokenAmount;
 
-        ceilingPrice = IERC20(paymentToken).totalSupply() / (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
+        // Order of operations unclear here.
+        ceilingPrice =
+            IERC20(paymentToken).totalSupply() /
+            (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
     }
 
     /// @notice Returns the current price of the auction

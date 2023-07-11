@@ -172,7 +172,12 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         }
 
         if (_emergencyType == EmergencyType.ChangeConfig) {
-            ( bytes32 configName, address configAddress, bytes4 interfaceId ) = abi.decode(callData, (bytes32, address, bytes4));
+            (
+                bytes32 configName,
+                address configAddress,
+                bytes4 interfaceId
+            ) = abi.decode(callData, (bytes32, address, bytes4));
+
             super.changeConfig(configName, configAddress, interfaceId);
             return;
         }

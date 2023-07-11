@@ -16,8 +16,13 @@ interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
 
     // Events
     event RewardsAccrued(
-        address indexed account, address indexed delegate, uint256 startEpoch, uint256 indexed lastEpoch, uint256 voteReward
+        address indexed account,
+        address indexed delegate,
+        uint256 startEpoch,
+        uint256 indexed lastEpoch,
+        uint256 voteReward
     );
+
     event RewardsWithdrawn(address indexed account, address indexed delegate, uint256 amount);
     event VotingPowerAdded(address indexed account, address indexed governor, uint256 amount);
 
