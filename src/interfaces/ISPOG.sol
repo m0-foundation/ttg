@@ -5,7 +5,6 @@ import { IERC165 } from "./ImportedInterfaces.sol";
 import { IProtocolConfigurator } from "./IProtocolConfigurator.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
-
     // Enums
     enum EmergencyType {
         Remove,
@@ -40,28 +39,42 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     // Info functions about double governance and SPOG parameters
     function governor() external view returns (address);
+
     function vault() external view returns (address);
+
     function cash() external view returns (address);
+
     function tax() external view returns (uint256);
+
     function taxLowerBound() external view returns (uint256);
+
     function taxUpperBound() external view returns (uint256);
+
     function inflator() external view returns (uint256);
+
     function valueFixedInflation() external view returns (uint256);
 
     // Accepted `proposal` functions
     function addList(address list) external;
+
     function append(address list, address account) external;
+
     function remove(address list, address account) external;
+
     function emergency(uint8 emergencyType, bytes calldata callData) external;
+
     function reset(address newGovernor) external;
+
     function changeTax(uint256 newTax) external;
+
     function changeTaxRange(uint256 newLowerBound, uint256 newUpperBound) external;
 
     function isGovernedMethod(bytes4 func) external pure returns (bool);
+
     function chargeFee(address account, bytes4 func) external returns (uint256);
+
     function getInflationReward(uint256 amount) external view returns (uint256);
 
     // List accessor functions
     function isListInMasterList(address list) external view returns (bool);
-
 }

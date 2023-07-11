@@ -16,7 +16,6 @@ import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
 import { BaseTest } from "./BaseTest.t.sol";
 
 contract SPOGBaseTest is BaseTest {
-
     SPOGDeployScript public deployScript;
 
     ISPOG public spog;
@@ -106,10 +105,9 @@ contract SPOGBaseTest is BaseTest {
         proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
-    function proposeAddingNewListToSpog(string memory proposalDescription)
-        internal
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function proposeAddingNewListToSpog(
+        string memory proposalDescription
+    ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -167,10 +165,12 @@ contract SPOGBaseTest is BaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -187,5 +187,4 @@ contract SPOGBaseTest is BaseTest {
         // execute proposal
         governor.execute(targets, values, calldatas, hashedDescription);
     }
-
 }

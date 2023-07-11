@@ -8,7 +8,6 @@ import { Test, ERC20DecimalsMock } from "../ImportedContracts.sol";
 /// @title BaseTest
 /// @notice Common contract members needed across test contracts.
 abstract contract BaseTest is Test {
-
     /******************************************************************************************************************/
     /*** EVENTS                                                                                                     ***/
     /******************************************************************************************************************/
@@ -99,5 +98,4 @@ abstract contract BaseTest is Test {
     function expectEmit() internal {
         vm.expectEmit({ checkTopic1: true, checkTopic2: true, checkTopic3: true, checkData: true });
     }
-
 }

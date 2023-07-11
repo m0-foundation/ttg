@@ -18,7 +18,6 @@ import { ProtocolConfigurator } from "../config/ProtocolConfigurator.sol";
 /// @notice SPOG, "Simple Participation Optimized Governance"
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
 contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
-
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -34,10 +33,10 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     }
 
     /// @dev Indicator that list is in master list
-    uint256 private constant inMasterList = 1;
+    uint256 private constant _inMasterList = 1;
 
     /// TODO find the right one for better precision
-    uint256 private constant INFLATOR_SCALE = 100;
+    uint256 private constant _INFLATOR_SCALE = 100;
 
     /// @notice Vault for value holders assets
     address public immutable vault;
@@ -107,7 +106,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
 
         // add the list to the master list
-        _masterlist.set(list, inMasterList);
+        _masterlist.set(list, _inMasterList);
 
         emit ListAdded(list, IList(list).name());
     }
@@ -140,11 +139,11 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param configName The name of the config contract to be changed
     /// @param configAddress The address of the new config contract
     /// @param interfaceId The interface identifier, as specified in ERC-165
-    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId)
-        public
-        override(IProtocolConfigurator, ProtocolConfigurator)
-        onlyGovernance
-    {
+    function changeConfig(
+        bytes32 configName,
+        address configAddress,
+        bytes4 interfaceId
+    ) public override(IProtocolConfigurator, ProtocolConfigurator) onlyGovernance {
         super.changeConfig(configName, configAddress, interfaceId);
     }
 
@@ -155,28 +154,27 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     // TODO: IMPORTANT: right now voting period and logic is the same as for other functions
     // TODO: IMPORTANT: implement immediate remove
     function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernance {
-        EmergencyType _emergencyType = EmergencyType(emergencyType);
+        EmergencyType emergencyType_ = EmergencyType(emergencyType);
 
         emit EmergencyExecuted(emergencyType, callData);
 
-        if (_emergencyType == EmergencyType.Remove) {
-            ( address list, address account ) = abi.decode(callData, (address, address));
+        if (emergencyType_ == EmergencyType.Remove) {
+            (address list, address account) = abi.decode(callData, (address, address));
             remove(list, account);
             return;
         }
 
-        if (_emergencyType == EmergencyType.Append) {
-            ( address list, address account ) = abi.decode(callData, (address, address));
+        if (emergencyType_ == EmergencyType.Append) {
+            (address list, address account) = abi.decode(callData, (address, address));
             append(list, account);
             return;
         }
 
-        if (_emergencyType == EmergencyType.ChangeConfig) {
-            (
-                bytes32 configName,
-                address configAddress,
-                bytes4 interfaceId
-            ) = abi.decode(callData, (bytes32, address, bytes4));
+        if (emergencyType_ == EmergencyType.ChangeConfig) {
+            (bytes32 configName, address configAddress, bytes4 interfaceId) = abi.decode(
+                callData,
+                (bytes32, address, bytes4)
+            );
 
             super.changeConfig(configName, configAddress, interfaceId);
             return;
@@ -226,7 +224,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @notice Charge fee for calling a governance function
     /// @param account The address of the caller
-    function chargeFee(address account, bytes4 /*func*/ ) external onlyGovernance returns (uint256) {
+    function chargeFee(address account, bytes4 /*func*/) external onlyGovernance returns (uint256) {
         // transfer the amount from the caller to the SPOG
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(cash).safeTransferFrom(account, address(this), tax);
@@ -275,7 +273,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @dev
     function getInflationReward(uint256 amount) external view returns (uint256) {
         // TODO: prevent overflow, precision loss ?
-        return amount * inflator / INFLATOR_SCALE;
+        return (amount * inflator) / _INFLATOR_SCALE;
     }
-
 }

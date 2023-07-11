@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VaultTest is SPOGBaseTest {
-
     event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
 
     /******************************************************************************************************************/
@@ -19,8 +18,9 @@ contract VaultTest is SPOGBaseTest {
 
             for (uint256 j = 0; j < numberOfProposalsPerEpoch; j++) {
                 // update vote governor
-                string memory proposalDescription =
-                    string(abi.encodePacked("Add new list to spog: epochNumber, proposalNumberPerEpoch", i, j));
+                string memory proposalDescription = string(
+                    abi.encodePacked("Add new list to spog: epochNumber, proposalNumberPerEpoch", i, j)
+                );
                 proposeAddingNewListToSpog(proposalDescription);
             }
         }
@@ -210,5 +210,4 @@ contract VaultTest is SPOGBaseTest {
 
         assertEq(vote.balanceOf(address(vault)), 1000e18);
     }
-
 }

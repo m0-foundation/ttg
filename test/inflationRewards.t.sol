@@ -4,12 +4,11 @@ pragma solidity 0.8.19;
 import { SPOGBaseTest } from "./shared/SPOGBaseTest.t.sol";
 
 contract InflationRewardsTest is SPOGBaseTest {
-
     function test_UserVoteInflationAfterVotingOnAllProposals() public {
         // set up proposals
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
-        (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Another new list to spog");
+        (uint256 proposalId3, , , , ) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // cannot vote in epoch 0
         vm.expectRevert("DualGovernor: vote not currently active");
@@ -44,7 +43,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         );
 
         uint256 aliceVotesAfterAllProposals = vote.getVotes(alice);
-        uint256 votesAfterVoting = aliceVotes + spog.inflator() * aliceVotes / 100;
+        uint256 votesAfterVoting = aliceVotes + (spog.inflator() * aliceVotes) / 100;
 
         assertEq(
             aliceVotesAfterAllProposals,
@@ -53,7 +52,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         );
 
         uint256 rewards = vote.withdrawRewards();
-        assertEq(rewards, aliceStartBalance * spog.inflator() / 100, "Alice should have received inflation rewards");
+        assertEq(rewards, (aliceStartBalance * spog.inflator()) / 100, "Alice should have received inflation rewards");
 
         assertEq(vote.balanceOf(alice), aliceStartBalance + rewards, "Alice should have more vote tokens");
     }
@@ -71,7 +70,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         assertEq(vote.balanceOf(carol), 300e18);
 
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
         // alice votes on proposal 1
@@ -84,14 +83,14 @@ contract InflationRewardsTest is SPOGBaseTest {
         vm.stopPrank();
         uint256 aliceVotesAfterFirstVote = vote.getVotes(alice);
         uint256 bobVotesAfterFirstVote = vote.getVotes(bob);
-        assertEq(bobVotesAfterFirstVote, bobStartVotes * (100 + spog.inflator()) / 100);
-        assertEq(aliceVotesAfterFirstVote, aliceStartVotes * (100 + spog.inflator()) / 100);
+        assertEq(bobVotesAfterFirstVote, (bobStartVotes * (100 + spog.inflator())) / 100);
+        assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + spog.inflator())) / 100);
         assertEq(vote.getVotes(carol), carolStartVotes);
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
         // set up proposals
-        (uint256 proposal2Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 2");
+        (uint256 proposal2Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 2");
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
         // alice votes on proposal 1
@@ -101,7 +100,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
-        assertEq(vote.getVotes(alice), aliceVotesAfterFirstVote * (100 + spog.inflator()) / 100);
+        assertEq(vote.getVotes(alice), (aliceVotesAfterFirstVote * (100 + spog.inflator())) / 100);
         assertEq(vote.getVotes(bob), bobVotesAfterFirstVote);
         // carol has no rewards, didn't vote on proposals
         assertEq(vote.getVotes(carol), carolStartVotes);
@@ -133,7 +132,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         assertEq(vote.balanceOf(alice), 100e18);
 
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
         // alice votes on proposal 1
@@ -141,7 +140,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         governor.castVote(proposal1Id, yesVote);
 
         uint256 aliceVotesAfterFirstVote = vote.getVotes(alice);
-        assertEq(aliceVotesAfterFirstVote, aliceStartVotes * (100 + spog.inflator()) / 100);
+        assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + spog.inflator())) / 100);
 
         uint256 bobVotes = vote.getVotes(bob);
         assertEq(bobVotes, 100e18);
@@ -170,7 +169,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         assertEq(vote.balanceOf(alice), 100e18);
 
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
         // alice votes on proposal 1
@@ -212,7 +211,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         assertEq(vote.balanceOf(alice), 100e18);
 
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
         // alice votes on proposal 1
@@ -251,7 +250,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         assertEq(vote.balanceOf(alice), 100e18);
 
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
         vm.startPrank(alice);
@@ -292,7 +291,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         uint256 extraTotalVotes = vote.totalVotes() - 300e18;
 
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
 
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -333,7 +332,7 @@ contract InflationRewardsTest is SPOGBaseTest {
     // TODO: make sure test is still needed
     function test_VotingInflationWithRedelegationInTheSameEpoch() public {
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
 
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -352,7 +351,7 @@ contract InflationRewardsTest is SPOGBaseTest {
 
     function test_UsersVoteInflationForMultipleEpochsWithRedelegation() public {
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
 
         /// EPOCH 1
 
@@ -382,7 +381,7 @@ contract InflationRewardsTest is SPOGBaseTest {
 
         /// EPOCH 2
 
-        (uint256 proposal2Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 2");
+        (uint256 proposal2Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 2");
 
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -440,7 +439,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         vm.roll(block.number + governor.votingPeriod() + 1);
 
         // epoch - set up proposals
-        (uint256 proposal3Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 3");
+        (uint256 proposal3Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 3");
 
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -464,20 +463,20 @@ contract InflationRewardsTest is SPOGBaseTest {
         uint256 bobRewards = vote.withdrawRewards();
         assertEq(bobRewards, 728e17, "Incorrect bob rewards");
         vm.stopPrank();
-        assertEq(vote.balanceOf(bob), 100e18 * 120 * 120 * 120 / 100 / 100 / 100);
-        assertEq(vote.balanceOf(alice), 100e18 * 120 * 120 / 100 / 100);
+        assertEq(vote.balanceOf(bob), (100e18 * 120 * 120 * 120) / 100 / 100 / 100);
+        assertEq(vote.balanceOf(alice), (100e18 * 120 * 120) / 100 / 100);
 
         vm.startPrank(alice);
         aliceRewards = vote.withdrawRewards();
         assertEq(aliceRewards, 288e17, "Incorrect alice rewards");
-        assertEq(vote.balanceOf(alice), 100e18 * 120 * 120 * 120 / 100 / 100 / 100);
+        assertEq(vote.balanceOf(alice), (100e18 * 120 * 120 * 120) / 100 / 100 / 100);
         vm.stopPrank();
 
         vm.startPrank(carol);
         carolRewards = vote.withdrawRewards();
         assertEq(carolRewards, 24e18, "Incorrect carol rewards");
         // carol missed 1 epoch on redelegation
-        assertEq(vote.balanceOf(carol), 100e18 * 120 * 120 / 100 / 100);
+        assertEq(vote.balanceOf(carol), (100e18 * 120 * 120) / 100 / 100);
         vm.stopPrank();
 
         // Main assumption of our voting system
@@ -490,7 +489,7 @@ contract InflationRewardsTest is SPOGBaseTest {
 
     function test_UsersVoteInflationForMultipleEpochsWithTransfers() public {
         // epoch - set up proposals
-        (uint256 proposal1Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 1");
+        (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
 
         /// EPOCH 1
 
@@ -567,7 +566,7 @@ contract InflationRewardsTest is SPOGBaseTest {
 
         /// EPOCH 2
 
-        (uint256 proposal2Id,,,,) = proposeAddingNewListToSpog("Add new list to spog 2");
+        (uint256 proposal2Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 2");
 
         // voting period started
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -603,5 +602,4 @@ contract InflationRewardsTest is SPOGBaseTest {
             "Incorrect total votes and balances"
         );
     }
-
 }

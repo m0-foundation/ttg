@@ -11,22 +11,22 @@ import { SafeERC20 } from "../ImportedContracts.sol";
 /// @title SPOGVault
 /// @notice Vault will hold SPOG assets shared pro-rata between VALUE holders.
 contract SPOGVault is ISPOGVault {
-
     using SafeERC20 for IERC20;
 
     /// @notice SPOG governor contract
     address public immutable governor;
 
     /// @dev epoch => token => account => bool
-    mapping(uint256 => mapping(address => mapping(address => bool))) public alreadyWithdrawn;
+    mapping(uint256 epoch => mapping(address token => mapping(address account => bool isAlreadyWithdrawn)))
+        public alreadyWithdrawn;
 
     /// @dev epoch => token => amount
-    mapping(uint256 => mapping(address => uint256)) public deposits;
+    mapping(uint256 epoch => mapping(address token => uint256 amount)) public deposits;
 
     /// @notice Constructs a new instance of VALUE vault
-    /// @param _governor SPOG governor contract
-    constructor(address _governor) {
-        governor = _governor;
+    /// @param governor_ SPOG governor contract
+    constructor(address governor_) {
+        governor = governor_;
     }
 
     /// @notice Deposit voting (vote and value) reward tokens for epoch
@@ -85,11 +85,10 @@ contract SPOGVault is ISPOGVault {
         // TODO: accounting for leftover/debris here, check overflow ranges ?
         uint256 totalVotesWeight = IVALUE(ISPOGGovernor(governor).value()).getPastTotalSupply(epochStart);
         uint256 accountVotesWeight = IVALUE(ISPOGGovernor(governor).value()).getPastVotes(account, epochStart);
-        uint256 reward = deposits[epoch][token] * accountVotesWeight / totalVotesWeight;
+        uint256 reward = (deposits[epoch][token] * accountVotesWeight) / totalVotesWeight;
 
         emit EpochRewardsWithdrawn(epoch, account, token, reward);
 
         return reward;
     }
-
 }

@@ -8,10 +8,8 @@ import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 
 /// @title Governor contract to track quorum for both value and vote tokens
 /// @notice Governor adjusted to track double quorums for SPOG proposals
-/// @dev Based on
-/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
+/// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
 abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
-
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
@@ -36,9 +34,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         address value_,
         uint256 voteQuorumNumerator_,
         uint256 valueQuorumNumerator_
-    )
-        Governor(name_)
-    {
+    ) Governor(name_) {
         // Sanity checks
         if (vote_ == address(0)) revert ZeroVoteAddress();
         if (value_ == address(0)) revert ZeroValueAddress();
@@ -158,12 +154,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         address account,
         uint256 timepoint,
         bytes memory /*params*/
-    )
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
+    ) internal view virtual returns (uint256) {
         return _min(IVOTE(vote).getPastVotes(account, timepoint), IVOTE(vote).getVotes(account));
     }
 
@@ -172,12 +163,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         address account,
         uint256 timepoint,
         bytes memory /*params*/
-    )
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
+    ) internal view virtual returns (uint256) {
         return IVALUE(value).getPastVotes(account, timepoint);
     }
 
@@ -187,18 +173,11 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         address account,
         uint256 timepoint,
         bytes memory /*params*/
-    )
-        internal
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    ) internal view virtual override returns (uint256) {
         return IVOTE(vote).getPastVotes(account, timepoint);
     }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }
-
 }

@@ -7,7 +7,6 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_RemoveAddressFromList is SPOGBaseTest {
-
     address internal listToRemoveAddressFrom;
     address internal addressToRemove;
 
@@ -42,10 +41,12 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("remove(address,address)", listToRemoveAddressFrom, addressToRemove);
         string memory description = "Remove address from a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -72,5 +73,4 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
         // assert that address was added to list
         assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");
     }
-
 }

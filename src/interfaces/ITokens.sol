@@ -5,15 +5,12 @@ import { IAccessControl, IERC20, IVotes } from "./ImportedInterfaces.sol";
 import { ISPOGControlled } from "./ISPOGControlled.sol";
 
 interface ISPOGToken is ISPOGControlled, IAccessControl {
-
-    function MINTER_ROLE() external view returns (bytes32);
+    function MINTER_ROLE() external pure returns (bytes32);
 
     function mint(address to, uint256 amount) external;
-
 }
 
 interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
-
     // Events
     event RewardsAccrued(
         address indexed account,
@@ -34,15 +31,17 @@ interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
     error VotesExpiredSignature(uint256 expiry);
 
     function totalVotes() external view returns (uint256);
-    function getPastBalance(address account, uint256 blockNumber) external view returns (uint256);
-    function getPastTotalVotes(uint256 blockNumber) external view returns (uint256);
-    function addVotingPower(address account, uint256 amount) external;
-    function withdrawRewards() external returns (uint256);
 
+    function getPastBalance(address account, uint256 blockNumber) external view returns (uint256);
+
+    function getPastTotalVotes(uint256 blockNumber) external view returns (uint256);
+
+    function addVotingPower(address account, uint256 amount) external;
+
+    function withdrawRewards() external returns (uint256);
 }
 
 interface IVOTE is IInflationaryVotes {
-
     // Events
     event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
     event ResetInitialized(uint256 indexed resetSnapshotId);
@@ -54,16 +53,16 @@ interface IVOTE is IInflationaryVotes {
     error NoResetTokensToClaim();
 
     function value() external view returns (address);
+
     function resetSnapshotId() external view returns (uint256);
 
     function reset(uint256 resetSnapshotId) external;
-    function resetBalanceOf(address account) external view returns (uint256);
-    function claimPreviousSupply() external;
 
+    function resetBalanceOf(address account) external view returns (uint256);
+
+    function claimPreviousSupply() external;
 }
 
 interface IVALUE is IVotes, IERC20, ISPOGToken {
-
     function snapshot() external returns (uint256);
-
 }

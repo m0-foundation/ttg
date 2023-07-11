@@ -7,9 +7,8 @@ import { ERC165CheckerSPOG } from "./ERC165CheckerSPOG.sol";
 
 /// @notice List contract where only an admin (SPOG) can add and remove addresses from a list
 contract List is ERC165CheckerSPOG, IList {
-
     // address list
-    mapping(address => bool) internal list;
+    mapping(address address_ => bool isInList) internal _list;
 
     address private _admin;
     string private _name;
@@ -31,44 +30,43 @@ contract List is ERC165CheckerSPOG, IList {
     }
 
     /// @notice Add an address to the list
-    /// @param _address The address to add
-    function add(address _address) external {
+    /// @param address_ The address to add
+    function add(address address_) external {
         if (msg.sender != _admin) revert NotAdmin();
 
         // require that the address is not already on the list
-        if (this.contains(_address)) revert AddressIsAlreadyInList();
+        if (this.contains(address_)) revert AddressIsAlreadyInList();
 
         // add the address to the list
-        list[_address] = true;
-        emit AddressAdded(_address);
+        _list[address_] = true;
+        emit AddressAdded(address_);
     }
 
     /// @notice Remove an address from the list
-    /// @param _address The address to remove
-    function remove(address _address) external {
+    /// @param address_ The address to remove
+    function remove(address address_) external {
         if (msg.sender != _admin) revert NotAdmin();
 
         // require that the address is on the list
-        if (!this.contains(_address)) revert AddressIsNotInList();
+        if (!this.contains(address_)) revert AddressIsNotInList();
 
         // remove the address from the list
-        list[_address] = false;
-        emit AddressRemoved(_address);
+        _list[address_] = false;
+        emit AddressRemoved(address_);
     }
 
     /// @notice Check if an address is on the list
-    /// @param _address The address to check
-    function contains(address _address) external view returns (bool) {
-        return list[_address];
+    /// @param address_ The address to check
+    function contains(address address_) external view returns (bool) {
+        return _list[address_];
     }
 
     /// @notice Change the admin address
-    /// @param _newAdmin The new admin address
-    function changeAdmin(address _newAdmin) external onlySPOGInterface(_newAdmin) {
+    /// @param newAdmin_ The new admin address
+    function changeAdmin(address newAdmin_) external onlySPOGInterface(newAdmin_) {
         if (msg.sender != _admin) revert NotAdmin();
 
-        _admin = _newAdmin;
-        emit AdminChanged(_newAdmin);
+        _admin = newAdmin_;
+        emit AdminChanged(newAdmin_);
     }
-
 }

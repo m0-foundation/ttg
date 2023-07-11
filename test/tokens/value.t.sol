@@ -11,7 +11,6 @@ import { ERC20Snapshot } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract ValueTokenTest is SPOGBaseTest {
-
     uint256 aliceStartBalance = 50e18;
 
     VALUE valueToken;
@@ -56,5 +55,4 @@ contract ValueTokenTest is SPOGBaseTest {
 
         assertEq(valueToken.balanceOf(user), 100);
     }
-
 }

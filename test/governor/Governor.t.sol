@@ -7,7 +7,6 @@ import { IERC165, IGovernor } from "../interfaces/ImportedInterfaces.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract DualGovernorTest is SPOGBaseTest {
-
     event NewVoteQuorumProposal(uint256 indexed proposalId);
 
     // Setup function, add test-specific initializations here
@@ -39,7 +38,7 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanOnlyVoteOnProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
 
         // vote balance of voter valid for voting
         uint256 voteBalance = vote.balanceOf(address(this));
@@ -69,8 +68,8 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
         // Proposal 1 and 2
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Another new list to spog");
 
         // vote balance of voter
         uint256 voteBalance = vote.getVotes(address(this));
@@ -113,7 +112,7 @@ contract DualGovernorTest is SPOGBaseTest {
         // Proposal 3
 
         // Add another proposal and voting can only happen after voting delay
-        (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+        (uint256 proposalId3, , , , ) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // vote balance of voter before casting vote on proposal 3
         uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
@@ -167,8 +166,8 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanVoteOnMultipleProposals() public {
         // propose adding a new list to spog
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Add another new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Add another new list to spog");
 
         // vote balance of voter
         uint256 voteBalance = vote.balanceOf(address(this));
@@ -308,10 +307,12 @@ contract DualGovernorTest is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "Append address to a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // create proposal
         cash.approve(address(spog), deployScript.tax());
@@ -342,5 +343,4 @@ contract DualGovernorTest is SPOGBaseTest {
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
     }
-
 }

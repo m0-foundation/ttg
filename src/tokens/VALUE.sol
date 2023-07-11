@@ -11,18 +11,13 @@ import { SPOGToken } from "./SPOGToken.sol";
 /// @dev This snapshot is used by new Vote token to set initial supply of tokens
 /// @dev All value holders become vote holders of the new Vote governance
 contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
-
-    constructor(string memory name, string memory symbol) SPOGToken() ERC20(name, symbol) ERC20Permit(name) { }
+    constructor(string memory name, string memory symbol) SPOGToken() ERC20(name, symbol) ERC20Permit(name) {}
 
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
-    )
-        internal
-        virtual
-        override(ERC20, ERC20Snapshot)
-    {
+    ) internal virtual override(ERC20, ERC20Snapshot) {
         super._beforeTokenTransfer(from, to, amount);
     }
 
@@ -30,11 +25,7 @@ contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
         address from,
         address to,
         uint256 amount
-    )
-        internal
-        virtual
-        override(ERC20, ERC20Votes)
-    {
+    ) internal virtual override(ERC20, ERC20Votes) {
         super._afterTokenTransfer(from, to, amount);
     }
 
@@ -60,5 +51,4 @@ contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
-
 }

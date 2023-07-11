@@ -13,7 +13,6 @@ import { SPOGToken } from "./SPOGToken.sol";
 /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
 /// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
 abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVotes {
-
     struct Checkpoint {
         uint32 fromBlock;
         uint224 amount;
@@ -22,20 +21,22 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     bytes32 private constant _DELEGATION_TYPEHASH =
         keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
-    mapping(address => address) private _delegates;
-    mapping(address => uint256) private _delegationSwitchEpoch;
+    mapping(address delegator => address delegate) private _delegates;
+    mapping(address delegator => uint256 switchEpoch) private _delegationSwitchEpoch;
 
-    mapping(address => Checkpoint[]) private _votesCheckpoints;
+    mapping(address account => Checkpoint[] voteCheckpoints) private _votesCheckpoints;
+
     Checkpoint[] private _totalVotesCheckpoints;
 
-    mapping(address => Checkpoint[]) private _balancesCheckpoints;
+    mapping(address account => Checkpoint[] balanceCheckpoints) private _balancesCheckpoints;
+
     Checkpoint[] private _totalSupplyCheckpoints;
 
-    mapping(address => uint256) private _voteRewards;
-    // mapping(address => uint256) private _valueRewards;
-    mapping(address => uint256) private _lastEpochRewardsAccrued;
+    mapping(address account => uint256 voteRewards) private _voteRewards;
+    // mapping(address account => uint256 valueRewards) private _valueRewards;
+    mapping(address account => uint256 lastEpochRewardsAccrued) private _lastEpochRewardsAccrued;
 
-    constructor() SPOGToken() { }
+    constructor() SPOGToken() {}
 
     /// @notice Get the address `account` is currently delegating to.
     function delegates(address account) public view virtual returns (address) {
@@ -94,7 +95,8 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         //
         // Initially we check if the block is recent to narrow the search range.
         // During the loop, the index of the wanted checkpoint remains in the range [low-1, high).
-        // With each iteration, either `low` or `high` is moved towards the middle of the range to maintain the invariant.
+        // With each iteration, either `low` or `high` is moved towards the middle of the range to maintain the
+        //  invariant.
         // - If the middle checkpoint is after `blockNumber`, we look in [low, mid)
         // - If the middle checkpoint is before or equal to `blockNumber`, we look in [mid+1, high)
         // Once we reach a single value (when low == high), we've found the right checkpoint at the index high-1, if not
@@ -143,10 +145,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         uint8 v,
         bytes32 r,
         bytes32 s
-    )
-        public
-        virtual
-    {
+    ) public virtual {
         if (block.timestamp > expiry) revert VotesExpiredSignature(expiry);
 
         address signer = ECDSA.recover(
@@ -308,12 +307,12 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         if (src == dst || amount == 0) return;
 
         if (src != address(0)) {
-            ( uint256 oldWeight, uint256 newWeight ) = _writeCheckpoint(_votesCheckpoints[src], _subtract, amount);
+            (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[src], _subtract, amount);
             emit DelegateVotesChanged(src, oldWeight, newWeight);
         }
 
         if (dst != address(0)) {
-            ( uint256 oldWeight, uint256 newWeight ) = _writeCheckpoint(_votesCheckpoints[dst], _add, amount);
+            (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[dst], _add, amount);
             emit DelegateVotesChanged(dst, oldWeight, newWeight);
         }
     }
@@ -335,10 +334,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         Checkpoint[] storage checkpoints,
         function(uint256, uint256) view returns (uint256) op,
         uint256 delta
-    )
-        private
-        returns (uint256 oldWeight, uint256 newWeight)
-    {
+    ) private returns (uint256 oldWeight, uint256 newWeight) {
         uint256 pos = checkpoints.length;
 
         Checkpoint memory oldCheckpoint = pos == 0 ? Checkpoint(0, 0) : _unsafeAccess(checkpoints, pos - 1);
@@ -350,10 +346,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
             _unsafeAccess(checkpoints, pos - 1).amount = SafeCast.toUint224(newWeight);
         } else {
             checkpoints.push(
-                Checkpoint({
-                    fromBlock: SafeCast.toUint32(block.number),
-                    amount: SafeCast.toUint224(newWeight)
-                })
+                Checkpoint({ fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight) })
             );
         }
     }
@@ -375,15 +368,10 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     function _unsafeAccess(
         Checkpoint[] storage checkpoints,
         uint256 pos
-    )
-        private
-        pure
-        returns (Checkpoint storage result)
-    {
+    ) private pure returns (Checkpoint storage result) {
         assembly {
             mstore(0, checkpoints.slot)
             result.slot := add(keccak256(0, 0x20), pos)
         }
     }
-
 }

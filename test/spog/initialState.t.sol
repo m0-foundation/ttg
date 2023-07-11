@@ -8,7 +8,6 @@ import { SPOG } from "../../src/core/SPOG.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_InitialState is SPOGBaseTest {
-
     uint256 _taxLowerBound = 0;
     uint256 _taxUpperBound = 6e18;
     uint256 internal _inflator = 10;
@@ -153,12 +152,11 @@ contract SPOG_InitialState is SPOGBaseTest {
 
     function test_fallback_SPOG() public {
         vm.expectRevert();
-        (bool success,) = address(spog).call(abi.encodeWithSignature("doesNotExist()"));
+        (bool success, ) = address(spog).call(abi.encodeWithSignature("doesNotExist()"));
         assertEq(success, true);
 
         vm.expectRevert();
-        (success,) = address(spog).call{ value: 10_000 }("");
+        (success, ) = address(spog).call{ value: 10_000 }("");
         assertEq(success, true);
     }
-
 }

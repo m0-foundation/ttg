@@ -9,23 +9,18 @@ import { ERC165 } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
-
     function someValue() external view returns (uint256);
-
 }
 
 contract MockConfig is IMockConfig, ERC165 {
-
     uint256 public immutable someValue = 1;
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IMockConfig).interfaceId || super.supportsInterface(interfaceId);
     }
-
 }
 
 contract SPOG_emergency is SPOGBaseTest {
-
     address internal addressToChange;
 
     event NewEmergencyProposal(uint256 indexed proposalId);
@@ -59,18 +54,16 @@ contract SPOG_emergency is SPOGBaseTest {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
-        calldatas[0] = abi.encodeWithSignature(
-            "emergency(uint8,bytes)",
-            uint8(ISPOG.EmergencyType.Remove),
-            callData
-        );
+        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Remove), callData);
 
         string memory description = "Emergency remove of merchant";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         cash.approve(address(spog), tax);
 
@@ -101,18 +94,16 @@ contract SPOG_emergency is SPOGBaseTest {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
-        calldatas[0] = abi.encodeWithSignature(
-            "emergency(uint8,bytes)",
-            uint8(ISPOG.EmergencyType.Append),
-            callData
-        );
+        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Append), callData);
 
         string memory description = "Emergency add of merchant";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         cash.approve(address(spog), tax);
 
@@ -148,10 +139,12 @@ contract SPOG_emergency is SPOGBaseTest {
 
         string memory description = "Emergency change config";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // emergency propose, tax price
         cash.approve(address(spog), tax);
@@ -420,7 +413,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that config was changed
-        (address a,) = spog.getConfig(keccak256("Fake Name"));
+        (address a, ) = spog.getConfig(keccak256("Fake Name"));
         assertEq(a, configAddress, "Config address did not match");
     }
 
@@ -453,8 +446,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that config was changed
-        (address a,) = spog.getConfig(keccak256("Fake Name"));
+        (address a, ) = spog.getConfig(keccak256("Fake Name"));
         assertEq(a, configAddress, "Config address did not match");
     }
-
 }

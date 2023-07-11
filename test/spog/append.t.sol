@@ -9,7 +9,6 @@ import { List } from "../../src/periphery/List.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_AppendAddressToList is SPOGBaseTest {
-
     address internal listToAddAddressTo;
     address internal addressToAdd;
 
@@ -46,10 +45,12 @@ contract SPOG_AppendAddressToList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -77,5 +78,4 @@ contract SPOG_AppendAddressToList is SPOGBaseTest {
         // assert that address was added to list
         assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");
     }
-
 }

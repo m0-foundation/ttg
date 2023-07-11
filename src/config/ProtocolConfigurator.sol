@@ -9,10 +9,9 @@ import { IProtocolConfigurator } from "../interfaces/IProtocolConfigurator.sol";
  * @dev Provide governed config contracts for the SPOG
  */
 contract ProtocolConfigurator is IProtocolConfigurator {
-
     // List of named config contracts managed by SPOG governance
     // hashed name => ConfigContract
-    mapping(bytes32 => ConfigContract) private config;
+    mapping(bytes32 hashedName => ConfigContract configContract) private _config;
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public virtual {
         if (configName == bytes32(0)) revert ConfigNameCannotBeZero();
@@ -22,17 +21,16 @@ contract ProtocolConfigurator is IProtocolConfigurator {
         if (!IERC165(configAddress).supportsInterface(interfaceId)) revert ConfigERC165Unsupported();
 
         // check if named config already exists, and if so, make sure the new contract address matches
-        if (config[configName].contractAddress != address(0) && config[configName].interfaceId != interfaceId) {
+        if (_config[configName].contractAddress != address(0) && _config[configName].interfaceId != interfaceId) {
             revert ConfigInterfaceIdMismatch();
         }
 
-        config[configName] = ConfigContract(configAddress, interfaceId);
+        _config[configName] = ConfigContract(configAddress, interfaceId);
 
         emit ConfigChange(configName, configAddress, interfaceId);
     }
 
     function getConfig(bytes32 name) public view returns (address, bytes4) {
-        return (config[name].contractAddress, config[name].interfaceId);
+        return (_config[name].contractAddress, _config[name].interfaceId);
     }
-
 }

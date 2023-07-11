@@ -11,7 +11,6 @@ import { ERC165Checker } from "../ImportedContracts.sol";
  * Utility to verify whether an address implements ISPOG.
  */
 abstract contract ERC165CheckerSPOG {
-
     error InvalidSPOGInterface();
 
     /// Only proceed if SPOG implements ISPOG interface
@@ -29,5 +28,4 @@ abstract contract ERC165CheckerSPOG {
     function _checkSPOGInterface(address spogAddress) internal view {
         if (!ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId)) revert InvalidSPOGInterface();
     }
-
 }

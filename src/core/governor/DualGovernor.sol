@@ -13,7 +13,6 @@ import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
 contract DualGovernor is DualGovernorQuorum {
-
     struct EpochBasic {
         uint256 numProposals;
         uint256 totalVotesWeight;
@@ -37,7 +36,7 @@ contract DualGovernor is DualGovernorQuorum {
     address public spog;
 
     /// @notice The list cof emergency proposals, (proposalId => true)
-    mapping(uint256 => bool) public emergencyProposals;
+    mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
 
     /// @dev The voting period in blocks
     uint256 private immutable _votingPeriod;
@@ -49,20 +48,21 @@ contract DualGovernor is DualGovernorQuorum {
     bool private _emergencyVotingIsOn;
 
     /// @dev Voting results for proposal: (proposalId => ProposalVote)
-    mapping(uint256 => ProposalVote) private _proposalVotes;
+    mapping(uint256 proposalId => ProposalVote proposalVote) private _proposalVotes;
 
     /// @dev Proposal types: (proposalId => ProposalType)
-    mapping(uint256 => ProposalType) private _proposalTypes;
+    mapping(uint256 proposalId => ProposalType proposalVote) private _proposalTypes;
 
     /// @dev Basic information about epoch (epoch number => EpochBasic)
-    mapping(uint256 => EpochBasic) private _epochBasic;
+    mapping(uint256 epoch => EpochBasic epochBasic) private _epochBasic;
 
     /// @notice Constructs a new governor instance
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
     /// @param value The address of the $VALUE token
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
-    /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a `VALUE QUORUM`
+    /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a
+    ///                    `VALUE QUORUM`
     /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
     constructor(
         string memory name,
@@ -71,9 +71,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 voteQuorum,
         uint256 valueQuorum,
         uint256 votingPeriod_
-    )
-        DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum)
-    {
+    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
         // Sanity checks
         if (votingPeriod_ == 0) revert ZeroVotingPeriod();
 
@@ -86,20 +84,20 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Initializes SPOG address
     /// @dev Adds additional initialization for tokens
-    /// @param _spog The address of the SPOG contract
-    function initializeSPOG(address _spog) external {
+    /// @param spog_ The address of the SPOG contract
+    function initializeSPOG(address spog_) external {
         if (spog != address(0)) revert AlreadyInitialized();
-        if (_spog == address(0)) revert ZeroSPOGAddress();
+        if (spog_ == address(0)) revert ZeroSPOGAddress();
         if (_start == 0) revert ZeroStart(); // should never happen, precaution
 
-        spog = _spog;
+        spog = spog_;
 
         // initialize tokens
-        IVOTE(vote).initializeSPOG(_spog);
+        IVOTE(vote).initializeSPOG(spog_);
 
         // TODO: find the way to avoid mistake with initialization for reset
         // TODO: do not fail if spog address has been already initialized for value token
-        try IVALUE(value).initializeSPOG(_spog) { } catch { }
+        try IVALUE(value).initializeSPOG(spog_) {} catch {}
     }
 
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
@@ -155,11 +153,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    )
-        public
-        override(IGovernor, Governor)
-        returns (uint256)
-    {
+    ) public override(IGovernor, Governor) returns (uint256) {
         // Sanity checks
         if (values[0] != 0) revert InvalidValue();
         if (targets.length != 1) revert TooManyTargets();
@@ -230,12 +224,13 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param reason The reason given for the vote by the voter
     /// @param params The parameters of the vote
     /// @return voteWeight The weight of vote
-    function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
-        internal
-        virtual
-        override
-        returns (uint256)
-    {
+    function _castVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        string memory reason,
+        bytes memory params
+    ) internal virtual override returns (uint256) {
         require(state(proposalId) == ProposalState.Active, "DualGovernor: vote not currently active");
 
         ProposalType proposalType = _proposalTypes[proposalId];
@@ -434,10 +429,14 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @dev Counts both value and vote votes for proposal
     /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256 voteVotes, uint256 valueVotes, bytes memory)
-        internal
-        virtual
-    {
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256 voteVotes,
+        uint256 valueVotes,
+        bytes memory
+    ) internal virtual {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
         if (proposalVote.hasVoted[account]) revert AlreadyVoted();
@@ -454,8 +453,13 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory) internal virtual override {
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256 votes,
+        bytes memory
+    ) internal virtual override {
         _countVote(proposalId, account, support, votes, 0, "");
     }
-
 }

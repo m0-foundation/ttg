@@ -11,7 +11,6 @@ import { InflationaryVotes } from "./InflationaryVotes.sol";
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
 contract VOTE is InflationaryVotes, IVOTE {
-
     /// @notice value token to take snapshot from
     address public immutable value;
 
@@ -19,33 +18,29 @@ contract VOTE is InflationaryVotes, IVOTE {
     uint256 public resetSnapshotId;
 
     /// @dev check that balances are claimed only once
-    mapping(address => bool) private _alreadyClaimed;
+    mapping(address account => bool hasAlreadyClaimed) private _alreadyClaimed;
 
     /// @notice Constructs the VOTE token
     /// @param name Name of the token
     /// @param symbol Symbol of the token
-    /// @param _value Address of the VALUE token for reset
+    /// @param value_ Address of the VALUE token for reset
     constructor(
         string memory name,
         string memory symbol,
-        address _value
-    )
-        InflationaryVotes()
-        ERC20(name, symbol)
-        ERC20Permit(name)
-    {
-        value = _value;
+        address value_
+    ) InflationaryVotes() ERC20(name, symbol) ERC20Permit(name) {
+        value = value_;
     }
 
     /// @notice SPOG initializes reset snapshot
-    /// @param _resetSnapshotId Snapshot id of the moment of reset
-    function reset(uint256 _resetSnapshotId) external {
+    /// @param resetSnapshotId_ Snapshot id of the moment of reset
+    function reset(uint256 resetSnapshotId_) external {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
         if (msg.sender != spog) revert CallerIsNotSPOG();
 
-        resetSnapshotId = _resetSnapshotId;
+        resetSnapshotId = resetSnapshotId_;
 
-        emit ResetInitialized(_resetSnapshotId);
+        emit ResetInitialized(resetSnapshotId_);
     }
 
     /// @notice Claim share of new vote tokens by previous value holders
@@ -79,5 +74,4 @@ contract VOTE is InflationaryVotes, IVOTE {
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
-
 }

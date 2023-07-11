@@ -11,7 +11,6 @@ import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol"
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_reset is SPOGBaseTest {
-
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
 
     /******************************************************************************************************************/
@@ -40,10 +39,10 @@ contract SPOG_reset is SPOGBaseTest {
         return address(newGovernor);
     }
 
-    function proposeGovernanceReset(string memory proposalDescription, address valueToken)
-        private
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function proposeGovernanceReset(
+        string memory proposalDescription,
+        address valueToken
+    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         vm.roll(deployScript.time() * 2);
 
         address[] memory targets = new address[](1);
@@ -87,10 +86,12 @@ contract SPOG_reset is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("addList(address)", list);
         string memory description = "Add new list";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), deployScript.tax());
@@ -159,5 +160,4 @@ contract SPOG_reset is SPOGBaseTest {
         // Make sure governance is functional
         executeValidProposal();
     }
-
 }

@@ -6,7 +6,6 @@ import { ISPOGToken } from "../interfaces/ITokens.sol";
 import { AccessControlEnumerable } from "../ImportedContracts.sol";
 
 abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
-
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     address public spog;
@@ -17,13 +16,12 @@ abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
     }
 
     /// @notice Sets the spog address. Can only be called once.
-    /// @param _spog the address of the spog
-    function initializeSPOG(address _spog) external {
+    /// @param spog_ the address of the spog
+    function initializeSPOG(address spog_) external {
         if (spog != address(0)) revert AlreadyInitialized();
 
-        spog = _spog;
+        spog = spog_;
 
-        _setupRole(MINTER_ROLE, _spog);
+        _setupRole(MINTER_ROLE, spog_);
     }
-
 }

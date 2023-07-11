@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 interface ISPOGVault {
-
     // Events
     event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
     event EpochRewardsWithdrawn(uint256 indexed epoch, address indexed account, address indexed token, uint256 amount);
@@ -13,9 +12,12 @@ interface ISPOGVault {
     error AlreadyWithdrawn();
 
     function governor() external returns (address);
-    function deposit(uint256 epoch, address token, uint256 amount) external;
-    function withdraw(uint256[] memory epochs, address token) external returns (uint256);
-    function deposits(uint256 epoch, address token) external view returns (uint256);
-    function alreadyWithdrawn(uint256 epoch, address token, address account) external view returns (bool);
 
+    function deposit(uint256 epoch, address token, uint256 amount) external;
+
+    function withdraw(uint256[] memory epochs, address token) external returns (uint256);
+
+    function deposits(uint256 epoch, address token) external view returns (uint256);
+
+    function alreadyWithdrawn(uint256 epoch, address token, address account) external view returns (bool);
 }

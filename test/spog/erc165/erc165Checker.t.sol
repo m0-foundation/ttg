@@ -5,10 +5,9 @@ import { ERC165CheckerSPOG } from "../../../src/periphery/ERC165CheckerSPOG.sol"
 
 import { SPOGBaseTest } from "../../shared/SPOGBaseTest.t.sol";
 
-contract MockContract is ERC165CheckerSPOG { }
+contract MockContract is ERC165CheckerSPOG {}
 
 contract TestERC165CheckerSPOG is SPOGBaseTest {
-
     function test_checkSpogInterface() public {
         MockContract checker = new MockContract();
 
@@ -17,5 +16,4 @@ contract TestERC165CheckerSPOG is SPOGBaseTest {
 
         checker.checkSPOGInterface(address(spog));
     }
-
 }

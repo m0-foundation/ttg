@@ -5,7 +5,7 @@ import { IVALUE, IVOTE } from "../src/interfaces/ITokens.sol";
 
 import { DualGovernor } from "../src/core/governor/DualGovernor.sol";
 import { SPOG } from "../src/core/SPOG.sol";
-import { SPOGVault } from"../src/periphery/SPOGVault.sol";
+import { SPOGVault } from "../src/periphery/SPOGVault.sol";
 import { VALUE } from "../src/tokens/VALUE.sol";
 import { VOTE } from "../src/tokens/VOTE.sol";
 import { VoteAuction } from "../src/periphery/VoteAuction.sol";
@@ -14,7 +14,6 @@ import { console, ERC20Mock } from "./ImportedContracts.sol";
 import { BaseScript } from "./shared/Base.s.sol";
 
 contract SPOGDeployScript is BaseScript {
-
     address public governor;
     address public spog;
 
@@ -71,7 +70,14 @@ contract SPOGDeployScript is BaseScript {
         vm.startBroadcast(deployer);
 
         SPOG.Configuration memory config = SPOG.Configuration(
-            payable(governor), vault, cash, tax, taxLowerBound, taxUpperBound, inflator, valueFixedInflation
+            payable(governor),
+            vault,
+            cash,
+            tax,
+            taxLowerBound,
+            taxUpperBound,
+            inflator,
+            valueFixedInflation
         );
 
         spog = address(new SPOG(config));
@@ -85,5 +91,4 @@ contract SPOGDeployScript is BaseScript {
 
         vm.stopBroadcast();
     }
-
 }

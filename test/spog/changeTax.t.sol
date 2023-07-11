@@ -6,7 +6,6 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_changeTax is SPOGBaseTest {
-
     uint256 internal newTaxValue;
 
     event TaxChanged(uint256 indexed tax);
@@ -33,10 +32,12 @@ contract SPOG_changeTax is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("changeTax(uint256)", outOfBoundsTaxValue);
         string memory description = "Change tax variable in spog";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -69,10 +70,12 @@ contract SPOG_changeTax is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("changeTax(uint256)", newTaxValue);
         string memory description = "Change tax variable in spog";
 
-        (
-            bytes32 hashedDescription,
-            uint256 proposalId
-        ) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -93,5 +96,4 @@ contract SPOG_changeTax is SPOGBaseTest {
         // assert that tax was modified
         assertTrue(tax == newTaxValue, "Tax wasn't changed");
     }
-
 }

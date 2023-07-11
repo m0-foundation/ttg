@@ -9,7 +9,6 @@ import { Initializable, SafeERC20 } from "../ImportedContracts.sol";
 /// @title VoteAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle
 contract VoteAuction is IVoteAuction, Initializable {
-
     using SafeERC20 for IERC20;
 
     error AlreadyInitialized();
@@ -30,9 +29,9 @@ contract VoteAuction is IVoteAuction, Initializable {
     uint256 public floorPrice;
     uint256 public lastBuyPrice;
 
-    bool initialized;
+    bool private _initialized;
 
-    uint256 CURVE_STEPS = 20;
+    uint256 private constant _CURVE_STEPS = 20;
 
     modifier onlyVault() {
         if (msg.sender != vault) revert OnlyVault();
@@ -46,34 +45,31 @@ contract VoteAuction is IVoteAuction, Initializable {
     }
 
     /// @notice Initializes the auction contract
-    /// @param _auctionToken The address of the ERC20 token being auctioned
-    /// @param _paymentToken The address of the ERC20 token used as payment
-    /// @param _auctionDuration The duration of the auction in seconds
-    /// @param _auctionTokenAmount The amount of tokens to be auctioned
+    /// @param auctionToken_ The address of the ERC20 token being auctioned
+    /// @param paymentToken_ The address of the ERC20 token used as payment
+    /// @param auctionDuration_ The duration of the auction in seconds
+    /// @param auctionTokenAmount_ The amount of tokens to be auctioned
     function initialize(
-        address _auctionToken,
-        address _paymentToken,
-        uint256 _auctionDuration,
-        uint256 _auctionTokenAmount
-    )
-        public
-        initializer
-    {
-        auctionToken = _auctionToken;
-        paymentToken = _paymentToken;
-        auctionDuration = _auctionDuration;
-        auctionEndTime = block.timestamp + _auctionDuration;
+        address auctionToken_,
+        address paymentToken_,
+        uint256 auctionDuration_,
+        uint256 auctionTokenAmount_
+    ) public initializer {
+        auctionToken = auctionToken_;
+        paymentToken = paymentToken_;
+        auctionDuration = auctionDuration_;
+        auctionEndTime = block.timestamp + auctionDuration_;
         ceilingPrice = IERC20(paymentToken).totalSupply();
         floorPrice = 1;
         vault = msg.sender;
 
-        if (initialized) revert AlreadyInitialized();
+        if (_initialized) revert AlreadyInitialized();
 
-        initialized = true;
+        _initialized = true;
 
-        IERC20(auctionToken).safeTransferFrom(msg.sender, address(this), _auctionTokenAmount);
+        IERC20(auctionToken).safeTransferFrom(msg.sender, address(this), auctionTokenAmount_);
 
-        auctionTokenAmount = _auctionTokenAmount;
+        auctionTokenAmount = auctionTokenAmount_;
 
         // Order of operations unclear here.
         ceilingPrice =
@@ -90,16 +86,16 @@ contract VoteAuction is IVoteAuction, Initializable {
 
         uint256 timePassed = block.timestamp - (auctionEndTime - auctionDuration);
         uint256 priceDifference = ceilingPrice - floorPrice;
-        uint256 percentSold = 1e18 * amountSold / auctionTokenAmount;
-        uint256 percentComplete = 1e18 * timePassed / auctionDuration;
+        uint256 percentSold = (1e18 * amountSold) / auctionTokenAmount;
+        uint256 percentComplete = (1e18 * timePassed) / auctionDuration;
         uint256 percentIncomplete = 1e18 - percentComplete;
 
-        uint256 priceDrop = (priceDifference * percentComplete / 1e18) * (1e18 - percentSold) / 1e18;
+        uint256 priceDrop = (((priceDifference * percentComplete) / 1e18) * (1e18 - percentSold)) / 1e18;
 
         uint256 price = ceilingPrice - priceDrop;
 
-        for (uint256 i; i < CURVE_STEPS; ++i) {
-            price = price * percentIncomplete / 1e18;
+        for (uint256 i; i < _CURVE_STEPS; ++i) {
+            price = (price * percentIncomplete) / 1e18;
         }
 
         return price;
@@ -111,7 +107,7 @@ contract VoteAuction is IVoteAuction, Initializable {
         if (block.timestamp > auctionEndTime) revert AuctionEnded();
 
         uint256 currentPrice = getCurrentPrice();
-        uint256 amountToPay = amountToBuy * currentPrice / 10 ** IERC20Metadata(auctionToken).decimals();
+        uint256 amountToPay = (amountToBuy * currentPrice) / 10 ** IERC20Metadata(auctionToken).decimals();
 
         if (auctionTokenAmount - amountSold < amountToBuy) revert AuctionBalanceInsufficient();
 
@@ -138,5 +134,4 @@ contract VoteAuction is IVoteAuction, Initializable {
 
         emit AuctionWithdrawal(msg.sender, balance);
     }
-
 }

@@ -8,7 +8,6 @@ import { BaseScript } from "./shared/Base.s.sol";
 import { SPOGDeployScript } from "./SPOGDeploy.s.sol";
 
 contract LocalTestDeployScript is BaseScript {
-
     SPOGDeployScript public spogDeployScript;
 
     function setUp() public override {
@@ -23,8 +22,8 @@ contract LocalTestDeployScript is BaseScript {
         vm.startBroadcast(deployer);
         // set up users
         string memory mnemonic = vm.envString("MNEMONIC");
-        (address user1,) = deriveRememberKey(mnemonic, 1);
-        (address user2,) = deriveRememberKey(mnemonic, 2);
+        (address user1, ) = deriveRememberKey(mnemonic, 1);
+        (address user2, ) = deriveRememberKey(mnemonic, 2);
 
         address[2] memory users = [user1, user2];
         // mint tokens to users
@@ -40,5 +39,4 @@ contract LocalTestDeployScript is BaseScript {
 
         vm.stopBroadcast();
     }
-
 }

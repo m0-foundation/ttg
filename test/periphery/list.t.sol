@@ -12,7 +12,6 @@ import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 import { SPOGMock } from "../shared/SPOGMock.sol";
 
 contract ListTest is SPOGBaseTest {
-
     address public admin;
 
     // Events to test
@@ -152,5 +151,4 @@ contract ListTest is SPOGBaseTest {
         vm.expectRevert(expectedError);
         list.add(alice);
     }
-
 }
