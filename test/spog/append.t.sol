@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOG } from "src/interfaces/ISPOG.sol";
+import { IList } from "src/interfaces/periphery/IList.sol";
+
+import { List } from "src/periphery/List.sol";
+
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract SPOG_AppendAddressToList is SPOGBaseTest {
     address internal listToAddAddressTo;

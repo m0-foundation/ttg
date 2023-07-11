@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "forge-std/Test.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
+import { Test } from "forge-std/Test.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import { ERC20DecimalsMock } from "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
 
 /// @title BaseTest
 /// @notice Common contract members needed across test contracts.

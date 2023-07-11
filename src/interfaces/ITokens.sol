@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/IAccessControl.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IVotes } from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 
-import "src/interfaces/ISPOGControlled.sol";
+import { ISPOGControlled } from "src/interfaces/ISPOGControlled.sol";
 
 interface ISPOGToken is ISPOGControlled, IAccessControl {
     function MINTER_ROLE() external view returns (bytes32);

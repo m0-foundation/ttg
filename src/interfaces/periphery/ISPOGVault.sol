@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/interfaces/ISPOGGovernor.sol";
+import { ISPOGGovernor } from "src/interfaces/ISPOGGovernor.sol";
 
 interface ISPOGVault {
     // Events

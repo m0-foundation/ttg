@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract InflationRewardsTest is SPOGBaseTest {
     function test_UserVoteInflationAfterVotingOnAllProposals() public {

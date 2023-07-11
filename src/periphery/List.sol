@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/periphery/ERC165CheckerSPOG.sol";
-import "src/interfaces/periphery/IList.sol";
+import { IList } from "src/interfaces/periphery/IList.sol";
+
+import { ERC165CheckerSPOG } from "src/periphery/ERC165CheckerSPOG.sol";
 
 /// @notice List contract where only an admin (SPOG) can add and remove addresses from a list
 contract List is ERC165CheckerSPOG, IList {

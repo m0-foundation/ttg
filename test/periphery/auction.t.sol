@@ -2,10 +2,14 @@
 
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/proxy/Clones.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import { ERC20DecimalsMock } from "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
 
-import "src/periphery/VoteAuction.sol";
-import "test/shared/SPOGBaseTest.t.sol";
+import { IVoteAuction } from "src/interfaces/periphery/IVoteAuction.sol";
+
+import { VoteAuction } from "src/periphery/VoteAuction.sol";
+
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract VoteAuctionTest is SPOGBaseTest {
     IVoteAuction public auctionImplementation;

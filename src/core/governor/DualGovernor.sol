@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/interfaces/periphery/IList.sol";
-import "src/interfaces/ISPOG.sol";
-import "src/core/governor/DualGovernorQuorum.sol";
+import { IList } from "src/interfaces/periphery/IList.sol";
+import { ISPOG } from "src/interfaces/ISPOG.sol";
+
+import { DualGovernorQuorum } from "src/core/governor/DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance

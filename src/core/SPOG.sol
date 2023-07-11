@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import "src/interfaces/ISPOG.sol";
-import "src/interfaces/ITokens.sol";
-import "src/interfaces/periphery/IList.sol";
+import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "src/config/ProtocolConfigurator.sol";
+import { IERC20 } from "src/interfaces/ITokens.sol";
+import { IList } from "src/interfaces/periphery/IList.sol";
+import { IProtocolConfigurator } from "src/interfaces/IProtocolConfigurator.sol";
+import { ISPOG, ISPOGVault, ISPOGGovernor } from "src/interfaces/ISPOG.sol";
+
+import { ProtocolConfigurator } from "src/config/ProtocolConfigurator.sol";
 
 /// @title SPOG
 /// @notice Contracts for governing lists and managing communal property through token voting

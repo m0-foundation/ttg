@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {IProtocolConfigurator} from "src/interfaces/IProtocolConfigurator.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+import { IProtocolConfigurator } from "src/interfaces/IProtocolConfigurator.sol";
 
 /**
  * @title ProtocolConfigurator
@@ -20,7 +21,7 @@ contract ProtocolConfigurator is IProtocolConfigurator {
 
         // check that the contract supports the interfaceId provided
         // Note: This also protect against address(0)
-        if (!ERC165(configAddress).supportsInterface(interfaceId)) {
+        if (!IERC165(configAddress).supportsInterface(interfaceId)) {
             revert ConfigERC165Unsupported();
         }
 

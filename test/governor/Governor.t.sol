@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
+
+import { IDualGovernor } from "src/interfaces/ISPOGGovernor.sol";
+
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract DualGovernorTest is SPOGBaseTest {
     event NewVoteQuorumProposal(uint256 indexed proposalId);

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
+
+import { ISPOG } from "src/interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "src/interfaces/ISPOGGovernor.sol";
+
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract SPOG_change is SPOGBaseTest {
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType);

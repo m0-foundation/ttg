@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import { ERC20Snapshot } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import { ERC20Votes } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-import "src/tokens/SPOGToken.sol";
+import { IVALUE } from "src/interfaces/ITokens.sol";
+
+import { SPOGToken } from "src/tokens/SPOGToken.sol";
 
 /// @title VALUE ERC20 token with a built-in snapshot functionality
 /// @dev Snapshot is taken at the moment of reset by SPOG

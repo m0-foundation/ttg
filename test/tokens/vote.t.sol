@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+
+import { ISPOGControlled } from "src/interfaces/ISPOGControlled.sol";
+import { IVOTE } from "src/interfaces/ITokens.sol";
+
+import { VALUE } from "src/tokens/VALUE.sol";
+import { VOTE } from "src/tokens/VOTE.sol";
+
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract VoteTokenTest is SPOGBaseTest {
     address alice1 = createUser("alice1");

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "src/factories/ListFactory.sol";
-import "test/shared/SPOGBaseTest.t.sol";
+import { IList } from "src/interfaces/periphery/IList.sol";
+
+import { ListFactory } from "src/factories/ListFactory.sol";
+
+import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
 
 contract ListFactoryTest is SPOGBaseTest {
     function test_listDeployWithFactory() public {
