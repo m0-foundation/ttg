@@ -88,7 +88,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     }
 
     /// @dev Lookup a value in a list of (sorted) checkpoints.
-    function _checkpointsLookup(Checkpoint[] storage ckpts, uint256 blockNumber) private view returns (uint256) {
+    function _checkpointsLookup(Checkpoint[] storage checkpoints, uint256 blockNumber) private view returns (uint256) {
         // We run a binary search to look for the earliest checkpoint taken after `blockNumber`.
         //
         // Initially we check if the block is recent to narrow the search range.
@@ -101,7 +101,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         // Note that if the latest checkpoint available is exactly for `blockNumber`, we end up with an index that is
         // past the end of the array, so we technically don't find a checkpoint after `blockNumber`, but it works out
         // the same.
-        uint256 length = ckpts.length;
+        uint256 length = checkpoints.length;
 
         uint256 low = 0;
         uint256 high = length;
@@ -109,7 +109,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         if (length > 5) {
             uint256 mid = length - Math.sqrt(length);
 
-            if (_unsafeAccess(ckpts, mid).fromBlock > blockNumber) {
+            if (_unsafeAccess(checkpoints, mid).fromBlock > blockNumber) {
                 high = mid;
             } else {
                 low = mid + 1;
@@ -119,14 +119,14 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         while (low < high) {
             uint256 mid = Math.average(low, high);
 
-            if (_unsafeAccess(ckpts, mid).fromBlock > blockNumber) {
+            if (_unsafeAccess(checkpoints, mid).fromBlock > blockNumber) {
                 high = mid;
             } else {
                 low = mid + 1;
             }
         }
 
-        return high == 0 ? 0 : _unsafeAccess(ckpts, high - 1).amount;
+        return high == 0 ? 0 : _unsafeAccess(checkpoints, high - 1).amount;
     }
 
     /// @notice Delegate votes from the sender to `delegatee`.
@@ -317,21 +317,21 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         }
     }
 
-    function _writeCheckpoint(Checkpoint[] storage ckpts, function(uint256, uint256) view returns (uint256) op, uint256 delta)
+    function _writeCheckpoint(Checkpoint[] storage checkpoints, function(uint256, uint256) view returns (uint256) op, uint256 delta)
         private
         returns (uint256 oldWeight, uint256 newWeight)
     {
-        uint256 pos = ckpts.length;
+        uint256 pos = checkpoints.length;
 
-        Checkpoint memory oldCkpt = pos == 0 ? Checkpoint(0, 0) : _unsafeAccess(ckpts, pos - 1);
+        Checkpoint memory oldCheckpoint = pos == 0 ? Checkpoint(0, 0) : _unsafeAccess(checkpoints, pos - 1);
 
-        oldWeight = oldCkpt.amount;
+        oldWeight = oldCheckpoint.amount;
         newWeight = op(oldWeight, delta);
 
-        if (pos > 0 && oldCkpt.fromBlock == block.number) {
-            _unsafeAccess(ckpts, pos - 1).amount = SafeCast.toUint224(newWeight);
+        if (pos > 0 && oldCheckpoint.fromBlock == block.number) {
+            _unsafeAccess(checkpoints, pos - 1).amount = SafeCast.toUint224(newWeight);
         } else {
-            ckpts.push(Checkpoint({ fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight) }));
+            checkpoints.push(Checkpoint({ fromBlock: SafeCast.toUint32(block.number), amount: SafeCast.toUint224(newWeight) }));
         }
     }
 
@@ -348,9 +348,9 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     }
 
     /// @dev Access an element of the array without performing bounds check. The position is assumed to be within bounds.
-    function _unsafeAccess(Checkpoint[] storage ckpts, uint256 pos) private pure returns (Checkpoint storage result) {
+    function _unsafeAccess(Checkpoint[] storage checkpoints, uint256 pos) private pure returns (Checkpoint storage result) {
         assembly {
-            mstore(0, ckpts.slot)
+            mstore(0, checkpoints.slot)
             result.slot := add(keccak256(0, 0x20), pos)
         }
     }
