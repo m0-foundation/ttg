@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
-import { ERC20Votes } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { ECDSA, ERC20Permit, ERC20Votes, Math, SafeCast } from "src/ImportedContracts.sol";
 
 import { InflationaryVotesInterface } from "src/interfaces/ITokens.sol";
 import { ISPOG } from "src/interfaces/ISPOG.sol";

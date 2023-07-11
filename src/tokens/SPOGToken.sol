@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { AccessControlEnumerable } from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import { AccessControlEnumerable } from "src/ImportedContracts.sol";
 
 import { ISPOGToken } from "src/interfaces/ITokens.sol";
 

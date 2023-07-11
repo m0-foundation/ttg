@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IGovernor } from "@openzeppelin/contracts/governance/IGovernor.sol";
+import { IGovernor } from "test/interfaces/ImportedInterfaces.sol";
 
 import { ISPOG } from "src/interfaces/ISPOG.sol";
 

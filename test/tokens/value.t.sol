@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IAccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { IAccessControl } from "test/interfaces/ImportedInterfaces.sol";
 
-import { ERC20Snapshot } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import { ERC20Snapshot } from "test/ImportedContracts.sol";
 
 import { ISPOGControlled } from "src/interfaces/ISPOGControlled.sol";
 

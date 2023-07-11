@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC165 } from "src/interfaces/ImportedInterfaces.sol";
 
-import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
-import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { EnumerableMap, ERC165, SafeERC20 } from "src/ImportedContracts.sol";
 
 import { IERC20 } from "src/interfaces/ITokens.sol";
 import { IList } from "src/interfaces/periphery/IList.sol";

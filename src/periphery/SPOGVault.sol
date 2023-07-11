@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20 } from "src/interfaces/ImportedInterfaces.sol";
 
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "src/ImportedContracts.sol";
 
 import { ISPOGGovernor } from "src/interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "src/interfaces/periphery/ISPOGVault.sol";

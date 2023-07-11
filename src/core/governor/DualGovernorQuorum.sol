@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { Checkpoints } from "@openzeppelin/contracts/utils/Checkpoints.sol";
-import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { Checkpoints, Governor, SafeCast } from "src/ImportedContracts.sol";
 
 import { ISPOGGovernor, IVOTE, IVALUE } from "src/interfaces/ISPOGGovernor.sol";
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC165 } from "src/interfaces/ImportedInterfaces.sol";
 
 import { IProtocolConfigurator } from "src/interfaces/IProtocolConfigurator.sol";
 

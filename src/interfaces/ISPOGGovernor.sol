@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
+import { Governor } from "src/ImportedContracts.sol";
 
 import { ISPOGControlled } from "src/interfaces/ISPOGControlled.sol";
 import { IVOTE, IVALUE } from "src/interfaces/ITokens.sol";

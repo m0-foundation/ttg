@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity 0.8.19;
 
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { ERC20DecimalsMock } from "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
+import { Clones, ERC20DecimalsMock } from "test/ImportedContracts.sol";
 
 import { IVoteAuction } from "src/interfaces/periphery/IVoteAuction.sol";
 
