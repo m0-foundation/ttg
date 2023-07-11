@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IERC20 } from "test/interfaces/ImportedInterfaces.sol";
+import { IList } from "../../src/interfaces/periphery/IList.sol";
+import { ISPOG, ISPOGGovernor, ISPOGVault } from "../../src/interfaces/ISPOG.sol";
+import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
 
-import { IList } from "src/interfaces/periphery/IList.sol";
-import { ISPOG, ISPOGGovernor, ISPOGVault } from "src/interfaces/ISPOG.sol";
-import { IVOTE, IVALUE } from "src/interfaces/ITokens.sol";
+import { List } from "../../src/periphery/List.sol";
 
-import { List } from "src/periphery/List.sol";
+import { SPOGDeployScript } from "../../script/SPOGDeploy.s.sol";
 
-import { SPOGDeployScript } from "script/SPOGDeploy.s.sol";
+import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
 
-import { BaseTest } from "test/shared/BaseTest.t.sol";
+import { BaseTest } from "./BaseTest.t.sol";
 
 contract SPOGBaseTest is BaseTest {
     SPOGDeployScript public deployScript;

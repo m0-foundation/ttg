@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165, IERC20 } from "src/interfaces/ImportedInterfaces.sol";
-
-import { IProtocolConfigurator } from "src/interfaces/IProtocolConfigurator.sol";
-import { ISPOGGovernor } from "src/interfaces/ISPOGGovernor.sol";
-import { ISPOGVault } from "src/interfaces/periphery/ISPOGVault.sol";
+import { IERC165, IERC20 } from "./ImportedInterfaces.sol";
+import { IProtocolConfigurator } from "./IProtocolConfigurator.sol";
+import { ISPOGGovernor } from "./ISPOGGovernor.sol";
+import { ISPOGVault } from "./periphery/ISPOGVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
     // Enums

@@ -2,14 +2,14 @@
 
 pragma solidity 0.8.19;
 
-import { IList } from "src/interfaces/periphery/IList.sol";
-import { ISPOG } from "src/interfaces/ISPOG.sol";
+import { IList } from "../../src/interfaces/periphery/IList.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
-import { ERC165CheckerSPOG } from "src/periphery/ERC165CheckerSPOG.sol";
-import { List } from "src/periphery/List.sol";
+import { ERC165CheckerSPOG } from "../../src/periphery/ERC165CheckerSPOG.sol";
+import { List } from "../../src/periphery/List.sol";
 
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
-import { SPOGMock } from "test/shared/SPOGMock.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
+import { SPOGMock } from "../shared/SPOGMock.sol";
 
 contract ListTest is SPOGBaseTest {
     address public admin;

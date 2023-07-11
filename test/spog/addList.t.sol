@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IGovernor } from "test/interfaces/ImportedInterfaces.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
-import { ISPOG } from "src/interfaces/ISPOG.sol";
+import { List } from "../../src/periphery/List.sol";
 
-import { List } from "src/periphery/List.sol";
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
-import { SPOGMock } from "test/shared/SPOGMock.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
+import { SPOGMock } from "../shared/SPOGMock.sol";
 
 contract SPOG_AddNewList is SPOGBaseTest {
     // Events to test

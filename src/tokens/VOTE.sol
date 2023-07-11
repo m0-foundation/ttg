@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
-import { ERC20, ERC20Permit, ERC20Snapshot } from "src/ImportedContracts.sol";
+import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
-import { IVALUE, IVOTE } from "src/interfaces/ITokens.sol";
-
-import { InflationaryVotes } from "src/tokens/InflationaryVotes.sol";
+import { ERC20, ERC20Permit, ERC20Snapshot } from "../ImportedContracts.sol";
+import { InflationaryVotes } from "./InflationaryVotes.sol";
 
 /// @title VOTE token with built-in inflation
 /// @dev It relies of snapshotted balances of VALUE token holders at the moment of reset

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IAccessControl } from "test/interfaces/ImportedInterfaces.sol";
+import { ISPOGControlled } from "../../src/interfaces/ISPOGControlled.sol";
 
-import { ERC20Snapshot } from "test/ImportedContracts.sol";
+import { VALUE } from "../../src/tokens/VALUE.sol";
 
-import { ISPOGControlled } from "src/interfaces/ISPOGControlled.sol";
+import { IAccessControl } from "../interfaces/ImportedInterfaces.sol";
 
-import { VALUE } from "src/tokens/VALUE.sol";
-
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { ERC20Snapshot } from "../ImportedContracts.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract ValueTokenTest is SPOGBaseTest {
     uint256 aliceStartBalance = 50e18;

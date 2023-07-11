@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IAccessControl, IGovernor } from "test/interfaces/ImportedInterfaces.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
-import { ISPOG } from "src/interfaces/ISPOG.sol";
+import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
+import { VOTE } from "../../src/tokens/VOTE.sol";
 
-import { DualGovernor } from "src/core/governor/DualGovernor.sol";
-import { VOTE } from "src/tokens/VOTE.sol";
+import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_reset is SPOGBaseTest {
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);

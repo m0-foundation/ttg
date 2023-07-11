@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { AccessControlEnumerable } from "src/ImportedContracts.sol";
+import { ISPOGToken } from "../interfaces/ITokens.sol";
 
-import { ISPOGToken } from "src/interfaces/ITokens.sol";
+import { AccessControlEnumerable } from "../ImportedContracts.sol";
 
 abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
     bytes32 public constant override MINTER_ROLE = keccak256("MINTER_ROLE");

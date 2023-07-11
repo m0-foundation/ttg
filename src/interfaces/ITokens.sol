@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IAccessControl, IERC20, IVotes } from "src/interfaces/ImportedInterfaces.sol";
-
-import { ISPOGControlled } from "src/interfaces/ISPOGControlled.sol";
+import { IAccessControl, IERC20, IVotes } from "./ImportedInterfaces.sol";
+import { ISPOGControlled } from "./ISPOGControlled.sol";
 
 interface ISPOGToken is ISPOGControlled, IAccessControl {
     function MINTER_ROLE() external view returns (bytes32);

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165 } from "src/interfaces/ImportedInterfaces.sol";
-
-import { IProtocolConfigurator } from "src/interfaces/IProtocolConfigurator.sol";
+import { IERC165 } from "../interfaces/ImportedInterfaces.sol";
+import { IProtocolConfigurator } from "../interfaces/IProtocolConfigurator.sol";
 
 /**
  * @title ProtocolConfigurator

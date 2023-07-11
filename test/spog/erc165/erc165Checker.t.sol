@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { ERC165CheckerSPOG } from "src/periphery/ERC165CheckerSPOG.sol";
+import { ERC165CheckerSPOG } from "../../../src/periphery/ERC165CheckerSPOG.sol";
 
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { SPOGBaseTest } from "../../shared/SPOGBaseTest.t.sol";
 
 contract MockContract is ERC165CheckerSPOG {}
 

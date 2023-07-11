@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { Checkpoints, Governor, SafeCast } from "src/ImportedContracts.sol";
+import { ISPOGGovernor, IVOTE, IVALUE } from "../../interfaces/ISPOGGovernor.sol";
 
-import { ISPOGGovernor, IVOTE, IVALUE } from "src/interfaces/ISPOGGovernor.sol";
+import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 
 /// @title Governor contract to track quorum for both value and vote tokens
 /// @notice Governor adjusted to track double quorums for SPOG proposals

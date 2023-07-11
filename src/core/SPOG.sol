@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165 } from "src/interfaces/ImportedInterfaces.sol";
+import { IERC165, IERC20 } from "../interfaces/ImportedInterfaces.sol";
+import { IList } from "../interfaces/periphery/IList.sol";
+import { IProtocolConfigurator } from "../interfaces/IProtocolConfigurator.sol";
+import { ISPOG, ISPOGVault, ISPOGGovernor } from "../interfaces/ISPOG.sol";
 
-import { EnumerableMap, ERC165, SafeERC20 } from "src/ImportedContracts.sol";
-
-import { IERC20 } from "src/interfaces/ITokens.sol";
-import { IList } from "src/interfaces/periphery/IList.sol";
-import { IProtocolConfigurator } from "src/interfaces/IProtocolConfigurator.sol";
-import { ISPOG, ISPOGVault, ISPOGGovernor } from "src/interfaces/ISPOG.sol";
-
-import { ProtocolConfigurator } from "src/config/ProtocolConfigurator.sol";
+import { EnumerableMap, ERC165, SafeERC20 } from "../ImportedContracts.sol";
+import { ProtocolConfigurator } from "../config/ProtocolConfigurator.sol";
 
 /// @title SPOG
 /// @notice Contracts for governing lists and managing communal property through token voting

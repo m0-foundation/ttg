@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { ECDSA, ERC20Permit, ERC20Votes, Math, SafeCast } from "src/ImportedContracts.sol";
+import { InflationaryVotesInterface } from "../interfaces/ITokens.sol";
+import { ISPOG } from "../interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 
-import { InflationaryVotesInterface } from "src/interfaces/ITokens.sol";
-import { ISPOG } from "src/interfaces/ISPOG.sol";
-import { ISPOGGovernor } from "src/interfaces/ISPOGGovernor.sol";
-
-import { SPOGToken } from "src/tokens/SPOGToken.sol";
+import { ECDSA, ERC20Permit, ERC20Votes, Math, SafeCast } from "../ImportedContracts.sol";
+import { SPOGToken } from "./SPOGToken.sol";
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
 /// @notice Modified from OpenZeppelin https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol

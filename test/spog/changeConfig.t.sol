@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { ERC165 } from "test/ImportedContracts.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
-import { ISPOG } from "src/interfaces/ISPOG.sol";
-
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { ERC165 } from "../ImportedContracts.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);

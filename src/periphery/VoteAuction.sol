@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC20, IERC20Metadata } from "src/interfaces/ImportedInterfaces.sol";
+import { IERC20, IERC20Metadata } from "../interfaces/ImportedInterfaces.sol";
+import { IVoteAuction } from "../interfaces/periphery/IVoteAuction.sol";
 
-import { Initializable, SafeERC20 } from "src/ImportedContracts.sol";
-
-import { IVoteAuction } from "src/interfaces/periphery/IVoteAuction.sol";
+import { Initializable, SafeERC20 } from "../ImportedContracts.sol";
 
 /// @title VoteAuction
 /// @notice A contract for conducting a Dutch auction of ERC20 tokens without a price oracle

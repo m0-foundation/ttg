@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IERC165, IGovernor } from "test/interfaces/ImportedInterfaces.sol";
+import { IDualGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+import { IERC165, IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
-import { IDualGovernor } from "src/interfaces/ISPOGGovernor.sol";
-
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract DualGovernorTest is SPOGBaseTest {
     event NewVoteQuorumProposal(uint256 indexed proposalId);

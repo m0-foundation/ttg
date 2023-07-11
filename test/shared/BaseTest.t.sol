@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { Test, ERC20DecimalsMock } from "test/ImportedContracts.sol";
+import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
 
-import { IERC20 } from "test/interfaces/ImportedInterfaces.sol";
+import { Test, ERC20DecimalsMock } from "../ImportedContracts.sol";
 
 /// @title BaseTest
 /// @notice Common contract members needed across test contracts.

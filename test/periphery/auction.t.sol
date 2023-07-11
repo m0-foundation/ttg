@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { Clones, ERC20DecimalsMock } from "test/ImportedContracts.sol";
+import { IVoteAuction } from "../../src/interfaces/periphery/IVoteAuction.sol";
 
-import { IVoteAuction } from "src/interfaces/periphery/IVoteAuction.sol";
+import { VoteAuction } from "../../src/periphery/VoteAuction.sol";
 
-import { VoteAuction } from "src/periphery/VoteAuction.sol";
-
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { Clones, ERC20DecimalsMock } from "../ImportedContracts.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VoteAuctionTest is SPOGBaseTest {
     IVoteAuction public auctionImplementation;

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { ISPOG } from "src/interfaces/ISPOG.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
-import { SPOG } from "src/core/SPOG.sol";
+import { SPOG } from "../../src/core/SPOG.sol";
 
-import { SPOGBaseTest } from "test/shared/SPOGBaseTest.t.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_InitialState is SPOGBaseTest {
     uint256 _taxLowerBound = 0;

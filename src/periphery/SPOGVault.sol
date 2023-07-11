@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC20 } from "src/interfaces/ImportedInterfaces.sol";
+import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
+import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
+import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 
-import { SafeERC20 } from "src/ImportedContracts.sol";
-
-import { ISPOGGovernor } from "src/interfaces/ISPOGGovernor.sol";
-import { ISPOGVault } from "src/interfaces/periphery/ISPOGVault.sol";
+import { SafeERC20 } from "../ImportedContracts.sol";
 
 /// @title SPOGVault
 /// @notice Vault will hold SPOG assets shared pro-rata between VALUE holders.
