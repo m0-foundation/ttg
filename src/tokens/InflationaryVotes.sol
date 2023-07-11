@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { InflationaryVotesInterface } from "../interfaces/ITokens.sol";
+import { IInflationaryVotes } from "../interfaces/ITokens.sol";
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 
@@ -11,7 +11,7 @@ import { SPOGToken } from "./SPOGToken.sol";
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
 /// @notice Modified from OpenZeppelin https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
 /// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
-abstract contract InflationaryVotes is SPOGToken, ERC20Permit, InflationaryVotesInterface {
+abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVotes {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 amount;

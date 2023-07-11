@@ -10,7 +10,7 @@ interface ISPOGToken is ISPOGControlled, IAccessControl {
     function mint(address to, uint256 amount) external;
 }
 
-interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
+interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
     // Events
     event RewardsAccrued(
         address indexed account,
@@ -36,7 +36,7 @@ interface InflationaryVotesInterface is IVotes, IERC20, ISPOGToken {
     function withdrawRewards() external returns (uint256);
 }
 
-interface IVOTE is InflationaryVotesInterface {
+interface IVOTE is IInflationaryVotes {
     // Events
     event PreviousResetSupplyClaimed(address indexed account, uint256 amount);
     event ResetInitialized(uint256 indexed resetSnapshotId);
