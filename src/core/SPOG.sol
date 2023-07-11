@@ -4,7 +4,10 @@ pragma solidity 0.8.19;
 import { IERC165, IERC20 } from "../interfaces/ImportedInterfaces.sol";
 import { IList } from "../interfaces/periphery/IList.sol";
 import { IProtocolConfigurator } from "../interfaces/IProtocolConfigurator.sol";
-import { ISPOG, ISPOGVault, ISPOGGovernor } from "../interfaces/ISPOG.sol";
+import { ISPOG } from "../interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
+import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
+import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
 import { EnumerableMap, ERC165, SafeERC20 } from "../ImportedContracts.sol";
 import { ProtocolConfigurator } from "../config/ProtocolConfigurator.sol";
@@ -37,10 +40,10 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     uint256 private constant INFLATOR_SCALE = 100;
 
     /// @notice Vault for value holders assets
-    ISPOGVault public immutable vault;
+    address public immutable vault;
 
     /// @notice Cash token used for proposal fee payments
-    IERC20 public immutable cash;
+    address public immutable cash;
 
     /// @notice Fixed inflation rewards per epoch for value holders
     uint256 public immutable valueFixedInflation;
@@ -49,7 +52,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     uint256 public immutable inflator;
 
     /// @notice Governor, upgradable via `reset` by value holders
-    ISPOGGovernor public governor;
+    address public governor;
 
     /// @notice Tax value for proposal cash fee
     uint256 public tax;
@@ -66,7 +69,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
     /// @dev Modifier checks if caller is a governor address
     modifier onlyGovernance() {
-        if (msg.sender != address(governor)) revert OnlyGovernor();
+        if (msg.sender != governor) revert OnlyGovernor();
 
         _;
     }
@@ -84,12 +87,12 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (config.valueFixedInflation == 0) revert ZeroValueInflation();
 
         // Set configuration data
-        governor = ISPOGGovernor(config.governor);
+        governor = config.governor;
         // Initialize governor
-        governor.initializeSPOG(address(this));
+        ISPOGGovernor(governor).initializeSPOG(address(this));
 
-        vault = ISPOGVault(config.vault);
-        cash = IERC20(config.cash);
+        vault = config.vault;
+        cash = config.cash;
         tax = config.tax;
         taxLowerBound = config.taxLowerBound;
         taxUpperBound = config.taxUpperBound;
@@ -171,14 +174,14 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param newGovernor The address of the new governor
     function reset(address newGovernor) external onlyGovernance {
         // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
-        governor = ISPOGGovernor(payable(newGovernor));
+        governor = newGovernor;
         // Important: initialize SPOG address in the new vote governor
-        governor.initializeSPOG(address(this));
+        ISPOGGovernor(governor).initializeSPOG(address(this));
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetId = governor.value().snapshot();
-        governor.vote().reset(resetId);
+        uint256 resetId = IVALUE(ISPOGGovernor(governor).value()).snapshot();
+        IVOTE(ISPOGGovernor(governor).vote()).reset(resetId);
 
         emit ResetExecuted(newGovernor, resetId);
     }
@@ -209,13 +212,13 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     function chargeFee(address account, bytes4 /*func*/ ) external onlyGovernance returns (uint256) {
         // transfer the amount from the caller to the SPOG
         // slither-disable-next-line arbitrary-send-erc20
-        cash.safeTransferFrom(account, address(this), tax);
+        IERC20(cash).safeTransferFrom(account, address(this), tax);
         // approve amount to be sent to the vault
-        cash.approve(address(vault), tax);
+        IERC20(cash).approve(vault, tax);
 
         // deposit the amount to the vault
-        uint256 epoch = governor.currentEpoch();
-        vault.deposit(epoch, address(cash), tax);
+        uint256 epoch = ISPOGGovernor(governor).currentEpoch();
+        ISPOGVault(vault).deposit(epoch, cash, tax);
 
         emit ProposalFeeCharged(account, epoch, tax);
 

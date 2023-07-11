@@ -17,7 +17,7 @@ contract ListFactoryTest is SPOGBaseTest {
         address[] memory items = new address[](1);
         items[0] = item1;
 
-        IList list = listFactory.deploy(address(spog), "List Name", items, 0);
+        IList list = IList(listFactory.deploy(address(spog), "List Name", items, 0));
 
         assertTrue(list.contains(item1), "item1 should be in the list");
         assertTrue(list.admin() == address(spog), "spog should be the admin");
@@ -31,7 +31,7 @@ contract ListFactoryTest is SPOGBaseTest {
         address[] memory items = new address[](1);
         items[0] = item1;
 
-        IList list = listFactory.deploy(address(spog), "List Name", items, 0);
+        IList list = IList(listFactory.deploy(address(spog), "List Name", items, 0));
 
         bytes memory bytecode = listFactory.getBytecode("List Name");
 

@@ -52,7 +52,7 @@ interface IVOTE is IInflationaryVotes {
     error ResetNotInitialized();
     error NoResetTokensToClaim();
 
-    function value() external view returns (IVALUE);
+    function value() external view returns (address);
     function resetSnapshotId() external view returns (uint256);
 
     function reset(uint256 resetSnapshotId) external;

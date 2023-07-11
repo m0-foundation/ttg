@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import { IList } from "../../interfaces/periphery/IList.sol";
 import { ISPOG } from "../../interfaces/ISPOG.sol";
 import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
 import { Governor } from "../../ImportedContracts.sol";
 
@@ -91,10 +92,10 @@ contract DualGovernor is DualGovernorQuorum {
 
         spog = _spog;
         // initialize tokens
-        vote.initializeSPOG(_spog);
+        IVOTE(vote).initializeSPOG(_spog);
         // TODO: find the way to avoid mistake with initialization for reset
         // TODO: do not fail if spog address has been already initialized for value token
-        try value.initializeSPOG(_spog) {} catch {}
+        try IVALUE(value).initializeSPOG(_spog) {} catch {}
     }
 
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
@@ -155,14 +156,14 @@ contract DualGovernor is DualGovernorQuorum {
         if (targets.length != 1) revert TooManyTargets();
         address target = targets[0];
         bytes4 func = bytes4(calldatas[0]);
-        if (target != address(this) && target != address(spog)) revert InvalidTarget();
+        if (target != address(this) && target != spog) revert InvalidTarget();
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
         if (target == spog && !ISPOG(spog).isGovernedMethod(func)) revert InvalidMethod();
         // prevent proposing a list that can be changed before execution
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
             address list = _extractFuncParams(calldatas[0]);
-            if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
+            if (IList(list).admin() != spog) revert ListAdminIsNotSPOG();
         }
 
         ISPOG(spog).chargeFee(_msgSender(), func);
@@ -270,12 +271,12 @@ contract DualGovernor is DualGovernorQuorum {
 
         // calculate and mint VOTE voting power reward
         uint256 votesWeightReward = ISPOG(spog).getInflationReward(weight);
-        vote.addVotingPower(account, votesWeightReward);
+        IVOTE(vote).addVotingPower(account, votesWeightReward);
 
         // claim VALUE token reward by delegate
-        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalVotes(epochStart);
+        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / IVOTE(vote).getPastTotalVotes(epochStart);
         // TODO: make sure governor can mint here
-        // value.mint(account, valueReward);
+        // IVALUE(value).mint(account, valueReward);
 
         emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, votesWeightReward);
 

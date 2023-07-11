@@ -2,7 +2,9 @@
 pragma solidity 0.8.19;
 
 import { IList } from "../../src/interfaces/periphery/IList.sol";
-import { ISPOG, ISPOGGovernor, ISPOGVault } from "../../src/interfaces/ISPOG.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+import { ISPOGVault } from "../../src/interfaces/periphery/ISPOGVault.sol";
 import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
 
 import { List } from "../../src/periphery/List.sol";

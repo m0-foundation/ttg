@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165, IERC20 } from "./ImportedInterfaces.sol";
+import { IERC165 } from "./ImportedInterfaces.sol";
 import { IProtocolConfigurator } from "./IProtocolConfigurator.sol";
-import { ISPOGGovernor } from "./ISPOGGovernor.sol";
-import { ISPOGVault } from "./periphery/ISPOGVault.sol";
 
 interface ISPOG is IProtocolConfigurator, IERC165 {
 
@@ -41,9 +39,9 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error InvalidTaxRange();
 
     // Info functions about double governance and SPOG parameters
-    function governor() external view returns (ISPOGGovernor);
-    function vault() external view returns (ISPOGVault);
-    function cash() external view returns (IERC20);
+    function governor() external view returns (address);
+    function vault() external view returns (address);
+    function cash() external view returns (address);
     function tax() external view returns (uint256);
     function taxLowerBound() external view returns (uint256);
     function taxUpperBound() external view returns (uint256);

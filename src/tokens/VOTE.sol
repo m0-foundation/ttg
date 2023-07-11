@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
-import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
+import { IVOTE } from "../interfaces/ITokens.sol";
 
 import { ERC20, ERC20Permit, ERC20Snapshot } from "../ImportedContracts.sol";
 import { InflationaryVotes } from "./InflationaryVotes.sol";
@@ -13,7 +13,7 @@ import { InflationaryVotes } from "./InflationaryVotes.sol";
 contract VOTE is InflationaryVotes, IVOTE {
 
     /// @notice value token to take snapshot from
-    IVALUE public immutable value;
+    address public immutable value;
 
     /// @notice snapshot id at the moment of reset
     uint256 public resetSnapshotId;
@@ -30,7 +30,7 @@ contract VOTE is InflationaryVotes, IVOTE {
         ERC20(name, symbol)
         ERC20Permit(name)
     {
-        value = IVALUE(_value);
+        value = _value;
     }
 
     /// @notice SPOG initializes reset snapshot
@@ -65,7 +65,7 @@ contract VOTE is InflationaryVotes, IVOTE {
     /// @notice Returns balance of the user at the moment of reset.
     /// @dev Fails with `ERC20Snapshot: id is 0` error if reset not initialized.
     function resetBalanceOf(address account) public view returns (uint256) {
-        return ERC20Snapshot(address(value)).balanceOfAt(account, resetSnapshotId);
+        return ERC20Snapshot(value).balanceOfAt(account, resetSnapshotId);
     }
 
     /// @notice Restricts minting to address with MINTER_ROLE

@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import { IGovernor } from "./ImportedInterfaces.sol";
 import { ISPOGControlled } from "./ISPOGControlled.sol";
-import { IVOTE, IVALUE } from "./ITokens.sol";
 
 interface IDualGovernor {
 
@@ -46,8 +45,8 @@ interface IDualGovernor {
     );
 
     // Accessors for vote, value tokens and spog contract
-    function vote() external view returns (IVOTE);
-    function value() external view returns (IVALUE);
+    function vote() external view returns (address);
+    function value() external view returns (address);
 
     // Utility functions
     function isGovernedMethod(bytes4 func) external pure returns (bool);

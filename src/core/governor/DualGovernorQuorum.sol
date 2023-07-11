@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { ISPOGGovernor, IVOTE, IVALUE } from "../../interfaces/ISPOGGovernor.sol";
+import { ISPOGGovernor } from "../../interfaces/ISPOGGovernor.sol";
+import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
 import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 
@@ -13,10 +14,10 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
-    IVOTE public immutable vote;
+    address public immutable vote;
 
     /// @notice The value token of SPOG governance
-    IVALUE public immutable value;
+    address public immutable value;
 
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
@@ -42,9 +43,9 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         if (valueQuorumNumerator_ == 0) revert ZeroValueQuorumNumerator();
 
         // Set tokens and check that they are properly linked together
-        vote = IVOTE(vote_);
-        value = IVALUE(value_);
-        if (vote.value() != value) revert VoteValueMismatch();
+        vote = vote_;
+        value = value_;
+        if (IVOTE(vote).value() != value) revert VoteValueMismatch();
 
         // Set initial vote and value quorums
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
@@ -100,12 +101,12 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
 
     /// @notice Returns the vote quorum at the given timepoint
     function voteQuorum(uint256 timepoint) public view virtual returns (uint256) {
-        return (vote.getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
+        return (IVOTE(vote).getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the value quorum at the given timepoint
     function valueQuorum(uint256 timepoint) public view virtual returns (uint256) {
-        return (value.getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
+        return (IVALUE(value).getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the vote quorum at the given timepoint
@@ -157,7 +158,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         virtual
         returns (uint256)
     {
-        return _min(vote.getPastVotes(account, timepoint), vote.getVotes(account));
+        return _min(IVOTE(vote).getPastVotes(account, timepoint), IVOTE(vote).getVotes(account));
     }
 
     /// @dev Returns value votes for the account at the given timepoint
@@ -167,7 +168,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         virtual
         returns (uint256)
     {
-        return value.getPastVotes(account, timepoint);
+        return IVALUE(value).getPastVotes(account, timepoint);
     }
 
     /// @dev Returns vote votes for the account at the given timepoint
@@ -179,7 +180,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         override
         returns (uint256)
     {
-        return vote.getPastVotes(account, timepoint);
+        return IVOTE(vote).getPastVotes(account, timepoint);
     }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {

@@ -5,7 +5,7 @@ import { IInflationaryVotes } from "../interfaces/ITokens.sol";
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 
-import { ECDSA, ERC20Permit, ERC20Votes, Math, SafeCast } from "../ImportedContracts.sol";
+import { ECDSA, ERC20Permit, Math, SafeCast } from "../ImportedContracts.sol";
 import { SPOGToken } from "./SPOGToken.sol";
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
@@ -176,7 +176,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
     /// @notice Adds voting power to active delegate after voting on all proposals
     function addVotingPower(address account, uint256 amount) external {
-        address governor = address(ISPOG(spog).governor());
+        address governor = ISPOG(spog).governor();
         if (_msgSender() != governor) revert OnlyGovernor();
         _mintVotingPower(account, amount);
 
@@ -221,7 +221,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         address currentDelegate = delegates(delegator);
         uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
 
-        _delegationSwitchEpoch[delegator] = ISPOG(spog).governor().currentEpoch();
+        _delegationSwitchEpoch[delegator] = ISPOGGovernor(ISPOG(spog).governor()).currentEpoch();
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
@@ -233,7 +233,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev Called during redelegation or rewards withdrawal
     function _accrueRewards(address delegator) internal virtual {
         // calculate rewards for number of active epochs (delegate voted on all active proposals in these epochs)
-        ISPOGGovernor governor = ISPOG(spog).governor();
+        ISPOGGovernor governor = ISPOGGovernor(ISPOG(spog).governor());
         uint256 currentEpoch = governor.currentEpoch();
         // no rewards are available for epoch 0
         if (currentEpoch == 0) return;

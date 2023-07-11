@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { ISPOGGovernor } from "../ISPOGGovernor.sol";
-
 interface ISPOGVault {
 
     // Events
@@ -14,7 +12,7 @@ interface ISPOGVault {
     error EpochWithNoRewards();
     error AlreadyWithdrawn();
 
-    function governor() external returns (ISPOGGovernor);
+    function governor() external returns (address);
     function deposit(uint256 epoch, address token, uint256 amount) external;
     function withdraw(uint256[] memory epochs, address token) external returns (uint256);
     function deposits(uint256 epoch, address token) external view returns (uint256);
