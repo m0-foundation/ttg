@@ -18,6 +18,7 @@ abstract contract ERC165CheckerSPOG {
     /// @param spogAddress address to check
     modifier onlySPOGInterface(address spogAddress) {
         _checkSPOGInterface(spogAddress);
+
         _;
     }
 
@@ -26,9 +27,7 @@ abstract contract ERC165CheckerSPOG {
     }
 
     function _checkSPOGInterface(address spogAddress) internal view {
-        if (!ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId)) {
-            revert InvalidSPOGInterface();
-        }
+        if (!ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId)) revert InvalidSPOGInterface();
     }
 
 }

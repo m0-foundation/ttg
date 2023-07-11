@@ -88,6 +88,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // Set configuration data
         governor = config.governor;
+
         // Initialize governor
         ISPOGGovernor(governor).initializeSPOG(address(this));
 
@@ -107,6 +108,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // add the list to the master list
         _masterlist.set(list, inMasterList);
+
         emit ListAdded(list, IList(list).name());
     }
 
@@ -118,6 +120,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // add the address to the list
         IList(list).add(account);
+
         emit AddressAppendedToList(list, account);
     }
 
@@ -129,6 +132,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
 
         // remove the address from the list
         IList(list).remove(account);
+
         emit AddressRemovedFromList(list, account);
     }
 
@@ -153,21 +157,27 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernance {
         EmergencyType _emergencyType = EmergencyType(emergencyType);
 
+        emit EmergencyExecuted(emergencyType, callData);
+
         if (_emergencyType == EmergencyType.Remove) {
-            (address list, address account) = abi.decode(callData, (address, address));
+            ( address list, address account ) = abi.decode(callData, (address, address));
             remove(list, account);
-        } else if (_emergencyType == EmergencyType.Append) {
-            (address list, address account) = abi.decode(callData, (address, address));
-            append(list, account);
-        } else if (_emergencyType == EmergencyType.ChangeConfig) {
-            (bytes32 configName, address configAddress, bytes4 interfaceId) =
-                abi.decode(callData, (bytes32, address, bytes4));
-            super.changeConfig(configName, configAddress, interfaceId);
-        } else {
-            revert EmergencyMethodNotSupported();
+            return;
         }
 
-        emit EmergencyExecuted(emergencyType, callData);
+        if (_emergencyType == EmergencyType.Append) {
+            ( address list, address account ) = abi.decode(callData, (address, address));
+            append(list, account);
+            return;
+        }
+
+        if (_emergencyType == EmergencyType.ChangeConfig) {
+            ( bytes32 configName, address configAddress, bytes4 interfaceId ) = abi.decode(callData, (bytes32, address, bytes4));
+            super.changeConfig(configName, configAddress, interfaceId);
+            return;
+        }
+
+        revert EmergencyMethodNotSupported();
     }
 
     /// @notice Reset current governor, special value governance method
@@ -175,6 +185,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     function reset(address newGovernor) external onlyGovernance {
         // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
         governor = newGovernor;
+
         // Important: initialize SPOG address in the new vote governor
         ISPOGGovernor(governor).initializeSPOG(address(this));
 
@@ -192,6 +203,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (newTax < taxLowerBound || newTax > taxUpperBound) revert TaxOutOfRange();
 
         emit TaxChanged(tax, newTax);
+
         tax = newTax;
     }
 
@@ -213,6 +225,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         // transfer the amount from the caller to the SPOG
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(cash).safeTransferFrom(account, address(this), tax);
+
         // approve amount to be sent to the vault
         IERC20(cash).approve(vault, tax);
 
@@ -237,16 +250,15 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @return Whether the function is supported by governance
     function isGovernedMethod(bytes4 selector) external pure returns (bool) {
         /// @dev ordered by frequency of usage
-        if (selector == this.append.selector) return true;
-        if (selector == this.addList.selector) return true;
-        if (selector == this.changeConfig.selector) return true;
-        if (selector == this.remove.selector) return true;
-        if (selector == this.changeTax.selector) return true;
-        if (selector == this.changeTaxRange.selector) return true;
-        if (selector == this.emergency.selector) return true;
-        if (selector == this.reset.selector) return true;
-
-        return false;
+        return
+            selector == this.append.selector ||
+            selector == this.addList.selector ||
+            selector == this.changeConfig.selector ||
+            selector == this.remove.selector ||
+            selector == this.changeTax.selector ||
+            selector == this.changeTaxRange.selector ||
+            selector == this.emergency.selector ||
+            selector == this.reset.selector;
     }
 
     /// @dev check SPOG interface support

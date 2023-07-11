@@ -22,6 +22,7 @@ abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
         if (spog != address(0)) revert AlreadyInitialized();
 
         spog = _spog;
+
         _setupRole(MINTER_ROLE, _spog);
     }
 

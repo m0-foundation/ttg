@@ -77,6 +77,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         // Set governor configuration
         _votingPeriod = votingPeriod_;
+
         // TODO: should setting SPOG be start of counting epochs ?
         _start = block.number;
     }
@@ -87,12 +88,13 @@ contract DualGovernor is DualGovernorQuorum {
     function initializeSPOG(address _spog) external {
         if (spog != address(0)) revert AlreadyInitialized();
         if (_spog == address(0)) revert ZeroSPOGAddress();
-        // @dev should never happen, precaution
-        if (_start == 0) revert ZeroStart();
+        if (_start == 0) revert ZeroStart();  // should never happen, precaution
 
         spog = _spog;
+
         // initialize tokens
         IVOTE(vote).initializeSPOG(_spog);
+
         // TODO: find the way to avoid mistake with initialization for reset
         // TODO: do not fail if spog address has been already initialized for value token
         try IVALUE(value).initializeSPOG(_spog) {} catch {}
@@ -116,8 +118,9 @@ contract DualGovernor is DualGovernorQuorum {
     /// @return type of proposals
     function _getProposalType(bytes4 func) internal view virtual returns (ProposalType) {
         if (
-            func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector
-                || func == ISPOG.changeTaxRange.selector
+            func == this.updateVoteQuorumNumerator.selector ||
+            func == this.updateValueQuorumNumerator.selector ||
+            func == ISPOG.changeTaxRange.selector
         ) {
             return ProposalType.Double;
         }
@@ -154,15 +157,19 @@ contract DualGovernor is DualGovernorQuorum {
         // Sanity checks
         if (values[0] != 0) revert InvalidValue();
         if (targets.length != 1) revert TooManyTargets();
+
         address target = targets[0];
         bytes4 func = bytes4(calldatas[0]);
+
         if (target != address(this) && target != spog) revert InvalidTarget();
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
         if (target == spog && !ISPOG(spog).isGovernedMethod(func)) revert InvalidMethod();
+
         // prevent proposing a list that can be changed before execution
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
             address list = _extractFuncParams(calldatas[0]);
+
             if (IList(list).admin() != spog) revert ListAdminIsNotSPOG();
         }
 
@@ -192,6 +199,7 @@ contract DualGovernor is DualGovernorQuorum {
         _proposalTypes[proposalId] = proposalType;
 
         emit Proposal(nextEpoch, proposalId, proposalType);
+
         return proposalId;
     }
 
@@ -225,10 +233,13 @@ contract DualGovernor is DualGovernorQuorum {
         require(state(proposalId) == ProposalState.Active, "DualGovernor: vote not currently active");
 
         ProposalType proposalType = _proposalTypes[proposalId];
+
         uint256 snapshot = proposalSnapshot(proposalId);
+
         uint256 voteWeight = (proposalType == ProposalType.Vote || proposalType == ProposalType.Double)
             ? _getVoteVotes(account, snapshot, params)
             : 0;
+
         uint256 valueWeight = (proposalType == ProposalType.Value || proposalType == ProposalType.Double)
             ? _getValueVotes(account, snapshot, params)
             : 0;
@@ -305,6 +316,7 @@ contract DualGovernor is DualGovernorQuorum {
 
     function _hasFinishedVoting(EpochBasic storage epochBasic, address account) internal view returns (bool) {
         if (account == address(0)) return false;
+
         return epochBasic.withRewards && epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
 
@@ -330,9 +342,7 @@ contract DualGovernor is DualGovernorQuorum {
             uint256 expires = deadline + _votingPeriod;
 
             // Set state to Expired if it can no longer be executed.
-            if (expires <= block.number) {
-                return ProposalState.Expired;
-            }
+            if (expires <= block.number) return ProposalState.Expired;
         }
 
         return status;
@@ -403,9 +413,8 @@ contract DualGovernor is DualGovernorQuorum {
         if (proposalType == ProposalType.Double) {
             return voteQuorum_ <= proposalVote.voteYesVotes && valueQuorum_ <= proposalVote.valueYesVotes;
         }
-        if (proposalType == ProposalType.Value) {
-            return valueQuorum_ <= proposalVote.valueYesVotes;
-        }
+
+        if (proposalType == ProposalType.Value) return valueQuorum_ <= proposalVote.valueYesVotes;
 
         return voteQuorum_ <= proposalVote.voteYesVotes;
     }

@@ -42,6 +42,7 @@ contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
     /// @return The snapshot id
     function snapshot() external returns (uint256) {
         if (msg.sender != spog) revert CallerIsNotSPOG();
+
         return _snapshot();
     }
 

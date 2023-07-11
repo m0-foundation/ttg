@@ -17,7 +17,6 @@ contract List is ERC165CheckerSPOG, IList {
     // constructor sets the admin address
     constructor(string memory name_) {
         _name = name_;
-
         _admin = msg.sender;
     }
 
@@ -37,9 +36,7 @@ contract List is ERC165CheckerSPOG, IList {
         if (msg.sender != _admin) revert NotAdmin();
 
         // require that the address is not already on the list
-        if (this.contains(_address)) {
-            revert AddressIsAlreadyInList();
-        }
+        if (this.contains(_address)) revert AddressIsAlreadyInList();
 
         // add the address to the list
         list[_address] = true;
@@ -52,9 +49,7 @@ contract List is ERC165CheckerSPOG, IList {
         if (msg.sender != _admin) revert NotAdmin();
 
         // require that the address is on the list
-        if (!this.contains(_address)) {
-            revert AddressIsNotInList();
-        }
+        if (!this.contains(_address)) revert AddressIsNotInList();
 
         // remove the address from the list
         list[_address] = false;

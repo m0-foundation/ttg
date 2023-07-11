@@ -25,11 +25,7 @@ contract VOTE is InflationaryVotes, IVOTE {
     /// @param name Name of the token
     /// @param symbol Symbol of the token
     /// @param _value Address of the VALUE token for reset
-    constructor(string memory name, string memory symbol, address _value)
-        InflationaryVotes()
-        ERC20(name, symbol)
-        ERC20Permit(name)
-    {
+    constructor(string memory name, string memory symbol, address _value) InflationaryVotes() ERC20(name, symbol) ERC20Permit(name) {
         value = _value;
     }
 
@@ -57,6 +53,7 @@ contract VOTE is InflationaryVotes, IVOTE {
 
         // TODO: Check if we want to revert or silently fail by not minting any tokens
         if (claimBalance == 0) revert NoResetTokensToClaim();
+
         _mint(msg.sender, claimBalance);
 
         emit PreviousResetSupplyClaimed(msg.sender, claimBalance);

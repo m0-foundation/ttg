@@ -50,12 +50,7 @@ contract VoteAuction is IVoteAuction, Initializable {
     /// @param _paymentToken The address of the ERC20 token used as payment
     /// @param _auctionDuration The duration of the auction in seconds
     /// @param _auctionTokenAmount The amount of tokens to be auctioned
-    function initialize(
-        address _auctionToken,
-        address _paymentToken,
-        uint256 _auctionDuration,
-        uint256 _auctionTokenAmount
-    ) public initializer {
+    function initialize(address _auctionToken, address _paymentToken, uint256 _auctionDuration, uint256 _auctionTokenAmount) public initializer {
         auctionToken = _auctionToken;
         paymentToken = _paymentToken;
         auctionDuration = _auctionDuration;
@@ -63,24 +58,24 @@ contract VoteAuction is IVoteAuction, Initializable {
         ceilingPrice = IERC20(paymentToken).totalSupply();
         floorPrice = 1;
         vault = msg.sender;
+
         if (initialized) revert AlreadyInitialized();
+
         initialized = true;
+
         IERC20(auctionToken).safeTransferFrom(msg.sender, address(this), _auctionTokenAmount);
+
         auctionTokenAmount = _auctionTokenAmount;
-        ceilingPrice =
-            IERC20(paymentToken).totalSupply() / (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
+
+        ceilingPrice = IERC20(paymentToken).totalSupply() / (auctionTokenAmount / 10 ** IERC20Metadata(auctionToken).decimals());
     }
 
     /// @notice Returns the current price of the auction
     /// @return The current price per token in payment tokens
     function getCurrentPrice() public view returns (uint256) {
-        if (auctionTokenAmount - amountSold == 0) {
-            return lastBuyPrice;
-        }
+        if (auctionTokenAmount - amountSold == 0) return lastBuyPrice;
 
-        if (block.timestamp >= auctionEndTime) {
-            return floorPrice;
-        }
+        if (block.timestamp >= auctionEndTime) return floorPrice;
 
         uint256 timePassed = block.timestamp - (auctionEndTime - auctionDuration);
         uint256 priceDifference = ceilingPrice - floorPrice;
@@ -92,12 +87,8 @@ contract VoteAuction is IVoteAuction, Initializable {
 
         uint256 price = ceilingPrice - priceDrop;
 
-        uint256 i;
-        for (i; i < CURVE_STEPS;) {
+        for (uint256 i; i < CURVE_STEPS; ++i) {
             price = price * percentIncomplete / 1e18;
-            unchecked {
-                ++i;
-            }
         }
 
         return price;
@@ -106,20 +97,14 @@ contract VoteAuction is IVoteAuction, Initializable {
     /// @notice Returns the current price of the auction
     /// @param amountToBuy The amount of tokens to buy
     function buyTokens(uint256 amountToBuy) public {
-        if (block.timestamp > auctionEndTime) {
-            revert AuctionEnded();
-        }
+        if (block.timestamp > auctionEndTime) revert AuctionEnded();
 
         uint256 currentPrice = getCurrentPrice();
         uint256 amountToPay = amountToBuy * currentPrice / 10 ** IERC20Metadata(auctionToken).decimals();
 
-        if (auctionTokenAmount - amountSold < amountToBuy) {
-            revert AuctionBalanceInsufficient();
-        }
+        if (auctionTokenAmount - amountSold < amountToBuy) revert AuctionBalanceInsufficient();
 
-        unchecked {
-            amountSold = amountSold + amountToBuy;
-        }
+        amountSold = amountSold + amountToBuy;
 
         // Transfer the winning bid amount to the vault
         IERC20(paymentToken).safeTransferFrom(msg.sender, vault, amountToPay);
@@ -134,9 +119,7 @@ contract VoteAuction is IVoteAuction, Initializable {
 
     /// @notice Withdraws the unsold auction tokens
     function withdraw() public {
-        if (block.timestamp < auctionEndTime) {
-            revert AuctionNotEnded();
-        }
+        if (block.timestamp < auctionEndTime) revert AuctionNotEnded();
 
         uint256 balance = IERC20(auctionToken).balanceOf(address(this));
 

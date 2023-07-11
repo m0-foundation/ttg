@@ -15,22 +15,15 @@ contract ProtocolConfigurator is IProtocolConfigurator {
     mapping(bytes32 => ConfigContract) private config;
 
     function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public virtual {
-        if (configName == bytes32(0)) {
-            revert ConfigNameCannotBeZero();
-        }
+        if (configName == bytes32(0)) revert ConfigNameCannotBeZero();
 
         // check that the contract supports the interfaceId provided
         // Note: This also protect against address(0)
-        if (!IERC165(configAddress).supportsInterface(interfaceId)) {
-            revert ConfigERC165Unsupported();
-        }
+        if (!IERC165(configAddress).supportsInterface(interfaceId)) revert ConfigERC165Unsupported();
 
-        //check if named config already exists
-        if (config[configName].contractAddress != address(0)) {
-            //if it exists, make sure the new contract interface matches
-            if (config[configName].interfaceId != interfaceId) {
-                revert ConfigInterfaceIdMismatch();
-            }
+        // check if named config already exists, and if so, make sure the new contract address matches
+        if (config[configName].contractAddress != address(0) && config[configName].interfaceId != interfaceId) {
+            revert ConfigInterfaceIdMismatch();
         }
 
         config[configName] = ConfigContract(configAddress, interfaceId);

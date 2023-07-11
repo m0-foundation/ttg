@@ -18,8 +18,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         uint224 amount;
     }
 
-    bytes32 private constant _DELEGATION_TYPEHASH =
-        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
+    bytes32 private constant _DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address => address) private _delegates;
     mapping(address => uint256) private _delegationSwitchEpoch;
@@ -51,6 +50,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev `blockNumber` must have been already mined
     function getPastVotes(address account, uint256 blockNumber) public view virtual returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();
+
         return _checkpointsLookup(_votesCheckpoints[account], blockNumber);
     }
 
@@ -60,6 +60,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev `blockNumber` must have been already mined
     function getPastTotalVotes(uint256 blockNumber) public view virtual returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();
+
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
 
@@ -81,6 +82,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev `blockNumber` must have been already mined
     function getPastTotalSupply(uint256 blockNumber) public view virtual returns (uint256) {
         if (blockNumber >= block.number) revert InvalidFutureLookup();
+
         return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
     }
 
@@ -105,6 +107,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
         if (length > 5) {
             uint256 mid = length - Math.sqrt(length);
+
             if (_unsafeAccess(ckpts, mid).fromBlock > blockNumber) {
                 high = mid;
             } else {
@@ -114,6 +117,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
         while (low < high) {
             uint256 mid = Math.average(low, high);
+
             if (_unsafeAccess(ckpts, mid).fromBlock > blockNumber) {
                 high = mid;
             } else {
@@ -132,25 +136,35 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @notice Delegates votes from signer to `delegatee`
     function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) public virtual {
         if (block.timestamp > expiry) revert VotesExpiredSignature(expiry);
+
         address signer = ECDSA.recover(
-            _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))), v, r, s
+            _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
+            v,
+            r,
+            s
         );
+
         require(nonce == _useNonce(signer), "InflationaryVotes: invalid nonce");
+
         _delegate(signer, delegatee);
     }
 
     /// @notice Withdraw rewards for all the epochs where delegate was active
     function withdrawRewards() external returns (uint256) {
         address sender = _msgSender();
+
         _accrueRewards(sender);
 
         uint256 reward = _voteRewards[sender];
+
         if (reward == 0) return 0;
 
         _voteRewards[sender] = 0;
 
         address currentDelegate = delegates(sender);
+
         _mint(sender, reward);
+
         /// prevents double counting of current delegate's voting power
         _burnVotingPower(currentDelegate, reward);
 
@@ -167,6 +181,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev Snapshots the totalSupply and total votes after it has been increased.
     function _mint(address account, uint256 amount) internal virtual override {
         super._mint(account, amount);
+
         if (totalVotes() > _maxSupply()) revert TotalVotesOverflow();
         if (totalSupply() > _maxSupply()) revert TotalSupplyOverflow();
 
@@ -177,7 +192,9 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @notice Adds voting power to active delegate after voting on all proposals
     function addVotingPower(address account, uint256 amount) external {
         address governor = ISPOG(spog).governor();
+
         if (_msgSender() != governor) revert OnlyGovernor();
+
         _mintVotingPower(account, amount);
 
         emit VotingPowerAdded(account, governor, amount);
@@ -186,6 +203,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev Adds voting power without changing token balances
     function _mintVotingPower(address account, uint256 amount) internal virtual {
         _writeCheckpoint(_totalVotesCheckpoints, _add, amount);
+
         if (totalVotes() > _maxSupply()) revert TotalVotesOverflow();
 
         _moveVotingPower(address(0), account, amount);
@@ -235,28 +253,28 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         // calculate rewards for number of active epochs (delegate voted on all active proposals in these epochs)
         ISPOGGovernor governor = ISPOGGovernor(ISPOG(spog).governor());
         uint256 currentEpoch = governor.currentEpoch();
+
         // no rewards are available for epoch 0
         if (currentEpoch == 0) return;
+
         address currentDelegate = delegates(delegator);
 
         uint256 voteReward;
         // uint256 valueReward;
         uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
+
         // TODO make cycle looping safe
-        for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch;) {
-            if (epoch != _delegationSwitchEpoch[delegator] && governor.hasFinishedVoting(epoch, currentDelegate)) {
-                uint256 epochStart = governor.startOf(epoch);
-                uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
-                uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
-                uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
-                uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
-                voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
-                // valueReward +=
-                //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
-            }
-            unchecked {
-                ++epoch;
-            }
+        for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch; ++epoch) {
+            if (epoch == _delegationSwitchEpoch[delegator] || !governor.hasFinishedVoting(epoch, currentDelegate)) continue;
+
+            uint256 epochStart = governor.startOf(epoch);
+            uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
+            uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
+            uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
+            uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
+            voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
+            // valueReward +=
+            //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
         }
 
         _voteRewards[delegator] += voteReward;
@@ -272,29 +290,29 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     }
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {
-        if (src != dst && amount > 0) {
-            if (src != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[src], _subtract, amount);
-                emit DelegateVotesChanged(src, oldWeight, newWeight);
-            }
+        if (src == dst || amount == 0) return;
 
-            if (dst != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[dst], _add, amount);
-                emit DelegateVotesChanged(dst, oldWeight, newWeight);
-            }
+        if (src != address(0)) {
+            ( uint256 oldWeight, uint256 newWeight ) = _writeCheckpoint(_votesCheckpoints[src], _subtract, amount);
+            emit DelegateVotesChanged(src, oldWeight, newWeight);
+        }
+
+        if (dst != address(0)) {
+            ( uint256 oldWeight, uint256 newWeight ) = _writeCheckpoint(_votesCheckpoints[dst], _add, amount);
+            emit DelegateVotesChanged(dst, oldWeight, newWeight);
         }
     }
 
     /// @dev Save balances sna when tokens are transferred.
     function _updateBalanceCheckpoints(address src, address dst, uint256 amount) private {
-        if (src != dst && amount > 0) {
-            if (src != address(0)) {
-                _writeCheckpoint(_balancesCheckpoints[src], _subtract, amount);
-            }
+        if (src == dst || amount == 0) return;
 
-            if (dst != address(0)) {
-                _writeCheckpoint(_balancesCheckpoints[dst], _add, amount);
-            }
+        if (src != address(0)) {
+            _writeCheckpoint(_balancesCheckpoints[src], _subtract, amount);
+        }
+
+        if (dst != address(0)) {
+            _writeCheckpoint(_balancesCheckpoints[dst], _add, amount);
         }
     }
 

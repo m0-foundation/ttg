@@ -19,6 +19,7 @@ contract SPOGVault is ISPOGVault {
 
     /// @dev epoch => token => account => bool
     mapping(uint256 => mapping(address => mapping(address => bool))) public alreadyWithdrawn;
+
     /// @dev epoch => token => amount
     mapping(uint256 => mapping(address => uint256)) public deposits;
 
@@ -35,9 +36,11 @@ contract SPOGVault is ISPOGVault {
     function deposit(uint256 epoch, address token, uint256 amount) external virtual {
         // TODO: should we allow to deposit only for next epoch ? or current and next epoch is good ?
         uint256 currentEpoch = ISPOGGovernor(governor).currentEpoch();
+
         if (epoch < currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
         deposits[epoch][token] += amount;
+
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         emit EpochRewardsDeposited(epoch, token, amount);
@@ -51,14 +54,13 @@ contract SPOGVault is ISPOGVault {
         uint256 length = epochs.length;
         uint256 currentEpoch = ISPOGGovernor(governor).currentEpoch();
         uint256 totalRewards;
-        for (uint256 i; i < length;) {
+
+        for (uint256 i; i < length; ++i) {
             uint256 epoch = epochs[i];
+
             if (epoch > currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
             totalRewards += _withdraw(epoch, msg.sender, token);
-            unchecked {
-                ++i;
-            }
         }
 
         IERC20(token).safeTransfer(msg.sender, totalRewards);

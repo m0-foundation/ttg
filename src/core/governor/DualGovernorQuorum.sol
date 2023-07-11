@@ -45,6 +45,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
         // Set tokens and check that they are properly linked together
         vote = vote_;
         value = value_;
+
         if (IVOTE(vote).value() != value) revert VoteValueMismatch();
 
         // Set initial vote and value quorums
@@ -69,9 +70,8 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
 
         // Optimistic search, check the latest checkpoint
         Checkpoints.Checkpoint224 memory latest = _voteQuorumNumeratorHistory._checkpoints[length - 1];
-        if (latest._key <= timepoint) {
-            return latest._value;
-        }
+
+        if (latest._key <= timepoint) return latest._value;
 
         // Otherwise, do the binary search
         // TODO: `upperLookupRecent` vs `upperLookup`, upgrade to use the latest OZ libs
@@ -85,9 +85,8 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
 
         // Optimistic search, check the latest checkpoint
         Checkpoints.Checkpoint224 memory latest = _valueQuorumNumeratorHistory._checkpoints[length - 1];
-        if (latest._key <= timepoint) {
-            return latest._value;
-        }
+
+        if (latest._key <= timepoint) return latest._value;
 
         // Otherwise, do the binary search
         // TODO: `upperLookupRecent` vs `upperLookup`, upgrade to use the latest OZ libs
