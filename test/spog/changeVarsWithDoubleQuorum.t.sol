@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_change is SPOGBaseTest {
     event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ISPOGGovernor.ProposalType indexed proposalType);
@@ -17,10 +22,9 @@ contract SPOG_change is SPOGBaseTest {
         charlie = createUser("charlie");
     }
 
-    function proposeTaxRangeChange(string memory proposalDescription)
-        private
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function proposeTaxRangeChange(
+        string memory proposalDescription
+    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -197,7 +201,7 @@ contract SPOG_change is SPOGBaseTest {
         uint256 newTaxLowerBound = spog.taxLowerBound();
         uint256 newTaxUpperBound = spog.taxUpperBound();
 
-        // assert that tax hange has been changed
+        // assert that tax range has been changed
         assertTrue(newTaxLowerBound == 10e18, "Tax range lower bound has not changed");
         assertTrue(newTaxUpperBound == 12e18, "Tax range upper bound has not changed");
     }

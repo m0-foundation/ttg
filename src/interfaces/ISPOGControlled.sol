@@ -7,5 +7,6 @@ interface ISPOGControlled {
     error CallerIsNotSPOG();
 
     function spog() external view returns (address);
+
     function initializeSPOG(address spog) external;
 }

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "script/shared/Base.s.sol";
-import "script/SPOGDeploy.s.sol";
+import { IVALUE, IVOTE } from "../src/interfaces/ITokens.sol";
+
+import { console, ERC20Mock } from "./ImportedContracts.sol";
+import { BaseScript } from "./shared/Base.s.sol";
+import { SPOGDeployScript } from "./SPOGDeploy.s.sol";
 
 contract LocalTestDeployScript is BaseScript {
     SPOGDeployScript public spogDeployScript;
@@ -19,12 +22,12 @@ contract LocalTestDeployScript is BaseScript {
         vm.startBroadcast(deployer);
         // set up users
         string memory mnemonic = vm.envString("MNEMONIC");
-        (address user1,) = deriveRememberKey(mnemonic, 1);
-        (address user2,) = deriveRememberKey(mnemonic, 2);
+        (address user1, ) = deriveRememberKey(mnemonic, 1);
+        (address user2, ) = deriveRememberKey(mnemonic, 2);
 
         address[2] memory users = [user1, user2];
         // mint tokens to users
-        uint256 amount = 100000e18; // 100K
+        uint256 amount = 100_000e18; // 100K
 
         for (uint256 i = 0; i < users.length; i++) {
             ERC20Mock(spogDeployScript.cash()).mint(users[i], amount);

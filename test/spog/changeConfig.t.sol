@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
+import { ERC165 } from "../ImportedContracts.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
@@ -10,6 +12,7 @@ interface IMockConfig {
 
 interface IMockConfigV2 {
     function someValue() external view returns (uint256);
+
     function someNewAddress() external view returns (address);
 }
 
@@ -30,8 +33,10 @@ contract MockConfigWithERC165v2 is IMockConfigV2, ERC165 {
     address public immutable someNewAddress = address(0x123);
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IMockConfigV2).interfaceId || interfaceId == type(IMockConfig).interfaceId
-            || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IMockConfigV2).interfaceId ||
+            interfaceId == type(IMockConfig).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
 
@@ -44,14 +49,19 @@ contract SPOG_ChangeConfig is SPOGBaseTest {
         ISPOG(spog).changeConfig(keccak256("MockConfigNoERC165"), address(badConfig), type(IMockConfig).interfaceId);
     }
 
-    function test_Revert_WhenContractDoesSupportERC165_ButInterfaceDoesntMatch() public {
+    function test_Revert_WhenContractDoesSupportERC165_ButInterfaceDoesNotMatch() public {
         MockConfigWithERC165 badConfig = new MockConfigWithERC165();
 
         bytes memory expectedError = abi.encodeWithSignature("ConfigERC165Unsupported()");
 
         vm.expectRevert(expectedError);
         vm.prank(address(governor));
-        ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(badConfig), type(IMockConfigV2).interfaceId);
+
+        ISPOG(spog).changeConfig(
+            keccak256("MockConfigWithERC165"),
+            address(badConfig),
+            type(IMockConfigV2).interfaceId
+        );
     }
 
     function test_Revert_WhenNewContractDoesNotMatchExistingContract() public {
@@ -73,7 +83,7 @@ contract SPOG_ChangeConfig is SPOGBaseTest {
         vm.prank(address(governor));
         ISPOG(spog).changeConfig(keccak256("MockConfigWithERC165"), address(config), type(IMockConfig).interfaceId);
 
-        (address configAddress,) = ISPOG(spog).getConfig(keccak256("MockConfigWithERC165"));
+        (address configAddress, ) = ISPOG(spog).getConfig(keccak256("MockConfigWithERC165"));
         assertTrue(configAddress == address(config), "Config not set");
     }
 }

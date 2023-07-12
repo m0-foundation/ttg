@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+import { IList } from "../../src/interfaces/periphery/IList.sol";
+
+import { List } from "../../src/periphery/List.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_AppendAddressToList is SPOGBaseTest {
     address internal listToAddAddressTo;
@@ -40,8 +45,12 @@ contract SPOG_AppendAddressToList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);

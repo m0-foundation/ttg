@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "forge-std/Test.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/mocks/ERC20DecimalsMock.sol";
+import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
+
+import { Test, ERC20DecimalsMock } from "../ImportedContracts.sol";
 
 /// @title BaseTest
 /// @notice Common contract members needed across test contracts.
 abstract contract BaseTest is Test {
-    /*//////////////////////////////////////////////////////////////////////////
-                                       EVENTS
-    //////////////////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** EVENTS                                                                                                     ***/
+    /******************************************************************************************************************/
 
     event Log(string err);
     event LogAddress(address value);
@@ -39,32 +39,32 @@ abstract contract BaseTest is Test {
     event LogNamedUint256(string key, uint256 value);
     event LogNamedArray(string key, IERC20[] value);
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                     CONSTANTS
-    //////////////////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** CONSTANTS                                                                                                  ***/
+    /******************************************************************************************************************/
 
     uint256 internal constant ONE_MILLION_DAI = 1_000_000e18;
     uint256 internal constant ONE_MILLION_USDC = 1_000_000e6;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                 TESTING CONTRACTS
-    //////////////////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** TESTING CONTRACTS                                                                                          ***/
+    /******************************************************************************************************************/
 
     ERC20DecimalsMock internal dai = new ERC20DecimalsMock("Dai Stablecoin", "DAI", 18);
     ERC20DecimalsMock internal usdc = new ERC20DecimalsMock("USD Coin", "USDC", 6);
 
-    /*//////////////////////////////////////////////////////////////////////////
-                            INTERNAL CONSTANT FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** INTERNAL CONSTANT FUNCTIONS                                                                                ***/
+    /******************************************************************************************************************/
 
     /// @dev Helper function that multiplies the `amount` by `10^decimals` and returns a `uint256.`
     function bn(uint256 amount, uint256 decimals) internal pure returns (uint256 result) {
         result = amount * 10 ** decimals;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                          INTERNAL NON-CONSTANT FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** INTERNAL NON-CONSTANT FUNCTIONS                                                                            ***/
+    /******************************************************************************************************************/
 
     /// @dev Helper function to compare two `IERC20` arrays.
     function assertEq(IERC20[] memory a, IERC20[] memory b) internal {
@@ -88,14 +88,14 @@ abstract contract BaseTest is Test {
     /// and 1 million non-compliant tokens.
     function createUser(string memory name) internal returns (address payable addr) {
         addr = payable(makeAddr(name));
-        vm.deal({account: addr, newBalance: 1000 ether});
-        dai.mint({account: addr, amount: ONE_MILLION_DAI});
-        usdc.mint({account: addr, amount: ONE_MILLION_USDC});
+        vm.deal({ account: addr, newBalance: 1000 ether });
+        dai.mint({ account: addr, amount: ONE_MILLION_DAI });
+        usdc.mint({ account: addr, amount: ONE_MILLION_USDC });
     }
 
     /// @dev Expects an event to be emitted by checking all three topics and the data. As mentioned in the Foundry
     /// Book, the extra `true` arguments don't hurt.
     function expectEmit() internal {
-        vm.expectEmit({checkTopic1: true, checkTopic2: true, checkTopic3: true, checkData: true});
+        vm.expectEmit({ checkTopic1: true, checkTopic2: true, checkTopic3: true, checkData: true });
     }
 }

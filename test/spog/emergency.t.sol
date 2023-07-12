@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
+import { ERC165 } from "../ImportedContracts.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
     function someValue() external view returns (uint256);
@@ -48,11 +53,17 @@ contract SPOG_emergency is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
+
         calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Remove), callData);
+
         string memory description = "Emergency remove of merchant";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         cash.approve(address(spog), tax);
 
@@ -82,11 +93,18 @@ contract SPOG_emergency is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
+
         calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Append), callData);
+
         string memory description = "Emergency add of merchant";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
         cash.approve(address(spog), tax);
 
         // TODO: Check that `NewEmergencyProposal` event is emitted
@@ -112,12 +130,21 @@ contract SPOG_emergency is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] =
-            abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.ChangeConfig), callData);
+
+        calldatas[0] = abi.encodeWithSignature(
+            "emergency(uint8,bytes)",
+            uint8(ISPOG.EmergencyType.ChangeConfig),
+            callData
+        );
+
         string memory description = "Emergency change config";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // emergency propose, tax price
         cash.approve(address(spog), tax);
@@ -386,7 +413,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that config was changed
-        (address a,) = spog.getConfig(keccak256("Fake Name"));
+        (address a, ) = spog.getConfig(keccak256("Fake Name"));
         assertEq(a, configAddress, "Config address did not match");
     }
 
@@ -419,7 +446,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that config was changed
-        (address a,) = spog.getConfig(keccak256("Fake Name"));
+        (address a, ) = spog.getConfig(keccak256("Fake Name"));
         assertEq(a, configAddress, "Config address did not match");
     }
 }

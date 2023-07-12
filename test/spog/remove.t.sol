@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { IList } from "../../src/interfaces/periphery/IList.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_RemoveAddressFromList is SPOGBaseTest {
     address internal listToRemoveAddressFrom;
@@ -38,8 +41,12 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("remove(address,address)", listToRemoveAddressFrom, addressToRemove);
         string memory description = "Remove address from a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);

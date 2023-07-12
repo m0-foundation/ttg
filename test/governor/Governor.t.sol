@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { IDualGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+import { IERC165, IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract DualGovernorTest is SPOGBaseTest {
     event NewVoteQuorumProposal(uint256 indexed proposalId);
@@ -35,7 +38,7 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanOnlyVoteOnProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
 
         // vote balance of voter valid for voting
         uint256 voteBalance = vote.balanceOf(address(this));
@@ -45,7 +48,10 @@ contract DualGovernorTest is SPOGBaseTest {
         governor.castVote(proposalId, yesVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Pending,
+            "Proposal is not in an pending state"
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -62,8 +68,8 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
         // Proposal 1 and 2
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Another new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Another new list to spog");
 
         // vote balance of voter
         uint256 voteBalance = vote.getVotes(address(this));
@@ -76,10 +82,14 @@ contract DualGovernorTest is SPOGBaseTest {
         governor.castVote(proposalId2, noVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Pending,
+            "Proposal is not in an pending state"
+        );
 
         assertTrue(
-            governor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal2 is not in an pending state"
+            governor.state(proposalId2) == IGovernor.ProposalState.Pending,
+            "Proposal2 is not in an pending state"
         );
 
         // fast forward to an active voting period
@@ -102,7 +112,7 @@ contract DualGovernorTest is SPOGBaseTest {
         // Proposal 3
 
         // Add another proposal and voting can only happen after voting delay
-        (uint256 proposalId3,,,,) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+        (uint256 proposalId3, , , , ) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // vote balance of voter before casting vote on proposal 3
         uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
@@ -111,7 +121,8 @@ contract DualGovernorTest is SPOGBaseTest {
         governor.castVote(proposalId3, noVote);
 
         assertTrue(
-            governor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal3 is not in an pending state"
+            governor.state(proposalId3) == IGovernor.ProposalState.Pending,
+            "Proposal3 is not in an pending state"
         );
 
         // fast forward to an active voting period
@@ -155,8 +166,8 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanVoteOnMultipleProposals() public {
         // propose adding a new list to spog
-        (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2,,,,) = proposeAddingNewListToSpog("Add another new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Add another new list to spog");
 
         // vote balance of voter
         uint256 voteBalance = vote.balanceOf(address(this));
@@ -296,8 +307,12 @@ contract DualGovernorTest is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
         string memory description = "Append address to a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // create proposal
         cash.approve(address(spog), deployScript.tax());
@@ -318,7 +333,11 @@ contract DualGovernorTest is SPOGBaseTest {
         // fast forward to next voting period
         // Note: No extra +1 here.
         vm.roll(governor.startOf(governor.currentEpoch() + 1));
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Proposal is not in an expired state");
+
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Expired,
+            "Proposal is not in an expired state"
+        );
 
         // execute proposal
         vm.expectRevert("Governor: proposal not successful");

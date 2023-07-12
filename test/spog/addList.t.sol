@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
-import "test/shared/SPOGMock.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
+import { List } from "../../src/periphery/List.sol";
+
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
+import { SPOGMock } from "../shared/SPOGMock.sol";
 
 contract SPOG_AddNewList is SPOGBaseTest {
     // Events to test
@@ -57,8 +63,12 @@ contract SPOG_AddNewList is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("addList(address)", address(list));
         string memory description = "Add new list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);
@@ -68,7 +78,10 @@ contract SPOG_AddNewList is SPOGBaseTest {
         assertEq(cash.balanceOf(address(vault)), tax);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in an pending state");
+        assertTrue(
+            governor.state(proposalId) == IGovernor.ProposalState.Pending,
+            "Proposal is not in an pending state"
+        );
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);

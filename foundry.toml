@@ -1,7 +1,7 @@
 [profile.default]
-src = 'src'
-out = 'out'
-libs = ['lib']
+src = "src"
+out = "out"
+libs = ["lib"]
 solc-version = "0.8.19"
 gas_reports_ignore = ["SPOGDeployScript", "ERC20GodMode", "ERC20Mock", "MockContract", "MockConfig", "MockGovernedContract", "MockGovernedContract2", "MockSPOG", "MockConfigNoERC165", "MockConfigWithERC165", "MockConfigWithERC165v2", "MockSPOGGovernor"]
 
@@ -9,4 +9,3 @@ gas_reports_ignore = ["SPOGDeployScript", "ERC20GodMode", "ERC20Mock", "MockCont
 localhost = "http://127.0.0.1:8545"
 sepolia = "https://rpc.sepolia.org"
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
-

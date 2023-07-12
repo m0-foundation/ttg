@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOGControlled } from "../../src/interfaces/ISPOGControlled.sol";
+
+import { VALUE } from "../../src/tokens/VALUE.sol";
+
+import { IAccessControl } from "../interfaces/ImportedInterfaces.sol";
+
+import { ERC20Snapshot } from "../ImportedContracts.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract ValueTokenTest is SPOGBaseTest {
     uint256 aliceStartBalance = 50e18;
@@ -19,7 +26,7 @@ contract ValueTokenTest is SPOGBaseTest {
         IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
 
         // Alice can interact with blockchain
-        vm.deal({account: alice, newBalance: 10 ether});
+        vm.deal({ account: alice, newBalance: 10 ether });
     }
 
     function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {

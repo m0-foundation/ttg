@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/BaseTest.t.sol";
-import "script/SPOGDeploy.s.sol";
+import { IList } from "../../src/interfaces/periphery/IList.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+import { ISPOGVault } from "../../src/interfaces/periphery/ISPOGVault.sol";
+import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
 
-import "src/interfaces/ITokens.sol";
-import "src/periphery/List.sol";
+import { List } from "../../src/periphery/List.sol";
+
+import { SPOGDeployScript } from "../../script/SPOGDeploy.s.sol";
+
+import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
+
+import { BaseTest } from "./BaseTest.t.sol";
 
 contract SPOGBaseTest is BaseTest {
     SPOGDeployScript public deployScript;
@@ -97,10 +105,9 @@ contract SPOGBaseTest is BaseTest {
         proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
-    function proposeAddingNewListToSpog(string memory proposalDescription)
-        internal
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function proposeAddingNewListToSpog(
+        string memory proposalDescription
+    ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -158,8 +165,12 @@ contract SPOGBaseTest is BaseTest {
         calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), tax);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/periphery/List.sol";
+import { List } from "../periphery/List.sol";
 
 /// @title ListFactory
 /// @notice This contract is used to deploy List contracts
@@ -10,39 +10,37 @@ contract ListFactory {
 
     /// @notice Create a new List
     /// @dev creates a list with the given name, adds the addresses to it, and sets admin
-    function deploy(address _spog, string memory _name, address[] memory addresses, uint256 _salt)
-        public
-        returns (IList)
-    {
-        IList list = IList(address(new List{salt: bytes32(_salt)}(_name)));
+    function deploy(
+        address spog,
+        string memory name,
+        address[] memory addresses,
+        uint256 salt
+    ) public returns (address) {
+        List list = new List{ salt: bytes32(salt) }(name);
 
-        uint256 i;
-        for (i; i < addresses.length;) {
+        for (uint256 i; i < addresses.length; ++i) {
             list.add(addresses[i]);
-            unchecked {
-                ++i;
-            }
         }
 
-        list.changeAdmin(_spog);
+        list.changeAdmin(spog);
 
-        emit ListDeployed(address(list), _salt);
+        emit ListDeployed(address(list), salt);
 
-        return list;
+        return address(list);
     }
 
     /// @notice This function is used to get the bytecode of the SPOG contract to be deployed
-    function getBytecode(string memory _name) public pure returns (bytes memory) {
+    function getBytecode(string memory name) public pure returns (bytes memory) {
         bytes memory bytecode = type(List).creationCode;
 
-        return abi.encodePacked(bytecode, abi.encode(_name));
+        return abi.encodePacked(bytecode, abi.encode(name));
     }
 
     /// @notice Compute the address of the List contract to be deployed
     /// @param bytecode The bytecode of the contract to be deployed
-    /// @param _salt is a random number used to create an address
-    function predictListAddress(bytes memory bytecode, uint256 _salt) public view returns (address) {
-        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
+    /// @param salt is a random number used to create an address
+    function predictListAddress(bytes memory bytecode, uint256 salt) public view returns (address) {
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(bytecode)));
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));

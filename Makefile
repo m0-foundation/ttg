@@ -18,4 +18,4 @@ deploy-spog-sepolia :; forge script script/SPOGDeploy.s.sol --rpc-url sepolia --
 deploy-spog-qa-sepolia :; forge script script/LocalTestDeployScript.s.sol --rpc-url sepolia --broadcast -v
 
 # Run slither
-slither :; slither --compile-force-framework foundry --sarif results.sarif --no-fail-pedantic .
+slither :; forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json .

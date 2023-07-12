@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/utils/Checkpoints.sol";
+import { ISPOGGovernor } from "../../interfaces/ISPOGGovernor.sol";
+import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
-import "src/interfaces/ISPOGGovernor.sol";
+import { Checkpoints, Governor, SafeCast } from "../../ImportedContracts.sol";
 
 /// @title Governor contract to track quorum for both value and vote tokens
 /// @notice Governor adjusted to track double quorums for SPOG proposals
 /// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
-abstract contract DualGovernorQuorum is ISPOGGovernor {
+abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance
-    IVOTE public immutable override vote;
+    address public immutable vote;
 
     /// @notice The value token of SPOG governance
-    IVALUE public immutable override value;
+    address public immutable value;
 
     /// @custom:oz-retyped-from Checkpoints.History
     Checkpoints.Trace224 private _valueQuorumNumeratorHistory;
@@ -41,9 +42,10 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
         if (valueQuorumNumerator_ == 0) revert ZeroValueQuorumNumerator();
 
         // Set tokens and check that they are properly linked together
-        vote = IVOTE(vote_);
-        value = IVALUE(value_);
-        if (vote.value() != value) revert VoteValueMistmatch();
+        vote = vote_;
+        value = value_;
+
+        if (IVOTE(vote).value() != value) revert VoteValueMismatch();
 
         // Set initial vote and value quorums
         _updateVoteQuorumNumerator(voteQuorumNumerator_);
@@ -51,25 +53,24 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     }
 
     /// @notice Returns the latest vote quorum numerator
-    function voteQuorumNumerator() public view virtual override returns (uint256) {
+    function voteQuorumNumerator() public view virtual returns (uint256) {
         return _voteQuorumNumeratorHistory.latest();
     }
 
     /// @notice Returns the latest value quorum numerator
-    function valueQuorumNumerator() public view virtual override returns (uint256) {
+    function valueQuorumNumerator() public view virtual returns (uint256) {
         return _valueQuorumNumeratorHistory.latest();
     }
 
     /// @notice Returns the vote quorum numerator at the given timepoint
-    function voteQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
+    function voteQuorumNumerator(uint256 timepoint) public view virtual returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _voteQuorumNumeratorHistory._checkpoints.length;
 
         // Optimistic search, check the latest checkpoint
         Checkpoints.Checkpoint224 memory latest = _voteQuorumNumeratorHistory._checkpoints[length - 1];
-        if (latest._key <= timepoint) {
-            return latest._value;
-        }
+
+        if (latest._key <= timepoint) return latest._value;
 
         // Otherwise, do the binary search
         // TODO: `upperLookupRecent` vs `upperLookup`, upgrade to use the latest OZ libs
@@ -77,15 +78,14 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     }
 
     /// @notice Returns the value quorum numerator at the given timepoint
-    function valueQuorumNumerator(uint256 timepoint) public view virtual override returns (uint256) {
+    function valueQuorumNumerator(uint256 timepoint) public view virtual returns (uint256) {
         // If history is empty, fallback to old storage
         uint256 length = _valueQuorumNumeratorHistory._checkpoints.length;
 
         // Optimistic search, check the latest checkpoint
         Checkpoints.Checkpoint224 memory latest = _valueQuorumNumeratorHistory._checkpoints[length - 1];
-        if (latest._key <= timepoint) {
-            return latest._value;
-        }
+
+        if (latest._key <= timepoint) return latest._value;
 
         // Otherwise, do the binary search
         // TODO: `upperLookupRecent` vs `upperLookup`, upgrade to use the latest OZ libs
@@ -93,18 +93,18 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     }
 
     /// @notice Returns the quorum denominator
-    function quorumDenominator() public view virtual override returns (uint256) {
+    function quorumDenominator() public view virtual returns (uint256) {
         return 100;
     }
 
     /// @notice Returns the vote quorum at the given timepoint
-    function voteQuorum(uint256 timepoint) public view virtual override returns (uint256) {
-        return (vote.getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
+    function voteQuorum(uint256 timepoint) public view virtual returns (uint256) {
+        return (IVOTE(vote).getPastTotalVotes(timepoint) * voteQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the value quorum at the given timepoint
-    function valueQuorum(uint256 timepoint) public view virtual override returns (uint256) {
-        return (value.getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
+    function valueQuorum(uint256 timepoint) public view virtual returns (uint256) {
+        return (IVALUE(value).getPastTotalSupply(timepoint) * valueQuorumNumerator(timepoint)) / quorumDenominator();
     }
 
     /// @notice Returns the vote quorum at the given timepoint
@@ -115,7 +115,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @notice Updates the vote quorum numerator
     /// @param newVoteQuorumNumerator New vote quorum numerator
-    function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual override onlyGovernance {
+    function updateVoteQuorumNumerator(uint256 newVoteQuorumNumerator) external virtual onlyGovernance {
         _updateVoteQuorumNumerator(newVoteQuorumNumerator);
     }
 
@@ -133,7 +133,7 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
 
     /// @notice Updates the value quorum numerator
     /// @param newValueQuorumNumerator New value quorum numerator
-    function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual override onlyGovernance {
+    function updateValueQuorumNumerator(uint256 newValueQuorumNumerator) external virtual onlyGovernance {
         _updateValueQuorumNumerator(newValueQuorumNumerator);
     }
 
@@ -150,35 +150,31 @@ abstract contract DualGovernorQuorum is ISPOGGovernor {
     }
 
     /// @dev Returns min between vote votes for the account at the given timepoint and current votes
-    function _getVoteVotes(address account, uint256 timepoint, bytes memory /*params*/ )
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
-        return _min(vote.getPastVotes(account, timepoint), vote.getVotes(account));
+    function _getVoteVotes(
+        address account,
+        uint256 timepoint,
+        bytes memory /*params*/
+    ) internal view virtual returns (uint256) {
+        return _min(IVOTE(vote).getPastVotes(account, timepoint), IVOTE(vote).getVotes(account));
     }
 
     /// @dev Returns value votes for the account at the given timepoint
-    function _getValueVotes(address account, uint256 timepoint, bytes memory /*params*/ )
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
-        return value.getPastVotes(account, timepoint);
+    function _getValueVotes(
+        address account,
+        uint256 timepoint,
+        bytes memory /*params*/
+    ) internal view virtual returns (uint256) {
+        return IVALUE(value).getPastVotes(account, timepoint);
     }
 
     /// @dev Returns vote votes for the account at the given timepoint
     /// @dev Added to be compatible with standard OZ Governor interface
-    function _getVotes(address account, uint256 timepoint, bytes memory /*params*/ )
-        internal
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return vote.getPastVotes(account, timepoint);
+    function _getVotes(
+        address account,
+        uint256 timepoint,
+        bytes memory /*params*/
+    ) internal view virtual override returns (uint256) {
+        return IVOTE(vote).getPastVotes(account, timepoint);
     }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {

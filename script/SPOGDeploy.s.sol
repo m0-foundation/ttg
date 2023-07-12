@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import { IVALUE, IVOTE } from "../src/interfaces/ITokens.sol";
 
-import "script/shared/Base.s.sol";
+import { DualGovernor } from "../src/core/governor/DualGovernor.sol";
+import { SPOG } from "../src/core/SPOG.sol";
+import { SPOGVault } from "../src/periphery/SPOGVault.sol";
+import { VALUE } from "../src/tokens/VALUE.sol";
+import { VOTE } from "../src/tokens/VOTE.sol";
+import { VoteAuction } from "../src/periphery/VoteAuction.sol";
 
-import "src/core/SPOG.sol";
-import "src/tokens/VOTE.sol";
-import "src/tokens/VALUE.sol";
-import "src/core/governor/DualGovernor.sol";
-import "src/periphery/SPOGVault.sol";
-import "src/periphery/VoteAuction.sol";
+import { console, ERC20Mock } from "./ImportedContracts.sol";
+import { BaseScript } from "./shared/Base.s.sol";
 
 contract SPOGDeployScript is BaseScript {
     address public governor;
@@ -69,15 +70,16 @@ contract SPOGDeployScript is BaseScript {
         vm.startBroadcast(deployer);
 
         SPOG.Configuration memory config = SPOG.Configuration(
-            payable(address(governor)),
-            address(vault),
-            address(cash),
+            payable(governor),
+            vault,
+            cash,
             tax,
             taxLowerBound,
             taxUpperBound,
             inflator,
             valueFixedInflation
         );
+
         spog = address(new SPOG(config));
 
         console.log("SPOG address: ", spog);

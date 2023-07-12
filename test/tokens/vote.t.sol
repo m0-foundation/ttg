@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOGControlled } from "../../src/interfaces/ISPOGControlled.sol";
+import { IVOTE } from "../../src/interfaces/ITokens.sol";
+
+import { VALUE } from "../../src/tokens/VALUE.sol";
+import { VOTE } from "../../src/tokens/VOTE.sol";
+
+import { IAccessControl } from "../interfaces/ImportedInterfaces.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VoteTokenTest is SPOGBaseTest {
     address alice1 = createUser("alice1");
@@ -24,9 +32,9 @@ contract VoteTokenTest is SPOGBaseTest {
         super.setUp();
 
         // Make sure alice, bob and carol can interact with blockchain
-        vm.deal({account: alice1, newBalance: 10 ether});
-        vm.deal({account: bob1, newBalance: 10 ether});
-        vm.deal({account: carol1, newBalance: 10 ether});
+        vm.deal({ account: alice1, newBalance: 10 ether });
+        vm.deal({ account: bob1, newBalance: 10 ether });
+        vm.deal({ account: carol1, newBalance: 10 ether });
     }
 
     /**
@@ -78,7 +86,7 @@ contract VoteTokenTest is SPOGBaseTest {
     function test_Revert_reset_WhenCallerIsNotSPOG() public {
         initTokens();
 
-        uint256 randomSnapshotId = 10000;
+        uint256 randomSnapshotId = 10_000;
         vm.expectRevert(ISPOGControlled.CallerIsNotSPOG.selector);
         voteToken.reset(randomSnapshotId);
     }
@@ -86,7 +94,7 @@ contract VoteTokenTest is SPOGBaseTest {
     function test_Revert_reset_WhenResetWasInitialized() public {
         initTokens();
 
-        uint256 randomSnapshotId = 10000;
+        uint256 randomSnapshotId = 10_000;
         vm.startPrank(address(spog));
         voteToken.reset(randomSnapshotId);
 

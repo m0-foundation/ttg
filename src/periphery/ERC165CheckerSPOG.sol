@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {ISPOG} from "src/interfaces/ISPOG.sol";
+import { ISPOG } from "../interfaces/ISPOG.sol";
+
+import { ERC165Checker } from "../ImportedContracts.sol";
 
 /**
  * @title ERC165CheckerSPOG
  *
  * Utility to verify whether an address implements ISPOG.
  */
-
 abstract contract ERC165CheckerSPOG {
     error InvalidSPOGInterface();
 
@@ -17,6 +17,7 @@ abstract contract ERC165CheckerSPOG {
     /// @param spogAddress address to check
     modifier onlySPOGInterface(address spogAddress) {
         _checkSPOGInterface(spogAddress);
+
         _;
     }
 
@@ -25,8 +26,6 @@ abstract contract ERC165CheckerSPOG {
     }
 
     function _checkSPOGInterface(address spogAddress) internal view {
-        if (!ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId)) {
-            revert InvalidSPOGInterface();
-        }
+        if (!ERC165Checker.supportsInterface(spogAddress, type(ISPOG).interfaceId)) revert InvalidSPOGInterface();
     }
 }

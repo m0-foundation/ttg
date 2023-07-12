@@ -7,11 +7,11 @@ const IVault = require("./out/IVault.sol/IVault.json");
 const IVoteToken = require("./out/IVoteToken.sol/IVoteToken.json");
 
 module.exports = {
-  IERC20PricelessAuction: IERC20PricelessAuction.abi,
-  IList: IList.abi,
-  ISPOG: ISPOG.abi,
-  ISPOGGovernor: ISPOGGovernor.abi,
-  IValueToken: IValueToken.abi,
-  IVault: IVault.abi,
-  IVoteToken: IVoteToken.abi,
+    IERC20PricelessAuction: IERC20PricelessAuction.abi,
+    IList: IList.abi,
+    ISPOG: ISPOG.abi,
+    ISPOGGovernor: ISPOGGovernor.abi,
+    IValueToken: IValueToken.abi,
+    IVault: IVault.abi,
+    IVoteToken: IVoteToken.abi,
 };

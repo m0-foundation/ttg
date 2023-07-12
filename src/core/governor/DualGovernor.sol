@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import "src/interfaces/periphery/IList.sol";
-import "src/interfaces/ISPOG.sol";
-import "src/core/governor/DualGovernorQuorum.sol";
+import { IList } from "../../interfaces/periphery/IList.sol";
+import { ISPOG } from "../../interfaces/ISPOG.sol";
+import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
+
+import { Governor } from "../../ImportedContracts.sol";
+
+import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
@@ -28,10 +33,10 @@ contract DualGovernor is DualGovernorQuorum {
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     /// @notice The SPOG contract
-    address public override spog;
+    address public spog;
 
     /// @notice The list cof emergency proposals, (proposalId => true)
-    mapping(uint256 => bool) public override emergencyProposals;
+    mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
 
     /// @dev The voting period in blocks
     uint256 private immutable _votingPeriod;
@@ -43,20 +48,21 @@ contract DualGovernor is DualGovernorQuorum {
     bool private _emergencyVotingIsOn;
 
     /// @dev Voting results for proposal: (proposalId => ProposalVote)
-    mapping(uint256 => ProposalVote) private _proposalVotes;
+    mapping(uint256 proposalId => ProposalVote proposalVote) private _proposalVotes;
 
     /// @dev Proposal types: (proposalId => ProposalType)
-    mapping(uint256 => ProposalType) private _proposalTypes;
+    mapping(uint256 proposalId => ProposalType proposalVote) private _proposalTypes;
 
     /// @dev Basic information about epoch (epoch number => EpochBasic)
-    mapping(uint256 => EpochBasic) private _epochBasic;
+    mapping(uint256 epoch => EpochBasic epochBasic) private _epochBasic;
 
     /// @notice Constructs a new governor instance
     /// @param name The name of the governor
     /// @param vote The address of the $VOTE token
     /// @param value The address of the $VALUE token
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
-    /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" required for actions that require a `VALUE QUORUM`
+    /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a
+    ///                    `VALUE QUORUM`
     /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
     constructor(
         string memory name,
@@ -71,37 +77,39 @@ contract DualGovernor is DualGovernorQuorum {
 
         // Set governor configuration
         _votingPeriod = votingPeriod_;
+
         // TODO: should setting SPOG be start of counting epochs ?
         _start = block.number;
     }
 
     /// @notice Initializes SPOG address
-    /// @dev Adds additional intialization for tokens
-    /// @param _spog The address of the SPOG contract
-    function initializeSPOG(address _spog) external override {
+    /// @dev Adds additional initialization for tokens
+    /// @param spog_ The address of the SPOG contract
+    function initializeSPOG(address spog_) external {
         if (spog != address(0)) revert AlreadyInitialized();
-        if (_spog == address(0)) revert ZeroSPOGAddress();
-        // @dev should never happen, precaution
-        if (_start == 0) revert ZeroStart();
+        if (spog_ == address(0)) revert ZeroSPOGAddress();
+        if (_start == 0) revert ZeroStart(); // should never happen, precaution
 
-        spog = _spog;
+        spog = spog_;
+
         // initialize tokens
-        vote.initializeSPOG(_spog);
+        IVOTE(vote).initializeSPOG(spog_);
+
         // TODO: find the way to avoid mistake with initialization for reset
         // TODO: do not fail if spog address has been already initialized for value token
-        try value.initializeSPOG(_spog) {} catch {}
+        try IVALUE(value).initializeSPOG(spog_) {} catch {}
     }
 
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
     /// @return current epoch number
-    function currentEpoch() public view override returns (uint256) {
+    function currentEpoch() public view returns (uint256) {
         return (block.number - _start) / _votingPeriod;
     }
 
     /// @notice Gets the start block number of the given epoch
     /// @param epoch The epoch number
     /// @return `block.number` of the start of the epoch
-    function startOf(uint256 epoch) public view override returns (uint256) {
+    function startOf(uint256 epoch) public view returns (uint256) {
         return _start + epoch * _votingPeriod;
     }
 
@@ -110,8 +118,9 @@ contract DualGovernor is DualGovernorQuorum {
     /// @return type of proposals
     function _getProposalType(bytes4 func) internal view virtual returns (ProposalType) {
         if (
-            func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector
-                || func == ISPOG.changeTaxRange.selector
+            func == this.updateVoteQuorumNumerator.selector ||
+            func == this.updateValueQuorumNumerator.selector ||
+            func == ISPOG.changeTaxRange.selector
         ) {
             return ProposalType.Double;
         }
@@ -126,12 +135,12 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev Returns whether the given function selector is a governed method
     /// @param func The function selector
     /// @return true if the function is governed, false otherwise
-    function isGovernedMethod(bytes4 func) public pure override returns (bool) {
+    function isGovernedMethod(bytes4 func) public pure returns (bool) {
         return func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector;
     }
 
     /// @notice Creates a new proposal
-    /// @dev One of main overriden methods of OZ governor interface, adjusted for SPOG needs
+    /// @dev One of main overridden methods of OZ governor interface, adjusted for SPOG needs
     /// @param targets The ordered list of target addresses for calls to be made
     /// @dev only one target is allowed and target address can be only SPOG or governor contract
     /// @param values The ordered list of values (i.e amounts) to be passed to the calls to be made
@@ -144,20 +153,24 @@ contract DualGovernor is DualGovernorQuorum {
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override returns (uint256) {
+    ) public override(IGovernor, Governor) returns (uint256) {
         // Sanity checks
         if (values[0] != 0) revert InvalidValue();
         if (targets.length != 1) revert TooManyTargets();
+
         address target = targets[0];
         bytes4 func = bytes4(calldatas[0]);
-        if (target != address(this) && target != address(spog)) revert InvalidTarget();
+
+        if (target != address(this) && target != spog) revert InvalidTarget();
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
         if (target == spog && !ISPOG(spog).isGovernedMethod(func)) revert InvalidMethod();
+
         // prevent proposing a list that can be changed before execution
         // TODO: potentially this should be part of pre-validation logic
         if (func == ISPOG.addList.selector) {
             address list = _extractFuncParams(calldatas[0]);
-            if (IList(list).admin() != address(spog)) revert ListAdminIsNotSPOG();
+
+            if (IList(list).admin() != spog) revert ListAdminIsNotSPOG();
         }
 
         ISPOG(spog).chargeFee(_msgSender(), func);
@@ -186,6 +199,7 @@ contract DualGovernor is DualGovernorQuorum {
         _proposalTypes[proposalId] = proposalType;
 
         emit Proposal(nextEpoch, proposalId, proposalType);
+
         return proposalId;
     }
 
@@ -193,7 +207,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev Allows batch voting
     /// @param proposalIds The ids of the proposals
     /// @param votes The values of the votes
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public override {
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public {
         address voter = _msgSender();
         require(proposalIds.length == votes.length, "DualGovernor: proposalIds and votes length mismatch");
 
@@ -203,26 +217,30 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @dev Cast vote to count user activity in epochs
-    /// @dev Overriden method of OZ governor interface adjusted for double governance nature of voting process
+    /// @dev Overridden method of OZ governor interface adjusted for double governance nature of voting process
     /// @param proposalId The id of the proposal
     /// @param account The address of the account to vote for
     /// @param support The support value of the vote - 0 or 1
     /// @param reason The reason given for the vote by the voter
     /// @param params The parameters of the vote
     /// @return voteWeight The weight of vote
-    function _castVote(uint256 proposalId, address account, uint8 support, string memory reason, bytes memory params)
-        internal
-        virtual
-        override
-        returns (uint256)
-    {
+    function _castVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        string memory reason,
+        bytes memory params
+    ) internal virtual override returns (uint256) {
         require(state(proposalId) == ProposalState.Active, "DualGovernor: vote not currently active");
 
         ProposalType proposalType = _proposalTypes[proposalId];
+
         uint256 snapshot = proposalSnapshot(proposalId);
+
         uint256 voteWeight = (proposalType == ProposalType.Vote || proposalType == ProposalType.Double)
             ? _getVoteVotes(account, snapshot, params)
             : 0;
+
         uint256 valueWeight = (proposalType == ProposalType.Value || proposalType == ProposalType.Double)
             ? _getValueVotes(account, snapshot, params)
             : 0;
@@ -256,7 +274,7 @@ contract DualGovernor is DualGovernorQuorum {
         // update number of proposals account voted for in current epoch
         epochBasic.numVotedOn[account] += 1;
 
-        // if user voted for all proposals, update cululative weight and give rewards
+        // if user voted for all proposals, update cumulative weight and give rewards
         if (!_hasFinishedVoting(epochBasic, account)) return 0;
 
         // update cumulative vote weight and save time when last proposal was voted on
@@ -265,12 +283,12 @@ contract DualGovernor is DualGovernorQuorum {
 
         // calculate and mint VOTE voting power reward
         uint256 votesWeightReward = ISPOG(spog).getInflationReward(weight);
-        vote.addVotingPower(account, votesWeightReward);
+        IVOTE(vote).addVotingPower(account, votesWeightReward);
 
         // claim VALUE token reward by delegate
-        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / vote.getPastTotalVotes(epochStart);
+        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / IVOTE(vote).getPastTotalVotes(epochStart);
         // TODO: make sure governor can mint here
-        // value.mint(account, valueReward);
+        // IVALUE(value).mint(account, valueReward);
 
         emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, votesWeightReward);
 
@@ -280,11 +298,11 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice Gets total vote weight power for the epoch
     /// @param epoch The epoch number to get total vote weight for
     /// @return The total vote weight power for the epoch
-    function epochTotalVotesWeight(uint256 epoch) external view override returns (uint256) {
+    function epochTotalVotesWeight(uint256 epoch) external view returns (uint256) {
         return _epochBasic[epoch].totalVotesWeight;
     }
 
-    function finishedVotingAt(uint256 epoch, address account) external view override returns (uint256) {
+    function finishedVotingAt(uint256 epoch, address account) external view returns (uint256) {
         return _epochBasic[epoch].finishedVotingAt[account];
     }
 
@@ -292,24 +310,26 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param epoch The epoch number to check
     /// @param account The account to check
     /// @return True if account voted on all proposals in the epoch
-    function hasFinishedVoting(uint256 epoch, address account) external view override returns (bool) {
+    function hasFinishedVoting(uint256 epoch, address account) external view returns (bool) {
         EpochBasic storage epochBasic = _epochBasic[epoch];
         return _hasFinishedVoting(epochBasic, account);
     }
 
     function _hasFinishedVoting(EpochBasic storage epochBasic, address account) internal view returns (bool) {
         if (account == address(0)) return false;
+
         return epochBasic.withRewards && epochBasic.numVotedOn[account] == epochBasic.numProposals;
     }
 
     /// @notice Returns state of proposal
     /// @param proposalId The id of the proposal
     /// @return The state of the proposal
-    /// @dev One of main overriden methods of OZ governor interface, adjusted for SPOG needs
-    function state(uint256 proposalId) public view override returns (ProposalState) {
+    /// @dev One of main overridden methods of OZ governor interface, adjusted for SPOG needs
+    function state(uint256 proposalId) public view override(IGovernor, Governor) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
-        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not passed yet.
+        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not
+        // passed yet.
         // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
         if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
             status = ProposalState.Succeeded;
@@ -324,9 +344,7 @@ contract DualGovernor is DualGovernorQuorum {
             uint256 expires = deadline + _votingPeriod;
 
             // Set state to Expired if it can no longer be executed.
-            if (expires <= block.number) {
-                return ProposalState.Expired;
-            }
+            if (expires <= block.number) return ProposalState.Expired;
         }
 
         return status;
@@ -357,9 +375,9 @@ contract DualGovernor is DualGovernorQuorum {
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            COUNTING MODULE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** COUNTING MODULE FUNCTIONS                                                                                  ***/
+    /******************************************************************************************************************/
 
     /// @notice Implements OZ Governor counting module interface
     // solhint-disable-next-line func-name-mixedcase
@@ -373,13 +391,13 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @notice Implements OZ Governor counting module interface
-    function proposalVotes(uint256 proposalId) public view override returns (uint256, uint256) {
+    function proposalVotes(uint256 proposalId) public view returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.voteNoVotes, proposalVote.voteYesVotes);
     }
 
-    /// @notice Retuns total value votes for proposal
-    function proposalValueVotes(uint256 proposalId) public view override returns (uint256, uint256) {
+    /// @notice Returns total value votes for proposal
+    function proposalValueVotes(uint256 proposalId) public view returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.valueNoVotes, proposalVote.valueYesVotes);
     }
@@ -397,14 +415,13 @@ contract DualGovernor is DualGovernorQuorum {
         if (proposalType == ProposalType.Double) {
             return voteQuorum_ <= proposalVote.voteYesVotes && valueQuorum_ <= proposalVote.valueYesVotes;
         }
-        if (proposalType == ProposalType.Value) {
-            return valueQuorum_ <= proposalVote.valueYesVotes;
-        }
+
+        if (proposalType == ProposalType.Value) return valueQuorum_ <= proposalVote.valueYesVotes;
 
         return voteQuorum_ <= proposalVote.voteYesVotes;
     }
 
-    /// @notice Checks if proposal is succeessful
+    /// @notice Checks if proposal is successful
     /// @dev See {Governor-_voteSucceeded}.
     function _voteSucceeded(uint256 proposalId) internal view override returns (bool) {
         return _quorumReached(proposalId);
@@ -436,11 +453,13 @@ contract DualGovernor is DualGovernorQuorum {
     }
 
     /// @dev See {Governor-_countVote}.
-    function _countVote(uint256 proposalId, address account, uint8 support, uint256 votes, bytes memory)
-        internal
-        virtual
-        override
-    {
+    function _countVote(
+        uint256 proposalId,
+        address account,
+        uint8 support,
+        uint256 votes,
+        bytes memory
+    ) internal virtual override {
         _countVote(proposalId, account, support, votes, 0, "");
     }
 }

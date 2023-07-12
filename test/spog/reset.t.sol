@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import "test/shared/SPOGBaseTest.t.sol";
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
+import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
+import { VOTE } from "../../src/tokens/VOTE.sol";
+
+import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_reset is SPOGBaseTest {
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
 
-    /*//////////////////////////////////////////////////////////////
-                            HELPERS
-    //////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** HELPERS                                                                                                    ***/
+    /******************************************************************************************************************/
 
     function createNewGovernor(address valueToken) private returns (address) {
         // deploy vote governor from factory
@@ -19,16 +26,23 @@ contract SPOG_reset is SPOGBaseTest {
         uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
         uint256 valueQuorum = 5;
-        DualGovernor newGovernor =
-            new DualGovernor("new SPOGGovernor", address(newVoteToken), valueToken, voteQuorum, valueQuorum, time);
+
+        DualGovernor newGovernor = new DualGovernor(
+            "new SPOGGovernor",
+            address(newVoteToken),
+            valueToken,
+            voteQuorum,
+            valueQuorum,
+            time
+        );
 
         return address(newGovernor);
     }
 
-    function proposeGovernanceReset(string memory proposalDescription, address valueToken)
-        private
-        returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
-    {
+    function proposeGovernanceReset(
+        string memory proposalDescription,
+        address valueToken
+    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         vm.roll(deployScript.time() * 2);
 
         address[] memory targets = new address[](1);
@@ -72,8 +86,12 @@ contract SPOG_reset is SPOGBaseTest {
         calldatas[0] = abi.encodeWithSignature("addList(address)", list);
         string memory description = "Add new list";
 
-        (bytes32 hashedDescription, uint256 proposalId) =
-            getProposalIdAndHashedDescription(targets, values, calldatas, description);
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
 
         // vote on proposal
         cash.approve(address(spog), deployScript.tax());
@@ -125,12 +143,14 @@ contract SPOG_reset is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         assertFalse(address(spog.governor()) == governorBeforeFork, "Governor was not reset");
+
         // TODO: fix interfaces
         assertEq(
             DualGovernor(payable(address(spog.governor()))).voteQuorumNumerator(),
             5,
             "Governor quorum was not set correctly"
         );
+
         assertEq(
             DualGovernor(payable(address(spog.governor()))).votingPeriod(),
             15,
