@@ -36,7 +36,14 @@ interface IDualGovernor {
     error VoteValueMismatch();
 
     // Events
-    event Proposal(uint256 indexed epoch, uint256 indexed proposalId, ProposalType indexed proposalType);
+    event Proposal(
+        uint256 indexed epoch,
+        uint256 indexed proposalId,
+        ProposalType indexed proposalType,
+        address target,
+        bytes data,
+        string description
+    );
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
