@@ -35,7 +35,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice The SPOG contract
     address public spog;
 
-    /// @notice The list cof emergency proposals, (proposalId => true)
+    /// @notice The list of emergency proposals, (proposalId => true)
     mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
 
     /// @dev The voting period in blocks
@@ -352,12 +352,17 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Returns the voting delay for proposal
     function votingDelay() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOf(currentEpoch() + 1) - block.number - 1;
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : _currentEpochRemainder();
     }
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? startOf(currentEpoch() + 1) - block.number - 1 : _votingPeriod;
+        return _emergencyVotingIsOn ? _currentEpochRemainder() : _votingPeriod;
+    }
+
+    /// @dev Returns the number of blocks left in the current epoch
+    function _currentEpochRemainder() internal view returns (uint256) {
+        return startOf(currentEpoch() + 1) - block.number - 1;
     }
 
     /// @dev Extracts address params from the call data
