@@ -177,21 +177,19 @@ contract DualGovernor is DualGovernorQuorum {
 
         uint256 nextEpoch = currentEpoch() + 1;
         uint256 proposalId;
-        if (func == ISPOG.reset.selector || func == ISPOG.emergency.selector) {
+        if (func == ISPOG.emergency.selector || func == ISPOG.reset.selector) {
             _emergencyVotingIsOn = true;
             proposalId = super.propose(targets, values, calldatas, description);
             _emergencyVotingIsOn = false;
+
+            emergencyProposals[proposalId] = true;
         } else {
-            /// @dev proposals are voted on in the next epoch
+            // proposals are voted on in the next epoch
             EpochBasic storage epochBasic = _epochBasic[nextEpoch];
             epochBasic.withRewards = true;
             epochBasic.numProposals += 1;
 
             proposalId = super.propose(targets, values, calldatas, description);
-        }
-
-        if (func == ISPOG.emergency.selector) {
-            emergencyProposals[proposalId] = true;
         }
 
         // Save proposal type
@@ -231,7 +229,7 @@ contract DualGovernor is DualGovernorQuorum {
         string memory reason,
         bytes memory params
     ) internal virtual override returns (uint256) {
-        require(state(proposalId) == ProposalState.Active, "DualGovernor: vote not currently active");
+        if (state(proposalId) != ProposalState.Active) revert ProposalIsNotInActiveState();
 
         ProposalType proposalType = _proposalTypes[proposalId];
 
@@ -328,23 +326,25 @@ contract DualGovernor is DualGovernorQuorum {
     function state(uint256 proposalId) public view override(IGovernor, Governor) returns (ProposalState) {
         ProposalState status = super.state(proposalId);
 
-        // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded` even if deadline is not
-        // passed yet.
-        // Use only `_quorumReached` for this check, `_voteSucceeded` is not needed as it is the same.
-        if (emergencyProposals[proposalId] && status == ProposalState.Active && _quorumReached(proposalId)) {
-            status = ProposalState.Succeeded;
+        if (emergencyProposals[proposalId]) {
+            // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded`
+            // Use only `_quorumReached` for this check, `_voteSucceeded` returns the same result
+            if (status == ProposalState.Active && _quorumReached(proposalId)) {
+                return ProposalState.Succeeded;
+            }
+
+            // emergency proposal expires in the same epoch it was voted on
+            if (status == ProposalState.Succeeded) {
+                return ProposalState.Expired;
+            }
         }
 
-        // If the proposal is not executed before expiration, set status to `Expired`.
+        // Set state to `Expired` if proposal was not executed in the next epoch
         if (status == ProposalState.Succeeded) {
-            // proposal deadline is for voting in block.number
-            uint256 deadline = proposalDeadline(proposalId);
-
-            // expires is for execution in block.number
-            uint256 expires = deadline + _votingPeriod;
-
-            // Set state to Expired if it can no longer be executed.
-            if (expires <= block.number) return ProposalState.Expired;
+            uint256 expiresAt = proposalDeadline(proposalId) + _votingPeriod;
+            if (block.number > expiresAt) {
+                return ProposalState.Expired;
+            }
         }
 
         return status;
@@ -352,12 +352,12 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Returns the voting delay for proposal
     function votingDelay() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOf(currentEpoch() + 1) - block.number;
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : startOf(currentEpoch() + 1) - block.number - 1;
     }
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _votingPeriod;
+        return _emergencyVotingIsOn ? startOf(currentEpoch() + 1) - block.number - 1 : _votingPeriod;
     }
 
     /// @dev Extracts address params from the call data
