@@ -151,8 +151,6 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param emergencyType The type of emergency method to be called (See enum in ISPOG)
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
-    // TODO: IMPORTANT: right now voting period and logic is the same as for other functions
-    // TODO: IMPORTANT: implement immediate remove
     function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernance {
         EmergencyType emergencyType_ = EmergencyType(emergencyType);
 
