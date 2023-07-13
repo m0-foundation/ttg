@@ -9,7 +9,6 @@ import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
 import { VOTE } from "../../src/tokens/VOTE.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
-import "forge-std/console.sol";
 
 contract SPOG_reset is SPOGBaseTest {
     event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
@@ -149,5 +148,27 @@ contract SPOG_reset is SPOGBaseTest {
 
         // Make sure governance is functional
         executeValidProposal();
+    }
+
+    function test_Reset_ValidateProposalState() public {
+        (uint256 proposalId, , , , ) = proposeGovernanceReset("Propose reset of vote governance", address(value));
+
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
+
+        // fast forward to an active voting period
+        vm.roll(block.number + 2);
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
+
+        // value holders vote on proposal
+        governor.castVote(proposalId, yesVote);
+
+        // proposal is now in succeeded state, it reached quorum
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
+
+        // fast forward to an active voting period
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        // proposal is now in succeeded state, it reached quorum
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Not in expired state");
     }
 }
