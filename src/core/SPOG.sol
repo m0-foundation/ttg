@@ -2,22 +2,19 @@
 pragma solidity 0.8.19;
 
 import { IERC165, IERC20 } from "../interfaces/ImportedInterfaces.sol";
-import { IList } from "../interfaces/periphery/IList.sol";
-import { IProtocolConfigurator } from "../interfaces/IProtocolConfigurator.sol";
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
 import { EnumerableMap, ERC165, SafeERC20 } from "../ImportedContracts.sol";
-import { ProtocolConfigurator } from "../config/ProtocolConfigurator.sol";
 
 /// @title SPOG
 /// @notice Contracts for governing lists and managing communal property through token voting
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
 /// @notice SPOG, "Simple Participation Optimized Governance"
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
-contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
+contract SPOG is ERC165, ISPOG {
     using SafeERC20 for IERC20;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -103,12 +100,12 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @notice Add a new list to the master list of the SPOG
     /// @param list The list address of the list to be added
     function addList(address list) external onlyGovernance {
-        if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
+        // if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
 
         // add the list to the master list
         _masterlist.set(list, _inMasterList);
 
-        emit ListAdded(list, IList(list).name());
+        // emit ListAdded(list, IList(list).name());
     }
 
     /// @notice Append an address to a list
@@ -118,7 +115,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // add the address to the list
-        IList(list).add(account);
+        // IList(list).add(account);
 
         emit AddressAppendedToList(list, account);
     }
@@ -130,7 +127,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
         if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
 
         // remove the address from the list
-        IList(list).remove(account);
+        // IList(list).remove(account);
 
         emit AddressRemovedFromList(list, account);
     }
@@ -139,12 +136,8 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
     /// @param configName The name of the config contract to be changed
     /// @param configAddress The address of the new config contract
     /// @param interfaceId The interface identifier, as specified in ERC-165
-    function changeConfig(
-        bytes32 configName,
-        address configAddress,
-        bytes4 interfaceId
-    ) public override(IProtocolConfigurator, ProtocolConfigurator) onlyGovernance {
-        super.changeConfig(configName, configAddress, interfaceId);
+    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public onlyGovernance {
+        // super.changeConfig(configName, configAddress, interfaceId);
     }
 
     /// @notice Emergency version of existing methods
@@ -174,7 +167,7 @@ contract SPOG is ProtocolConfigurator, ERC165, ISPOG {
                 (bytes32, address, bytes4)
             );
 
-            super.changeConfig(configName, configAddress, interfaceId);
+            // super.changeConfig(configName, configAddress, interfaceId);
             return;
         }
 

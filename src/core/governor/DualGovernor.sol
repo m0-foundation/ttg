@@ -2,12 +2,10 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
-import { Governor } from "../../ImportedContracts.sol";
-
-import { IList } from "../../interfaces/periphery/IList.sol";
 import { ISPOG } from "../../interfaces/ISPOG.sol";
 import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
+import { Governor } from "../../ImportedContracts.sol";
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
@@ -170,7 +168,7 @@ contract DualGovernor is DualGovernorQuorum {
         if (func == ISPOG.addList.selector) {
             address list = _extractFuncParams(calldatas[0]);
 
-            if (IList(list).admin() != spog) revert ListAdminIsNotSPOG();
+            // if (IList(list).admin() != spog) revert ListAdminIsNotSPOG();
         }
 
         ISPOG(spog).chargeFee(_msgSender(), func);

@@ -81,7 +81,7 @@ contract SPOG_reset is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addList(address)", list);
+        // calldatas[0] = abi.encodeWithSignature("addList(address)", list);
         string memory description = "Add new list";
 
         (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(

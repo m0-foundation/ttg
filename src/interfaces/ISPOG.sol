@@ -2,9 +2,8 @@
 pragma solidity 0.8.19;
 
 import { IERC165 } from "./ImportedInterfaces.sol";
-import { IProtocolConfigurator } from "./IProtocolConfigurator.sol";
 
-interface ISPOG is IProtocolConfigurator, IERC165 {
+interface ISPOG is IERC165 {
     // Enums
     enum EmergencyType {
         Remove,

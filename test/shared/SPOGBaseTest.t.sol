@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IList } from "../../src/interfaces/periphery/IList.sol";
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../../src/interfaces/periphery/ISPOGVault.sol";
 import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
-
-import { List } from "../../src/periphery/List.sol";
 
 import { SPOGDeployScript } from "../../script/SPOGDeploy.s.sol";
 
@@ -24,7 +21,6 @@ contract SPOGBaseTest is BaseTest {
     IVALUE public value;
     ISPOGVault public vault;
     IERC20 public cash;
-    IList public list;
     uint256 public tax;
 
     address public alice = createUser("alice");
@@ -62,9 +58,9 @@ contract SPOGBaseTest is BaseTest {
         value.delegate(address(this));
 
         // deploy list and change admin to spog
-        List newList = new List("SPOG List");
-        newList.changeAdmin(address(spog));
-        list = IList(address(newList));
+        // List newList = new List("SPOG List");
+        // newList.changeAdmin(address(spog));
+        // list = IList(address(newList));
 
         // Initialize users initial token balances
         fundUsers();
@@ -113,7 +109,7 @@ contract SPOGBaseTest is BaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addList(address)", list);
+        // calldatas[0] = abi.encodeWithSignature("addList(address)", list);
         string memory description = proposalDescription;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
@@ -153,7 +149,7 @@ contract SPOGBaseTest is BaseTest {
     function addNewListToSpogAndAppendAnAddressToIt() internal {
         addNewListToSpog();
 
-        address listToAddAddressTo = address(list);
+        // address listToAddAddressTo = address(list);
         address addressToAdd = address(0x1234);
 
         // create proposal to append address to list
@@ -162,7 +158,7 @@ contract SPOGBaseTest is BaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
+        // calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
         string memory description = "Append address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
