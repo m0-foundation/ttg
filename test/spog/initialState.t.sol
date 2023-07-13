@@ -2,7 +2,9 @@
 pragma solidity 0.8.19;
 
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
 import { SPOG } from "../../src/core/SPOG.sol";
+
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_InitialState is SPOGBaseTest {
