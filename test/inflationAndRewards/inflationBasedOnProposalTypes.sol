@@ -9,8 +9,6 @@ import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
-import "forge-std/console.sol";
-
 contract InflationPerProposalTypeTest is SPOGBaseTest {
     function test_Inflation_EpochWithEmergencyAndStandardProposals() public {
         // set up proposals
