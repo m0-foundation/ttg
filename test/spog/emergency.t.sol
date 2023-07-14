@@ -20,7 +20,7 @@ contract MockConfig is IMockConfig, ERC165 {
 }
 
 contract SPOG_emergency is SPOGBaseTest {
-    
+
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
