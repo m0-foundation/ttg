@@ -14,44 +14,7 @@ contract SPOG_change is SPOGBaseTest {
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
 
-    address public charlie;
-
-    function setUp() public override {
-        super.setUp();
-
-        charlie = createUser("charlie");
-    }
-
-    function proposeTaxRangeChange(
-        string memory proposalDescription
-    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
-        address[] memory targets = new address[](1);
-        targets[0] = address(spog);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-        bytes memory callData = abi.encodeWithSignature("changeTaxRange(uint256,uint256)", 10e18, 12e18);
-        string memory description = proposalDescription;
-        calldatas[0] = callData;
-
-        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
-
-        // uint256 epoch = governor.currentEpoch();
-
-        // create proposal
-        cash.approve(address(spog), tax);
-
-        // TODO: add checks for 2 emitted events
-        // expectEmit();
-        // emit ProposalCreated();
-        // expectEmit();
-        // emit Proposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
-        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
-        assertTrue(spogProposalId == proposalId, "spog proposal ids don't match");
-
-        return (proposalId, targets, values, calldatas, hashedDescription);
-    }
+    address public charlie = createUser("charlie");
 
     function test_Revert_ChangeTaxRange_WhenNotCalledByGovernance() public {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);

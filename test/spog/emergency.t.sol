@@ -20,10 +20,8 @@ contract MockConfig is IMockConfig, ERC165 {
 }
 
 contract SPOG_emergency is SPOGBaseTest {
-    address internal addressToChange;
-
-    event NewEmergencyProposal(uint256 indexed proposalId);
-
+    
+    // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
 
@@ -31,11 +29,11 @@ contract SPOG_emergency is SPOGBaseTest {
         (, addressToChange) = addAnAddressToList();
     }
 
-    /*//////////////////////////////////////////////////////////////
-                                HELPERS
-    //////////////////////////////////////////////////////////////*/
+    /******************************************************************************************************************/
+    /*** HELPERS                                                                                                    ***/
+    /******************************************************************************************************************/
 
-    function createEmergencyRemoveFromListProposal()
+    function proposeEmergencyRemove()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -77,7 +75,7 @@ contract SPOG_emergency is SPOGBaseTest {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function createEmergencyAddToListProposal()
+    function proposeEmergencyAddToList()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -119,7 +117,7 @@ contract SPOG_emergency is SPOGBaseTest {
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
-    function createEmergencyUpdateConfigProposal()
+    function proposeEmergencyUpdateConfig()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -168,7 +166,7 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyRemoveFromListProposal();
+        ) = proposeEmergencyRemoveFromList();
 
         // Check that tax was paid
         uint256 balanceAfterProposal = cash.balanceOf(address(vault));
@@ -211,7 +209,7 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyAddToListProposal();
+        ) = proposeEmergencyAddToList();
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -239,7 +237,7 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyUpdateConfigProposal();
+        ) = proposeEmergencyUpdateConfig();
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -290,7 +288,7 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyRemoveFromListProposal();
+        ) = proposeEmergencyRemove();
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -328,7 +326,16 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = createEmergencyRemoveFromListProposal();
+        ) = proposeEmergencyRemove();
+
+        // Check that tax was paid
+        uint256 balanceAfterProposal = cash.balanceOf(address(vault));
+        assertEq(balanceAfterProposal - balanceBeforeProposal, tax, "Emergency proposal costs 1 * tax");
+
+        // Emergency proposal is in the governor list
+        assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
+
+        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
 
         // check proposal is pending
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IDualGovernor } from "../src/interfaces/ISPOGGovernor.sol";
+import { IDualGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
 
-import { SPOGBaseTest } from "./shared/SPOGBaseTest.t.sol";
+import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
-contract InflationRewardsTest is SPOGBaseTest {
+contract InflationTest is SPOGBaseTest {
     function test_UserVoteInflationAfterVotingOnAllProposals() public {
         // set up proposals
         (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
