@@ -18,10 +18,7 @@ contract VaultTest is SPOGBaseTest {
 
             for (uint256 j = 0; j < numberOfProposalsPerEpoch; j++) {
                 // update vote governor
-                string memory proposalDescription = string(
-                    abi.encodePacked("Add new list to spog: epochNumber, proposalNumberPerEpoch", i, j)
-                );
-                proposeAddingNewListToSpog(proposalDescription);
+                proposeAddingAnAddressToList(makeAddr(string(abi.encode("Account-i", i, "-j-", j))));
             }
         }
     }

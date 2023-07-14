@@ -5,42 +5,29 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
-contract SPOG_AppendAddressToList is SPOGBaseTest {
-    address internal listToAddAddressTo;
+contract SPOG_AddToList is SPOGBaseTest {
     address internal addressToAdd;
 
     function setUp() public override {
         super.setUp();
 
-        addNewListToSpog();
-        // listToAddAddressTo = address(list);
         addressToAdd = address(0x1234);
     }
 
-    function test_Revert_AppendToListWhenNotCallingFromGovernance() public {
+    function test_Revert_AddToListWhenNotCallingFromGovernance() public {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
-        spog.append(listToAddAddressTo, addressToAdd);
+        spog.addToList(LIST_NAME, addressToAdd);
     }
 
-    function test_Revert_WhenListNotInMasterList() external {
-        // listToAddAddressTo = address(new List("New List"));
-
-        bytes memory expectedError = abi.encodeWithSignature("ListIsNotInMasterList()");
-
-        vm.expectRevert(expectedError);
-        vm.prank(address(governor));
-        ISPOG(spog).append(listToAddAddressTo, addressToAdd);
-    }
-
-    function test_SPOGProposalToAppendToAList() public {
-        // create proposal to append address to list
+    function test_SPOGProposalToAddToAList() public {
+        // create proposal to add address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", listToAddAddressTo, addressToAdd);
-        string memory description = "Append address to a list";
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, addressToAdd);
+        string memory description = "Add address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
             targets,
@@ -54,10 +41,7 @@ contract SPOG_AppendAddressToList is SPOGBaseTest {
         governor.propose(targets, values, calldatas, description);
 
         // assert that vault has cash balance paid for proposals
-        assertTrue(
-            cash.balanceOf(address(vault)) == tax * 2,
-            "Balance of SPOG should be 2x tax, one from adding the list and one from the current proposal"
-        );
+        assertTrue(cash.balanceOf(address(vault)) == tax, "Balance of SPOG should be 1x tax from the current proposal");
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -73,6 +57,6 @@ contract SPOG_AppendAddressToList is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
-        // assertTrue(IList(listToAddAddressTo).contains(addressToAdd), "Address was not added to list");
+        assertTrue(spog.listContains(LIST_NAME, addressToAdd), "Address was not added to list");
     }
 }

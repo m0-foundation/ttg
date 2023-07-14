@@ -7,7 +7,9 @@ import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
-import { EnumerableMap, ERC165, SafeERC20 } from "../ImportedContracts.sol";
+import { ERC165, SafeERC20 } from "../ImportedContracts.sol";
+
+// TODO: "Lists" that are not enumerable are actually "Sets".
 
 /// @title SPOG
 /// @notice Contracts for governing lists and managing communal property through token voting
@@ -16,10 +18,10 @@ import { EnumerableMap, ERC165, SafeERC20 } from "../ImportedContracts.sol";
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
 contract SPOG is ERC165, ISPOG {
     using SafeERC20 for IERC20;
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
 
+    // TODO: Drop the need for a struct for the constructor. Use named arguments instead.
     struct Configuration {
-        address payable governor;
+        address governor;
         address vault;
         address cash;
         uint256 tax;
@@ -28,9 +30,6 @@ contract SPOG is ERC165, ISPOG {
         uint256 inflator;
         uint256 valueFixedInflation;
     }
-
-    /// @dev Indicator that list is in master list
-    uint256 private constant _inMasterList = 1;
 
     /// TODO find the right one for better precision
     uint256 private constant _INFLATOR_SCALE = 100;
@@ -59,9 +58,7 @@ contract SPOG is ERC165, ISPOG {
     /// @notice Tax range: upper bound for proposal cash fee
     uint256 public taxUpperBound;
 
-    /// @dev List of addresses that are part of the masterlist
-    /// @dev (address => uint256) 0 = not in masterlist, 1 = in masterlist
-    EnumerableMap.AddressToUintMap private _masterlist;
+    mapping(bytes32 key => bytes32 value) internal _valueAt;
 
     /// @dev Modifier checks if caller is a governor address
     modifier onlyGovernance() {
@@ -97,47 +94,25 @@ contract SPOG is ERC165, ISPOG {
         valueFixedInflation = config.valueFixedInflation;
     }
 
-    /// @notice Add a new list to the master list of the SPOG
-    /// @param list The list address of the list to be added
-    function addList(address list) external onlyGovernance {
-        // if (IList(list).admin() != address(this)) revert ListAdminIsNotSPOG();
-
-        // add the list to the master list
-        _masterlist.set(list, _inMasterList);
-
-        // emit ListAdded(list, IList(list).name());
-    }
-
-    /// @notice Append an address to a list
-    /// @param list The list to which the address will be appended
-    /// @param account The address to be appended to the list
-    function append(address list, address account) public onlyGovernance {
-        if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
-
-        // add the address to the list
-        // IList(list).add(account);
-
-        emit AddressAppendedToList(list, account);
+    /// @notice Add an address to a list
+    /// @param listName The name of the list to which the address will be added.
+    /// @param account The address to be added to the list
+    function addToList(bytes32 listName, address account) external onlyGovernance {
+        _addToList(listName, account);
     }
 
     /// @notice Remove an address from a list
-    /// @param list The list from which the address will be removed
+    /// @param listName The name of the list from which the address will be removed
     /// @param account The address to be removed from the list
-    function remove(address list, address account) public onlyGovernance {
-        if (!_masterlist.contains(list)) revert ListIsNotInMasterList();
-
-        // remove the address from the list
-        // IList(list).remove(account);
-
-        emit AddressRemovedFromList(list, account);
+    function removeFromList(bytes32 listName, address account) external onlyGovernance {
+        _removeFromList(listName, account);
     }
 
     /// @notice Change the protocol configs
-    /// @param configName The name of the config contract to be changed
-    /// @param configAddress The address of the new config contract
-    /// @param interfaceId The interface identifier, as specified in ERC-165
-    function changeConfig(bytes32 configName, address configAddress, bytes4 interfaceId) public onlyGovernance {
-        // super.changeConfig(configName, configAddress, interfaceId);
+    /// @param valueName The name of the config to be updated
+    /// @param value The value to update the config to
+    function updateConfig(bytes32 valueName, bytes32 value) external onlyGovernance {
+        _updateConfig(valueName, value);
     }
 
     /// @notice Emergency version of existing methods
@@ -149,25 +124,21 @@ contract SPOG is ERC165, ISPOG {
 
         emit EmergencyExecuted(emergencyType, callData);
 
-        if (emergencyType_ == EmergencyType.Remove) {
-            (address list, address account) = abi.decode(callData, (address, address));
-            remove(list, account);
+        if (emergencyType_ == EmergencyType.RemoveFromList) {
+            (bytes32 listName, address account) = abi.decode(callData, (bytes32, address));
+            _removeFromList(listName, account);
             return;
         }
 
-        if (emergencyType_ == EmergencyType.Append) {
-            (address list, address account) = abi.decode(callData, (address, address));
-            append(list, account);
+        if (emergencyType_ == EmergencyType.AddToList) {
+            (bytes32 listName, address account) = abi.decode(callData, (bytes32, address));
+            _addToList(listName, account);
             return;
         }
 
-        if (emergencyType_ == EmergencyType.ChangeConfig) {
-            (bytes32 configName, address configAddress, bytes4 interfaceId) = abi.decode(
-                callData,
-                (bytes32, address, bytes4)
-            );
-
-            // super.changeConfig(configName, configAddress, interfaceId);
+        if (emergencyType_ == EmergencyType.UpdateConfig) {
+            (bytes32 valueName, bytes32 value) = abi.decode(callData, (bytes32, bytes32));
+            _updateConfig(valueName, value);
             return;
         }
 
@@ -232,23 +203,15 @@ contract SPOG is ERC165, ISPOG {
         return tax;
     }
 
-    /// @notice Getter for finding whether a list is in a masterlist
-    /// @param list The list address to check
-    /// @return Whether the list is in the masterlist
-    function isListInMasterList(address list) external view returns (bool) {
-        return _masterlist.contains(list);
-    }
-
     /// @notice Check is proposed change is supported by governance
     /// @param selector The function selector to check
     /// @return Whether the function is supported by governance
     function isGovernedMethod(bytes4 selector) external pure returns (bool) {
         /// @dev ordered by frequency of usage
         return
-            selector == this.append.selector ||
-            selector == this.addList.selector ||
-            selector == this.changeConfig.selector ||
-            selector == this.remove.selector ||
+            selector == this.addToList.selector ||
+            selector == this.updateConfig.selector ||
+            selector == this.removeFromList.selector ||
             selector == this.changeTax.selector ||
             selector == this.changeTaxRange.selector ||
             selector == this.emergency.selector ||
@@ -265,5 +228,45 @@ contract SPOG is ERC165, ISPOG {
     function getInflationReward(uint256 amount) external view returns (uint256) {
         // TODO: prevent overflow, precision loss ?
         return (amount * inflator) / _INFLATOR_SCALE;
+    }
+
+    function get(bytes32 key) external view returns (bytes32 value) {
+        value = _valueAt[key];
+    }
+
+    function get(bytes32[] calldata keys) external view returns (bytes32[] memory values) {
+        values = new bytes32[](keys.length);
+
+        for (uint256 index_; index_ < keys.length; ++index_) {
+            values[index_] = _valueAt[keys[index_]];
+        }
+    }
+
+    function listContains(bytes32 listName, address account) external view returns (bool contains) {
+        contains = _valueAt[_getKeyInSet(listName, account)] == bytes32(uint256(1));
+    }
+
+    function _addToList(bytes32 listName, address account) internal {
+        // add the address to the list
+        _valueAt[_getKeyInSet(listName, account)] = bytes32(uint256(1));
+
+        emit AddressAddedToList(listName, account);
+    }
+
+    function _removeFromList(bytes32 listName, address account) internal {
+        // remove the address from the list
+        delete _valueAt[_getKeyInSet(listName, account)];
+
+        emit AddressRemovedFromList(listName, account);
+    }
+
+    function _updateConfig(bytes32 valueName, bytes32 value) internal {
+        _valueAt[valueName] = value;
+
+        emit ConfigUpdated(valueName, value);
+    }
+
+    function _getKeyInSet(bytes32 listName, address account) private pure returns (bytes32 key) {
+        key = keccak256(abi.encodePacked(listName, account));
     }
 }

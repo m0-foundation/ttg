@@ -70,7 +70,7 @@ contract SPOGDeployScript is BaseScript {
         vm.startBroadcast(deployer);
 
         SPOG.Configuration memory config = SPOG.Configuration(
-            payable(governor),
+            governor,
             vault,
             cash,
             tax,

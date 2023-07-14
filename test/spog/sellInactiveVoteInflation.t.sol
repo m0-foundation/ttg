@@ -7,7 +7,7 @@ contract SPOG_SellInactiveVoteInflation is SPOGBaseTest {
     //
     // function test_sellInactiveVoteInflation() public {
     //     uint256 initialBalance = governor.vote().totalSupply();
-    //     (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+    //     (uint256 proposalId,,,,) = proposeAddingAnAddressToList(makeAddr("Alpha"));
     //     // deposit rewards for previous epoch
     //     vm.roll(block.number + governor.votingDelay() + 1);
     //     uint256 adminBalance = vote.balanceOf(address(this));
@@ -39,7 +39,7 @@ contract SPOG_SellInactiveVoteInflation is SPOGBaseTest {
     //     assertEq(governor.vote().balanceOf(address(voteVault)), totalInflation - inactiveCoinsInflation);
     // }
     // function test_Revert_sellInactiveVoteInflation_whenEpochAlreadyAuctioned() public {
-    //     (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+    //     (uint256 proposalId,,,,) = proposeAddingAnAddressToList(makeAddr("Alpha"));
     //     // deposit rewards for previous epoch
     //     vm.roll(block.number + governor.votingDelay() + 1);
     //     governor.castVote(proposalId, yesVote);
@@ -69,7 +69,7 @@ contract SPOG_SellInactiveVoteInflation is SPOGBaseTest {
     //     vote.delegate(ernie);
     //     vm.stopPrank();
     //     uint256 initialBalance = governor.vote().totalSupply();
-    //     (uint256 proposalId,,,,) = proposeAddingNewListToSpog("Add new list to spog");
+    //     (uint256 proposalId,,,,) = proposeAddingAnAddressToList(makeAddr("Alpha"));
     //     // deposit rewards for previous epoch
     //     vm.roll(block.number + governor.votingDelay() + 1);
     //     uint256 adminBalance = vote.balanceOf(address(this));

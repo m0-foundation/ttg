@@ -163,14 +163,6 @@ contract DualGovernor is DualGovernorQuorum {
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
         if (target == spog && !ISPOG(spog).isGovernedMethod(func)) revert InvalidMethod();
 
-        // prevent proposing a list that can be changed before execution
-        // TODO: potentially this should be part of pre-validation logic
-        if (func == ISPOG.addList.selector) {
-            address list = _extractFuncParams(calldatas[0]);
-
-            // if (IList(list).admin() != spog) revert ListAdminIsNotSPOG();
-        }
-
         ISPOG(spog).chargeFee(_msgSender(), func);
 
         uint256 nextEpoch = currentEpoch() + 1;

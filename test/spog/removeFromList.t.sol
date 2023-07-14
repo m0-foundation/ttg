@@ -5,39 +5,24 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
-contract SPOG_RemoveAddressFromList is SPOGBaseTest {
-    address internal listToRemoveAddressFrom;
+contract SPOG_RemoveFromList is SPOGBaseTest {
     address internal addressToRemove;
 
-    function setUp() public override {
-        super.setUp();
-
-        addNewListToSpogAndAppendAnAddressToIt();
-        // listToRemoveAddressFrom = address(list);
-        addressToRemove = address(0x1234);
-    }
-
-    function test_Revert_RemoveAddressFromListWhenNotCallingFromGovernance() public {
+    function test_Revert_RemoveFromListWhenNotCallingFromGovernance() public {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
-        spog.remove(listToRemoveAddressFrom, addressToRemove);
+        spog.removeFromList(LIST_NAME, addressToRemove);
     }
 
-    function test_Revert_WhenListNotInMasterList() external {
-        bytes memory expectedError = abi.encodeWithSignature("ListIsNotInMasterList()");
+    function test_SPOGProposalToRemoveFromAList() public {
+        (, addressToRemove) = addAnAddressToList();
 
-        vm.expectRevert(expectedError);
-        vm.prank(address(governor));
-        spog.remove(address(0x1234), addressToRemove);
-    }
-
-    function test_SPOGProposalToRemoveAddressFromAList() public {
         // create proposal to remove address from list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("remove(address,address)", listToRemoveAddressFrom, addressToRemove);
+        calldatas[0] = abi.encodeWithSignature("removeFromList(bytes32,address)", LIST_NAME, addressToRemove);
         string memory description = "Remove address from a list";
 
         (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
@@ -53,8 +38,8 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
 
         // assert that vault has cash balance paid for proposals
         assertTrue(
-            cash.balanceOf(address(vault)) == tax * 3,
-            "Balance of SPOG should be 3x tax, one from adding the list to the SPOG, one from append an address to the list, and one from the current proposal"
+            cash.balanceOf(address(vault)) == tax * 2,
+            "Balance of SPOG should be 3x tax, one from add an address to the list and one from the current proposal"
         );
 
         // fast forward to an active voting period
@@ -70,6 +55,6 @@ contract SPOG_RemoveAddressFromList is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
-        // assertTrue(!IList(listToRemoveAddressFrom).contains(addressToRemove), "Address was not removed from list");
+        assertFalse(spog.listContains(LIST_NAME, addressToRemove), "Address was not removed from list");
     }
 }
