@@ -34,6 +34,7 @@ interface IDualGovernor {
     error InvalidValueQuorumNumerator();
     error ZeroStart();
     error VoteValueMismatch();
+    error ProposalIsNotInActiveState();
 
     // Events
     event Proposal(

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import { IDualGovernor } from "../src/interfaces/ISPOGGovernor.sol";
+
 import { SPOGBaseTest } from "./shared/SPOGBaseTest.t.sol";
 
 contract InflationRewardsTest is SPOGBaseTest {
@@ -11,7 +13,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         (uint256 proposalId3, , , , ) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
 
         // cannot vote in epoch 0
-        vm.expectRevert("DualGovernor: vote not currently active");
+        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId, yesVote);
 
         // voting period started
@@ -171,7 +173,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         // epoch - set up proposals
         (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
         // alice votes on proposal 1
         vm.startPrank(alice);
         governor.castVote(proposal1Id, yesVote);
@@ -294,7 +296,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         (uint256 proposal1Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog 1");
 
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
 
         vm.startPrank(alice);
         // alice votes on proposal 1
@@ -494,7 +496,7 @@ contract InflationRewardsTest is SPOGBaseTest {
         /// EPOCH 1
 
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
 
         vm.startPrank(alice);
         // alice votes on proposal 1

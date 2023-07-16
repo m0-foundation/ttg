@@ -44,7 +44,7 @@ contract DualGovernorTest is SPOGBaseTest {
         uint256 voteBalance = vote.balanceOf(address(this));
 
         // revert happens when voting on proposal before voting period has started
-        vm.expectRevert("DualGovernor: vote not currently active");
+        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId, yesVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
@@ -75,10 +75,10 @@ contract DualGovernorTest is SPOGBaseTest {
         uint256 voteBalance = vote.getVotes(address(this));
 
         // revert happens when voting on proposal before voting period has started
-        vm.expectRevert("DualGovernor: vote not currently active");
+        vm.expectRevert();
         governor.castVote(proposalId, yesVote);
 
-        vm.expectRevert("DualGovernor: vote not currently active");
+        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId2, noVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
@@ -117,7 +117,7 @@ contract DualGovernorTest is SPOGBaseTest {
         // vote balance of voter before casting vote on proposal 3
         uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
 
-        vm.expectRevert("DualGovernor: vote not currently active");
+        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId3, noVote);
 
         assertTrue(

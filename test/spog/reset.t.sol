@@ -2,11 +2,11 @@
 pragma solidity 0.8.19;
 
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
 import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
 import { VOTE } from "../../src/tokens/VOTE.sol";
-
-import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -43,8 +43,6 @@ contract SPOG_reset is SPOGBaseTest {
         string memory proposalDescription,
         address valueToken
     ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
-        vm.roll(deployScript.time() * 2);
-
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -132,8 +130,8 @@ contract SPOG_reset is SPOGBaseTest {
         // value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod() + 1);
+        // proposal is now in succeeded state, it reached quorum
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         address governorBeforeFork = address(spog.governor());
 
@@ -144,20 +142,33 @@ contract SPOG_reset is SPOGBaseTest {
 
         assertFalse(address(spog.governor()) == governorBeforeFork, "Governor was not reset");
 
-        // TODO: fix interfaces
-        assertEq(
-            DualGovernor(payable(address(spog.governor()))).voteQuorumNumerator(),
-            5,
-            "Governor quorum was not set correctly"
-        );
+        assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 5, "Governor quorum was not set correctly");
 
-        assertEq(
-            DualGovernor(payable(address(spog.governor()))).votingPeriod(),
-            15,
-            "Governor voting delay was not set correctly"
-        );
+        assertEq(ISPOGGovernor(spog.governor()).votingPeriod(), 15, "Governor voting delay was not set correctly");
 
         // Make sure governance is functional
         executeValidProposal();
+    }
+
+    function test_Reset_ValidateProposalState() public {
+        (uint256 proposalId, , , , ) = proposeGovernanceReset("Propose reset of vote governance", address(value));
+
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
+
+        // fast forward to an active voting period
+        vm.roll(block.number + 2);
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
+
+        // value holders vote on proposal
+        governor.castVote(proposalId, yesVote);
+
+        // proposal is now in succeeded state, it reached quorum
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
+
+        // fast forward to an active voting period
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        // proposal is now in succeeded state, it reached quorum
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Not in expired state");
     }
 }
