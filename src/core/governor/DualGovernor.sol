@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
+import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+import { Governor } from "../../ImportedContracts.sol";
+
 import { IList } from "../../interfaces/periphery/IList.sol";
 import { ISPOG } from "../../interfaces/ISPOG.sol";
-import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
 import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
-
-import { Governor } from "../../ImportedContracts.sol";
 
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 
@@ -342,6 +342,7 @@ contract DualGovernor is DualGovernorQuorum {
         // Set state to `Expired` if proposal was not executed in the next epoch
         if (status == ProposalState.Succeeded) {
             uint256 expiresAt = proposalDeadline(proposalId) + _votingPeriod;
+
             if (block.number > expiresAt) {
                 return ProposalState.Expired;
             }
