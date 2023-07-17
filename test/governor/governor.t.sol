@@ -38,7 +38,7 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanOnlyVoteOnProposalAfterItsVotingDelay() public {
         // propose adding a new list to spog
-        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
 
         // vote balance of voter valid for voting
         uint256 voteBalance = vote.balanceOf(address(this));
@@ -68,8 +68,8 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_CanVoteOnMultipleProposalsAfterItsVotingDelay() public {
         // Proposal 1 and 2
-        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Another new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+        (uint256 proposalId2, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
 
         // vote balance of voter
         uint256 voteBalance = vote.getVotes(address(this));
@@ -112,7 +112,7 @@ contract DualGovernorTest is SPOGBaseTest {
         // Proposal 3
 
         // Add another proposal and voting can only happen after voting delay
-        (uint256 proposalId3, , , , ) = proposeAddingNewListToSpog("Proposal3 for new list to spog");
+        (uint256 proposalId3, , , , ) = proposeAddingAnAddressToList(makeAddr("Omega"));
 
         // vote balance of voter before casting vote on proposal 3
         uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
@@ -144,7 +144,7 @@ contract DualGovernorTest is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeAddingNewListToSpog("new list to spog");
+        ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
 
         // fast forward to an active voting period. Inflate vote token supply
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -161,13 +161,13 @@ contract DualGovernorTest is SPOGBaseTest {
         vm.roll(block.number + 5 * governor.votingDelay() + 1);
 
         // should not revert
-        proposeAddingNewListToSpog("new list to spog 2");
+        proposeAddingAnAddressToList(makeAddr("Beta"));
     }
 
     function test_CanVoteOnMultipleProposals() public {
         // propose adding a new list to spog
-        (uint256 proposalId, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
-        (uint256 proposalId2, , , , ) = proposeAddingNewListToSpog("Add another new list to spog");
+        (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+        (uint256 proposalId2, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
 
         // vote balance of voter
         uint256 voteBalance = vote.balanceOf(address(this));
@@ -214,8 +214,8 @@ contract DualGovernorTest is SPOGBaseTest {
         values[0] = 0;
         values[1] = 0;
         bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
-        calldatas[1] = abi.encodeWithSignature("append(address,address)", bob, list);
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
+        calldatas[1] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, bob);
         string memory description = "add 2 merchants to spog";
 
         // approve cash spend for proposal
@@ -232,7 +232,7 @@ contract DualGovernorTest is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 1 ether;
         bytes[] memory calldatas = new bytes[](2);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -246,11 +246,11 @@ contract DualGovernorTest is SPOGBaseTest {
     function test_Revert_Propose_WhenTargetIsNotSPOG() public {
         address[] memory targets = new address[](1);
         // Instead of SPOG, we are passing the list contract
-        targets[0] = address(list);
+        targets[0] = makeAddr("someAddress");
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -267,7 +267,7 @@ contract DualGovernorTest is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addListFun(address)", list);
+        calldatas[0] = abi.encodeWithSignature("someNonExistentFunction(uint256)", 0);
         string memory description = "Should not pass proposal";
 
         // approve cash spend for proposal
@@ -283,7 +283,7 @@ contract DualGovernorTest is SPOGBaseTest {
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
         string memory description = "add merchant to spog";
 
         // approve cash spend for proposal
@@ -298,14 +298,14 @@ contract DualGovernorTest is SPOGBaseTest {
     }
 
     function test_Revert_Execute_onExpiration() public {
-        // create proposal to append address to list
+        // create proposal to add address to list
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("append(address,address)", alice, list);
-        string memory description = "Append address to a list";
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
+        string memory description = "Add address to a list";
 
         (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
             targets,

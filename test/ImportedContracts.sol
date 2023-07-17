@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { Test } from "../lib/forge-std/src/Test.sol";
+import { Test, console2 } from "../lib/forge-std/src/Test.sol";
 
 import { Clones } from "../lib/openzeppelin-contracts/contracts/proxy/Clones.sol";
 import { ERC165 } from "../lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";

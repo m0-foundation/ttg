@@ -47,7 +47,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.governor == address(0)) revert ZeroGovernorAddress();
         SPOG.Configuration memory configInvalidGovernor = SPOG.Configuration(
-            payable(address(0)),
+            address(0),
             _vault,
             _cash,
             _tax,
@@ -62,7 +62,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.vault == address(0)) revert ZeroVaultAddress();
         SPOG.Configuration memory configInvalidVault = SPOG.Configuration(
-            payable(_governor),
+            _governor,
             address(0),
             _cash,
             _tax,
@@ -77,7 +77,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.cash == address(0)) revert ZeroCashAddress();
         SPOG.Configuration memory configInvalidCash = SPOG.Configuration(
-            payable(_governor),
+            _governor,
             _vault,
             address(0),
             _tax,
@@ -92,7 +92,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.tax == 0) revert ZeroTax();
         SPOG.Configuration memory configInvalidTax = SPOG.Configuration(
-            payable(_governor),
+            _governor,
             _vault,
             _cash,
             0,
@@ -107,7 +107,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
         SPOG.Configuration memory configTaxOutOfRange = SPOG.Configuration(
-            payable(_governor),
+            _governor,
             _vault,
             _cash,
             _taxUpperBound + 1,
@@ -121,7 +121,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.inflator == 0) revert ZeroInflator();
         SPOG.Configuration memory configInvalidInflator = SPOG.Configuration(
-            payable(_governor),
+            _governor,
             _vault,
             _cash,
             _tax,
@@ -136,7 +136,7 @@ contract SPOG_InitialState is SPOGBaseTest {
 
         // if (config.valueFixedInflation == 0) revert ZeroValueInflation();
         SPOG.Configuration memory configInvalidInflation = SPOG.Configuration(
-            payable(_governor),
+            _governor,
             _vault,
             _cash,
             _tax,

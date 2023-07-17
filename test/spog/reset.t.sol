@@ -75,14 +75,14 @@ contract SPOG_reset is SPOGBaseTest {
     }
 
     function executeValidProposal() private {
-        DualGovernor governor = DualGovernor(payable(address(spog.governor())));
+        DualGovernor governor = DualGovernor(payable(spog.governor()));
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("addList(address)", list);
-        string memory description = "Add new list";
+        calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
+        string memory description = "Add alice to list";
 
         (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
             targets,
@@ -109,7 +109,7 @@ contract SPOG_reset is SPOGBaseTest {
 
     function test_Revert_Reset_WhenNotCalledByGovernance() public {
         vm.expectRevert(ISPOG.OnlyGovernor.selector);
-        spog.reset(payable(address(governor)));
+        spog.reset(address(governor));
     }
 
     function test_Reset_Success() public {
@@ -133,14 +133,14 @@ contract SPOG_reset is SPOGBaseTest {
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
-        address governorBeforeFork = address(spog.governor());
+        address governorBeforeFork = spog.governor();
 
         vm.expectEmit(false, false, false, false);
         address anyAddress = address(0);
         emit ResetExecuted(anyAddress, 0);
         governor.execute(targets, values, calldatas, hashedDescription);
 
-        assertFalse(address(spog.governor()) == governorBeforeFork, "Governor was not reset");
+        assertFalse(spog.governor() == governorBeforeFork, "Governor was not reset");
 
         assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 5, "Governor quorum was not set correctly");
 

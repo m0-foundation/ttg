@@ -2,20 +2,19 @@
 pragma solidity 0.8.19;
 
 import { IERC165 } from "./ImportedInterfaces.sol";
-import { IProtocolConfigurator } from "./IProtocolConfigurator.sol";
 
-interface ISPOG is IProtocolConfigurator, IERC165 {
+interface ISPOG is IERC165 {
     // Enums
     enum EmergencyType {
-        Remove,
-        Append,
-        ChangeConfig
+        RemoveFromList,
+        AddToList,
+        UpdateConfig
     }
 
     // Events
-    event ListAdded(address indexed list, string name);
-    event AddressAppendedToList(address indexed list, address indexed account);
-    event AddressRemovedFromList(address indexed list, address indexed account);
+    event AddressAddedToList(bytes32 indexed listName, address indexed account);
+    event AddressRemovedFromList(bytes32 indexed listName, address indexed account);
+    event ConfigUpdated(bytes32 indexed valueName, bytes32 indexed value);
     event EmergencyExecuted(uint8 emergencyType, bytes callData);
     event TaxChanged(uint256 oldTax, uint256 newTax);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
@@ -31,10 +30,10 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     error TaxOutOfRange();
     error ZeroInflator();
     error ZeroValueInflation();
-    error ListAdminIsNotSPOG();
-    error ListIsNotInMasterList();
+    error ListAdminIsNotSPOG(); // TODO: Remove?
+    error ListIsNotInMasterList(); // TODO: Remove?
     error EmergencyMethodNotSupported();
-    error ValueTokenMismatch();
+    error ValueTokenMismatch(); // TODO: Remove?
     error InvalidTaxRange();
 
     // Info functions about double governance and SPOG parameters
@@ -55,11 +54,11 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
     function valueFixedInflation() external view returns (uint256);
 
     // Accepted `proposal` functions
-    function addList(address list) external;
+    function addToList(bytes32 listName, address account) external;
 
-    function append(address list, address account) external;
+    function removeFromList(bytes32 listName, address account) external;
 
-    function remove(address list, address account) external;
+    function updateConfig(bytes32 valueName, bytes32 value) external;
 
     function emergency(uint8 emergencyType, bytes calldata callData) external;
 
@@ -75,6 +74,10 @@ interface ISPOG is IProtocolConfigurator, IERC165 {
 
     function getInflationReward(uint256 amount) external view returns (uint256);
 
-    // List accessor functions
-    function isListInMasterList(address list) external view returns (bool);
+    // Registry functions
+    function get(bytes32 key) external view returns (bytes32 value);
+
+    function get(bytes32[] calldata keys) external view returns (bytes32[] memory values);
+
+    function listContains(bytes32 listName, address account) external view returns (bool contains);
 }
