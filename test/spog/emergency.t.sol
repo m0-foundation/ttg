@@ -4,20 +4,7 @@ pragma solidity 0.8.19;
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
-import { ERC165 } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
-
-interface IMockConfig {
-    function someValue() external view returns (uint256);
-}
-
-contract MockConfig is IMockConfig, ERC165 {
-    uint256 public immutable someValue = 1;
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IMockConfig).interfaceId || super.supportsInterface(interfaceId);
-    }
-}
 
 contract SPOG_emergency is SPOGBaseTest {
     address internal addressToChange;
