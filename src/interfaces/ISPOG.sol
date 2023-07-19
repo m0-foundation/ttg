@@ -27,7 +27,7 @@ interface ISPOG {
     error ZeroTax();
     error TaxOutOfRange();
     error ZeroInflator();
-    error ZeroValueInflation();
+    error ZeroFixedReward();
     error ListAdminIsNotSPOG(); // TODO: Remove?
     error ListIsNotInMasterList(); // TODO: Remove?
     error EmergencyMethodNotSupported();
@@ -49,7 +49,7 @@ interface ISPOG {
 
     function inflator() external view returns (uint256);
 
-    function valueFixedInflation() external view returns (uint256);
+    function fixedReward() external view returns (uint256);
 
     // Accepted `proposal` functions
     function addToList(bytes32 listName, address account) external;

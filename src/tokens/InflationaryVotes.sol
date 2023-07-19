@@ -287,7 +287,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
             inflation += ISPOG(spog).getInflationReward(rewardableBalance);
             // valueReward +=
-            //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
+            //     rewardableBalance * ISPOG(spog).fixedReward() / getPastTotalBalanceSupply(epochStart);
         }
 
         _inflation[delegator] += inflation;

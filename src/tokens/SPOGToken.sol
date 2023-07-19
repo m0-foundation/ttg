@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
+import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGToken } from "../interfaces/ITokens.sol";
 
 import { AccessControlEnumerable } from "../ImportedContracts.sol";
@@ -22,6 +23,7 @@ abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
 
         spog = spog_;
 
-        _setupRole(MINTER_ROLE, spog_);
+        _setupRole(MINTER_ROLE, spog);
+        // _setupRole(MINTER_ROLE, ISPOG(spog).governor());
     }
 }

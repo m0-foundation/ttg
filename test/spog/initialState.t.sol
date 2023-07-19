@@ -19,26 +19,20 @@ contract SPOG_InitialState is SPOGBaseTest {
     address internal _cash = makeAddr("TestCash");
 
     function test_SPOGHasSetInitialValuesCorrectly() public {
-        assertEq(address(spog.governor()), deployScript.governor(), "governor not set correctly");
-        assertEq(address(spog.vault()), deployScript.vault(), "vault not set correctly");
-        assertEq(address(spog.cash()), deployScript.cash(), "cash not set correctly");
-        assertEq(spog.inflator(), deployScript.inflator(), "inflator not set correctly");
+        assertEq(address(spog.governor()), deployScript.governor(), "governor was not set up correctly");
+        assertEq(address(spog.vault()), deployScript.vault(), "vault was not set up correctly");
+        assertEq(address(spog.cash()), deployScript.cash(), "cash was not set up correctly");
+        assertEq(spog.inflator(), deployScript.inflator(), "inflator was not set up correctly");
+        assertEq(spog.fixedReward(), deployScript.fixedReward(), "fixedReward was not set up correctly");
+        assertEq(spog.tax(), deployScript.tax(), "tax was not set up correctly");
+        assertEq(spog.taxLowerBound(), deployScript.taxLowerBound(), "taxLowerBound was not set up correctly");
+        assertEq(spog.taxUpperBound(), deployScript.taxUpperBound(), "taxUpperBound was not set up correctly");
 
-        assertEq(
-            spog.valueFixedInflation(),
-            deployScript.valueFixedInflation(),
-            "valueFixedInflation not set correctly"
-        );
-
-        assertEq(spog.tax(), deployScript.tax(), "tax not set correctly");
-        assertEq(spog.taxLowerBound(), deployScript.taxLowerBound(), "taxLowerBound not set correctly");
-        assertEq(spog.taxUpperBound(), deployScript.taxUpperBound(), "taxUpperBound not set correctly");
-
-        assertEq(governor.votingPeriod(), deployScript.time(), "time not set correctly");
-        assertEq(governor.voteQuorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
-        assertEq(governor.valueQuorumNumerator(), deployScript.valueQuorum(), "valueQuorum not set correctly");
-        assertEq(address(governor.vote()), deployScript.vote(), "vote token not set correctly");
-        assertEq(address(governor.value()), deployScript.value(), "value token not set correctly");
+        assertEq(governor.votingPeriod(), deployScript.time(), "time was not set up correctly");
+        assertEq(governor.voteQuorumNumerator(), deployScript.voteQuorum(), "voteQuorum was not set up correctly");
+        assertEq(governor.valueQuorumNumerator(), deployScript.valueQuorum(), "valueQuorum was not set up correctly");
+        assertEq(governor.vote(), deployScript.vote(), "vote token was not set up correctly");
+        assertEq(governor.value(), deployScript.value(), "value token was not set up correctly");
     }
 
     function test_Revert_WhenSettingIncorrectInitialValues() public {
@@ -134,7 +128,7 @@ contract SPOG_InitialState is SPOGBaseTest {
         vm.expectRevert(ISPOG.ZeroInflator.selector);
         new SPOG(configInvalidInflator);
 
-        // if (config.valueFixedInflation == 0) revert ZeroValueInflation();
+        // if (config.fixedReward == 0) revert ZeroFixedReward();
         SPOG.Configuration memory configInvalidInflation = SPOG.Configuration(
             _governor,
             _vault,
@@ -146,7 +140,7 @@ contract SPOG_InitialState is SPOGBaseTest {
             0
         );
 
-        vm.expectRevert(ISPOG.ZeroValueInflation.selector);
+        vm.expectRevert(ISPOG.ZeroFixedReward.selector);
         new SPOG(configInvalidInflation);
     }
 

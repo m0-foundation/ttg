@@ -274,17 +274,18 @@ contract DualGovernor is DualGovernorQuorum {
         epochBasic.finishedVotingAt[account] = block.number;
 
         // calculate and mint VOTE voting power inflation
-        uint256 votesWeightInflation = ISPOG(spog).getInflationReward(weight);
-        IVOTE(vote).addVotingPower(account, votesWeightInflation);
+        uint256 weightInflation = ISPOG(spog).getInflationReward(weight);
+        IVOTE(vote).addVotingPower(account, weightInflation);
 
-        // claim VALUE token reward by delegate
-        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / IVOTE(vote).getPastTotalVotes(epochStart);
-        // TODO: make sure governor can mint here
+        // // claim VALUE reward by delegate
+        // uint256 epochStart = startOf(epoch);
+        // uint256 valueReward = (weight * ISPOG(spog).fixedReward()) / IVOTE(vote).getPastTotalVotes(epochStart);
+        // // TODO: make sure governor can mint here
         // IVALUE(value).mint(account, valueReward);
 
-        emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, votesWeightInflation);
+        emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, weightInflation);
 
-        return votesWeightInflation;
+        return weightInflation;
     }
 
     /// @notice Gets total vote weight power for the epoch
