@@ -9,7 +9,7 @@ import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_reset is SPOGBaseTest {
-    event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
+    event ResetExecuted(address newGovernor, uint256 snapshotId);
 
     /******************************************************************************************************************/
     /*** HELPERS                                                                                                    ***/
