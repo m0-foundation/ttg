@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
+import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
+
+import { ISPOG } from "../interfaces/ISPOG.sol";
+import { ISPOGControlled } from "../interfaces/ISPOGControlled.sol";
 import { IVALUE } from "../interfaces/ITokens.sol";
 
-import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
 import { SPOGToken } from "./SPOGToken.sol";
 
 /// @title VALUE ERC20 token with a built-in snapshot functionality

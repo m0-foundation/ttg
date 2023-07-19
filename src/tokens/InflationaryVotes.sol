@@ -61,7 +61,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @dev We assume it is the sum of all the delegated votes, delegation is incentivised.
     /// @dev `blockNumber` must have been already mined
     function getPastTotalVotes(uint256 blockNumber) public view virtual returns (uint256) {
-        if (blockNumber >= block.number) revert InvalidFutureLookup();
+        // if (blockNumber >= block.number) revert InvalidFutureLookup();
 
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }

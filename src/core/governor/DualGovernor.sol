@@ -2,10 +2,11 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+import { Governor } from "../../ImportedContracts.sol";
+
 import { ISPOG } from "../../interfaces/ISPOG.sol";
 import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
-import { Governor } from "../../ImportedContracts.sol";
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 
 /// @title SPOG Dual Governor Contract
@@ -277,11 +278,11 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 weightInflation = ISPOG(spog).getInflationReward(weight);
         IVOTE(vote).addVotingPower(account, weightInflation);
 
-        // // claim VALUE reward by delegate
-        // uint256 epochStart = startOf(epoch);
-        // uint256 valueReward = (weight * ISPOG(spog).fixedReward()) / IVOTE(vote).getPastTotalVotes(epochStart);
-        // // TODO: make sure governor can mint here
-        // IVALUE(value).mint(account, valueReward);
+        // claim VALUE reward by delegate
+        uint256 epochStart = startOf(epoch);
+        uint256 valueReward = (weight * ISPOG(spog).fixedReward()) / IVOTE(vote).getPastTotalVotes(epochStart);
+        // TODO: make sure governor can mint here
+        IVALUE(value).mint(account, valueReward);
 
         emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, weightInflation);
 
