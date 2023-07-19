@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
-import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol";
-
-import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
-import { VOTE } from "../../src/tokens/VOTE.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -17,65 +15,8 @@ contract SPOG_reset is SPOGBaseTest {
     /*** HELPERS                                                                                                    ***/
     /******************************************************************************************************************/
 
-    function createNewGovernor(address valueToken) private returns (address) {
-        // deploy vote governor from factory
-        VOTE newVoteToken = new VOTE("new SPOGVote", "vote", valueToken);
-        // grant minter role to new voteToken deployer
-        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(this));
-
-        uint256 time = 15; // in blocks
-        uint256 voteQuorum = 5;
-        uint256 valueQuorum = 5;
-
-        DualGovernor newGovernor = new DualGovernor(
-            "new SPOGGovernor",
-            address(newVoteToken),
-            valueToken,
-            voteQuorum,
-            valueQuorum,
-            time
-        );
-
-        return address(newGovernor);
-    }
-
-    function proposeGovernanceReset(
-        string memory proposalDescription,
-        address valueToken
-    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
-        address[] memory targets = new address[](1);
-        targets[0] = address(spog);
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        bytes[] memory calldatas = new bytes[](1);
-        address newGovernor = createNewGovernor(valueToken);
-        bytes memory callData = abi.encodeWithSignature("reset(address)", newGovernor);
-        string memory description = proposalDescription;
-        calldatas[0] = callData;
-
-        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
-        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
-
-        // create proposal
-        cash.approve(address(spog), 12 * deployScript.tax());
-
-        // Check the event is emitted
-        // TODO: check proposal
-        // expectEmit();
-        // emit NewValueQuorumProposal(proposalId);
-
-        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
-
-        // Make sure the proposal is immediately (+1 block) votable
-        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
-
-        assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
-
-        return (proposalId, targets, values, calldatas, hashedDescription);
-    }
-
     function executeValidProposal() private {
-        DualGovernor governor = DualGovernor(payable(spog.governor()));
+        ISPOGGovernor governor = ISPOGGovernor(spog.governor());
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
@@ -119,7 +60,7 @@ contract SPOG_reset is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeGovernanceReset("Propose reset of vote governance", address(value));
+        ) = proposeReset("Propose reset of vote governance", address(value));
 
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
@@ -151,7 +92,7 @@ contract SPOG_reset is SPOGBaseTest {
     }
 
     function test_Reset_ValidateProposalState() public {
-        (uint256 proposalId, , , , ) = proposeGovernanceReset("Propose reset of vote governance", address(value));
+        (uint256 proposalId, , , , ) = proposeReset("Propose reset of vote governance", address(value));
 
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 

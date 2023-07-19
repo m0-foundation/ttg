@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import { IERC20, IAccessControl } from "../interfaces/ImportedInterfaces.sol";
+
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../../src/interfaces/periphery/ISPOGVault.sol";
 import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
 
+import { VOTE } from "../../src/tokens/VOTE.sol";
+import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
+
 import { SPOGDeployScript } from "../../script/SPOGDeploy.s.sol";
-
-import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
-
 import { BaseTest } from "./BaseTest.t.sol";
 
 contract SPOGBaseTest is BaseTest {
@@ -87,7 +89,6 @@ contract SPOGBaseTest is BaseTest {
         vm.stopPrank();
     }
 
-    /* Helper functions */
     function getProposalIdAndHashedDescription(
         address[] memory targets,
         uint256[] memory values,
@@ -146,5 +147,126 @@ contract SPOGBaseTest is BaseTest {
 
         // execute proposal
         governor.execute(targets, values, calldatas, hashedDescription);
+    }
+
+    function proposeEmergencyAppend(
+        address account
+    ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
+        // the actual proposal to wrap as an emergency
+        bytes memory callData = abi.encode(LIST_NAME, account);
+
+        // the emergency proposal
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+
+        calldatas[0] = abi.encodeWithSignature(
+            "emergency(uint8,bytes)",
+            uint8(ISPOG.EmergencyType.AddToList),
+            callData
+        );
+
+        string memory description = "Emergency add of merchant";
+
+        (bytes32 hashedDescription, uint256 proposalId) = getProposalIdAndHashedDescription(
+            targets,
+            values,
+            calldatas,
+            description
+        );
+
+        cash.approve(address(spog), tax);
+
+        // TODO: Check that `NewEmergencyProposal` event is emitted
+        // expectEmit();
+        // emit NewEmergencyProposal(proposalId);
+        governor.propose(targets, values, calldatas, description);
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
+    }
+
+    function proposeReset(
+        string memory proposalDescription,
+        address valueToken
+    ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        address newGovernor = createNewGovernor(valueToken);
+        bytes memory callData = abi.encodeWithSignature("reset(address)", newGovernor);
+        string memory description = proposalDescription;
+        calldatas[0] = callData;
+
+        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
+
+        // create proposal
+        cash.approve(address(spog), 12 * deployScript.tax());
+
+        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
+
+        // Make sure the proposal is immediately (+1 block) votable
+        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
+
+        assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
+    }
+
+    function createNewGovernor(address valueToken) internal returns (address) {
+        // deploy vote governor from factory
+        VOTE newVoteToken = new VOTE("new SPOGVote", "vote", valueToken);
+        // grant minter role to new voteToken deployer
+        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(this));
+
+        uint256 time = 15; // in blocks
+        uint256 voteQuorum = 5;
+        uint256 valueQuorum = 5;
+
+        DualGovernor newGovernor = new DualGovernor(
+            "new SPOGGovernor",
+            address(newVoteToken),
+            valueToken,
+            voteQuorum,
+            valueQuorum,
+            time
+        );
+
+        return address(newGovernor);
+    }
+
+    function proposeTaxRangeChange(
+        string memory proposalDescription
+    ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        bytes memory callData = abi.encodeWithSignature("changeTaxRange(uint256,uint256)", 10e18, 12e18);
+        string memory description = proposalDescription;
+        calldatas[0] = callData;
+
+        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
+
+        // uint256 epoch = governor.currentEpoch();
+
+        // create proposal
+        cash.approve(address(spog), tax);
+
+        // TODO: add checks for 2 emitted events
+        // expectEmit();
+        // emit ProposalCreated();
+        // expectEmit();
+        // emit Proposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
+        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
+        assertTrue(spogProposalId == proposalId, "spog proposal ids don't match");
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
     }
 }
