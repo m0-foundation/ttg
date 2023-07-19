@@ -31,6 +31,8 @@ contract SPOGBaseTest is BaseTest {
     address public bob = createUser("bob");
     address public carol = createUser("carol");
 
+    address public addressToChange = address(0x1234);
+
     uint256 public amountToMint = 100e18;
 
     uint8 public noVote = 0;
