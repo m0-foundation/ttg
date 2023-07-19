@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { ISPOG } from "../../src/interfaces/ISPOG.sol";
-import { IAccessControl } from "../interfaces/ImportedInterfaces.sol";
-
-import { VOTE } from "../../src/tokens/VOTE.sol";
-import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
-
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract InflationPerProposalTypeTest is SPOGBaseTest {

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
-
 import { ERC165 } from "../ImportedContracts.sol";
+
+import { ISPOG } from "../../src/interfaces/ISPOG.sol";
+
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 interface IMockConfig {
@@ -21,6 +22,8 @@ contract MockConfig is IMockConfig, ERC165 {
 
 contract SPOG_emergency is SPOGBaseTest {
     // Setup function, add test-specific initializations here
+    address internal addressToChange;
+
     function setUp() public override {
         super.setUp();
 

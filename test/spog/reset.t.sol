@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
-import { IAccessControl, IGovernor } from "../interfaces/ImportedInterfaces.sol";
-
-import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
-import { VOTE } from "../../src/tokens/VOTE.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -18,7 +16,7 @@ contract SPOG_reset is SPOGBaseTest {
     /******************************************************************************************************************/
 
     function executeValidProposal() private {
-        DualGovernor governor = DualGovernor(payable(spog.governor()));
+        ISPOGGovernor governor = ISPOGGovernor(spog.governor());
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
