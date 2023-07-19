@@ -36,8 +36,6 @@ contract SPOGBaseTest is BaseTest {
     uint8 public noVote = 0;
     uint8 public yesVote = 1;
 
-    address public addressToChange = address(0x1234);
-
     enum VoteType {
         No,
         Yes
@@ -101,7 +99,10 @@ contract SPOGBaseTest is BaseTest {
         proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
     }
 
-    function proposeAddingAnAddressToList(address account) internal 
+    function proposeAddingAnAddressToList(
+        address account
+    )
+        internal
         returns (
             uint256 proposalId,
             address[] memory targets,
@@ -161,7 +162,11 @@ contract SPOGBaseTest is BaseTest {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
-        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.AddToList), callData);
+        calldatas[0] = abi.encodeWithSignature(
+            "emergency(uint8,bytes)",
+            uint8(ISPOG.EmergencyType.AddToList),
+            callData
+        );
 
         string memory description = "Emergency add of merchant";
 

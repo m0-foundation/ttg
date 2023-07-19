@@ -20,7 +20,6 @@ contract MockConfig is IMockConfig, ERC165 {
 }
 
 contract SPOG_emergency is SPOGBaseTest {
-
     // Setup function, add test-specific initializations here
     function setUp() public override {
         super.setUp();
@@ -327,7 +326,7 @@ contract SPOG_emergency is SPOGBaseTest {
             bytes[] memory calldatas,
             bytes32 hashedDescription
         ) = proposeEmergencyRemoveFromList();
-        
+
         // check proposal is pending
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
