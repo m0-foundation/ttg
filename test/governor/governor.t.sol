@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import { IDualGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
-import { IERC165, IGovernor } from "../interfaces/ImportedInterfaces.sol";
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 

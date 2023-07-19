@@ -5,8 +5,6 @@ import { AccessControlEnumerable } from "../lib/openzeppelin-contracts/contracts
 import { Checkpoints } from "../lib/openzeppelin-contracts/contracts/utils/Checkpoints.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { EnumerableMap } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableMap.sol";
-import { ERC165 } from "../lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
-import { ERC165Checker } from "../lib/openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.sol";
 import { ERC20 } from "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import { ERC20Permit } from "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import { ERC20Snapshot } from "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Snapshot.sol";

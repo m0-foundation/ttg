@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165, IERC20 } from "../interfaces/ImportedInterfaces.sol";
+import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
-import { ERC165, SafeERC20 } from "../ImportedContracts.sol";
+import { SafeERC20 } from "../ImportedContracts.sol";
 
 // TODO: "Lists" that are not enumerable are actually "Sets".
 
@@ -16,7 +16,7 @@ import { ERC165, SafeERC20 } from "../ImportedContracts.sol";
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
 /// @notice SPOG, "Simple Participation Optimized Governance"
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
-contract SPOG is ERC165, ISPOG {
+contract SPOG is ISPOG {
     using SafeERC20 for IERC20;
 
     // TODO: Drop the need for a struct for the constructor. Use named arguments instead.
@@ -148,7 +148,8 @@ contract SPOG is ERC165, ISPOG {
     /// @notice Reset current governor, special value governance method
     /// @param newGovernor The address of the new governor
     function reset(address newGovernor) external onlyGovernance {
-        // TODO: check that newGovernor implements SPOGGovernor interface, ERC165 ?
+        // NOTE: This function already ensures `newGovernor` implements `initializeSPOG`, `value`, and `vote`.
+        //       It does not ensure `newGovernor` implements `currentEpoch` for `chargeFee`.
         governor = newGovernor;
 
         // Important: initialize SPOG address in the new vote governor
@@ -216,12 +217,6 @@ contract SPOG is ERC165, ISPOG {
             selector == this.changeTaxRange.selector ||
             selector == this.emergency.selector ||
             selector == this.reset.selector;
-    }
-
-    /// @dev check SPOG interface support
-    /// @param interfaceId The interface ID to check
-    function supportsInterface(bytes4 interfaceId) public view override(IERC165, ERC165) returns (bool) {
-        return interfaceId == type(ISPOG).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /// @dev
