@@ -22,7 +22,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
 
         // alice votes didn't change, no inflation of voting power
         uint256 aliceVotesAfterFirstVote = vote.getVotes(alice);
-        assertEq(aliceVotesAfterFirstVote, aliceVotes, "No voting power rewards for emergency proposal");
+        assertEq(aliceVotesAfterFirstVote, aliceVotes, "No voting power inflation for emergency proposal");
 
         // voting period for standard proposal has started
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
@@ -32,12 +32,12 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         assertEq(
             aliceVotesAfterSecondVote,
             aliceVotes + (spog.inflator() * aliceVotes) / 100,
-            "No voting power rewards for emergency proposal"
+            "No voting power inflation for emergency proposal"
         );
 
-        // check non-zero inflation rewards
-        uint256 rewards = vote.withdrawRewards();
-        assertEq(rewards, (aliceStartBalance * spog.inflator()) / 100, "No inflation rewards");
+        // check non-zero inflation
+        uint256 inflation = vote.claimInflation();
+        assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "No inflation");
     }
 
     function test_Inflation_EpochWithDoubleQuorumProposal() public {
@@ -62,12 +62,12 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         assertEq(
             aliceVotes,
             aliceStartVotes + (spog.inflator() * aliceStartVotes) / 100,
-            "No voting power rewards for emergency proposal"
+            "No voting power inflation for emergency proposal"
         );
 
-        // check non-zero inflation rewards
-        uint256 rewards = vote.withdrawRewards();
-        assertEq(rewards, (aliceStartBalance * spog.inflator()) / 100, "No inflation rewards");
+        // check non-zero inflation
+        uint256 inflation = vote.claimInflation();
+        assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "No inflation");
     }
 
     function test_NoInflation_EpochWithEmergencyAndResetProposals() public {
@@ -89,17 +89,17 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
 
         // alice votes didn't change, no inflation of voting power
         uint256 aliceVotes = vote.getVotes(alice);
-        assertEq(aliceVotes, aliceStartVotes, "No voting power rewards for emergency proposal");
+        assertEq(aliceVotes, aliceStartVotes, "No voting power inflation for emergency proposal");
 
         // alice votes on reset proposal
         governor.castVote(proposal2Id, yesVote);
 
         // alice votes didn't change, no inflation of voting power
         aliceVotes = vote.getVotes(alice);
-        assertEq(aliceVotes, aliceStartVotes, "No voting power rewards for reset proposal");
+        assertEq(aliceVotes, aliceStartVotes, "No voting power inflation for reset proposal");
 
-        // no inflation rewards
-        uint256 rewards = vote.withdrawRewards();
-        assertEq(rewards, 0, "No inflation rewards");
+        // no inflation
+        uint256 inflation = vote.claimInflation();
+        assertEq(inflation, 0, "No inflation");
     }
 }
