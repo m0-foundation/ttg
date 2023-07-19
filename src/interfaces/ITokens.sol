@@ -12,7 +12,7 @@ interface ISPOGToken is ISPOGControlled, IAccessControl {
 
 interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
     // Events
-    event RewardsAccrued(
+    event InflationAccrued(
         address indexed account,
         address indexed delegate,
         uint256 startEpoch,
@@ -38,7 +38,7 @@ interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
 
     function addVotingPower(address account, uint256 amount) external;
 
-    function withdrawRewards() external returns (uint256);
+    function claimInflation() external returns (uint256);
 }
 
 interface IVOTE is IInflationaryVotes {

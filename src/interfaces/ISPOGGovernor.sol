@@ -52,7 +52,7 @@ interface IDualGovernor {
         address indexed account,
         uint256 indexed epoch,
         uint256 blockNumber,
-        uint256 votesWeightReward
+        uint256 inflation
     );
 
     // Accessors for vote, value tokens and spog contract

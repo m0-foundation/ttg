@@ -11,7 +11,7 @@ import { SPOGToken } from "./SPOGToken.sol";
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
 /// @notice Modified from OpenZeppelin
 /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
-/// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
+/// @dev Decouples voting power and balances for effective, time-adjusted inflation accrual
 abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVotes {
     struct Checkpoint {
         uint32 fromBlock;
@@ -22,19 +22,18 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     mapping(address delegator => address delegate) private _delegates;
-    mapping(address delegator => uint256 switchEpoch) private _delegationSwitchEpoch;
 
     mapping(address account => Checkpoint[] voteCheckpoints) private _votesCheckpoints;
-
     Checkpoint[] private _totalVotesCheckpoints;
 
     mapping(address account => Checkpoint[] balanceCheckpoints) private _balancesCheckpoints;
-
     Checkpoint[] private _totalSupplyCheckpoints;
 
-    mapping(address account => uint256 voteRewards) private _voteRewards;
-    // mapping(address account => uint256 valueRewards) private _valueRewards;
-    mapping(address account => uint256 lastEpochRewardsAccrued) private _lastEpochRewardsAccrued;
+    mapping(address account => uint256 inflation) private _inflation;
+    // mapping(address account => uint256 rewards) private _rewards;
+
+    mapping(address account => uint256 epoch) private _delegationSwitchEpoch;
+    mapping(address account => uint256 epoch) private _lastEpochInflationAccrued;
 
     constructor() SPOGToken() {}
 
@@ -160,17 +159,17 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         _delegate(signer, delegatee);
     }
 
-    /// @notice Withdraw rewards for all the epochs where delegate was active
-    function withdrawRewards() external returns (uint256) {
+    /// @notice Claim inflation for all the epochs where delegate was active
+    function claimInflation() external returns (uint256) {
         address sender = _msgSender();
 
-        _accrueRewards(sender);
+        _accrueInflation(sender);
 
-        uint256 reward = _voteRewards[sender];
+        uint256 reward = _inflation[sender];
 
         if (reward == 0) return 0;
 
-        _voteRewards[sender] = 0;
+        _inflation[sender] = 0;
 
         address currentDelegate = delegates(sender);
 
@@ -244,11 +243,11 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
     /// @dev Change delegation for `delegator` to `delegatee`.
     function _delegate(address delegator, address delegatee) internal virtual {
-        // cash out your rewards
-        _accrueRewards(delegator);
+        // voting power
+        _accrueInflation(delegator);
 
         address currentDelegate = delegates(delegator);
-        uint256 delegatorBalance = balanceOf(delegator) + _voteRewards[delegator];
+        uint256 delegatorBalance = balanceOf(delegator) + _inflation[delegator];
 
         _delegationSwitchEpoch[delegator] = ISPOGGovernor(ISPOG(spog).governor()).currentEpoch();
         _delegates[delegator] = delegatee;
@@ -258,21 +257,21 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         _moveVotingPower(currentDelegate, delegatee, delegatorBalance);
     }
 
-    /// @dev Accrue rewards for `delegator` for all the epochs where delegate was active
-    /// @dev Called during redelegation or rewards withdrawal
-    function _accrueRewards(address delegator) internal virtual {
-        // calculate rewards for number of active epochs (delegate voted on all active proposals in these epochs)
+    /// @dev Accrue inflation for `delegator` for all the epochs where delegate was active
+    /// @dev Called during redelegation or inflation withdrawal
+    function _accrueInflation(address delegator) internal virtual {
+        // calculate inflation for number of active epochs (delegate voted on all active proposals in these epochs)
         ISPOGGovernor governor = ISPOGGovernor(ISPOG(spog).governor());
         uint256 currentEpoch = governor.currentEpoch();
 
-        // no rewards are available for epoch 0
+        // no inflation for epoch 0
         if (currentEpoch == 0) return;
 
         address currentDelegate = delegates(delegator);
 
-        uint256 voteReward;
+        uint256 inflation;
         // uint256 valueReward;
-        uint256 startEpoch = _lastEpochRewardsAccrued[delegator];
+        uint256 startEpoch = _lastEpochInflationAccrued[delegator];
 
         // TODO make cycle looping safe
         for (uint256 epoch = startEpoch + 1; epoch <= currentEpoch; ++epoch) {
@@ -284,23 +283,23 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
             uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
             uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
             uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
-            uint256 rewardableBalance = _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting) + voteReward;
+            uint256 rewardableBalance = inflation + _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting);
 
-            voteReward += ISPOG(spog).getInflationReward(rewardableBalance);
+            inflation += ISPOG(spog).getInflationReward(rewardableBalance);
             // valueReward +=
             //     rewardableBalance * ISPOG(spog).valueFixedInflation() / getPastTotalBalanceSupply(epochStart);
         }
 
-        _voteRewards[delegator] += voteReward;
+        _inflation[delegator] += inflation;
         // _valueRewards[delegator] += valueReward;
 
         // TODO: see if it can be written better
         uint256 lastEpoch = governor.hasFinishedVoting(currentEpoch, currentDelegate) ? currentEpoch : currentEpoch - 1;
-        _lastEpochRewardsAccrued[delegator] = lastEpoch;
+        _lastEpochInflationAccrued[delegator] = lastEpoch;
 
-        emit RewardsAccrued(delegator, currentDelegate, startEpoch, lastEpoch, voteReward);
+        emit InflationAccrued(delegator, currentDelegate, startEpoch, lastEpoch, inflation);
 
-        // TODO: return vote and value rewards amounts
+        // TODO: return vote inflation and value rewards amounts
     }
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {

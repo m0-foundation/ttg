@@ -4,20 +4,18 @@ pragma solidity 0.8.19;
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract VaultTest is SPOGBaseTest {
-    event EpochRewardsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
+    event EpochAssetsDeposited(uint256 indexed epoch, address indexed token, uint256 amount);
 
     /******************************************************************************************************************/
     /*** HELPERS                                                                                                    ***/
     /******************************************************************************************************************/
 
-    // calculate value token inflation rewards for voter
     function createProposalsForEpochs(uint256 numberOfEpochs, uint256 numberOfProposalsPerEpoch) private {
         for (uint256 i = 0; i < numberOfEpochs; i++) {
             // advance to next epoch
             vm.roll(block.number + governor.votingDelay() + 1);
 
             for (uint256 j = 0; j < numberOfProposalsPerEpoch; j++) {
-                // update vote governor
                 proposeAddingAnAddressToList(makeAddr(string(abi.encode("Account-i", i, "-j-", j))));
             }
         }
@@ -58,13 +56,13 @@ contract VaultTest is SPOGBaseTest {
             "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
         );
 
-        // advance to next epoch so msg.sender can take rewards from previous epoch
+        // advance to next epoch so msg.sender can withdraw assets from previous epoch
         vm.roll(block.number + governor.votingDelay() + 1);
 
-        // rewards is divvied up equally among value holders (alice, bob, carol, and address(this))
+        // assets are dividied up equally among value holders (alice, bob, carol, and address(this))
         uint256 rewardAmountToReceive = epochCashRewards / 4;
 
-        // first value holder withdraws rewards
+        // first value holder withdraws assets
         uint256 initialBalanceOfCash = cash.balanceOf(address(this));
 
         vault.withdraw(epochsToGetRewardsFor, address(cash));
@@ -77,7 +75,7 @@ contract VaultTest is SPOGBaseTest {
             "Vault should have balance of Cash value"
         );
 
-        // second value holder withdraws rewards
+        // second value holder withdraws assets
         vm.startPrank(alice);
         uint256 initialAliceBalanceOfCash = cash.balanceOf(address(alice));
 
@@ -93,7 +91,7 @@ contract VaultTest is SPOGBaseTest {
 
         vm.stopPrank();
 
-        // third value holder withdraws rewards
+        // third value holder withdraws assets
         vm.startPrank(bob);
         uint256 initialBobBalanceOfCash = cash.balanceOf(address(bob));
 
@@ -109,7 +107,7 @@ contract VaultTest is SPOGBaseTest {
 
         vm.stopPrank();
 
-        // last value holder withdraws rewards
+        // last value holder withdraws assets
         vm.startPrank(carol);
         uint256 initialCarolBalanceOfCash = cash.balanceOf(address(carol));
 
@@ -158,7 +156,7 @@ contract VaultTest is SPOGBaseTest {
             "Vault's epochCashRewardDepositInVault should be equal to epochCashRewards"
         );
 
-        // advance to next epoch so msg.sender can withdraw rewards
+        // advance to next epoch so msg.sender can withdraw assets
         vm.roll(block.number + governor.votingDelay() + 1);
 
         uint256 initialBalanceOfCash = cash.balanceOf(address(this));
@@ -175,7 +173,7 @@ contract VaultTest is SPOGBaseTest {
 
         assertLt(balanceOfVaultAfter, balanceOfVaultBefore, "Vault should have less balance of Cash value");
 
-        // alice withdraws rewards
+        // alice withdraws assets
         vm.startPrank(alice);
         uint256 initialAliceBalanceOfCash = cash.balanceOf(address(alice));
 
@@ -194,14 +192,14 @@ contract VaultTest is SPOGBaseTest {
     }
 
     function test_deposit() public {
-        // deposit rewards for previous epoch
+        // deposit assets for previous epoch
         uint256 epoch = 1;
         vote.mint(address(spog), 1000e18);
         vm.startPrank(address(spog));
         vote.approve(address(vault), 1000e18);
 
         expectEmit();
-        emit EpochRewardsDeposited(epoch, address(vote), 1000e18);
+        emit EpochAssetsDeposited(epoch, address(vote), 1000e18);
         vault.deposit(epoch, address(vote), 1000e18);
         vm.stopPrank();
 
