@@ -33,7 +33,7 @@ contract SPOG_emergency is SPOGBaseTest {
     /*** HELPERS                                                                                                    ***/
     /******************************************************************************************************************/
 
-    function proposeEmergencyRemove()
+    function proposeEmergencyRemoveFromList()
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
@@ -288,7 +288,7 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeEmergencyRemove();
+        ) = proposeEmergencyRemoveFromList();
 
         // Emergency proposal is in the governor list
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
@@ -326,17 +326,8 @@ contract SPOG_emergency is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeEmergencyRemove();
-
-        // Check that tax was paid
-        uint256 balanceAfterProposal = cash.balanceOf(address(vault));
-        assertEq(balanceAfterProposal - balanceBeforeProposal, tax, "Emergency proposal costs 1 * tax");
-
-        // Emergency proposal is in the governor list
-        assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
-
-        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
-
+        ) = proposeEmergencyRemoveFromList();
+        
         // check proposal is pending
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 

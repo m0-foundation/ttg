@@ -13,24 +13,25 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
     function test_Inflation_EpochWithEmergencyAndStandardProposals() public {
         // set up proposals
         (uint256 proposal1Id, , , , ) = proposeEmergencyAppend(alice);
-        (uint256 proposal2Id, , , , ) = proposeAddingNewListToSpog("Add new list to spog");
+        (uint256 proposal2Id, , , , ) = proposeAddingAnAddressToList(bob);
 
-        // voting period started
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        vm.roll(block.number + 2);
+
+        // alice votes on proposal 1
+        vm.startPrank(alice);
+        governor.castVote(proposal1Id, yesVote);
 
         // alice is its own delegate
         uint256 aliceVotes = vote.getVotes(alice);
         uint256 aliceStartBalance = vote.balanceOf(alice);
         assertEq(aliceStartBalance, aliceVotes, "Votes and balances are equal, alice uses self-delegation");
 
-        // alice votes on proposal 1
-        vm.startPrank(alice);
-        governor.castVote(proposal1Id, yesVote);
-
         // alice votes didn't change, no inflation of voting power
         uint256 aliceVotesAfterFirstVote = vote.getVotes(alice);
         assertEq(aliceVotesAfterFirstVote, aliceVotes, "No voting power rewards for emergency proposal");
 
+        // voting period for standard proposal has started
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
         governor.castVote(proposal2Id, yesVote);
 
         uint256 aliceVotesAfterSecondVote = vote.getVotes(alice);
@@ -80,8 +81,8 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         (uint256 proposal1Id, , , , ) = proposeEmergencyAppend(alice);
         (uint256 proposal2Id, , , , ) = proposeReset("Reset proposal", address(cash));
 
-        // voting period started
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        // emergency proposals voting period has started
+        vm.roll(block.number + 2);
 
         // alice is its own delegate
         uint256 aliceStartVotes = vote.getVotes(alice);

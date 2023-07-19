@@ -152,7 +152,7 @@ contract SPOGBaseTest is BaseTest {
         address account
     ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         // the actual proposal to wrap as an emergency
-        bytes memory callData = abi.encode(address(list), account);
+        bytes memory callData = abi.encode(LIST_NAME, account);
 
         // the emergency proposal
         address[] memory targets = new address[](1);
@@ -161,7 +161,7 @@ contract SPOGBaseTest is BaseTest {
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
-        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.Append), callData);
+        calldatas[0] = abi.encodeWithSignature("emergency(uint8,bytes)", uint8(ISPOG.EmergencyType.AddToList), callData);
 
         string memory description = "Emergency add of merchant";
 
