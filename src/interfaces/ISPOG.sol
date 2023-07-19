@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IERC165 } from "./ImportedInterfaces.sol";
-
-interface ISPOG is IERC165 {
+interface ISPOG {
     // Enums
     enum EmergencyType {
         RemoveFromList,
