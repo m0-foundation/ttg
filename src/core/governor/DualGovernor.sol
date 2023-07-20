@@ -281,7 +281,6 @@ contract DualGovernor is DualGovernorQuorum {
         // claim VALUE reward by delegate
         uint256 epochStart = startOf(epoch);
         uint256 valueReward = (weight * ISPOG(spog).fixedReward()) / IVOTE(vote).getPastTotalVotes(epochStart);
-        // TODO: make sure governor can mint here
         IVALUE(value).mint(account, valueReward);
 
         emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, weightInflation);

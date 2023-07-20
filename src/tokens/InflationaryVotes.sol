@@ -57,11 +57,11 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     }
 
     /// @notice Retrieve the total votes, assuming all votes were delegated.
-    /// TODO: see if forced self-delegation is required as default option
     /// @dev We assume it is the sum of all the delegated votes, delegation is incentivised.
     /// @dev `blockNumber` must have been already mined
     function getPastTotalVotes(uint256 blockNumber) public view virtual returns (uint256) {
-        // if (blockNumber >= block.number) revert InvalidFutureLookup();
+        // TODO: address > vs >= it
+        if (blockNumber > block.number) revert InvalidFutureLookup();
 
         return _checkpointsLookup(_totalVotesCheckpoints, blockNumber);
     }
@@ -75,8 +75,9 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     /// @notice Retrieve the token balance for `account` at the end of `blockNumber`.
     /// @dev `blockNumber` must have been already mined
     function getPastBalance(address account, uint256 blockNumber) public view virtual returns (uint256) {
-        // TODO: address it
-        // if (blockNumber >= block.number) revert InvalidFutureLookup();
+        // TODO: address > vs >= it
+        if (blockNumber > block.number) revert InvalidFutureLookup();
+
         return _checkpointsLookup(_balancesCheckpoints[account], blockNumber);
     }
 
