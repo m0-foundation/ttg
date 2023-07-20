@@ -70,7 +70,7 @@ interface ISPOG {
 
     function chargeFee(address account, bytes4 func) external returns (uint256);
 
-    function getInflationReward(uint256 amount) external view returns (uint256);
+    function getInflation(uint256 amount) external view returns (uint256);
 
     // Registry functions
     function get(bytes32 key) external view returns (bytes32 value);

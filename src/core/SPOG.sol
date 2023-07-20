@@ -220,7 +220,7 @@ contract SPOG is ISPOG {
     }
 
     /// @dev
-    function getInflationReward(uint256 amount) external view returns (uint256) {
+    function getInflation(uint256 amount) external view returns (uint256) {
         // TODO: prevent overflow, precision loss ?
         return (amount * inflator) / _INFLATOR_SCALE;
     }

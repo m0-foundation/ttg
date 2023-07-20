@@ -275,7 +275,7 @@ contract DualGovernor is DualGovernorQuorum {
         epochBasic.finishedVotingAt[account] = block.number;
 
         // calculate and mint VOTE voting power inflation
-        uint256 weightInflation = ISPOG(spog).getInflationReward(weight);
+        uint256 weightInflation = ISPOG(spog).getInflation(weight);
         IVOTE(vote).addVotingPower(account, weightInflation);
 
         // claim VALUE reward by delegate
