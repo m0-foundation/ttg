@@ -60,8 +60,10 @@ contract InflationTest is SPOGBaseTest {
     }
 
     function test_UsersVoteInflationForMultipleEpochs() public {
+        vm.startPrank(address(governor));
         vote.mint(bob, amountToMint * 1);
         vote.mint(carol, amountToMint * 2);
+        vm.stopPrank();
 
         uint256 aliceStartVotes = vote.getVotes(alice);
         uint256 bobStartVotes = vote.getVotes(bob);

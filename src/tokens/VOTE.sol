@@ -10,7 +10,7 @@ import { InflationaryVotes } from "./InflationaryVotes.sol";
 /// @dev It relies of snapshotted balances of VALUE token holders at the moment of reset
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
-contract VOTE is InflationaryVotes, IVOTE {
+contract VOTE is IVOTE, InflationaryVotes {
     /// @notice value token to take snapshot from
     address public immutable value;
 
@@ -23,12 +23,14 @@ contract VOTE is InflationaryVotes, IVOTE {
     /// @notice Constructs the VOTE token
     /// @param name Name of the token
     /// @param symbol Symbol of the token
+    /// @param spog Address of the SPOG contract
     /// @param value_ Address of the VALUE token for reset
     constructor(
         string memory name,
         string memory symbol,
+        address spog,
         address value_
-    ) InflationaryVotes() ERC20(name, symbol) ERC20Permit(name) {
+    ) InflationaryVotes(spog) ERC20(name, symbol) ERC20Permit(name) {
         value = value_;
     }
 
@@ -68,10 +70,10 @@ contract VOTE is InflationaryVotes, IVOTE {
         return ERC20Snapshot(value).balanceOfAt(account, resetSnapshotId);
     }
 
-    /// @notice Restricts minting to address with MINTER_ROLE
+    /// @notice Restricts minting to the governor.
     /// @param to The address to mint to
     /// @param amount The amount to mint
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) public onlyGovernor {
         _mint(to, amount);
     }
 }

@@ -34,7 +34,9 @@ contract SPOG_change is SPOGBaseTest {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // give charlie vote power
+        vm.prank(address(governor));
         vote.mint(charlie, 95e18);
+
         vm.startPrank(charlie);
         vote.delegate(charlie);
 
@@ -79,7 +81,9 @@ contract SPOG_change is SPOGBaseTest {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // give charlie vote power
+        vm.prank(address(governor));
         value.mint(charlie, 95e18);
+
         vm.startPrank(charlie);
         value.delegate(charlie);
 

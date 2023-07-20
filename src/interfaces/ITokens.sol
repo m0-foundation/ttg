@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IAccessControl, IERC20, IVotes } from "./ImportedInterfaces.sol";
+import { IERC20, IERC20Metadata, IERC20Permit, IVotes } from "./ImportedInterfaces.sol";
 import { ISPOGControlled } from "./ISPOGControlled.sol";
 
-interface ISPOGToken is ISPOGControlled, IAccessControl {
-    function MINTER_ROLE() external pure returns (bytes32);
-
+// TODO: This may not even bee necessary, especially if there is no mint for vote.
+interface ISPOGToken is ISPOGControlled {
     function mint(address to, uint256 amount) external;
 }
 
-interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
+interface IInflationaryVotes is IVotes, IERC20, IERC20Metadata, IERC20Permit, ISPOGToken {
     // Events
     event InflationAccrued(
         address indexed account,
@@ -21,14 +20,18 @@ interface IInflationaryVotes is IVotes, IERC20, ISPOGToken {
     );
 
     event RewardsWithdrawn(address indexed account, address indexed delegate, uint256 amount);
-    event VotingPowerAdded(address indexed account, address indexed governor, uint256 amount);
+
+    event VotingPowerAdded(address indexed account, uint256 amount);
 
     // Errors
+    error CallerIsNotGovernor();
     error OnlyGovernor();
     error TotalVotesOverflow();
     error TotalSupplyOverflow();
     error InvalidFutureLookup();
     error VotesExpiredSignature(uint256 expiry);
+
+    function governor() external view returns (address governor);
 
     function totalVotes() external view returns (uint256);
 
@@ -63,6 +66,8 @@ interface IVOTE is IInflationaryVotes {
     function claimPreviousSupply() external;
 }
 
-interface IVALUE is IVotes, IERC20, ISPOGToken {
+interface IVALUE is IVotes, IERC20, IERC20Metadata, IERC20Permit, ISPOGToken {
+    error CallerIsNotGovernor();
+
     function snapshot() external returns (uint256);
 }

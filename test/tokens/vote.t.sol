@@ -41,15 +41,14 @@ contract VoteTokenTest is SPOGBaseTest {
      * Helpers
      */
     function initTokens() private {
-        valueToken = new VALUE("SPOGValue", "value");
-        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
-
-        valueToken.initializeSPOG(address(spog));
+        valueToken = new VALUE("SPOGValue", "value", address(spog));
 
         // Mint initial balances to users
+        vm.startPrank(address(governor));
         valueToken.mint(alice1, aliceStartBalance);
         valueToken.mint(bob1, bobStartBalance);
         valueToken.mint(carol1, carolStartBalance);
+        vm.stopPrank();
 
         // Check initial balances
         assertEq(valueToken.balanceOf(alice1), aliceStartBalance);
@@ -58,8 +57,7 @@ contract VoteTokenTest is SPOGBaseTest {
         assertEq(valueToken.totalSupply(), 140e18);
 
         // Create new VoteToken
-        voteToken = new VOTE("SPOGVote", "vote", address(valueToken));
-        voteToken.initializeSPOG(address(spog));
+        voteToken = new VOTE("SPOGVote", "vote", address(spog), address(valueToken));
     }
 
     function resetGovernance() private {

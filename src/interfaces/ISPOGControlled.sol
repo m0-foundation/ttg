@@ -3,10 +3,8 @@ pragma solidity 0.8.19;
 
 interface ISPOGControlled {
     // Errors
-    error AlreadyInitialized();
     error CallerIsNotSPOG();
+    error ZeroSPOGAddress();
 
-    function spog() external view returns (address);
-
-    function initializeSPOG(address spog) external;
+    function spog() external view returns (address spog);
 }

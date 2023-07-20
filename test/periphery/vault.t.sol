@@ -196,7 +196,10 @@ contract VaultTest is SPOGBaseTest {
     function test_deposit() public {
         // deposit assets for previous epoch
         uint256 epoch = governor.currentEpoch();
+
+        vm.startPrank(address(governor));
         vote.mint(address(spog), 1000e18);
+
         vm.startPrank(address(spog));
         vote.approve(address(vault), 1000e18);
 

@@ -19,11 +19,7 @@ contract ValueTokenTest is SPOGBaseTest {
     function setUp() public override {
         super.setUp();
 
-        valueToken = new VALUE("SPOGValue", "value");
-        valueToken.initializeSPOG(address(spog));
-
-        // grant mint role to this contract
-        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
+        valueToken = new VALUE("SPOGValue", "value", address(spog));
 
         // Alice can interact with blockchain
         vm.deal({ account: alice, newBalance: 10 ether });
@@ -36,11 +32,12 @@ contract ValueTokenTest is SPOGBaseTest {
 
     function test_snapshot() public {
         // Mint initial balance for alice
+        vm.prank(address(governor));
         valueToken.mint(alice, aliceStartBalance);
         assertEq(valueToken.balanceOf(alice), aliceStartBalance);
 
         // SPOG takes snapshot
-        vm.startPrank(address(spog));
+        vm.prank(address(spog));
         uint256 snapshotId = valueToken.snapshot();
 
         uint256 aliceSnapshotBalance = ERC20Snapshot(valueToken).balanceOfAt(address(alice), snapshotId);
@@ -51,6 +48,7 @@ contract ValueTokenTest is SPOGBaseTest {
         address user = createUser("user");
 
         // test mint
+        vm.prank(address(governor));
         valueToken.mint(user, 100);
 
         assertEq(valueToken.balanceOf(user), 100);

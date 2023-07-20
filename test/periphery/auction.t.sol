@@ -32,7 +32,9 @@ contract VoteAuctionTest is SPOGBaseTest {
     }
 
     function mintAndApproveVoteTokens(uint256 amount) internal {
+        vm.prank(address(governor));
         voteToken.mint(address(fakeVault), amount);
+
         vm.prank(fakeVault);
         voteToken.approve(address(auction), amount);
     }

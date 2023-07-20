@@ -33,7 +33,7 @@ contract DualGovernor is DualGovernorQuorum {
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
     /// @notice The SPOG contract
-    address public spog;
+    address public immutable spog;
 
     /// @notice The list of emergency proposals, (proposalId => true)
     mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
@@ -57,29 +57,16 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a
     ///                    `VALUE QUORUM`
+    /// @param spog_ The address of the SPOG contract
     constructor(
         string memory name,
         address vote,
         address value,
         uint256 voteQuorum,
-        uint256 valueQuorum
-    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {}
-
-    /// @notice Initializes SPOG address
-    /// @dev Adds additional initialization for tokens
-    /// @param spog_ The address of the SPOG contract
-    function initializeSPOG(address spog_) external {
-        if (spog != address(0)) revert AlreadyInitialized();
-        if (spog_ == address(0)) revert ZeroSPOGAddress();
-
-        spog = spog_;
-
-        // initialize tokens
-        IVOTE(vote).initializeSPOG(spog_);
-
-        // TODO: find the way to avoid mistake with initialization for reset
-        // TODO: do not fail if spog address has been already initialized for value token
-        try IVALUE(value).initializeSPOG(spog_) {} catch {}
+        uint256 valueQuorum,
+        address spog_
+    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
+        if ((spog = spog_) == address(0)) revert ZeroSPOGAddress();
     }
 
     // TODO: Is `currentEpoch` a standard interface? If not, just `epoch` may be better.

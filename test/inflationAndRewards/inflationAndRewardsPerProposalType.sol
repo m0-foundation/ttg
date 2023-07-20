@@ -98,7 +98,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
     function test_NoInflation_EpochWithEmergencyAndResetProposals() public {
         // set up proposals
         (uint256 proposal1Id, , , , ) = proposeEmergencyAppend(alice);
-        (uint256 proposal2Id, , , , ) = proposeReset("Reset proposal", address(cash));
+        (uint256 proposal2Id, , , , ) = proposeReset("Reset proposal");
 
         // emergency proposals voting period has started
         vm.roll(block.number + 2);

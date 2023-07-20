@@ -17,6 +17,8 @@ contract VoteAuction is IVoteAuction, Initializable {
     error AuctionBalanceInsufficient();
     error OnlyVault();
 
+    // TODO: Many of these can be immutable.
+
     address public auctionToken;
     address public paymentToken;
     address public vault;
@@ -44,6 +46,7 @@ contract VoteAuction is IVoteAuction, Initializable {
         _disableInitializers();
     }
 
+    // TODO: Not sure why this is needed instead of just a larger constructor. Will revisit.
     /// @notice Initializes the auction contract
     /// @param auctionToken_ The address of the ERC20 token being auctioned
     /// @param paymentToken_ The address of the ERC20 token used as payment
