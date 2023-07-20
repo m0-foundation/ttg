@@ -7,10 +7,11 @@ import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
 import { Governor } from "../../ImportedContracts.sol";
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
+import { PureEpochs } from "../../pureEpochs/PureEpochs.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
-contract DualGovernor is DualGovernorQuorum {
+contract DualGovernor is DualGovernorQuorum, PureEpochs {
     struct EpochBasic {
         uint256 numProposals;
         uint256 totalVotesWeight;
@@ -35,12 +36,6 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice The list of emergency proposals, (proposalId => true)
     mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
-
-    /// @dev The voting period in blocks
-    uint256 private immutable _votingPeriod;
-
-    /// @dev The start of counting epochs
-    uint256 private immutable _start;
 
     /// @dev The indicator of voting with `MINIMUM_VOTING_DELAY` delay is required proposal
     bool private _emergencyVotingIsOn;
@@ -69,16 +64,7 @@ contract DualGovernor is DualGovernorQuorum {
         uint256 voteQuorum,
         uint256 valueQuorum,
         uint256 votingPeriod_
-    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
-        // Sanity checks
-        if (votingPeriod_ == 0) revert ZeroVotingPeriod();
-
-        // Set governor configuration
-        _votingPeriod = votingPeriod_;
-
-        // TODO: should setting SPOG be start of counting epochs ?
-        _start = block.number;
-    }
+    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) PureEpochs(votingPeriod_) {}
 
     /// @notice Initializes SPOG address
     /// @dev Adds additional initialization for tokens
@@ -86,7 +72,6 @@ contract DualGovernor is DualGovernorQuorum {
     function initializeSPOG(address spog_) external {
         if (spog != address(0)) revert AlreadyInitialized();
         if (spog_ == address(0)) revert ZeroSPOGAddress();
-        if (_start == 0) revert ZeroStart(); // should never happen, precaution
 
         spog = spog_;
 
@@ -98,17 +83,19 @@ contract DualGovernor is DualGovernorQuorum {
         try IVALUE(value).initializeSPOG(spog_) {} catch {}
     }
 
+    // TODO: Is `currentEpoch` a standard interface? If not, just `epoch` may be better.
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
     /// @return current epoch number
     function currentEpoch() public view returns (uint256) {
-        return (block.number - _start) / _votingPeriod;
+        return _currentEpoch();
     }
 
+    // TODO: Is `startOf` a standard interface? If not, `getEpochStart` is better.
     /// @notice Gets the start block number of the given epoch
     /// @param epoch The epoch number
     /// @return `block.number` of the start of the epoch
     function startOf(uint256 epoch) public view returns (uint256) {
-        return _start + epoch * _votingPeriod;
+        return _getEpochStart(epoch);
     }
 
     /// @dev Returns proposal type for given function selector
@@ -165,7 +152,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         ISPOG(spog).chargeFee(_msgSender(), func);
 
-        uint256 nextEpoch = currentEpoch() + 1;
+        uint256 nextEpoch = _currentEpoch() + 1;
         uint256 proposalId;
         if (func == ISPOG.emergency.selector || func == ISPOG.reset.selector) {
             _emergencyVotingIsOn = true;
@@ -256,7 +243,7 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param weight The vote weight of the account
     /// @return The reward vote weight of the account if all mandatory proposals were voted on
     function _registerVotesAndAccrueRewards(address account, uint256 weight) internal virtual returns (uint256) {
-        uint256 epoch = currentEpoch();
+        uint256 epoch = _currentEpoch();
         EpochBasic storage epochBasic = _epochBasic[epoch];
 
         // update number of proposals account voted for in current epoch
@@ -331,7 +318,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         // Set state to `Expired` if proposal was not executed in the next epoch
         if (status == ProposalState.Succeeded) {
-            uint256 expiresAt = proposalDeadline(proposalId) + _votingPeriod;
+            uint256 expiresAt = proposalDeadline(proposalId) + _epochPeriod;
 
             if (block.number > expiresAt) {
                 return ProposalState.Expired;
@@ -348,7 +335,7 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? _currentEpochRemainder() : _votingPeriod;
+        return _epochPeriod;
     }
 
     /// @dev Returns the number of blocks left in the current epoch

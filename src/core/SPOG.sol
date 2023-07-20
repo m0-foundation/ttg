@@ -7,6 +7,8 @@ import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
+import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
+
 import { SafeERC20 } from "../ImportedContracts.sol";
 
 // TODO: "Lists" that are not enumerable are actually "Sets".
@@ -16,7 +18,7 @@ import { SafeERC20 } from "../ImportedContracts.sol";
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
 /// @notice SPOG, "Simple Participation Optimized Governance"
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
-contract SPOG is ISPOG {
+contract SPOG is ISPOG, PureEpochs {
     using SafeERC20 for IERC20;
 
     // TODO: Drop the need for a struct for the constructor. Use named arguments instead.
@@ -69,7 +71,7 @@ contract SPOG is ISPOG {
 
     /// @notice Constructs a new SPOG instance
     /// @param config The configuration data for the SPOG
-    constructor(Configuration memory config) {
+    constructor(Configuration memory config) PureEpochs(30 days) {
         // Sanity checks
         if (config.governor == address(0)) revert ZeroGovernorAddress();
         if (config.vault == address(0)) revert ZeroVaultAddress();
@@ -196,7 +198,7 @@ contract SPOG is ISPOG {
         IERC20(cash).approve(vault, tax);
 
         // deposit the amount to the vault
-        uint256 epoch = ISPOGGovernor(governor).currentEpoch();
+        uint256 epoch = _currentEpoch();
         ISPOGVault(vault).deposit(epoch, cash, tax);
 
         emit ProposalFeeCharged(account, epoch, tax);

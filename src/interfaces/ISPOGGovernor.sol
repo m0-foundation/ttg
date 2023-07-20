@@ -25,14 +25,12 @@ interface IDualGovernor {
     error ListAdminIsNotSPOG();
     error AlreadyVoted();
     error ZeroSPOGAddress();
-    error ZeroVotingPeriod();
     error ZeroVoteAddress();
     error ZeroValueAddress();
     error ZeroVoteQuorumNumerator();
     error ZeroValueQuorumNumerator();
     error InvalidVoteQuorumNumerator();
     error InvalidValueQuorumNumerator();
-    error ZeroStart();
     error VoteValueMismatch();
     error ProposalIsNotInActiveState();
 
