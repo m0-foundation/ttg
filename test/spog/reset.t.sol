@@ -85,7 +85,7 @@ contract SPOG_reset is SPOGBaseTest {
 
         assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 5, "Governor quorum was not set correctly");
 
-        assertEq(ISPOGGovernor(spog.governor()).votingPeriod(), 15, "Governor voting delay was not set correctly");
+        assertEq(ISPOGGovernor(spog.governor()).votingPeriod(), 216_000, "Governor voting delay was not set correctly");
 
         // Make sure governance is functional
         executeValidProposal();
@@ -107,7 +107,7 @@ contract SPOG_reset is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         // fast forward to an active voting period
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        vm.roll(block.number + governor.votingPeriod());
 
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Not in expired state");

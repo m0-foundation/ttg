@@ -17,7 +17,6 @@ contract SPOGDeployScript is BaseScript {
     address public governor;
     address public spog;
 
-    uint256 public time;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     address public cash;
@@ -42,7 +41,6 @@ contract SPOGDeployScript is BaseScript {
         inflator = 20; // 20%
         valueFixedInflation = 100 * 10e18;
 
-        time = 100; // in blocks
         voteQuorum = 4; // 4%
         valueQuorum = 4; // 4%
         tax = 5e18;
@@ -54,7 +52,7 @@ contract SPOGDeployScript is BaseScript {
         auction = address(new VoteAuction());
 
         // deploy governor and vaults
-        governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum, time));
+        governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum));
         vault = address(new SPOGVault(governor));
 
         // grant minter role for test runner

@@ -18,7 +18,7 @@ import { SafeERC20 } from "../ImportedContracts.sol";
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
 /// @notice SPOG, "Simple Participation Optimized Governance"
 /// @notice SPOG is used for permissioning actors and optimized for token holder participation
-contract SPOG is ISPOG, PureEpochs {
+contract SPOG is ISPOG {
     using SafeERC20 for IERC20;
 
     // TODO: Drop the need for a struct for the constructor. Use named arguments instead.
@@ -71,7 +71,7 @@ contract SPOG is ISPOG, PureEpochs {
 
     /// @notice Constructs a new SPOG instance
     /// @param config The configuration data for the SPOG
-    constructor(Configuration memory config) PureEpochs(30 days) {
+    constructor(Configuration memory config) {
         // Sanity checks
         if (config.governor == address(0)) revert ZeroGovernorAddress();
         if (config.vault == address(0)) revert ZeroVaultAddress();
@@ -198,7 +198,7 @@ contract SPOG is ISPOG, PureEpochs {
         IERC20(cash).approve(vault, tax);
 
         // deposit the amount to the vault
-        uint256 epoch = _currentEpoch();
+        uint256 epoch = PureEpochs.currentEpoch();
         ISPOGVault(vault).deposit(epoch, cash, tax);
 
         emit ProposalFeeCharged(account, epoch, tax);

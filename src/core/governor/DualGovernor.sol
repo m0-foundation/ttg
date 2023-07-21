@@ -11,7 +11,7 @@ import { PureEpochs } from "../../pureEpochs/PureEpochs.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
-contract DualGovernor is DualGovernorQuorum, PureEpochs {
+contract DualGovernor is DualGovernorQuorum {
     struct EpochBasic {
         uint256 numProposals;
         uint256 totalVotesWeight;
@@ -56,15 +56,13 @@ contract DualGovernor is DualGovernorQuorum, PureEpochs {
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a
     ///                    `VALUE QUORUM`
-    /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
     constructor(
         string memory name,
         address vote,
         address value,
         uint256 voteQuorum,
-        uint256 valueQuorum,
-        uint256 votingPeriod_
-    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) PureEpochs(votingPeriod_) {}
+        uint256 valueQuorum
+    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {}
 
     /// @notice Initializes SPOG address
     /// @dev Adds additional initialization for tokens
@@ -87,15 +85,15 @@ contract DualGovernor is DualGovernorQuorum, PureEpochs {
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
     /// @return current epoch number
     function currentEpoch() public view returns (uint256) {
-        return _currentEpoch();
+        return PureEpochs.currentEpoch();
     }
 
     // TODO: Is `startOf` a standard interface? If not, `getEpochStart` is better.
     /// @notice Gets the start block number of the given epoch
     /// @param epoch The epoch number
     /// @return `block.number` of the start of the epoch
-    function startOf(uint256 epoch) public view returns (uint256) {
-        return _getEpochStart(epoch);
+    function startOf(uint256 epoch) public pure returns (uint256) {
+        return PureEpochs.getBlockNumberOfEpochStart(epoch);
     }
 
     /// @dev Returns proposal type for given function selector
@@ -152,7 +150,7 @@ contract DualGovernor is DualGovernorQuorum, PureEpochs {
 
         ISPOG(spog).chargeFee(_msgSender(), func);
 
-        uint256 nextEpoch = _currentEpoch() + 1;
+        uint256 nextEpoch = PureEpochs.currentEpoch() + 1;
         uint256 proposalId;
         if (func == ISPOG.emergency.selector || func == ISPOG.reset.selector) {
             _emergencyVotingIsOn = true;
@@ -243,7 +241,7 @@ contract DualGovernor is DualGovernorQuorum, PureEpochs {
     /// @param weight The vote weight of the account
     /// @return The reward vote weight of the account if all mandatory proposals were voted on
     function _registerVotesAndAccrueRewards(address account, uint256 weight) internal virtual returns (uint256) {
-        uint256 epoch = _currentEpoch();
+        uint256 epoch = PureEpochs.currentEpoch();
         EpochBasic storage epochBasic = _epochBasic[epoch];
 
         // update number of proposals account voted for in current epoch
@@ -318,7 +316,7 @@ contract DualGovernor is DualGovernorQuorum, PureEpochs {
 
         // Set state to `Expired` if proposal was not executed in the next epoch
         if (status == ProposalState.Succeeded) {
-            uint256 expiresAt = proposalDeadline(proposalId) + _epochPeriod;
+            uint256 expiresAt = proposalDeadline(proposalId) + PureEpochs._EPOCH_PERIOD;
 
             if (block.number > expiresAt) {
                 return ProposalState.Expired;
@@ -330,17 +328,21 @@ contract DualGovernor is DualGovernorQuorum, PureEpochs {
 
     /// @notice Returns the voting delay for proposal
     function votingDelay() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : _currentEpochRemainder();
+        // NOTE: Since OpenZeppelin governor erroneously uses `block.number <= snapshot` instead of
+        //       `block.number < snapshot` to define a pending proposal, proposals are only active and able to be voted
+        //       on 1 block after the official start of an epoch. So, we need to subtract 1.
+        // TODO: Get rid of OZ contracts but implementing a correct Governor, then remove the `- 1` here.
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : _currentEpochRemainder() - 1;
     }
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _epochPeriod;
+        return _emergencyVotingIsOn ? _currentEpochRemainder() : PureEpochs._EPOCH_PERIOD;
     }
 
     /// @dev Returns the number of blocks left in the current epoch
     function _currentEpochRemainder() internal view returns (uint256) {
-        return startOf(currentEpoch() + 1) - block.number - 1;
+        return PureEpochs.blocksRemainingInCurrentEpoch();
     }
 
     /// @dev Extracts address params from the call data
