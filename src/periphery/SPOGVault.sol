@@ -8,6 +8,8 @@ import { IVALUE } from "../interfaces/ITokens.sol";
 
 import { SafeERC20 } from "../ImportedContracts.sol";
 
+import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
+
 /// @title SPOGVault
 /// @notice Vault will hold SPOG assets shared pro-rata between VALUE holders.
 contract SPOGVault is ISPOGVault {
@@ -35,7 +37,7 @@ contract SPOGVault is ISPOGVault {
     /// @param amount Amount of vote tokens to deposit
     function deposit(uint256 epoch, address token, uint256 amount) external virtual {
         // TODO: should we allow to deposit only for next epoch ? or current and next epoch is good ?
-        uint256 currentEpoch = ISPOGGovernor(governor).currentEpoch();
+        uint256 currentEpoch = PureEpochs.currentEpoch();
 
         if (epoch < currentEpoch) revert InvalidEpoch(epoch, currentEpoch);
 
@@ -52,7 +54,7 @@ contract SPOGVault is ISPOGVault {
     /// @return totalRewards Total rewards withdrawn
     function withdraw(uint256[] memory epochs, address token) external virtual returns (uint256) {
         uint256 length = epochs.length;
-        uint256 currentEpoch = ISPOGGovernor(governor).currentEpoch();
+        uint256 currentEpoch = PureEpochs.currentEpoch();
         uint256 totalRewards;
 
         for (uint256 i; i < length; ++i) {
@@ -79,7 +81,7 @@ contract SPOGVault is ISPOGVault {
 
         alreadyWithdrawn[epoch][token][account] = true;
 
-        uint256 epochStart = ISPOGGovernor(governor).startOf(epoch);
+        uint256 epochStart = PureEpochs.getBlockNumberOfEpochStart(epoch);
 
         // account reward = (account votes weight * shared rewards) / total votes weight
         // TODO: accounting for leftover/debris here, check overflow ranges ?

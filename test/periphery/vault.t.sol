@@ -11,10 +11,18 @@ contract VaultTest is SPOGBaseTest {
     /******************************************************************************************************************/
 
     // calculate value token inflation rewards for voter
-    function createProposalsForEpochs(uint256 numberOfEpochs, uint256 numberOfProposalsPerEpoch) private {
+    function createProposalsForEpochs(
+        uint256 numberOfEpochs,
+        uint256 numberOfProposalsPerEpoch
+    ) internal returns (uint256[] memory epochs) {
+        epochs = new uint256[](numberOfEpochs);
+
         for (uint256 i = 0; i < numberOfEpochs; i++) {
             // advance to next epoch
+            // TODO: Remove `+ 1` once we get rid of OZ contracts and implement correct state and votingDelay functions.
             vm.roll(block.number + governor.votingDelay() + 1);
+
+            epochs[i] = governor.currentEpoch();
 
             for (uint256 j = 0; j < numberOfProposalsPerEpoch; j++) {
                 // update vote governor
@@ -35,7 +43,7 @@ contract VaultTest is SPOGBaseTest {
         // set up proposals for 1 epoch with 2 proposals
         uint256 numberOfEpochs = 1;
         uint256 numberOfProposalsPerEpoch = 2;
-        createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
+        uint256[] memory epochs = createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
 
         uint256 vaultBalanceOfCash = cash.balanceOf(address(vault));
         // get spog tax from spog data
@@ -44,13 +52,11 @@ contract VaultTest is SPOGBaseTest {
         uint256 epochCashRewards = tax * numberOfProposalsPerEpoch * numberOfEpochs;
         assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");
 
-        // another sanity check
-        uint256 epochNumber = 1;
         uint256[] memory epochsToGetRewardsFor = new uint256[](1);
-        epochsToGetRewardsFor[0] = epochNumber;
+        epochsToGetRewardsFor[0] = epochs[0];
 
         // TODO: use vault interface
-        uint256 epochCashRewardDepositInVault = vault.deposits(epochNumber, address(cash));
+        uint256 epochCashRewardDepositInVault = vault.deposits(epochs[0], address(cash));
 
         assertEq(
             epochCashRewardDepositInVault,
@@ -134,7 +140,7 @@ contract VaultTest is SPOGBaseTest {
         // set up proposals for 3 epochs with 2 proposals
         uint256 numberOfEpochs = 3;
         uint256 numberOfProposalsPerEpoch = 2;
-        createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
+        uint256[] memory epochs = createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
 
         uint256 vaultBalanceOfCash = cash.balanceOf(address(vault));
         // get spog tax from spog data
@@ -144,13 +150,7 @@ contract VaultTest is SPOGBaseTest {
 
         assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");
 
-        uint256 epochNumber = 1;
-        uint256[] memory epochsToGetRewardsFor = new uint256[](3);
-        epochsToGetRewardsFor[0] = epochNumber;
-        epochsToGetRewardsFor[1] = epochNumber + 1;
-        epochsToGetRewardsFor[2] = epochNumber + 2;
-
-        uint256 epochCashRewardDepositInVault = vault.deposits(epochNumber, address(cash)) * numberOfEpochs;
+        uint256 epochCashRewardDepositInVault = vault.deposits(epochs[0], address(cash)) * numberOfEpochs;
 
         assertEq(
             epochCashRewardDepositInVault,
@@ -165,7 +165,7 @@ contract VaultTest is SPOGBaseTest {
 
         uint256 balanceOfVaultBefore = cash.balanceOf(address(vault));
 
-        vault.withdraw(epochsToGetRewardsFor, address(cash));
+        vault.withdraw(epochs, address(cash));
 
         uint256 finalBalanceOfCash = cash.balanceOf(address(this));
 
@@ -181,7 +181,7 @@ contract VaultTest is SPOGBaseTest {
 
         uint256 balanceOfVaultBeforeAlice = cash.balanceOf(address(vault));
 
-        vault.withdraw(epochsToGetRewardsFor, address(cash));
+        vault.withdraw(epochs, address(cash));
 
         uint256 finalAliceBalanceOfCash = cash.balanceOf(address(alice));
 
@@ -195,7 +195,7 @@ contract VaultTest is SPOGBaseTest {
 
     function test_deposit() public {
         // deposit rewards for previous epoch
-        uint256 epoch = 1;
+        uint256 epoch = governor.currentEpoch();
         vote.mint(address(spog), 1000e18);
         vm.startPrank(address(spog));
         vote.approve(address(vault), 1000e18);

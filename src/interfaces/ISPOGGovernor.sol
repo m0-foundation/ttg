@@ -25,14 +25,12 @@ interface IDualGovernor {
     error ListAdminIsNotSPOG();
     error AlreadyVoted();
     error ZeroSPOGAddress();
-    error ZeroVotingPeriod();
     error ZeroVoteAddress();
     error ZeroValueAddress();
     error ZeroVoteQuorumNumerator();
     error ZeroValueQuorumNumerator();
     error InvalidVoteQuorumNumerator();
     error InvalidValueQuorumNumerator();
-    error ZeroStart();
     error VoteValueMismatch();
     error ProposalIsNotInActiveState();
 
@@ -92,7 +90,7 @@ interface IDualGovernor {
     // Epochs logic
     function currentEpoch() external view returns (uint256);
 
-    function startOf(uint256 epoch) external view returns (uint256);
+    function startOf(uint256 epoch) external pure returns (uint256);
 
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
 
