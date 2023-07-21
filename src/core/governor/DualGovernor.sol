@@ -243,7 +243,7 @@ contract DualGovernor is DualGovernorQuorum {
             EpochBasic storage epochBasic = _epochBasic[epoch];
             epochBasic.numVotedOn[account] += 1;
 
-            // if it is the last manadatory proposal, accrue inflation and rewards
+            // if it is the last mandatory proposal, accrue inflation and rewards
             if (_hasFinishedVoting(epochBasic, account)) {
                 // update cumulative vote weight and save time when the last mandatory proposal was voted on
                 epochBasic.totalVotesWeight += voteWeight;
