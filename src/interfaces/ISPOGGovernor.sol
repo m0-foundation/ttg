@@ -47,12 +47,17 @@ interface IDualGovernor {
     );
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
-
-    event VotingFinishedAndRewardsAccrued(
-        address indexed account,
+    event MandatoryVotingFinished(
         uint256 indexed epoch,
-        uint256 blockNumber,
-        uint256 inflation
+        address indexed account,
+        uint256 indexed blockNumber,
+        uint256 totalVotedWeight
+    );
+    event InflationAndRewardsAccrued(
+        uint256 indexed epoch,
+        address indexed account,
+        uint256 inflation,
+        uint256 rewards
     );
 
     // Accessors for vote, value tokens and spog contract
