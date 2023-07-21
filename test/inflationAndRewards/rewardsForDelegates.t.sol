@@ -23,10 +23,10 @@ contract RewardsTest is SPOGBaseTest {
         vm.startPrank(alice);
         governor.castVote(proposalId, yesVote);
 
-        uint256 aliceBalanceAfterVote = value.balanceOf(alice);
+        uint256 aliceBalanceAfterVoting = value.balanceOf(alice);
         assertEq(
             aliceStartBalance,
-            aliceBalanceAfterVote,
+            aliceBalanceAfterVoting,
             "No value rewards yet, Alice has not voted on all proposals"
         );
 
@@ -35,7 +35,7 @@ contract RewardsTest is SPOGBaseTest {
         governor.castVote(proposalId3, noVote);
         vm.stopPrank();
 
-        // alice votes on proposal 1, 2 and 3
+        // bob votes on proposal 1, 2 and 3
         vm.startPrank(bob);
         governor.castVote(proposalId, yesVote);
         governor.castVote(proposalId2, yesVote);
@@ -50,6 +50,39 @@ contract RewardsTest is SPOGBaseTest {
             value.balanceOf(bob),
             "Alice and Bob should have same value balance after voting"
         );
+        assertEq(aliceStartBalance + aliceReward, value.balanceOf(alice), "Invalid Alice VALUE reward");
+        assertEq(bobStartBalance + bobReward, value.balanceOf(bob), "Invalid Bob Value reward");
+    }
+
+    function test_DelegateValueWithDifferentVotingPowerDistribution() public {
+        // set up proposals
+        (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+
+        vm.startPrank(bob);
+        vote.delegate(alice);
+        vm.stopPrank();
+
+        // voting period started
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        uint256 aliceStartBalance = value.balanceOf(alice);
+        uint256 bobStartBalance = value.balanceOf(bob);
+
+        assertEq(aliceStartBalance, bobStartBalance, "Alice and Bob should have same value balance before voting");
+
+        // alice votes on proposal 1
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        // bob votes on proposal 1, 2 and 3
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        uint256 aliceReward = spog.fixedReward() / 2;
+        uint256 bobReward = 0;
+
         assertEq(aliceStartBalance + aliceReward, value.balanceOf(alice), "Invalid Alice VALUE reward");
         assertEq(bobStartBalance + bobReward, value.balanceOf(bob), "Invalid Bob Value reward");
     }
