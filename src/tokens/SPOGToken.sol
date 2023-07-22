@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import { AccessControlEnumerable } from "../ImportedContracts.sol";
 
-import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGToken } from "../interfaces/ITokens.sol";
 
 abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
