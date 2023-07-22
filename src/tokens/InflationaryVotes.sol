@@ -300,7 +300,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
 
         emit InflationAccrued(delegator, currentDelegate, startEpoch, lastEpoch, inflation);
 
-        // TODO: return vote inflation and value rewards amounts
+        // TODO: return vote inflation and value rewards amounts ?
     }
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {
