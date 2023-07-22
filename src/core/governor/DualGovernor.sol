@@ -272,10 +272,12 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param account The the account that voted on proposals
     /// @param voteWeight The vote weight of the account
     function _accrueInflationAndRewards(uint256 epoch, address account, uint256 voteWeight) internal {
+        // accrue VALUE reward
         uint256 totalVoteWeight = IVOTE(vote).getPastTotalVotes(startOf(epoch));
         uint256 reward = (ISPOG(spog).fixedReward() * voteWeight) / totalVoteWeight;
         IVALUE(value).mint(account, reward);
 
+        // accrue VOTE inflation
         uint256 inflation = ISPOG(spog).getInflation(voteWeight);
         IVOTE(vote).addVotingPower(account, inflation);
 

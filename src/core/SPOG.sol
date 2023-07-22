@@ -204,6 +204,14 @@ contract SPOG is ISPOG {
         return tax;
     }
 
+    /// @notice Calculate inflation amount based on SPOG rules and inflator
+    /// @param amount The amount to be inflated
+    /// @return The inflation amount
+    function getInflation(uint256 amount) external view returns (uint256) {
+        // TODO: prevent overflow, precision loss ?
+        return (amount * inflator) / _INFLATOR_SCALE;
+    }
+
     /// @notice Check is proposed change is supported by governance
     /// @param selector The function selector to check
     /// @return Whether the function is supported by governance
@@ -217,12 +225,6 @@ contract SPOG is ISPOG {
             selector == this.changeTaxRange.selector ||
             selector == this.emergency.selector ||
             selector == this.reset.selector;
-    }
-
-    /// @dev
-    function getInflation(uint256 amount) external view returns (uint256) {
-        // TODO: prevent overflow, precision loss ?
-        return (amount * inflator) / _INFLATOR_SCALE;
     }
 
     function get(bytes32 key) external view returns (bytes32 value) {
