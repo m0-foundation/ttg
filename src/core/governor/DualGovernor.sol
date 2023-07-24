@@ -236,19 +236,21 @@ contract DualGovernor is DualGovernorQuorum {
 
                 emit MandatoryVotingFinished(epoch, account, block.number, epochBasic.totalVotesWeight);
 
-                // accrue inflation and rewards
+                // accrue inflation and rewards based on VOTE voting power
                 _accrueInflationAndRewards(epoch, account, voteWeight);
             }
         }
 
-        // TODO: adjust weight we need to return ?
+        // return bigger of two weights - simple solution for single governance proposals
+        uint256 weight = _max(voteWeight, valueWeight);
+
         if (params.length == 0) {
-            emit VoteCast(account, proposalId, support, voteWeight, reason);
+            emit VoteCast(account, proposalId, support, weight, reason);
         } else {
-            emit VoteCastWithParams(account, proposalId, support, voteWeight, reason, params);
+            emit VoteCastWithParams(account, proposalId, support, weight, reason, params);
         }
 
-        return voteWeight;
+        return weight;
     }
 
     /// @dev Accrue VOTE inflation and VALUE rewards
@@ -257,18 +259,16 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param account The the account that voted on proposals
     /// @param voteWeight The vote weight of the account
     function _accrueInflationAndRewards(uint256 epoch, address account, uint256 voteWeight) internal {
-        // accrue VALUE reward
+        // accrue VALUE reward, minting of actual token
         uint256 totalVoteWeight = IVOTE(vote).getPastTotalVotes(startOf(epoch));
         uint256 reward = (ISPOG(spog).fixedReward() * voteWeight) / totalVoteWeight;
         IVALUE(value).mint(account, reward);
 
-        // accrue VOTE inflation
+        // accrue VOTE inflation, upgrading of internal balance
         uint256 inflation = ISPOG(spog).getInflation(voteWeight);
         IVOTE(vote).addVotingPower(account, inflation);
 
         emit InflationAndRewardsAccrued(epoch, account, inflation, reward);
-
-        // return (reward, inflation);
     }
 
     /// @notice Gets total vote weight power for the epoch
