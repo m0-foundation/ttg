@@ -12,7 +12,7 @@ interface ISPOG {
     // Events
     event AddressAddedToList(bytes32 indexed listName, address indexed account);
     event AddressRemovedFromList(bytes32 indexed listName, address indexed account);
-    event ConfigUpdated(bytes32 indexed valueName, bytes32 value);
+    event ConfigUpdated(bytes32 indexed valueName, bytes32 indexed value);
     event EmergencyExecuted(uint8 indexed emergencyType, bytes callData);
     event ResetExecuted(address indexed newGovernor, uint256 indexed resetSnapshotId);
     event TaxChanged(uint256 oldTax, uint256 newTax);
