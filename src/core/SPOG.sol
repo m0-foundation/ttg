@@ -7,6 +7,8 @@ import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
 
+import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
+
 import { SafeERC20 } from "../ImportedContracts.sol";
 
 // TODO: "Lists" that are not enumerable are actually "Sets".
@@ -196,7 +198,7 @@ contract SPOG is ISPOG {
         IERC20(cash).approve(vault, tax);
 
         // deposit the amount to the vault
-        uint256 epoch = ISPOGGovernor(governor).currentEpoch();
+        uint256 epoch = PureEpochs.currentEpoch();
         ISPOGVault(vault).deposit(epoch, cash, tax);
 
         emit ProposalFeeCharged(account, epoch, tax);

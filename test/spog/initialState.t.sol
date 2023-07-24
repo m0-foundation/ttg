@@ -28,11 +28,11 @@ contract SPOG_InitialState is SPOGBaseTest {
         assertEq(spog.taxLowerBound(), deployScript.taxLowerBound(), "taxLowerBound was not set up correctly");
         assertEq(spog.taxUpperBound(), deployScript.taxUpperBound(), "taxUpperBound was not set up correctly");
 
-        assertEq(governor.votingPeriod(), deployScript.time(), "time was not set up correctly");
-        assertEq(governor.voteQuorumNumerator(), deployScript.voteQuorum(), "voteQuorum was not set up correctly");
-        assertEq(governor.valueQuorumNumerator(), deployScript.valueQuorum(), "valueQuorum was not set up correctly");
-        assertEq(governor.vote(), deployScript.vote(), "vote token was not set up correctly");
-        assertEq(governor.value(), deployScript.value(), "value token was not set up correctly");
+        assertEq(governor.votingPeriod(), 216_000, "vote period not set correctly");
+        assertEq(governor.voteQuorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
+        assertEq(governor.valueQuorumNumerator(), deployScript.valueQuorum(), "valueQuorum not set correctly");
+        assertEq(address(governor.vote()), deployScript.vote(), "vote token not set correctly");
+        assertEq(address(governor.value()), deployScript.value(), "value token not set correctly");
     }
 
     function test_Revert_WhenSettingIncorrectInitialValues() public {

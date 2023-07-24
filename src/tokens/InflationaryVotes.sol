@@ -7,12 +7,13 @@ import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 
 import { ECDSA, ERC20Permit, Math, SafeCast } from "../ImportedContracts.sol";
 import { SPOGToken } from "./SPOGToken.sol";
+import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
 /// @notice Modified from OpenZeppelin
 /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
-/// @dev Decouples voting power and balances for effective, time-adjusted inflation accrual
-abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVotes {
+/// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
+abstract contract InflationaryVotes is IInflationaryVotes, SPOGToken, ERC20Permit {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 amount;
@@ -250,7 +251,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
         address currentDelegate = delegates(delegator);
         uint256 delegatorBalance = balanceOf(delegator) + _inflation[delegator];
 
-        _delegationSwitchEpoch[delegator] = ISPOGGovernor(ISPOG(spog).governor()).currentEpoch();
+        _delegationSwitchEpoch[delegator] = PureEpochs.currentEpoch();
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
@@ -263,7 +264,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
     function _accrueInflation(address delegator) internal virtual {
         // calculate inflation for number of active epochs (delegate voted on all active proposals in these epochs)
         ISPOGGovernor governor = ISPOGGovernor(ISPOG(spog).governor());
-        uint256 currentEpoch = governor.currentEpoch();
+        uint256 currentEpoch = PureEpochs.currentEpoch();
 
         // no inflation for epoch 0
         if (currentEpoch == 0) return;
@@ -280,7 +281,7 @@ abstract contract InflationaryVotes is SPOGToken, ERC20Permit, IInflationaryVote
                 continue;
             }
 
-            uint256 epochStart = governor.startOf(epoch);
+            uint256 epochStart = PureEpochs.getBlockNumberOfEpochStart(epoch);
             uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
             uint256 delegateFinishedVotingAt = governor.finishedVotingAt(epoch, currentDelegate);
             uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
