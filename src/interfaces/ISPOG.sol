@@ -27,7 +27,7 @@ interface ISPOG {
     error ZeroTax();
     error TaxOutOfRange();
     error ZeroInflator();
-    error ZeroValueInflation();
+    error ZeroFixedReward();
     error ListAdminIsNotSPOG(); // TODO: Remove?
     error ListIsNotInMasterList(); // TODO: Remove?
     error EmergencyMethodNotSupported();
@@ -49,7 +49,7 @@ interface ISPOG {
 
     function inflator() external view returns (uint256);
 
-    function valueFixedInflation() external view returns (uint256);
+    function fixedReward() external view returns (uint256);
 
     // Accepted `proposal` functions
     function addToList(bytes32 listName, address account) external;
@@ -70,7 +70,7 @@ interface ISPOG {
 
     function chargeFee(address account, bytes4 func) external returns (uint256);
 
-    function getInflationReward(uint256 amount) external view returns (uint256);
+    function getInflation(uint256 amount) external view returns (uint256);
 
     // Registry functions
     function get(bytes32 key) external view returns (bytes32 value);

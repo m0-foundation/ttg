@@ -2,10 +2,11 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+import { Governor } from "../../ImportedContracts.sol";
+
 import { ISPOG } from "../../interfaces/ISPOG.sol";
 import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
-import { Governor } from "../../ImportedContracts.sol";
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
 import { PureEpochs } from "../../pureEpochs/PureEpochs.sol";
 
@@ -220,9 +221,24 @@ contract DualGovernor is DualGovernorQuorum {
 
         _countVote(proposalId, account, support, voteWeight, valueWeight, params);
 
-        // update total active votes and accrue rewards for non-emergency, non-reset proposals
+        // update total active votes and accrue inflation and rewards for non-emergency, non-reset proposals
         if (voteWeight > 0 && !emergencyProposals[proposalId]) {
-            _registerVotesAndAccrueRewards(account, voteWeight);
+            // record account activity in epoch
+            uint256 epoch = PureEpochs.currentEpoch();
+            EpochBasic storage epochBasic = _epochBasic[epoch];
+            epochBasic.numVotedOn[account] += 1;
+
+            // if it is the last mandatory proposal, accrue inflation and rewards
+            if (_hasFinishedVoting(epochBasic, account)) {
+                // update cumulative vote weight and save time when the last mandatory proposal was voted on
+                epochBasic.totalVotesWeight += voteWeight;
+                epochBasic.finishedVotingAt[account] = block.number;
+
+                emit MandatoryVotingFinished(epoch, account, block.number, epochBasic.totalVotesWeight);
+
+                // accrue inflation and rewards
+                _accrueInflationAndRewards(epoch, account, voteWeight);
+            }
         }
 
         // TODO: adjust weight we need to return ?
@@ -235,37 +251,24 @@ contract DualGovernor is DualGovernorQuorum {
         return voteWeight;
     }
 
-    /// @dev Update number of proposals account voted on and cumulative vote weight for the epoch
-    /// @dev If voted on all active proposals, accrue VOTE voting power rewards
+    /// @dev Accrue VOTE inflation and VALUE rewards
+    /// @dev If voted on all active proposals, accrue VOTE voting power inflation
+    /// @param epoch The epoch number to accrue inflation and rewards for
     /// @param account The the account that voted on proposals
-    /// @param weight The vote weight of the account
-    /// @return The reward vote weight of the account if all mandatory proposals were voted on
-    function _registerVotesAndAccrueRewards(address account, uint256 weight) internal virtual returns (uint256) {
-        uint256 epoch = PureEpochs.currentEpoch();
-        EpochBasic storage epochBasic = _epochBasic[epoch];
+    /// @param voteWeight The vote weight of the account
+    function _accrueInflationAndRewards(uint256 epoch, address account, uint256 voteWeight) internal {
+        // accrue VALUE reward
+        uint256 totalVoteWeight = IVOTE(vote).getPastTotalVotes(startOf(epoch));
+        uint256 reward = (ISPOG(spog).fixedReward() * voteWeight) / totalVoteWeight;
+        IVALUE(value).mint(account, reward);
 
-        // update number of proposals account voted for in current epoch
-        epochBasic.numVotedOn[account] += 1;
+        // accrue VOTE inflation
+        uint256 inflation = ISPOG(spog).getInflation(voteWeight);
+        IVOTE(vote).addVotingPower(account, inflation);
 
-        // if user voted for all proposals, update cumulative weight and give rewards
-        if (!_hasFinishedVoting(epochBasic, account)) return 0;
+        emit InflationAndRewardsAccrued(epoch, account, inflation, reward);
 
-        // update cumulative vote weight and save time when last proposal was voted on
-        epochBasic.totalVotesWeight += weight;
-        epochBasic.finishedVotingAt[account] = block.number;
-
-        // calculate and mint VOTE voting power reward
-        uint256 votesWeightReward = ISPOG(spog).getInflationReward(weight);
-        IVOTE(vote).addVotingPower(account, votesWeightReward);
-
-        // claim VALUE token reward by delegate
-        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / IVOTE(vote).getPastTotalVotes(epochStart);
-        // TODO: make sure governor can mint here
-        // IVALUE(value).mint(account, valueReward);
-
-        emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, votesWeightReward);
-
-        return votesWeightReward;
+        // return (reward, inflation);
     }
 
     /// @notice Gets total vote weight power for the epoch

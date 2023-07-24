@@ -30,7 +30,7 @@ contract SPOG is ISPOG {
         uint256 taxLowerBound;
         uint256 taxUpperBound;
         uint256 inflator;
-        uint256 valueFixedInflation;
+        uint256 fixedReward;
     }
 
     /// TODO find the right one for better precision
@@ -39,13 +39,13 @@ contract SPOG is ISPOG {
     /// @notice Vault for value holders assets
     address public immutable vault;
 
-    /// @notice Cash token used for proposal fee payments
+    /// @notice ERC20 token used for proposal's fee payment
     address public immutable cash;
 
-    /// @notice Fixed inflation rewards per epoch for value holders
-    uint256 public immutable valueFixedInflation;
+    /// @notice VALUE fixed rewards per epoch
+    uint256 public immutable fixedReward;
 
-    /// @notice Inflation rate per epoch for vote holders
+    /// @notice VOTE inflation rate per epoch
     uint256 public immutable inflator;
 
     /// @notice Governor, upgradable via `reset` by value holders
@@ -79,7 +79,7 @@ contract SPOG is ISPOG {
         if (config.tax == 0) revert ZeroTax();
         if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
         if (config.inflator == 0) revert ZeroInflator();
-        if (config.valueFixedInflation == 0) revert ZeroValueInflation();
+        if (config.fixedReward == 0) revert ZeroFixedReward();
 
         // Set configuration data
         governor = config.governor;
@@ -93,7 +93,7 @@ contract SPOG is ISPOG {
         taxLowerBound = config.taxLowerBound;
         taxUpperBound = config.taxUpperBound;
         inflator = config.inflator;
-        valueFixedInflation = config.valueFixedInflation;
+        fixedReward = config.fixedReward;
     }
 
     /// @notice Add an address to a list
@@ -206,6 +206,14 @@ contract SPOG is ISPOG {
         return tax;
     }
 
+    /// @notice Calculate inflation amount based on SPOG rules and inflator
+    /// @param amount The amount to be inflated
+    /// @return The inflation amount
+    function getInflation(uint256 amount) external view returns (uint256) {
+        // TODO: prevent overflow, precision loss ?
+        return (amount * inflator) / _INFLATOR_SCALE;
+    }
+
     /// @notice Check is proposed change is supported by governance
     /// @param selector The function selector to check
     /// @return Whether the function is supported by governance
@@ -219,12 +227,6 @@ contract SPOG is ISPOG {
             selector == this.changeTaxRange.selector ||
             selector == this.emergency.selector ||
             selector == this.reset.selector;
-    }
-
-    /// @dev
-    function getInflationReward(uint256 amount) external view returns (uint256) {
-        // TODO: prevent overflow, precision loss ?
-        return (amount * inflator) / _INFLATOR_SCALE;
     }
 
     function get(bytes32 key) external view returns (bytes32 value) {
