@@ -17,7 +17,6 @@ contract SPOGDeployScript is BaseScript {
     address public governor;
     address public spog;
 
-    uint256 public time;
     uint256 public voteQuorum;
     uint256 public valueQuorum;
     address public cash;
@@ -25,7 +24,7 @@ contract SPOGDeployScript is BaseScript {
     uint256 public taxLowerBound;
     uint256 public taxUpperBound;
     uint256 public inflator;
-    uint256 public valueFixedInflation;
+    uint256 public fixedReward;
 
     address public vote;
     address public value;
@@ -40,9 +39,8 @@ contract SPOGDeployScript is BaseScript {
         cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18));
 
         inflator = 20; // 20%
-        valueFixedInflation = 100 * 10e18;
+        fixedReward = 100 * 10e18;
 
-        time = 100; // in blocks
         voteQuorum = 4; // 4%
         valueQuorum = 4; // 4%
         tax = 5e18;
@@ -54,7 +52,7 @@ contract SPOGDeployScript is BaseScript {
         auction = address(new VoteAuction());
 
         // deploy governor and vaults
-        governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum, time));
+        governor = address(new DualGovernor("DualGovernor", vote, value, voteQuorum, valueQuorum));
         vault = address(new SPOGVault(governor));
 
         // grant minter role for test runner
@@ -77,7 +75,7 @@ contract SPOGDeployScript is BaseScript {
             taxLowerBound,
             taxUpperBound,
             inflator,
-            valueFixedInflation
+            fixedReward
         );
 
         spog = address(new SPOG(config));

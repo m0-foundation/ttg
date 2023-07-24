@@ -223,7 +223,6 @@ contract SPOGBaseTest is BaseTest {
         // grant minter role to new voteToken deployer
         IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(this));
 
-        uint256 time = 15; // in blocks
         uint256 voteQuorum = 5;
         uint256 valueQuorum = 5;
 
@@ -232,8 +231,7 @@ contract SPOGBaseTest is BaseTest {
             address(newVoteToken),
             valueToken,
             voteQuorum,
-            valueQuorum,
-            time
+            valueQuorum
         );
 
         return address(newGovernor);

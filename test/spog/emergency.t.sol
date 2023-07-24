@@ -333,8 +333,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
         // fast forward to end of voting period
-        uint256 nextEpochStart = governor.startOf(governor.currentEpoch() + 1);
-        vm.roll(nextEpochStart + 1);
+        vm.roll(block.number + governor.votingPeriod());
 
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Not in `Expired` state");
 

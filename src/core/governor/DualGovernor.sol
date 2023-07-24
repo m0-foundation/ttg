@@ -2,11 +2,13 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../../interfaces/ImportedInterfaces.sol";
+import { Governor } from "../../ImportedContracts.sol";
+
 import { ISPOG } from "../../interfaces/ISPOG.sol";
 import { IVALUE, IVOTE } from "../../interfaces/ITokens.sol";
 
-import { Governor } from "../../ImportedContracts.sol";
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
+import { PureEpochs } from "../../pureEpochs/PureEpochs.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
@@ -36,12 +38,6 @@ contract DualGovernor is DualGovernorQuorum {
     /// @notice The list of emergency proposals, (proposalId => true)
     mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
 
-    /// @dev The voting period in blocks
-    uint256 private immutable _votingPeriod;
-
-    /// @dev The start of counting epochs
-    uint256 private immutable _start;
-
     /// @dev The indicator of voting with `MINIMUM_VOTING_DELAY` delay is required proposal
     bool private _emergencyVotingIsOn;
 
@@ -61,24 +57,13 @@ contract DualGovernor is DualGovernorQuorum {
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a
     ///                    `VALUE QUORUM`
-    /// @param votingPeriod_ The duration of a voting epochs for governor and auctions in blocks
     constructor(
         string memory name,
         address vote,
         address value,
         uint256 voteQuorum,
-        uint256 valueQuorum,
-        uint256 votingPeriod_
-    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
-        // Sanity checks
-        if (votingPeriod_ == 0) revert ZeroVotingPeriod();
-
-        // Set governor configuration
-        _votingPeriod = votingPeriod_;
-
-        // TODO: should setting SPOG be start of counting epochs ?
-        _start = block.number;
-    }
+        uint256 valueQuorum
+    ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {}
 
     /// @notice Initializes SPOG address
     /// @dev Adds additional initialization for tokens
@@ -86,7 +71,6 @@ contract DualGovernor is DualGovernorQuorum {
     function initializeSPOG(address spog_) external {
         if (spog != address(0)) revert AlreadyInitialized();
         if (spog_ == address(0)) revert ZeroSPOGAddress();
-        if (_start == 0) revert ZeroStart(); // should never happen, precaution
 
         spog = spog_;
 
@@ -98,17 +82,19 @@ contract DualGovernor is DualGovernorQuorum {
         try IVALUE(value).initializeSPOG(spog_) {} catch {}
     }
 
+    // TODO: Is `currentEpoch` a standard interface? If not, just `epoch` may be better.
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
     /// @return current epoch number
     function currentEpoch() public view returns (uint256) {
-        return (block.number - _start) / _votingPeriod;
+        return PureEpochs.currentEpoch();
     }
 
+    // TODO: Is `startOf` a standard interface? If not, `getEpochStart` is better.
     /// @notice Gets the start block number of the given epoch
     /// @param epoch The epoch number
     /// @return `block.number` of the start of the epoch
-    function startOf(uint256 epoch) public view returns (uint256) {
-        return _start + epoch * _votingPeriod;
+    function startOf(uint256 epoch) public pure returns (uint256) {
+        return PureEpochs.getBlockNumberOfEpochStart(epoch);
     }
 
     /// @dev Returns proposal type for given function selector
@@ -165,7 +151,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         ISPOG(spog).chargeFee(_msgSender(), func);
 
-        uint256 nextEpoch = currentEpoch() + 1;
+        uint256 nextEpoch = PureEpochs.currentEpoch() + 1;
         uint256 proposalId;
         if (func == ISPOG.emergency.selector || func == ISPOG.reset.selector) {
             _emergencyVotingIsOn = true;
@@ -235,9 +221,24 @@ contract DualGovernor is DualGovernorQuorum {
 
         _countVote(proposalId, account, support, voteWeight, valueWeight, params);
 
-        // update total active votes and accrue rewards for non-emergency, non-reset proposals
+        // update total active votes and accrue inflation and rewards for non-emergency, non-reset proposals
         if (voteWeight > 0 && !emergencyProposals[proposalId]) {
-            _registerVotesAndAccrueRewards(account, voteWeight);
+            // record account activity in epoch
+            uint256 epoch = PureEpochs.currentEpoch();
+            EpochBasic storage epochBasic = _epochBasic[epoch];
+            epochBasic.numVotedOn[account] += 1;
+
+            // if it is the last mandatory proposal, accrue inflation and rewards
+            if (_hasFinishedVoting(epochBasic, account)) {
+                // update cumulative vote weight and save time when the last mandatory proposal was voted on
+                epochBasic.totalVotesWeight += voteWeight;
+                epochBasic.finishedVotingAt[account] = block.number;
+
+                emit MandatoryVotingFinished(epoch, account, block.number, epochBasic.totalVotesWeight);
+
+                // accrue inflation and rewards
+                _accrueInflationAndRewards(epoch, account, voteWeight);
+            }
         }
 
         // TODO: adjust weight we need to return ?
@@ -250,37 +251,24 @@ contract DualGovernor is DualGovernorQuorum {
         return voteWeight;
     }
 
-    /// @dev Update number of proposals account voted on and cumulative vote weight for the epoch
-    /// @dev If voted on all active proposals, accrue VOTE voting power rewards
+    /// @dev Accrue VOTE inflation and VALUE rewards
+    /// @dev If voted on all active proposals, accrue VOTE voting power inflation
+    /// @param epoch The epoch number to accrue inflation and rewards for
     /// @param account The the account that voted on proposals
-    /// @param weight The vote weight of the account
-    /// @return The reward vote weight of the account if all mandatory proposals were voted on
-    function _registerVotesAndAccrueRewards(address account, uint256 weight) internal virtual returns (uint256) {
-        uint256 epoch = currentEpoch();
-        EpochBasic storage epochBasic = _epochBasic[epoch];
+    /// @param voteWeight The vote weight of the account
+    function _accrueInflationAndRewards(uint256 epoch, address account, uint256 voteWeight) internal {
+        // accrue VALUE reward
+        uint256 totalVoteWeight = IVOTE(vote).getPastTotalVotes(startOf(epoch));
+        uint256 reward = (ISPOG(spog).fixedReward() * voteWeight) / totalVoteWeight;
+        IVALUE(value).mint(account, reward);
 
-        // update number of proposals account voted for in current epoch
-        epochBasic.numVotedOn[account] += 1;
+        // accrue VOTE inflation
+        uint256 inflation = ISPOG(spog).getInflation(voteWeight);
+        IVOTE(vote).addVotingPower(account, inflation);
 
-        // if user voted for all proposals, update cumulative weight and give rewards
-        if (!_hasFinishedVoting(epochBasic, account)) return 0;
+        emit InflationAndRewardsAccrued(epoch, account, inflation, reward);
 
-        // update cumulative vote weight and save time when last proposal was voted on
-        epochBasic.totalVotesWeight += weight;
-        epochBasic.finishedVotingAt[account] = block.number;
-
-        // calculate and mint VOTE voting power reward
-        uint256 votesWeightReward = ISPOG(spog).getInflationReward(weight);
-        IVOTE(vote).addVotingPower(account, votesWeightReward);
-
-        // claim VALUE token reward by delegate
-        // uint256 valueReward = epochVotes * spog.valueFixedInflation() / IVOTE(vote).getPastTotalVotes(epochStart);
-        // TODO: make sure governor can mint here
-        // IVALUE(value).mint(account, valueReward);
-
-        emit VotingFinishedAndRewardsAccrued(account, epoch, block.number, votesWeightReward);
-
-        return votesWeightReward;
+        // return (reward, inflation);
     }
 
     /// @notice Gets total vote weight power for the epoch
@@ -331,7 +319,7 @@ contract DualGovernor is DualGovernorQuorum {
 
         // Set state to `Expired` if proposal was not executed in the next epoch
         if (status == ProposalState.Succeeded) {
-            uint256 expiresAt = proposalDeadline(proposalId) + _votingPeriod;
+            uint256 expiresAt = proposalDeadline(proposalId) + PureEpochs._EPOCH_PERIOD;
 
             if (block.number > expiresAt) {
                 return ProposalState.Expired;
@@ -343,17 +331,21 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Returns the voting delay for proposal
     function votingDelay() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : _currentEpochRemainder();
+        // NOTE: Since OpenZeppelin governor erroneously uses `block.number <= snapshot` instead of
+        //       `block.number < snapshot` to define a pending proposal, proposals are only active and able to be voted
+        //       on 1 block after the official start of an epoch. So, we need to subtract 1.
+        // TODO: Get rid of OZ contracts but implementing a correct Governor, then remove the `- 1` here.
+        return _emergencyVotingIsOn ? MINIMUM_VOTING_DELAY : _currentEpochRemainder() - 1;
     }
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? _currentEpochRemainder() : _votingPeriod;
+        return _emergencyVotingIsOn ? _currentEpochRemainder() : PureEpochs._EPOCH_PERIOD;
     }
 
     /// @dev Returns the number of blocks left in the current epoch
     function _currentEpochRemainder() internal view returns (uint256) {
-        return startOf(currentEpoch() + 1) - block.number - 1;
+        return PureEpochs.blocksRemainingInCurrentEpoch();
     }
 
     /// @dev Extracts address params from the call data

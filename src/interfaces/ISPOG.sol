@@ -14,9 +14,9 @@ interface ISPOG {
     event AddressRemovedFromList(bytes32 indexed listName, address indexed account);
     event ConfigUpdated(bytes32 indexed valueName, bytes32 value);
     event EmergencyExecuted(uint8 indexed emergencyType, bytes callData);
+    event ResetExecuted(address indexed newGovernor, uint256 indexed resetSnapshotId);
     event TaxChanged(uint256 oldTax, uint256 newTax);
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
-    event ResetExecuted(address newGovernor, uint256 resetSnapshotId);
     event ProposalFeeCharged(address indexed account, uint256 indexed epoch, uint256 fee);
 
     // Errors
@@ -27,7 +27,7 @@ interface ISPOG {
     error ZeroTax();
     error TaxOutOfRange();
     error ZeroInflator();
-    error ZeroValueInflation();
+    error ZeroFixedReward();
     error ListAdminIsNotSPOG(); // TODO: Remove?
     error ListIsNotInMasterList(); // TODO: Remove?
     error EmergencyMethodNotSupported();
@@ -49,7 +49,7 @@ interface ISPOG {
 
     function inflator() external view returns (uint256);
 
-    function valueFixedInflation() external view returns (uint256);
+    function fixedReward() external view returns (uint256);
 
     // Accepted `proposal` functions
     function addToList(bytes32 listName, address account) external;
@@ -70,7 +70,7 @@ interface ISPOG {
 
     function chargeFee(address account, bytes4 func) external returns (uint256);
 
-    function getInflationReward(uint256 amount) external view returns (uint256);
+    function getInflation(uint256 amount) external view returns (uint256);
 
     // Registry functions
     function get(bytes32 key) external view returns (bytes32 value);

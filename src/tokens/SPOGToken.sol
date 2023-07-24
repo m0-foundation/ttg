@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { ISPOGToken } from "../interfaces/ITokens.sol";
-
 import { AccessControlEnumerable } from "../ImportedContracts.sol";
+
+import { ISPOGToken } from "../interfaces/ITokens.sol";
 
 abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -17,11 +17,12 @@ abstract contract SPOGToken is AccessControlEnumerable, ISPOGToken {
 
     /// @notice Sets the spog address. Can only be called once.
     /// @param spog_ the address of the spog
-    function initializeSPOG(address spog_) external {
+    function initializeSPOG(address spog_) external virtual {
         if (spog != address(0)) revert AlreadyInitialized();
 
         spog = spog_;
 
         _setupRole(MINTER_ROLE, spog_);
+        _setupRole(MINTER_ROLE, msg.sender); // should be governor address
     }
 }

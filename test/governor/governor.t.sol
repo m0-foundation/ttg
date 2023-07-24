@@ -16,23 +16,24 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_StartOfNextVotingPeriod() public {
         uint256 votingPeriod = governor.votingPeriod();
+        uint256 startOfCurrentEpoch = governor.startOf(governor.currentEpoch());
         uint256 startOfNextEpoch = governor.startOf(governor.currentEpoch() + 1);
 
         assertTrue(startOfNextEpoch > block.number);
-        assertEq(startOfNextEpoch, block.number + votingPeriod);
+        assertTrue(startOfNextEpoch > startOfCurrentEpoch);
+        assertEq(startOfNextEpoch, startOfCurrentEpoch + votingPeriod);
     }
 
     function test_AccurateIncrementOfCurrentVotingPeriodEpoch() public {
-        uint256 currentEpoch = governor.currentEpoch();
+        uint256 startingEpoch = governor.currentEpoch();
 
-        assertEq(currentEpoch, 0); // initial value
-
-        for (uint256 i = 0; i < 6; i++) {
+        for (uint256 i = 1; i <= 6; i++) {
+            // TODO: Remove `+ 1` once we get rid of OZ contracts and implement correct state and votingDelay functions.
             vm.roll(block.number + governor.votingDelay() + 1);
 
-            currentEpoch = governor.currentEpoch();
+            uint256 currentEpoch = governor.currentEpoch();
 
-            assertEq(currentEpoch, i + 1);
+            assertEq(currentEpoch, startingEpoch + i);
         }
     }
 
@@ -319,14 +320,14 @@ contract DualGovernorTest is SPOGBaseTest {
         governor.propose(targets, values, calldatas, description);
 
         // fast forward to next voting period
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         // cast vote on proposal
         uint8 yesVote = 1;
         governor.castVote(proposalId, yesVote);
 
         // fast forward to next voting period
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         // do not execute
 

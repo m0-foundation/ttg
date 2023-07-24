@@ -25,14 +25,12 @@ interface IDualGovernor {
     error ListAdminIsNotSPOG();
     error AlreadyVoted();
     error ZeroSPOGAddress();
-    error ZeroVotingPeriod();
     error ZeroVoteAddress();
     error ZeroValueAddress();
     error ZeroVoteQuorumNumerator();
     error ZeroValueQuorumNumerator();
     error InvalidVoteQuorumNumerator();
     error InvalidValueQuorumNumerator();
-    error ZeroStart();
     error VoteValueMismatch();
     error ProposalIsNotInActiveState();
 
@@ -40,19 +38,24 @@ interface IDualGovernor {
     event Proposal(
         uint256 indexed epoch,
         uint256 indexed proposalId,
-        ProposalType proposalType,
+        ProposalType indexed proposalType,
         address target,
         bytes data,
         string description
     );
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
-
-    event VotingFinishedAndRewardsAccrued(
-        address indexed account,
+    event MandatoryVotingFinished(
         uint256 indexed epoch,
-        uint256 blockNumber,
-        uint256 votesWeightReward
+        address indexed account,
+        uint256 indexed blockNumber,
+        uint256 totalVotedWeight
+    );
+    event InflationAndRewardsAccrued(
+        uint256 indexed epoch,
+        address indexed account,
+        uint256 inflation,
+        uint256 rewards
     );
 
     // Accessors for vote, value tokens and spog contract
@@ -92,7 +95,7 @@ interface IDualGovernor {
     // Epochs logic
     function currentEpoch() external view returns (uint256);
 
-    function startOf(uint256 epoch) external view returns (uint256);
+    function startOf(uint256 epoch) external pure returns (uint256);
 
     function epochTotalVotesWeight(uint256 epoch) external view returns (uint256);
 
