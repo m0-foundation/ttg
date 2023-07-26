@@ -17,7 +17,7 @@ contract SPOG_change is SPOGBaseTest {
     address public charlie = createUser("charlie");
 
     function test_Revert_ChangeTaxRange_WhenNotCalledByGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.changeTaxRange(10e18, 12e18);
     }
 

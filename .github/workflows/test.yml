@@ -31,6 +31,6 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          export MNEMONIC="cheap intact fame guilt pigeon uncover leopard gravity leopard jewel oval duck"
+          export MNEMONIC=${{ secrets.MNEMONIC_FOR_TESTS }}
           forge test -vvv
         id: test

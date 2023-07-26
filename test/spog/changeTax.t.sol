@@ -16,7 +16,7 @@ contract SPOG_changeTax is SPOGBaseTest {
     }
 
     function test_Revert_ChangeTaxWhenNotCalledFromGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.changeTax(newTaxValue);
     }
 

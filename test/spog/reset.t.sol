@@ -84,7 +84,7 @@ contract SPOG_reset is SPOGBaseTest {
     }
 
     function test_Revert_Reset_WhenNotCalledByGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.reset();
     }
 

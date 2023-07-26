@@ -4,14 +4,11 @@ pragma solidity 0.8.19;
 import { IInflationaryVotes } from "../interfaces/ITokens.sol";
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
+import { IGovernanceDeployer } from "../deployer/IGovernanceDeployer.sol";
 
 import { ECDSA, ERC20Permit, Math, SafeCast } from "../ImportedContracts.sol";
 import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
 import { SPOGControlled } from "../periphery/SPOGControlled.sol";
-
-interface IHasGovernor {
-    function governor() external view returns (address governor);
-}
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
 /// @notice Modified from OpenZeppelin
@@ -44,7 +41,8 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, SPOGCont
 
     constructor(address spog_) SPOGControlled(spog_) {
         // The caller should be a contract/factory that exposes a `governor`.
-        governor = IHasGovernor(msg.sender).governor();
+        // NOTE: `governor` cannot be a constructor argument in as it will affect the address of this contract.
+        governor = IGovernanceDeployer(msg.sender).governor();
     }
 
     modifier onlyGovernor() {

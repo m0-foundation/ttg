@@ -14,6 +14,8 @@ import { console, ERC20Mock } from "./ImportedContracts.sol";
 import { BaseScript } from "./shared/Base.s.sol";
 
 contract SPOGDeployScript is BaseScript {
+    uint256 public constant DEPLOYER_STARTING_NONCE = 0;
+
     address public governanceDeployer;
     address public governor;
     address public spog;
@@ -39,13 +41,13 @@ contract SPOGDeployScript is BaseScript {
     function run() public {
         vm.startBroadcast(deployer);
 
-        address expectedSpog = address(0x29b2440db4A256B0c1E6d3B4CDcaA68E2440A08f);
+        address expectedSpog = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 5);
 
-        value = address(new VALUE("SPOG Value", "VALUE", expectedSpog)); // 0xBd770416a3345F91E4B34576cb804a576fa48EB1
-        vault = address(new SPOGVault(value)); // 0x5a443704dd4B594B382c22a083e2BD3090A6feF3
-        cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18)); // 0x47e9Fbef8C83A1714F1951F142132E6e90F5fa5D
-        auction = address(new VoteAuction()); // 0x8Be503bcdEd90ED42Eff31f56199399B2b0154CA
-        governanceDeployer = address(new GovernanceDeployer(expectedSpog)); // 0x47c5e40890bcE4a473A49D7501808b9633F29782
+        value = address(new VALUE("SPOG Value", "VALUE", expectedSpog));
+        vault = address(new SPOGVault(value));
+        cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18));
+        auction = address(new VoteAuction());
+        governanceDeployer = address(new GovernanceDeployer(expectedSpog));
 
         SPOG.Configuration memory config = SPOG.Configuration(
             governanceDeployer,
@@ -73,5 +75,28 @@ contract SPOGDeployScript is BaseScript {
         console.log("VOTE token address: ", vote = ISPOGGovernor(governor).vote());
 
         vm.stopBroadcast();
+    }
+
+    function _getContractFrom(address account, uint256 nonce) internal pure returns (address) {
+        return
+            address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            nonce == 0x00
+                                ? abi.encodePacked(bytes1(0xd6), bytes1(0x94), account, bytes1(0x80))
+                                : nonce <= 0x7f
+                                ? abi.encodePacked(bytes1(0xd6), bytes1(0x94), account, uint8(nonce))
+                                : nonce <= 0xff
+                                ? abi.encodePacked(bytes1(0xd7), bytes1(0x94), account, bytes1(0x81), uint8(nonce))
+                                : nonce <= 0xffff
+                                ? abi.encodePacked(bytes1(0xd8), bytes1(0x94), account, bytes1(0x82), uint16(nonce))
+                                : nonce <= 0xffffff
+                                ? abi.encodePacked(bytes1(0xd9), bytes1(0x94), account, bytes1(0x83), uint24(nonce))
+                                : abi.encodePacked(bytes1(0xda), bytes1(0x94), account, bytes1(0x84), uint32(nonce))
+                        )
+                    )
+                )
+            );
     }
 }

@@ -25,7 +25,6 @@ interface IInflationaryVotes is IVotes, IERC20, IERC20Metadata, IERC20Permit, IS
 
     // Errors
     error CallerIsNotGovernor();
-    error OnlyGovernor();
     error TotalVotesOverflow();
     error TotalSupplyOverflow();
     error InvalidFutureLookup();

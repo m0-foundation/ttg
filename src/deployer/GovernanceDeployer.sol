@@ -7,6 +7,7 @@ import { DualGovernor } from "../core/governor/DualGovernor.sol";
 import { SPOGControlled } from "../periphery/SPOGControlled.sol";
 import { VOTE } from "../tokens/VOTE.sol";
 
+// TODO: This contract is too large, but likely will be resolved when DualGovernor and VOTE is refactored.
 contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
     address public governor;
 

@@ -37,6 +37,10 @@ contract SPOG is ISPOG {
         uint256 valueQuorum;
     }
 
+    string private constant VOTE_NAME = "SPOGVote";
+    string private constant VOTE_SYMBOL = "VOTE";
+    string private constant GOVERNOR_NAME = "DualGovernor";
+
     /// TODO find the right one for better precision
     uint256 private constant _INFLATOR_SCALE = 100;
 
@@ -71,7 +75,7 @@ contract SPOG is ISPOG {
 
     /// @dev Modifier checks if caller is a governor address
     modifier onlyGovernor() {
-        if (msg.sender != governor) revert OnlyGovernor();
+        if (msg.sender != governor) revert CallerIsNotGovernor();
 
         _;
     }
@@ -94,9 +98,9 @@ contract SPOG is ISPOG {
         deployer = config.deployer;
 
         (governor, ) = IGovernanceDeployer(deployer).deployGovernance(
-            "SPOGVote",
-            "VOTE",
-            "DualGovernor",
+            VOTE_NAME,
+            VOTE_SYMBOL,
+            GOVERNOR_NAME,
             config.value,
             config.voteQuorum,
             config.valueQuorum,

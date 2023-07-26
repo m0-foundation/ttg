@@ -15,7 +15,7 @@ contract SPOG_AddToList is SPOGBaseTest {
     }
 
     function test_Revert_AddToListWhenNotCallingFromGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.addToList(LIST_NAME, addressToAdd);
     }
 

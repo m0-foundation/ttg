@@ -12,10 +12,10 @@ contract VoteAuction is IVoteAuction, Initializable {
     using SafeERC20 for IERC20;
 
     error AlreadyInitialized();
+    error AuctionBalanceInsufficient();
     error AuctionEnded();
     error AuctionNotEnded();
-    error AuctionBalanceInsufficient();
-    error OnlyVault();
+    error CallerIsNotVault();
 
     // TODO: Many of these can be immutable.
 
@@ -36,7 +36,7 @@ contract VoteAuction is IVoteAuction, Initializable {
     uint256 private constant _CURVE_STEPS = 20;
 
     modifier onlyVault() {
-        if (msg.sender != vault) revert OnlyVault();
+        if (msg.sender != vault) revert CallerIsNotVault();
 
         _;
     }
