@@ -180,9 +180,4 @@ abstract contract DualGovernorQuorum is ISPOGGovernor, Governor {
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }
-
-    // TODO: use OZ Math lib for max and min, only if we decide to keep OZ contracts
-    function _max(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a > b ? a : b;
-    }
 }

@@ -241,8 +241,8 @@ contract DualGovernor is DualGovernorQuorum {
             }
         }
 
-        // return bigger of two weights - simple solution for single governance proposals
-        uint256 weight = _max(voteWeight, valueWeight);
+        // return sum of two weights - simple solution for single governance proposals
+        uint256 weight = voteWeight + valueWeight;
 
         if (params.length == 0) {
             emit VoteCast(account, proposalId, support, weight, reason);
