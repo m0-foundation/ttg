@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import { IInflationaryVotes } from "../interfaces/ITokens.sol";
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
-import { IGovernanceDeployer } from "../deployer/IGovernanceDeployer.sol";
+import { IVoteDeployer } from "../deployer/IVoteDeployer.sol";
 
 import { ECDSA, ERC20Permit, Math, SafeCast } from "../ImportedContracts.sol";
 import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
@@ -42,7 +42,9 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, SPOGCont
     constructor(address spog_) SPOGControlled(spog_) {
         // The caller should be a contract/factory that exposes a `governor`.
         // NOTE: `governor` cannot be a constructor argument in as it will affect the address of this contract.
-        governor = IGovernanceDeployer(msg.sender).governor();
+        // NOTE: Technically, for now, `msg.sender` is the VoteDeployer, but this will remain even once the
+        //       VoteDeployer is merged into the GovernanceDeployer.
+        governor = IVoteDeployer(msg.sender).governor();
     }
 
     modifier onlyGovernor() {

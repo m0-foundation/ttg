@@ -5,6 +5,8 @@ import { IVALUE, IVOTE } from "../src/interfaces/ITokens.sol";
 import { ISPOGGovernor } from "../src/interfaces/ISPOGGovernor.sol";
 
 import { GovernanceDeployer } from "../src/deployer/GovernanceDeployer.sol";
+import { GovernorDeployer } from "../src/deployer/GovernorDeployer.sol";
+import { VoteDeployer } from "../src/deployer/VoteDeployer.sol";
 import { SPOG } from "../src/core/SPOG.sol";
 import { SPOGVault } from "../src/periphery/SPOGVault.sol";
 import { VALUE } from "../src/tokens/VALUE.sol";
@@ -41,13 +43,19 @@ contract SPOGDeployScript is BaseScript {
     function run() public {
         vm.startBroadcast(deployer);
 
-        address expectedSpog = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 5);
+        address expectedSpog = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 7);
+
+        address expectedGovernanceDeployer = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 6);
 
         value = address(new VALUE("SPOG Value", "VALUE", expectedSpog));
         vault = address(new SPOGVault(value));
         cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18));
         auction = address(new VoteAuction());
-        governanceDeployer = address(new GovernanceDeployer(expectedSpog));
+
+        address governorDeployer = address(new GovernorDeployer(expectedGovernanceDeployer));
+        address voteDeployer = address(new VoteDeployer(expectedGovernanceDeployer));
+
+        governanceDeployer = address(new GovernanceDeployer(expectedSpog, governorDeployer, voteDeployer));
 
         SPOG.Configuration memory config = SPOG.Configuration(
             governanceDeployer,

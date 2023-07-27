@@ -33,21 +33,7 @@ interface IGovernanceDeployer is ISPOGControlled {
         bytes32 salt
     ) external view returns (address governor, address vote);
 
-    function getDeterministicVoteAddress(
-        string memory name,
-        string memory symbol,
-        address value,
-        bytes32 salt
-    ) external view returns (address deterministicAddress);
+    function governorDeployer() external view returns (address governorDeployer);
 
-    function getDeterministicGovernorAddress(
-        string memory name,
-        address vote,
-        address value,
-        uint256 voteQuorum,
-        uint256 valueQuorum,
-        bytes32 salt
-    ) external view returns (address deterministicAddress);
-
-    function governor() external view returns (address governor);
+    function voteDeployer() external view returns (address voteDeployer);
 }

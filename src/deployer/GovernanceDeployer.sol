@@ -2,20 +2,23 @@
 pragma solidity 0.8.19;
 
 import { IGovernanceDeployer } from "./IGovernanceDeployer.sol";
+import { IGovernorDeployer } from "./IGovernorDeployer.sol";
+import { IVoteDeployer } from "./IVoteDeployer.sol";
 
-import { DualGovernor } from "../core/governor/DualGovernor.sol";
 import { SPOGControlled } from "../periphery/SPOGControlled.sol";
-import { VOTE } from "../tokens/VOTE.sol";
 
-// TODO: This contract is too large, but likely will be resolved when DualGovernor and VOTE is refactored.
 contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
-    address public governor;
+    address public immutable governorDeployer;
+    address public immutable voteDeployer;
 
-    constructor(address spog_) SPOGControlled(spog_) {}
+    constructor(address spog_, address governorDeployer_, address voteDeployer_) SPOGControlled(spog_) {
+        governorDeployer = governorDeployer_;
+        voteDeployer = voteDeployer_;
+    }
 
     function deployGovernance(
         bytes memory deployArguments
-    ) external onlySPOG returns (address governor_, address vote) {
+    ) external onlySPOG returns (address governor_, address vote_) {
         (
             string memory voteName,
             string memory voteSymbol,
@@ -26,7 +29,7 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
             bytes32 salt
         ) = abi.decode(deployArguments, (string, string, string, address, uint256, uint256, bytes32));
 
-        (governor_, vote) = deployGovernance(voteName, voteSymbol, governorName, value, voteQuorum, valueQuorum, salt);
+        (governor_, vote_) = deployGovernance(voteName, voteSymbol, governorName, value, voteQuorum, valueQuorum, salt);
     }
 
     function deployGovernance(
@@ -37,37 +40,37 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
         uint256 voteQuorum,
         uint256 valueQuorum,
         bytes32 salt
-    ) public onlySPOG returns (address governor_, address vote) {
-        address expectedVote = getDeterministicVoteAddress(voteName, voteSymbol, value, salt);
-
-        address expectedGovernor = getDeterministicGovernorAddress(
+    ) public onlySPOG returns (address governor_, address vote_) {
+        (address expectedGovernor, address expectedVote) = getGovernanceAddresses(
+            voteName,
+            voteSymbol,
             governorName,
-            expectedVote,
             value,
             voteQuorum,
             valueQuorum,
             salt
         );
 
-        // Set public governor so that VOTE deployment cn access it during it's constructor.
-        // NOTE: SPOG does not exist during its own constructor, so VOTE cannot read the expected governor from it.
-        governor = expectedGovernor;
+        vote_ = IVoteDeployer(voteDeployer).deployVote(voteName, voteSymbol, spog, value, expectedGovernor, salt);
 
-        vote = address(new VOTE{ salt: salt }(voteName, voteSymbol, spog, value));
+        if (vote_ != expectedVote) revert VoteAddressMismatch(vote_, expectedVote);
 
-        // Only needed this during the deployment of VOTE. Can be deleted so save gas.
-        delete governor;
-
-        if (vote != expectedVote) revert VoteAddressMismatch(vote, expectedVote);
-
-        governor_ = address(new DualGovernor{ salt: salt }(governorName, vote, value, voteQuorum, valueQuorum, spog));
+        governor_ = IGovernorDeployer(governorDeployer).deployGovernor(
+            governorName,
+            vote_,
+            value,
+            voteQuorum,
+            valueQuorum,
+            spog,
+            salt
+        );
 
         if (governor_ != expectedGovernor) revert GovernorAddressMismatch(governor_, expectedGovernor);
     }
 
     function getGovernanceAddresses(
         bytes memory deployArguments
-    ) external view returns (address governor_, address vote) {
+    ) external view returns (address governor_, address vote_) {
         (
             string memory voteName,
             string memory voteSymbol,
@@ -78,7 +81,7 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
             bytes32 salt
         ) = abi.decode(deployArguments, (string, string, string, address, uint256, uint256, bytes32));
 
-        (governor_, vote) = getGovernanceAddresses(
+        (governor_, vote_) = getGovernanceAddresses(
             voteName,
             voteSymbol,
             governorName,
@@ -97,64 +100,17 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
         uint256 voteQuorum,
         uint256 valueQuorum,
         bytes32 salt
-    ) public view returns (address governor_, address vote) {
-        vote = getDeterministicVoteAddress(voteName, voteSymbol, value, salt);
+    ) public view returns (address governor_, address vote_) {
+        vote_ = IVoteDeployer(voteDeployer).getDeterministicVoteAddress(voteName, voteSymbol, spog, value, salt);
 
-        governor_ = getDeterministicGovernorAddress(governorName, vote, value, voteQuorum, valueQuorum, salt);
-    }
-
-    /// @dev Returns the deterministic address of a proxy given some salt.
-    function getDeterministicVoteAddress(
-        string memory name,
-        string memory symbol,
-        address value,
-        bytes32 salt
-    ) public view returns (address deterministicAddress_) {
-        // See https://docs.soliditylang.org/en/v0.8.7/control-structures.html#salted-contract-creations-create2
-        deterministicAddress_ = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff),
-                            address(this),
-                            salt,
-                            keccak256(abi.encodePacked(type(VOTE).creationCode, abi.encode(name, symbol, spog, value)))
-                        )
-                    )
-                )
-            )
-        );
-    }
-
-    /// @dev Returns the deterministic address of a proxy given some salt.
-    function getDeterministicGovernorAddress(
-        string memory name,
-        address vote,
-        address value,
-        uint256 voteQuorum,
-        uint256 valueQuorum,
-        bytes32 salt
-    ) public view returns (address deterministicAddress_) {
-        // See https://docs.soliditylang.org/en/v0.8.7/control-structures.html#salted-contract-creations-create2
-        deterministicAddress_ = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff),
-                            address(this),
-                            salt,
-                            keccak256(
-                                abi.encodePacked(
-                                    type(DualGovernor).creationCode,
-                                    abi.encode(name, vote, value, voteQuorum, valueQuorum, spog)
-                                )
-                            )
-                        )
-                    )
-                )
-            )
+        governor_ = IGovernorDeployer(governorDeployer).getDeterministicGovernorAddress(
+            governorName,
+            vote_,
+            value,
+            voteQuorum,
+            valueQuorum,
+            spog,
+            salt
         );
     }
 }
