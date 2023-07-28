@@ -316,10 +316,6 @@ contract SPOG_emergency is SPOGBaseTest {
         governor.castVote(proposalId, yesVote);
         vm.stopPrank();
 
-        vm.startPrank(bob);
-        governor.castVote(proposalId, noVote);
-        vm.stopPrank();
-
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
 
