@@ -38,7 +38,7 @@ interface IDualGovernor {
     event Proposal(
         uint256 indexed epoch,
         uint256 indexed proposalId,
-        ProposalType indexed proposalType,
+        ProposalType proposalType,
         address target,
         bytes data,
         string description
