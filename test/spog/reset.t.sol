@@ -106,8 +106,8 @@ contract SPOG_reset is SPOGBaseTest {
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
-        // fast forward to an active voting period
-        vm.roll(block.number + governor.votingPeriod());
+        // fast forward to the end of active voting period
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Not in expired state");
