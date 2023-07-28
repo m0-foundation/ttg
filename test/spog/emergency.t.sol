@@ -68,6 +68,8 @@ contract SPOG_emergency is SPOGBaseTest {
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
+        setUp();
+
         vm.prank(address(spog));
         // assert that address is not in the list
         assertFalse(spog.listContains(LIST_NAME, alice), "Address is in the list");
@@ -204,7 +206,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
 
         // fast forward to an active voting period
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(block.number + 2);
 
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
@@ -232,7 +234,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
 
         // fast forward to an active voting period
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(block.number + 2);
 
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
@@ -283,7 +285,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.emergencyProposals(proposalId), "Proposal was added to the list");
 
         // fast forward to an active voting period
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(block.number + 2);
 
         // cast vote on proposal
         governor.castVote(proposalId, noVote);
