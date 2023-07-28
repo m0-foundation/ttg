@@ -73,6 +73,14 @@ contract SPOG_reset is SPOGBaseTest {
         // value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
@@ -104,6 +112,14 @@ contract SPOG_reset is SPOGBaseTest {
 
         // value holders vote on proposal
         governor.castVote(proposalId, yesVote);
+
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
 
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");

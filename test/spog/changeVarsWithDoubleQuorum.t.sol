@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
+
 import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
-
-import { IGovernor } from "../interfaces/ImportedInterfaces.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -153,6 +153,14 @@ contract SPOG_change is SPOGBaseTest {
         // vote and value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
@@ -170,20 +178,22 @@ contract SPOG_change is SPOGBaseTest {
     }
 
     function test_UpdateVoteQuorum_Success() public {
+        // old and new value quorum numerator
+        uint256 oldVoteQuorumNumerator = governor.voteQuorumNumerator();
+        uint256 newVoteQuorumNumerator = 15;
+
         address[] memory targets = new address[](1);
         targets[0] = address(governor);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        bytes memory callData = abi.encodeWithSignature("updateVoteQuorumNumerator(uint256)", 15);
+        bytes memory callData = abi.encodeWithSignature("updateVoteQuorumNumerator(uint256)", newVoteQuorumNumerator);
         string memory description = "Change vote quorum numerator";
         calldatas[0] = callData;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
-        // uint256 epoch = governor.currentEpoch();
-
         // create proposal
         cash.approve(address(spog), tax);
 
@@ -200,33 +210,43 @@ contract SPOG_change is SPOGBaseTest {
 
         // vote and value holders vote on proposal
         governor.castVote(proposalId, yesVote);
+
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
 
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
         // check that VoteQuorumNumeratorUpdated event was emitted
         expectEmit();
-        emit VoteQuorumNumeratorUpdated(4, 15);
+        emit VoteQuorumNumeratorUpdated(oldVoteQuorumNumerator, newVoteQuorumNumerator);
         governor.execute(targets, values, calldatas, hashedDescription);
 
-        uint256 newVoteQuorumNumerator = governor.voteQuorumNumerator();
-        assertTrue(newVoteQuorumNumerator == 15, "Vote quorum numerator has not changed");
+        uint256 updatedVoteQuorumNumerator = governor.voteQuorumNumerator();
+        assertEq(updatedVoteQuorumNumerator, newVoteQuorumNumerator, "Vote quorum numerator has not changed");
     }
 
     function test_UpdateValueQuorum_Success() public {
+        // old and new value quorum numerator
+        uint256 oldValueQuorumNumerator = governor.valueQuorumNumerator();
+        uint256 newValueQuorumNumerator = 16;
+
         address[] memory targets = new address[](1);
         targets[0] = address(governor);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        bytes memory callData = abi.encodeWithSignature("updateValueQuorumNumerator(uint256)", 16);
+        bytes memory callData = abi.encodeWithSignature("updateValueQuorumNumerator(uint256)", newValueQuorumNumerator);
         string memory description = "Change value quorum numerator";
         calldatas[0] = callData;
 
         bytes32 hashedDescription = keccak256(abi.encodePacked(description));
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
-
-        // uint256 epoch = governor.currentEpoch();
 
         // create proposal
         cash.approve(address(spog), tax);
@@ -243,17 +263,34 @@ contract SPOG_change is SPOGBaseTest {
         vm.roll(block.number + governor.votingDelay() + 1);
 
         // vote and value holders vote on proposal
+        governor.castVote(proposalId, noVote);
+
+        require(
+            vote.getVotes(alice) + vote.getVotes(bob) + vote.getVotes(carol) >= governor.voteQuorum(block.number),
+            "not enough votes to reach quorum"
+        );
+
+        vm.startPrank(alice);
         governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(carol);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
 
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
 
         // check that ValueQuorumNumeratorUpdated event was emitted
         expectEmit();
-        emit ValueQuorumNumeratorUpdated(4, 16);
+        emit ValueQuorumNumeratorUpdated(oldValueQuorumNumerator, newValueQuorumNumerator);
         governor.execute(targets, values, calldatas, hashedDescription);
 
-        uint256 newValueQuorumNumerator = governor.valueQuorumNumerator();
-        assertTrue(newValueQuorumNumerator == 16, "Value quorum numerator has not changed");
+        uint256 updatedValueQuorumNumerator = governor.valueQuorumNumerator();
+        assertEq(updatedValueQuorumNumerator, newValueQuorumNumerator, "Value quorum numerator has not changed");
     }
 }
