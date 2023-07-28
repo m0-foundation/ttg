@@ -17,7 +17,7 @@ contract InflationTest is SPOGBaseTest {
         governor.castVote(proposalId, yesVote);
 
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         uint256 aliceVotes = vote.getVotes(alice);
         uint256 aliceStartBalance = vote.balanceOf(alice);
@@ -74,7 +74,7 @@ contract InflationTest is SPOGBaseTest {
         // epoch - set up proposals
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
         // alice votes on proposal 1
         vm.startPrank(alice);
         governor.castVote(proposal1Id, yesVote);
@@ -89,18 +89,18 @@ contract InflationTest is SPOGBaseTest {
         assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + spog.inflator())) / 100);
         assertEq(vote.getVotes(carol), carolStartVotes);
         // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         // set up proposals
         (uint256 proposal2Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
         // alice votes on proposal 1
         vm.startPrank(alice);
         governor.castVote(proposal2Id, yesVote);
         vm.stopPrank();
         // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         assertEq(vote.getVotes(alice), (aliceVotesAfterFirstVote * (100 + spog.inflator())) / 100);
         assertEq(vote.getVotes(bob), bobVotesAfterFirstVote);
@@ -136,7 +136,7 @@ contract InflationTest is SPOGBaseTest {
         // epoch - set up proposals
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
         // alice votes on proposal 1
         vm.startPrank(alice);
         governor.castVote(proposal1Id, yesVote);
@@ -173,6 +173,7 @@ contract InflationTest is SPOGBaseTest {
         // epoch - set up proposals
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
         // voting period started
+        // TODO no +1 here
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
         // alice votes on proposal 1
         vm.startPrank(alice);
@@ -215,7 +216,7 @@ contract InflationTest is SPOGBaseTest {
         // epoch - set up proposals
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
         // alice votes on proposal 1
         vm.startPrank(alice);
         governor.castVote(proposal1Id, yesVote);
@@ -254,7 +255,7 @@ contract InflationTest is SPOGBaseTest {
         // epoch - set up proposals
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
         vm.startPrank(alice);
         // redelegate voting power to bob
         vote.delegate(bob);
@@ -296,6 +297,7 @@ contract InflationTest is SPOGBaseTest {
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
 
         // voting period started
+        // TODO no +1 here
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
 
         vm.startPrank(alice);
@@ -337,7 +339,7 @@ contract InflationTest is SPOGBaseTest {
         (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
 
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         vm.startPrank(alice);
         vote.delegate(bob);
@@ -345,7 +347,7 @@ contract InflationTest is SPOGBaseTest {
         governor.castVote(proposal1Id, yesVote);
 
         // start new epoch
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         uint256 aliceInflation = vote.claimInflation();
         assertEq(aliceInflation, 0e18, "Alice: Invalid inflation");
@@ -358,7 +360,7 @@ contract InflationTest is SPOGBaseTest {
         /// EPOCH 1
 
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         vm.startPrank(alice);
         // alice votes on proposal 1
@@ -379,14 +381,14 @@ contract InflationTest is SPOGBaseTest {
         vm.stopPrank();
 
         // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         /// EPOCH 2
 
         (uint256 proposal2Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
 
         // voting period started
-        vm.roll(block.number + governor.votingDelay() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         vm.startPrank(alice);
         // alice votes on proposal 2
@@ -438,7 +440,7 @@ contract InflationTest is SPOGBaseTest {
         vm.stopPrank();
 
         // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         // epoch - set up proposals
         (uint256 proposal3Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Omega"));
@@ -496,6 +498,7 @@ contract InflationTest is SPOGBaseTest {
         /// EPOCH 1
 
         // voting period started
+        // TODO no +1 here
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
 
         vm.startPrank(alice);

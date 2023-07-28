@@ -61,7 +61,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         (uint256 proposal1Id, , , , ) = proposeTaxRangeChange("test proposal");
 
         // voting period started
-        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         // alice is its own delegate
         uint256 aliceStartVotes = vote.getVotes(alice);
