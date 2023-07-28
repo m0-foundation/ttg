@@ -16,6 +16,8 @@ contract SPOG_reset is SPOGBaseTest {
     /******************************************************************************************************************/
 
     function executeValidProposal() private {
+        setUp();
+
         ISPOGGovernor governor = ISPOGGovernor(spog.governor());
         address[] memory targets = new address[](1);
         targets[0] = address(spog);

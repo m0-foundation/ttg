@@ -394,25 +394,42 @@ contract DualGovernor is DualGovernorQuorum {
     /// @dev See {OZ Governor-_quorumReached} adjusted for double-governance nature of SPOG.
     function _quorumReached(uint256 proposalId) internal view override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
-
         ProposalType proposalType = _proposalTypes[proposalId];
+
         uint256 snapshot = proposalSnapshot(proposalId);
         uint256 voteQuorum_ = voteQuorum(snapshot);
         uint256 valueQuorum_ = valueQuorum(snapshot);
 
+        // Require VOTE and VALUE quorums for double governance proposals
         if (proposalType == ProposalType.Double) {
             return voteQuorum_ <= proposalVote.voteYesVotes && valueQuorum_ <= proposalVote.valueYesVotes;
         }
 
+        // Require VALUE quorum for RESET
         if (proposalType == ProposalType.Value) return valueQuorum_ <= proposalVote.valueYesVotes;
 
-        return voteQuorum_ <= proposalVote.voteYesVotes;
+        // Require VOTE quorum for emergency proposals, proposal is immediately executable if quorum is reached
+        if (emergencyProposals[proposalId]) return voteQuorum_ <= proposalVote.voteYesVotes;
+
+        // Standard VOTE proposals do not require quorum
+        return true;
     }
 
     /// @notice Checks if proposal is successful
     /// @dev See {Governor-_voteSucceeded}.
     function _voteSucceeded(uint256 proposalId) internal view override returns (bool) {
-        return _quorumReached(proposalId);
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+        ProposalType proposalType = _proposalTypes[proposalId];
+
+        if (proposalType == ProposalType.Double) {
+            return
+                proposalVote.voteYesVotes > proposalVote.voteNoVotes &&
+                proposalVote.valueYesVotes > proposalVote.valueNoVotes;
+        }
+
+        if (proposalType == ProposalType.Value) return proposalVote.valueYesVotes > proposalVote.valueNoVotes;
+
+        return proposalVote.voteYesVotes > proposalVote.voteNoVotes;
     }
 
     /// @dev Counts both value and vote votes for proposal
