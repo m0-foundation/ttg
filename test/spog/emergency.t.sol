@@ -297,7 +297,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Not in active state");
 
         // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod() + 1);
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
@@ -334,9 +334,14 @@ contract SPOG_emergency is SPOGBaseTest {
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
-        // fast forward to end of voting period
-        vm.roll(block.number + governor.votingPeriod());
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) - 1);
+        // proposal is still in `Succeeded` state
+        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
+        // fast forward to end of voting period
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
+
+        // check that proposal expires at the beginning of the next epoch
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Not in `Expired` state");
 
         vm.expectRevert("Governor: proposal not successful");
