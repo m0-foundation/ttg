@@ -341,7 +341,7 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? _currentEpochRemainder() - 1 - MINIMUM_VOTING_DELAY : PureEpochs._EPOCH_PERIOD;
+        return _emergencyVotingIsOn ? _currentEpochRemainder() - MINIMUM_VOTING_DELAY - 1 : PureEpochs._EPOCH_PERIOD;
     }
 
     /// @dev Returns the number of blocks left in the current epoch
