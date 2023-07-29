@@ -307,7 +307,7 @@ contract DualGovernor is DualGovernorQuorum {
         if (emergencyProposals[proposalId]) {
             // If emergency proposal is `Active` and quorum is reached, change status to `Succeeded`
             // Use only `_quorumReached` for this check, `_voteSucceeded` returns the same result
-            if (status == ProposalState.Active && _quorumReached(proposalId)) {
+            if (status == ProposalState.Active && _quorumReached(proposalId) && _voteSucceeded(proposalId)) {
                 return ProposalState.Succeeded;
             }
 
