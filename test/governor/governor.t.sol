@@ -166,42 +166,42 @@ contract DualGovernorTest is SPOGBaseTest {
     }
 
     function test_ProposalShouldChangeStatesCorrectly() public {
-        (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
-        (uint256 proposal2Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
+        (uint256 proposalId1, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+        (uint256 proposalId2, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
         (
-            uint256 proposal3Id,
+            uint256 proposalId3,
             address[] memory targets,
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
         ) = proposeAddingAnAddressToList(makeAddr("Gamma"));
 
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
-        assertTrue(governor.state(proposal2Id) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
-        assertTrue(governor.state(proposal3Id) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
+        assertTrue(governor.state(proposalId1) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
+        assertTrue(governor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
+        assertTrue(governor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
 
         vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Active, "Proposal is not in active state");
-        assertTrue(governor.state(proposal2Id) == IGovernor.ProposalState.Active, "Proposal is not in active state");
-        assertTrue(governor.state(proposal3Id) == IGovernor.ProposalState.Active, "Proposal is not in active state");
+        assertTrue(governor.state(proposalId1) == IGovernor.ProposalState.Active, "Proposal is not in active state");
+        assertTrue(governor.state(proposalId2) == IGovernor.ProposalState.Active, "Proposal is not in active state");
+        assertTrue(governor.state(proposalId3) == IGovernor.ProposalState.Active, "Proposal is not in active state");
 
-        governor.castVote(proposalId, yesVote);
-        governor.castVote(proposal2Id, noVote);
-        governor.castVote(proposal3Id, yesVote);
+        governor.castVote(proposalId1, yesVote);
+        governor.castVote(proposalId2, noVote);
+        governor.castVote(proposalId3, yesVote);
 
         vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
         assertTrue(
-            governor.state(proposalId) == IGovernor.ProposalState.Succeeded,
+            governor.state(proposalId1) == IGovernor.ProposalState.Succeeded,
             "Proposal is not in succeeded state"
         );
         assertTrue(
-            governor.state(proposal2Id) == IGovernor.ProposalState.Defeated,
+            governor.state(proposalId2) == IGovernor.ProposalState.Defeated,
             "Proposal is not in defeated state"
         );
         assertTrue(
-            governor.state(proposal3Id) == IGovernor.ProposalState.Succeeded,
+            governor.state(proposalId3) == IGovernor.ProposalState.Succeeded,
             "Proposal is not in succeeded state"
         );
 
@@ -210,13 +210,13 @@ contract DualGovernorTest is SPOGBaseTest {
 
         vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
-        assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Expired, "Proposal is not in expired state");
+        assertTrue(governor.state(proposalId1) == IGovernor.ProposalState.Expired, "Proposal is not in expired state");
         assertTrue(
-            governor.state(proposal2Id) == IGovernor.ProposalState.Defeated,
+            governor.state(proposalId2) == IGovernor.ProposalState.Defeated,
             "Proposal is not in defeated state"
         );
         assertTrue(
-            governor.state(proposal3Id) == IGovernor.ProposalState.Executed,
+            governor.state(proposalId3) == IGovernor.ProposalState.Executed,
             "Proposal is not in executed state"
         );
     }
