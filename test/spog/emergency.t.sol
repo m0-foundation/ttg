@@ -178,6 +178,14 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
 
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
@@ -209,6 +217,14 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
 
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // check proposal was executed
@@ -236,6 +252,14 @@ contract SPOG_emergency is SPOGBaseTest {
 
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
+
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
 
         governor.execute(targets, values, calldatas, hashedDescription);
 
@@ -288,6 +312,10 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, noVote);
 
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
 
@@ -328,6 +356,14 @@ contract SPOG_emergency is SPOGBaseTest {
 
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
+
+        vm.startPrank(alice);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, yesVote);
+        vm.stopPrank();
 
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");

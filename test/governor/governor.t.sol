@@ -344,4 +344,48 @@ contract DualGovernorTest is SPOGBaseTest {
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
     }
+
+    function test_Revert_Execute_WhenVoteDefeated() public {
+        (
+            uint256 proposalId,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+
+        (
+            uint256 proposalBetaId,
+            address[] memory targetsBeta,
+            uint256[] memory valuesBeta,
+            bytes[] memory calldatasBeta,
+            bytes32 hashedDescriptionBeta
+        ) = proposeAddingAnAddressToList(makeAddr("Beta"));
+
+        // fast forward to an active voting period. Inflate vote token supply
+        vm.roll(block.number + governor.votingDelay() + 1);
+
+        governor.castVote(proposalId, yesVote);
+
+        vm.startPrank(alice);
+        governor.castVote(proposalId, noVote);
+        governor.castVote(proposalBetaId, yesVote);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        governor.castVote(proposalId, noVote);
+        governor.castVote(proposalBetaId, noVote);
+        vm.stopPrank();
+
+        // fast forward to end of voting period
+        vm.roll(block.number + governor.votingPeriod() + 1);
+
+        // an attempt to execute proposal
+        vm.expectRevert("Governor: proposal not successful");
+        governor.execute(targets, values, calldatas, hashedDescription);
+
+        // an attempt to execute beta proposal
+        vm.expectRevert("Governor: proposal not successful");
+        governor.execute(targetsBeta, valuesBeta, calldatasBeta, hashedDescriptionBeta);
+    }
 }
