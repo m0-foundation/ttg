@@ -165,6 +165,62 @@ contract DualGovernorTest is SPOGBaseTest {
         proposeAddingAnAddressToList(makeAddr("Beta"));
     }
 
+    function test_ProposalShouldChangeStatesCorrectly() public {
+        (uint256 proposalId1, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+        (uint256 proposalId2, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
+        (
+            uint256 proposalId3,
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas,
+            bytes32 hashedDescription
+        ) = proposeAddingAnAddressToList(makeAddr("Gamma"));
+
+        assertTrue(governor.state(proposalId1) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
+        assertTrue(governor.state(proposalId2) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
+        assertTrue(governor.state(proposalId3) == IGovernor.ProposalState.Pending, "Proposal is not in pending state");
+
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
+
+        assertTrue(governor.state(proposalId1) == IGovernor.ProposalState.Active, "Proposal is not in active state");
+        assertTrue(governor.state(proposalId2) == IGovernor.ProposalState.Active, "Proposal is not in active state");
+        assertTrue(governor.state(proposalId3) == IGovernor.ProposalState.Active, "Proposal is not in active state");
+
+        governor.castVote(proposalId1, yesVote);
+        governor.castVote(proposalId2, noVote);
+        governor.castVote(proposalId3, yesVote);
+
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
+
+        assertTrue(
+            governor.state(proposalId1) == IGovernor.ProposalState.Succeeded,
+            "Proposal is not in succeeded state"
+        );
+        assertTrue(
+            governor.state(proposalId2) == IGovernor.ProposalState.Defeated,
+            "Proposal is not in defeated state"
+        );
+        assertTrue(
+            governor.state(proposalId3) == IGovernor.ProposalState.Succeeded,
+            "Proposal is not in succeeded state"
+        );
+
+        // execute proposal number 3
+        governor.execute(targets, values, calldatas, hashedDescription);
+
+        vm.roll(governor.startOf(governor.currentEpoch() + 1));
+
+        assertTrue(governor.state(proposalId1) == IGovernor.ProposalState.Expired, "Proposal is not in expired state");
+        assertTrue(
+            governor.state(proposalId2) == IGovernor.ProposalState.Defeated,
+            "Proposal is not in defeated state"
+        );
+        assertTrue(
+            governor.state(proposalId3) == IGovernor.ProposalState.Executed,
+            "Proposal is not in executed state"
+        );
+    }
+
     function test_CanVoteOnMultipleProposals() public {
         // propose adding a new list to spog
         (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));

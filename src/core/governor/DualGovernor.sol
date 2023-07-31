@@ -319,9 +319,10 @@ contract DualGovernor is DualGovernorQuorum {
 
         // Set state to `Expired` if proposal was not executed in the next epoch
         if (status == ProposalState.Succeeded) {
-            uint256 expiresAt = proposalDeadline(proposalId) + PureEpochs._EPOCH_PERIOD;
+            // expires after 1 epoch
+            uint256 expiresAt = proposalDeadline(proposalId) + PureEpochs._EPOCH_PERIOD + 1;
 
-            if (block.number > expiresAt) {
+            if (block.number >= expiresAt) {
                 return ProposalState.Expired;
             }
         }
@@ -340,7 +341,7 @@ contract DualGovernor is DualGovernorQuorum {
 
     /// @notice Returns the voting period for proposal
     function votingPeriod() public view override returns (uint256) {
-        return _emergencyVotingIsOn ? _currentEpochRemainder() : PureEpochs._EPOCH_PERIOD;
+        return _emergencyVotingIsOn ? _currentEpochRemainder() - MINIMUM_VOTING_DELAY - 1 : PureEpochs._EPOCH_PERIOD;
     }
 
     /// @dev Returns the number of blocks left in the current epoch
