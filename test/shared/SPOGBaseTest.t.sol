@@ -48,16 +48,30 @@ contract SPOGBaseTest is BaseTest {
         deployScript = new SPOGDeployScript();
         deployScript.run();
 
-        cash = IERC20(deployScript.cash());
-        deployer = IGovernanceDeployer(deployScript.governanceDeployer());
-        governor = ISPOGGovernor(deployScript.governor());
         spog = ISPOG(deployScript.spog());
-        value = IVALUE(deployScript.value());
-        vault = ISPOGVault(deployScript.vault());
-        vote = IVOTE(deployScript.vote());
 
-        tax = deployScript.tax();
+        updateAddresses();
 
+        // Initialize self
+        // TODO: Remove the need for this.
+        initializeSelf();
+
+        // Initialize users initial token balances
+        fundUsers();
+    }
+
+    function updateAddresses() internal {
+        vault = ISPOGVault(spog.vault());
+        cash = IERC20(spog.cash());
+        deployer = IGovernanceDeployer(spog.deployer());
+        governor = ISPOGGovernor(spog.governor());
+        value = IVALUE(governor.value());
+        vote = IVOTE(governor.vote());
+        tax = spog.tax();
+    }
+
+    // TODO: Remove the need for this.
+    function initializeSelf() internal {
         // mint vote tokens and self-delegate
         vm.prank(address(governor));
         vote.mint(address(this), amountToMint);
@@ -69,9 +83,6 @@ contract SPOGBaseTest is BaseTest {
         value.mint(address(this), amountToMint);
 
         value.delegate(address(this));
-
-        // Initialize users initial token balances
-        fundUsers();
     }
 
     function fundUsers() internal {

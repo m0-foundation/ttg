@@ -49,8 +49,6 @@ contract SPOG_reset is SPOGBaseTest {
     }
 
     function executeValidProposal() private {
-        setUp();
-
         ISPOGGovernor governor = ISPOGGovernor(spog.governor());
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -124,9 +122,12 @@ contract SPOG_reset is SPOGBaseTest {
 
         assertFalse(spog.governor() == governorBeforeFork, "Governor was not reset");
 
-        assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 4, "Governor quorum was not set correctly");
+        assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 65, "Governor quorum was not set correctly");
 
         assertEq(ISPOGGovernor(spog.governor()).votingPeriod(), 216_000, "Governor voting delay was not set correctly");
+
+        updateAddresses();
+        initializeSelf();
 
         // Make sure governance is functional
         executeValidProposal();

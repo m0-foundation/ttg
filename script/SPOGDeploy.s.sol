@@ -22,8 +22,8 @@ contract SPOGDeployScript is BaseScript {
     address public governor;
     address public spog;
 
-    uint256 public voteQuorum = 4; // 4%
-    uint256 public valueQuorum = 4; // 4%
+    uint256 public voteQuorum = 65; // 65%
+    uint256 public valueQuorum = 65; // 65%
     address public cash;
     uint256 public tax = 5e18;
     uint256 public taxLowerBound = 0;
