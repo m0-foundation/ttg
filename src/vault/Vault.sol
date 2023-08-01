@@ -2,8 +2,8 @@
 pragma solidity 0.8.19;
 
 import { IERC20 } from "../ImportedInterfaces.sol";
-import { IVault } from "./IVault.sol";
 import { IVALUE } from "../tokens/ITokens.sol";
+import { IVault } from "./IVault.sol";
 
 import { SafeERC20 } from "../ImportedContracts.sol";
 import { PureEpochs } from "../pureEpochs/PureEpochs.sol";

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IVALUE, IVOTE } from "../src/tokens/ITokens.sol";
 import { IDualGovernor } from "../src/governor/IDualGovernor.sol";
+import { IVALUE, IVOTE } from "../src/tokens/ITokens.sol";
 
+import { Auction } from "../src/auction/Auction.sol";
 import { GovernanceDeployer } from "../src/deployer/GovernanceDeployer.sol";
 import { GovernorDeployer } from "../src/deployer/GovernorDeployer.sol";
-import { VoteDeployer } from "../src/deployer/VoteDeployer.sol";
-import { Comptroller } from "../src/comptroller/Comptroller.sol";
-import { Vault } from "../src/vault/Vault.sol";
+import { Registrar } from "../src/registrar/Registrar.sol";
 import { VALUE } from "../src/tokens/VALUE.sol";
-import { Auction } from "../src/auction/Auction.sol";
+import { Vault } from "../src/vault/Vault.sol";
+import { VoteDeployer } from "../src/deployer/VoteDeployer.sol";
 
 import { console, ERC20Mock } from "./ImportedContracts.sol";
 import { BaseScript } from "./shared/Base.s.sol";
@@ -20,7 +20,7 @@ contract SPOGDeployScript is BaseScript {
 
     address public governanceDeployer;
     address public governor;
-    address public comptroller;
+    address public registrar;
 
     uint256 public voteQuorum = 65; // 65%
     uint256 public valueQuorum = 65; // 65%
@@ -43,11 +43,11 @@ contract SPOGDeployScript is BaseScript {
     function run() public {
         vm.startBroadcast(deployer);
 
-        address expectedComptroller = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 7);
+        address expectedRegistrar = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 7);
 
         address expectedGovernanceDeployer = _getContractFrom(deployer, DEPLOYER_STARTING_NONCE + 6);
 
-        value = address(new VALUE("Comptroller Value", "VALUE", expectedComptroller));
+        value = address(new VALUE("Registrar Value", "VALUE", expectedRegistrar));
         vault = address(new Vault(value));
         cash = address(new ERC20Mock("CashToken", "CASH", msg.sender, 100e18));
         auction = address(new Auction());
@@ -55,9 +55,9 @@ contract SPOGDeployScript is BaseScript {
         address governorDeployer = address(new GovernorDeployer(expectedGovernanceDeployer));
         address voteDeployer = address(new VoteDeployer(expectedGovernanceDeployer));
 
-        governanceDeployer = address(new GovernanceDeployer(expectedComptroller, governorDeployer, voteDeployer));
+        governanceDeployer = address(new GovernanceDeployer(expectedRegistrar, governorDeployer, voteDeployer));
 
-        Comptroller.Configuration memory config = Comptroller.Configuration(
+        Registrar.Configuration memory config = Registrar.Configuration(
             governanceDeployer,
             value,
             vault,
@@ -71,15 +71,15 @@ contract SPOGDeployScript is BaseScript {
             valueQuorum
         );
 
-        comptroller = address(new Comptroller(config)); // 0x29b2440db4A256B0c1E6d3B4CDcaA68E2440A08f
+        registrar = address(new Registrar(config)); // 0x29b2440db4A256B0c1E6d3B4CDcaA68E2440A08f
 
         console.log("VALUE token address: ", value);
         console.log("Vault address: ", vault);
         console.log("Cash address: ", cash);
         console.log("Auction address: ", auction);
         console.log("Deployer address: ", governanceDeployer);
-        console.log("Comptroller address: ", comptroller);
-        console.log("DualGovernor address: ", governor = Comptroller(comptroller).governor());
+        console.log("Registrar address: ", registrar);
+        console.log("DualGovernor address: ", governor = Registrar(registrar).governor());
         console.log("VOTE token address: ", vote = IDualGovernor(governor).vote());
 
         vm.stopBroadcast();

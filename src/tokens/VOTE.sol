@@ -8,7 +8,7 @@ import { InflationaryVotes } from "./InflationaryVotes.sol";
 
 /// @title VOTE token with built-in inflation
 /// @dev It relies of snapshotted balances of VALUE token holders at the moment of reset
-/// @dev Snapshot is taken at the moment of reset by Comptroller
+/// @dev Snapshot is taken at the moment of reset by Registrar
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
 contract VOTE is IVOTE, InflationaryVotes {
     /// @notice value token to take snapshot from
@@ -23,22 +23,22 @@ contract VOTE is IVOTE, InflationaryVotes {
     /// @notice Constructs the VOTE token
     /// @param name Name of the token
     /// @param symbol Symbol of the token
-    /// @param comptroller Address of the Comptroller contract
+    /// @param registrar Address of the Registrar contract
     /// @param value_ Address of the VALUE token for reset
     constructor(
         string memory name,
         string memory symbol,
-        address comptroller,
+        address registrar,
         address value_
-    ) InflationaryVotes(comptroller) ERC20(name, symbol) ERC20Permit(name) {
+    ) InflationaryVotes(registrar) ERC20(name, symbol) ERC20Permit(name) {
         value = value_;
     }
 
-    /// @notice Comptroller initializes reset snapshot
+    /// @notice Registrar initializes reset snapshot
     /// @param resetSnapshotId_ Snapshot id of the moment of reset
     function reset(uint256 resetSnapshotId_) external {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
-        if (msg.sender != comptroller) revert CallerIsNotComptroller();
+        if (msg.sender != registrar) revert CallerIsNotRegistrar();
 
         resetSnapshotId = resetSnapshotId_;
 

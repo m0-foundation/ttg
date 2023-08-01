@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import { IGovernor } from "../ImportedInterfaces.sol";
 
-import { IComptroller } from "../../src/comptroller/IComptroller.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -27,21 +27,21 @@ contract SPOG_emergency is SPOGBaseTest {
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
         // assert that address is in the list
-        assertTrue(comptroller.listContains(LIST_NAME, addressToChange), "Address is not in the list");
+        assertTrue(registrar.listContains(LIST_NAME, addressToChange), "Address is not in the list");
 
         // the actual proposal to wrap as an emergency
         bytes memory callData = abi.encode(LIST_NAME, addressToChange);
 
         // the emergency proposal
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
             "emergency(uint8,bytes)",
-            uint8(IComptroller.EmergencyType.RemoveFromList),
+            uint8(IRegistrar.EmergencyType.RemoveFromList),
             callData
         );
 
@@ -54,7 +54,7 @@ contract SPOG_emergency is SPOGBaseTest {
             description
         );
 
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         //TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -68,23 +68,23 @@ contract SPOG_emergency is SPOGBaseTest {
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         // assert that address is not in the list
-        assertFalse(comptroller.listContains(LIST_NAME, alice), "Address is in the list");
+        assertFalse(registrar.listContains(LIST_NAME, alice), "Address is in the list");
 
         // the actual proposal to wrap as an emergency
         bytes memory callData = abi.encode(LIST_NAME, alice);
 
         // the emergency proposal
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
             "emergency(uint8,bytes)",
-            uint8(IComptroller.EmergencyType.AddToList),
+            uint8(IRegistrar.EmergencyType.AddToList),
             callData
         );
 
@@ -96,7 +96,7 @@ contract SPOG_emergency is SPOGBaseTest {
             calldatas,
             description
         );
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -115,14 +115,14 @@ contract SPOG_emergency is SPOGBaseTest {
 
         // the emergency proposal
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
             "emergency(uint8,bytes)",
-            uint8(IComptroller.EmergencyType.UpdateConfig),
+            uint8(IRegistrar.EmergencyType.UpdateConfig),
             callData
         );
 
@@ -136,7 +136,7 @@ contract SPOG_emergency is SPOGBaseTest {
         );
 
         // emergency propose, tax price
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         //TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -193,7 +193,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that address is not in the list
-        assertFalse(comptroller.listContains(LIST_NAME, addressToChange), "Address is still in the list");
+        assertFalse(registrar.listContains(LIST_NAME, addressToChange), "Address is still in the list");
     }
 
     function test_Emergency_AppendToList() public {
@@ -227,7 +227,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that address is in the list
-        assertTrue(comptroller.listContains(LIST_NAME, addressToChange), "Address is not in the list");
+        assertTrue(registrar.listContains(LIST_NAME, addressToChange), "Address is not in the list");
     }
 
     function test_Emergency_UpdateConfig() public {
@@ -261,28 +261,28 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Executed, "Not in executed state");
 
         // assert that config was changed
-        assertEq(comptroller.get("someConfigName"), "someValue", "Config did not match");
+        assertEq(registrar.get("someConfigName"), "someValue", "Config did not match");
     }
 
     function test_Revert_Emergency_WhenNotEnoughTaxPaid() public {
         bytes memory callData = abi.encode(LIST_NAME, addressToChange);
 
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
             "emergency(uint8,bytes)",
-            uint8(IComptroller.EmergencyType.RemoveFromList),
+            uint8(IRegistrar.EmergencyType.RemoveFromList),
             callData
         );
 
         string memory description = "Emergency remove of merchant";
 
         // emergency propose, 1 * tax price is needed, but only 0.5 * tax is approved to be paid
-        cash.approve(address(comptroller), tax / 2);
+        cash.approve(address(registrar), tax / 2);
         vm.expectRevert("ERC20: insufficient allowance");
         governor.propose(targets, values, calldatas, description);
     }
@@ -325,7 +325,7 @@ contract SPOG_emergency is SPOGBaseTest {
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Defeated, "Not in defeated state");
 
         // assert that address is in the list
-        assertTrue(comptroller.listContains(LIST_NAME, addressToChange), "Address is not in the list");
+        assertTrue(registrar.listContains(LIST_NAME, addressToChange), "Address is not in the list");
     }
 
     function test_Revert_Emergency_WhenProposalIsExpired() public {

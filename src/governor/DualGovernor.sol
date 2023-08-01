@@ -2,9 +2,9 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../ImportedInterfaces.sol";
-import { IComptroller } from "../comptroller/IComptroller.sol";
-import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
 import { IDualGovernor } from "./IDualGovernor.sol";
+import { IRegistrar } from "../registrar/IRegistrar.sol";
+import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
 
 import { Governor } from "../ImportedContracts.sol";
 import { DualGovernorQuorum } from "./DualGovernorQuorum.sol";
@@ -32,8 +32,8 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @notice Minimum voting delay in blocks for emergency proposals
     uint256 public constant MINIMUM_VOTING_DELAY = 1;
 
-    /// @notice The comptroller contract
-    address public immutable comptroller;
+    /// @notice The registrar contract
+    address public immutable registrar;
 
     /// @notice The list of emergency proposals, (proposalId => true)
     mapping(uint256 proposalId => bool isEmergencyProposal) public override emergencyProposals;
@@ -57,16 +57,16 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @param voteQuorum The fraction of the current $VOTE supply voting "YES" for actions that require a `VOTE QUORUM`
     /// @param valueQuorum The fraction of the current $VALUE supply voting "YES" for actions that require a
     ///                    `VALUE QUORUM`
-    /// @param comptroller_ The address of the Comptroller contract
+    /// @param registrar_ The address of the Registrar contract
     constructor(
         string memory name,
         address vote,
         address value,
         uint256 voteQuorum,
         uint256 valueQuorum,
-        address comptroller_
+        address registrar_
     ) DualGovernorQuorum(name, vote, value, voteQuorum, valueQuorum) {
-        if ((comptroller = comptroller_) == address(0)) revert ZeroComptrollerAddress();
+        if ((registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
     }
 
     // TODO: Is `currentEpoch` a standard interface? If not, just `epoch` may be better.
@@ -91,12 +91,12 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
         if (
             func == this.updateVoteQuorumNumerator.selector ||
             func == this.updateValueQuorumNumerator.selector ||
-            func == IComptroller.changeTaxRange.selector
+            func == IRegistrar.changeTaxRange.selector
         ) {
             return ProposalType.Double;
         }
 
-        if (func == IComptroller.reset.selector) {
+        if (func == IRegistrar.reset.selector) {
             return ProposalType.Value;
         }
 
@@ -113,7 +113,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @notice Creates a new proposal
     /// @dev One of main overridden methods of OZ governor interface, adjusted for SPOG needs
     /// @param targets The ordered list of target addresses for calls to be made
-    /// @dev only one target is allowed and target address can be only Comptroller or Governor contract
+    /// @dev only one target is allowed and target address can be only Registrar or Governor contract
     /// @param values The ordered list of values (i.e amounts) to be passed to the calls to be made
     /// @dev only one value is allowed and it should be 0
     /// @param calldatas The ordered list of function signatures and encoded parameters to be passed to each call
@@ -132,15 +132,15 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
         address target = targets[0];
         bytes4 func = bytes4(calldatas[0]);
 
-        if (target != address(this) && target != comptroller) revert InvalidTarget();
+        if (target != address(this) && target != registrar) revert InvalidTarget();
         if (target == address(this) && !isGovernedMethod(func)) revert InvalidMethod();
-        if (target == comptroller && !IComptroller(comptroller).isGovernedMethod(func)) revert InvalidMethod();
+        if (target == registrar && !IRegistrar(registrar).isGovernedMethod(func)) revert InvalidMethod();
 
-        IComptroller(comptroller).chargeFee(_msgSender(), func);
+        IRegistrar(registrar).chargeFee(_msgSender(), func);
 
         uint256 nextEpoch = PureEpochs.currentEpoch() + 1;
         uint256 proposalId;
-        if (func == IComptroller.emergency.selector || func == IComptroller.reset.selector) {
+        if (func == IRegistrar.emergency.selector || func == IRegistrar.reset.selector) {
             _emergencyVotingIsOn = true;
             proposalId = super.propose(targets, values, calldatas, description);
             _emergencyVotingIsOn = false;
@@ -248,11 +248,11 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     function _accrueInflationAndRewards(uint256 epoch, address account, uint256 voteWeight) internal {
         // accrue VALUE reward, minting of actual token
         uint256 totalVoteWeight = IVOTE(vote).getPastTotalVotes(startOf(epoch));
-        uint256 reward = (IComptroller(comptroller).fixedReward() * voteWeight) / totalVoteWeight;
+        uint256 reward = (IRegistrar(registrar).fixedReward() * voteWeight) / totalVoteWeight;
         IVALUE(value).mint(account, reward);
 
         // accrue VOTE inflation, upgrading of internal balance
-        uint256 inflation = IComptroller(comptroller).getInflation(voteWeight);
+        uint256 inflation = IRegistrar(registrar).getInflation(voteWeight);
         IVOTE(vote).addVotingPower(account, inflation);
 
         emit InflationAndRewardsAccrued(epoch, account, inflation, reward);

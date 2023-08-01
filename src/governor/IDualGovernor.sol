@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
+import { IControlledByRegistrar } from "../registrar/IControlledByRegistrar.sol";
 import { IDualGovernorQuorum } from "./IDualGovernorQuorum.sol";
-import { IControlledByComptroller } from "../comptroller/IControlledByComptroller.sol";
 
 // NOTE: Openzeppelin erroneously declared `IGovernor` as abstract contract, so this needs to follow suit.
-abstract contract IDualGovernor is IControlledByComptroller, IDualGovernorQuorum {
+abstract contract IDualGovernor is IControlledByRegistrar, IDualGovernorQuorum {
     // Enums
     enum ProposalType {
         Vote,

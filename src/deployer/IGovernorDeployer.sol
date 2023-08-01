@@ -10,7 +10,7 @@ interface IGovernorDeployer {
         address value,
         uint256 voteQuorum,
         uint256 valueQuorum,
-        address comptroller,
+        address registrar,
         bytes32 salt
     ) external returns (address governor_);
 
@@ -20,7 +20,7 @@ interface IGovernorDeployer {
         address value,
         uint256 voteQuorum,
         uint256 valueQuorum,
-        address comptroller,
+        address registrar,
         bytes32 salt
     ) external view returns (address deterministicAddress_);
 

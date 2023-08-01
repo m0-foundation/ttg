@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
 import { IDualGovernorQuorum } from "./IDualGovernorQuorum.sol";
+import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
 
 import { Checkpoints, Governor, SafeCast } from "../ImportedContracts.sol";
 

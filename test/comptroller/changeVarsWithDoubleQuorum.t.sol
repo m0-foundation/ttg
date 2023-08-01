@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import { IGovernor } from "../ImportedInterfaces.sol";
 
-import { IComptroller } from "../../src/comptroller/IComptroller.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
 import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
@@ -17,8 +17,8 @@ contract SPOG_change is SPOGBaseTest {
     address public charlie = createUser("charlie");
 
     function test_Revert_ChangeTaxRange_WhenNotCalledByGovernance() public {
-        vm.expectRevert(IComptroller.CallerIsNotGovernor.selector);
-        comptroller.changeTaxRange(10e18, 12e18);
+        vm.expectRevert(IRegistrar.CallerIsNotGovernor.selector);
+        registrar.changeTaxRange(10e18, 12e18);
     }
 
     function test_Revert_Change_WhenValueHoldersDoNotVote() public {
@@ -28,10 +28,10 @@ contract SPOG_change is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeTaxRangeChange("Change tax range in comptroller");
+        ) = proposeTaxRangeChange("Change tax range in registrar");
 
-        uint256 taxLowerBound = comptroller.taxLowerBound();
-        uint256 taxUpperBound = comptroller.taxUpperBound();
+        uint256 taxLowerBound = registrar.taxLowerBound();
+        uint256 taxUpperBound = registrar.taxUpperBound();
 
         // give charlie vote power
         vm.prank(address(governor));
@@ -63,7 +63,7 @@ contract SPOG_change is SPOGBaseTest {
 
         // assert that tax range has not been changed
         assertTrue(
-            comptroller.taxLowerBound() == taxLowerBound && comptroller.taxUpperBound() == taxUpperBound,
+            registrar.taxLowerBound() == taxLowerBound && registrar.taxUpperBound() == taxUpperBound,
             "Tax range should not have been changed"
         );
     }
@@ -75,10 +75,10 @@ contract SPOG_change is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeTaxRangeChange("Change tax range in comptroller");
+        ) = proposeTaxRangeChange("Change tax range in registrar");
 
-        uint256 taxLowerBound = comptroller.taxLowerBound();
-        uint256 taxUpperBound = comptroller.taxUpperBound();
+        uint256 taxLowerBound = registrar.taxLowerBound();
+        uint256 taxUpperBound = registrar.taxUpperBound();
 
         // give charlie vote power
         vm.prank(address(governor));
@@ -110,7 +110,7 @@ contract SPOG_change is SPOGBaseTest {
 
         // assert that tax range has not been changed
         assertTrue(
-            comptroller.taxLowerBound() == taxLowerBound && comptroller.taxUpperBound() == taxUpperBound,
+            registrar.taxLowerBound() == taxLowerBound && registrar.taxUpperBound() == taxUpperBound,
             "Tax range should not have been changed"
         );
     }
@@ -122,7 +122,7 @@ contract SPOG_change is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeTaxRangeChange("Change tax range in comptroller");
+        ) = proposeTaxRangeChange("Change tax range in registrar");
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -146,10 +146,10 @@ contract SPOG_change is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeTaxRangeChange("Change tax range in comptroller");
+        ) = proposeTaxRangeChange("Change tax range in registrar");
 
-        uint256 oldTaxLowerBound = comptroller.taxLowerBound();
-        uint256 oldTaxUpperBound = comptroller.taxUpperBound();
+        uint256 oldTaxLowerBound = registrar.taxLowerBound();
+        uint256 oldTaxUpperBound = registrar.taxUpperBound();
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -171,8 +171,8 @@ contract SPOG_change is SPOGBaseTest {
         emit TaxRangeChanged(oldTaxLowerBound, 10e18, oldTaxUpperBound, 12e18);
         governor.execute(targets, values, calldatas, hashedDescription);
 
-        uint256 newTaxLowerBound = comptroller.taxLowerBound();
-        uint256 newTaxUpperBound = comptroller.taxUpperBound();
+        uint256 newTaxLowerBound = registrar.taxLowerBound();
+        uint256 newTaxUpperBound = registrar.taxUpperBound();
 
         // assert that tax range has been changed
         assertTrue(newTaxLowerBound == 10e18, "Tax range lower bound has not changed");
@@ -197,7 +197,7 @@ contract SPOG_change is SPOGBaseTest {
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // TODO: add checks for 2 emitted events
         // expectEmit();
@@ -205,7 +205,7 @@ contract SPOG_change is SPOGBaseTest {
         // expectEmit();
         // emit Proposal(epoch, proposalId, IDualGovernor.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
-        assertTrue(spogProposalId == proposalId, "comptroller proposal ids don't match");
+        assertTrue(spogProposalId == proposalId, "registrar proposal ids don't match");
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
@@ -249,7 +249,7 @@ contract SPOG_change is SPOGBaseTest {
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // TODO: add checks for 2 emitted events
         // expectEmit();
@@ -257,7 +257,7 @@ contract SPOG_change is SPOGBaseTest {
         // expectEmit();
         // emit Proposal(epoch, proposalId, IDualGovernor.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
-        assertTrue(spogProposalId == proposalId, "comptroller proposal ids don't match");
+        assertTrue(spogProposalId == proposalId, "registrar proposal ids don't match");
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);

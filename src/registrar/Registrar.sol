@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import { IERC20 } from "../ImportedInterfaces.sol";
-import { IComptroller } from "./IComptroller.sol";
+import { IRegistrar } from "./IRegistrar.sol";
 import { IDualGovernor } from "../governor/IDualGovernor.sol";
 import { IVault } from "../vault/IVault.sol";
 import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
@@ -14,12 +14,12 @@ import { SafeERC20 } from "../ImportedContracts.sol";
 
 // TODO: "Lists" that are not enumerable are actually "Sets".
 
-/// @title Comptroller
+/// @title Registrar
 /// @notice Contracts for governing lists and managing communal property through token voting
 /// @dev Reference: https://github.com/MZero-Labs/SPOG-Spec/blob/main/README.md
-/// @notice Comptroller, "Simple Participation Optimized Governance"
-/// @notice Comptroller is used for permissioning actors and optimized for token holder participation
-contract Comptroller is IComptroller {
+/// @notice Registrar, "Simple Participation Optimized Governance"
+/// @notice Registrar is used for permissioning actors and optimized for token holder participation
+contract Registrar is IRegistrar {
     using SafeERC20 for IERC20;
 
     // TODO: Drop the need for a struct for the constructor. Use named arguments instead.
@@ -80,8 +80,8 @@ contract Comptroller is IComptroller {
         _;
     }
 
-    /// @notice Constructs a new Comptroller instance
-    /// @param config The configuration data for the Comptroller
+    /// @notice Constructs a new Registrar instance
+    /// @param config The configuration data for the Registrar
     constructor(Configuration memory config) {
         // Sanity checks
         if (config.deployer == address(0)) revert ZeroDeployerAddress();
@@ -138,7 +138,7 @@ contract Comptroller is IComptroller {
     }
 
     /// @notice Emergency version of existing methods
-    /// @param emergencyType The type of emergency method to be called (See enum in IComptroller)
+    /// @param emergencyType The type of emergency method to be called (See enum in IRegistrar)
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
     function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernor {
@@ -217,7 +217,7 @@ contract Comptroller is IComptroller {
     /// @notice Charge fee for calling a governance function
     /// @param account The address of the caller
     function chargeFee(address account, bytes4 /*func*/) external onlyGovernor returns (uint256) {
-        // transfer the amount from the caller to the Comptroller
+        // transfer the amount from the caller to the Registrar
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(cash).safeTransferFrom(account, address(this), tax);
 
@@ -233,7 +233,7 @@ contract Comptroller is IComptroller {
         return tax;
     }
 
-    /// @notice Calculate inflation amount based on Comptroller rules and inflator
+    /// @notice Calculate inflation amount based on Registrar rules and inflator
     /// @param amount The amount to be inflated
     /// @return The inflation amount
     function getInflation(uint256 amount) external view returns (uint256) {

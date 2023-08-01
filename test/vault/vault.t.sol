@@ -46,8 +46,8 @@ contract VaultTest is SPOGBaseTest {
         uint256[] memory epochs = createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
 
         uint256 vaultBalanceOfCash = cash.balanceOf(address(vault));
-        // get comptroller tax from comptroller data
-        uint256 tax = comptroller.tax();
+        // get registrar tax from registrar data
+        uint256 tax = registrar.tax();
 
         uint256 epochCashRewards = tax * numberOfProposalsPerEpoch * numberOfEpochs;
         assertEq(vaultBalanceOfCash, epochCashRewards, "Vault should have balance of Cash value");
@@ -137,8 +137,8 @@ contract VaultTest is SPOGBaseTest {
         uint256[] memory epochs = createProposalsForEpochs(numberOfEpochs, numberOfProposalsPerEpoch);
 
         uint256 vaultBalanceOfCash = cash.balanceOf(address(vault));
-        // get comptroller tax from comptroller data
-        uint256 tax = comptroller.tax();
+        // get registrar tax from registrar data
+        uint256 tax = registrar.tax();
 
         uint256 epochCashRewards = tax * numberOfProposalsPerEpoch * numberOfEpochs;
 
@@ -191,14 +191,14 @@ contract VaultTest is SPOGBaseTest {
         uint256 epoch = governor.currentEpoch();
 
         vm.prank(address(governor));
-        vote.mint(address(comptroller), 1000e18);
+        vote.mint(address(registrar), 1000e18);
 
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         vote.approve(address(vault), 1000e18);
 
         expectEmit();
         emit EpochAssetsDeposited(epoch, address(vote), 1000e18);
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         vault.deposit(epoch, address(vote), 1000e18);
 
         assertEq(vote.balanceOf(address(vault)), 1000e18);

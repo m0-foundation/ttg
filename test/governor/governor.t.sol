@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
 import { IGovernor } from "../ImportedInterfaces.sol";
+import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -38,7 +38,7 @@ contract DualGovernorTest is SPOGBaseTest {
     }
 
     function test_CanOnlyVoteOnProposalAfterItsVotingDelay() public {
-        // propose adding a new list to comptroller
+        // propose adding a new list to registrar
         (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
 
         // vote balance of voter valid for voting
@@ -222,7 +222,7 @@ contract DualGovernorTest is SPOGBaseTest {
     }
 
     function test_CanVoteOnMultipleProposals() public {
-        // propose adding a new list to comptroller
+        // propose adding a new list to registrar
         (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
         (uint256 proposalId2, , , , ) = proposeAddingAnAddressToList(makeAddr("Beta"));
 
@@ -265,18 +265,18 @@ contract DualGovernorTest is SPOGBaseTest {
     function test_Revert_Propose_WhenMoreThanOneProposalPassed() public {
         // set data for 2 proposals at once
         address[] memory targets = new address[](2);
-        targets[0] = address(comptroller);
-        targets[1] = address(comptroller);
+        targets[0] = address(registrar);
+        targets[1] = address(registrar);
         uint256[] memory values = new uint256[](2);
         values[0] = 0;
         values[1] = 0;
         bytes[] memory calldatas = new bytes[](2);
         calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
         calldatas[1] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, bob);
-        string memory description = "add 2 merchants to comptroller";
+        string memory description = "add 2 merchants to registrar";
 
         // approve cash spend for proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // revert when method is not supported
         vm.expectRevert(IDualGovernor.TooManyTargets.selector);
@@ -285,33 +285,33 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_Revert_Propose_WhenEtherValueIsPassed() public {
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 1 ether;
         bytes[] memory calldatas = new bytes[](2);
         calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
-        string memory description = "add merchant to comptroller";
+        string memory description = "add merchant to registrar";
 
         // approve cash spend for proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // revert when proposal expects ETH value
         vm.expectRevert(IDualGovernor.InvalidValue.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
-    function test_Revert_Propose_WhenTargetIsNotComptroller() public {
+    function test_Revert_Propose_WhenTargetIsNotRegistrar() public {
         address[] memory targets = new address[](1);
-        // Instead of Comptroller, we are passing some other address
+        // Instead of Registrar, we are passing some other address
         targets[0] = makeAddr("someAddress");
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
-        string memory description = "add merchant to comptroller";
+        string memory description = "add merchant to registrar";
 
         // approve cash spend for proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // revert when proposal has invalid target
         vm.expectRevert(IDualGovernor.InvalidTarget.selector);
@@ -320,7 +320,7 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_Revert_Propose_WhenMethodIsNotSupported() public {
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -328,7 +328,7 @@ contract DualGovernorTest is SPOGBaseTest {
         string memory description = "Should not pass proposal";
 
         // approve cash spend for proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
         // revert when method signature is not supported
         vm.expectRevert(IDualGovernor.InvalidMethod.selector);
         governor.propose(targets, values, calldatas, description);
@@ -336,20 +336,20 @@ contract DualGovernorTest is SPOGBaseTest {
 
     function test_Revert_Propose_SameProposal() public {
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = abi.encodeWithSignature("addToList(bytes32,address)", LIST_NAME, alice);
-        string memory description = "add merchant to comptroller";
+        string memory description = "add merchant to registrar";
 
         // approve cash spend for proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
 
         // propose
         governor.propose(targets, values, calldatas, description);
 
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
         vm.expectRevert("Governor: proposal already exists");
         governor.propose(targets, values, calldatas, description);
     }
@@ -357,7 +357,7 @@ contract DualGovernorTest is SPOGBaseTest {
     function test_Revert_Execute_onExpiration() public {
         // create proposal to add address to list
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -372,7 +372,7 @@ contract DualGovernorTest is SPOGBaseTest {
         );
 
         // create proposal
-        cash.approve(address(comptroller), deployScript.tax());
+        cash.approve(address(registrar), deployScript.tax());
         governor.propose(targets, values, calldatas, description);
 
         // fast forward to next voting period

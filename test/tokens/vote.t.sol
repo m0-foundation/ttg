@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IControlledByComptroller } from "../../src/comptroller/IControlledByComptroller.sol";
+import { IControlledByRegistrar } from "../../src/registrar/IControlledByRegistrar.sol";
 import { IVOTE } from "../../src/tokens/ITokens.sol";
 
 import { VALUE } from "../../src/tokens/VALUE.sol";
@@ -39,7 +39,7 @@ contract VoteTokenTest is SPOGBaseTest {
      * Helpers
      */
     function initTokens() private {
-        valueToken = new VALUE("SPOGValue", "value", address(comptroller));
+        valueToken = new VALUE("SPOGValue", "value", address(registrar));
 
         // Mint initial balances to users
         vm.startPrank(address(governor));
@@ -55,19 +55,19 @@ contract VoteTokenTest is SPOGBaseTest {
         assertEq(valueToken.totalSupply(), 140e18);
 
         // Create new VoteToken
-        voteToken = new VOTE("SPOGVote", "vote", address(comptroller), address(valueToken));
+        voteToken = new VOTE("SPOGVote", "vote", address(registrar), address(valueToken));
     }
 
     function resetGovernance() private {
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         uint256 snapshotId = valueToken.snapshot();
 
-        // Reset VoteToken by Comptroller
+        // Reset VoteToken by Registrar
         // Do not check emitted snapshot id, just confirm that event happened
         vm.expectEmit(false, false, false, false);
         emit ResetInitialized(0);
 
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         voteToken.reset(snapshotId);
 
         // Check initial Vote balances after reset
@@ -79,11 +79,11 @@ contract VoteTokenTest is SPOGBaseTest {
     /**
      * Test Functions
      */
-    function test_Revert_reset_WhenCallerIsNotComptroller() public {
+    function test_Revert_reset_WhenCallerIsNotRegistrar() public {
         initTokens();
 
         uint256 randomSnapshotId = 10_000;
-        vm.expectRevert(IControlledByComptroller.CallerIsNotComptroller.selector);
+        vm.expectRevert(IControlledByRegistrar.CallerIsNotRegistrar.selector);
         voteToken.reset(randomSnapshotId);
     }
 
@@ -92,13 +92,13 @@ contract VoteTokenTest is SPOGBaseTest {
 
         uint256 randomSnapshotId = 10_000;
 
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         voteToken.reset(randomSnapshotId);
 
         assertEq(voteToken.resetSnapshotId(), randomSnapshotId);
 
         vm.expectRevert(IVOTE.ResetAlreadyInitialized.selector);
-        vm.prank(address(comptroller));
+        vm.prank(address(registrar));
         voteToken.reset(randomSnapshotId);
     }
 

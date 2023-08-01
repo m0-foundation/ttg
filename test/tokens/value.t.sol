@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IControlledByComptroller } from "../../src/comptroller/IControlledByComptroller.sol";
+import { IControlledByRegistrar } from "../../src/registrar/IControlledByRegistrar.sol";
 
 import { VALUE } from "../../src/tokens/VALUE.sol";
 
@@ -17,14 +17,14 @@ contract ValueTokenTest is SPOGBaseTest {
     function setUp() public override {
         super.setUp();
 
-        valueToken = new VALUE("SPOGValue", "value", address(comptroller));
+        valueToken = new VALUE("SPOGValue", "value", address(registrar));
 
         // Alice can interact with blockchain
         vm.deal({ account: alice, newBalance: 10 ether });
     }
 
-    function test_Revert_Snapshot_WhenCallerIsNotComptroller() public {
-        vm.expectRevert(IControlledByComptroller.CallerIsNotComptroller.selector);
+    function test_Revert_Snapshot_WhenCallerIsNotRegistrar() public {
+        vm.expectRevert(IControlledByRegistrar.CallerIsNotRegistrar.selector);
         valueToken.snapshot();
     }
 
@@ -34,8 +34,8 @@ contract ValueTokenTest is SPOGBaseTest {
         valueToken.mint(alice, aliceStartBalance);
         assertEq(valueToken.balanceOf(alice), aliceStartBalance);
 
-        // Comptroller takes snapshot
-        vm.prank(address(comptroller));
+        // Registrar takes snapshot
+        vm.prank(address(registrar));
         uint256 snapshotId = valueToken.snapshot();
 
         uint256 aliceSnapshotBalance = ERC20Snapshot(valueToken).balanceOfAt(address(alice), snapshotId);

@@ -22,16 +22,16 @@ contract VoteDeployer is IVoteDeployer {
     function deployVote(
         string memory name,
         string memory symbol,
-        address comptroller,
+        address registrar,
         address value,
         address expectedGovernor,
         bytes32 salt
     ) public onlyOwner returns (address vote) {
         // Set public governor so that VOTE deployment cn access it during it's constructor.
-        // NOTE: Comptroller does not exist during its own constructor, so VOTE cannot read the expected governor from it.
+        // NOTE: Registrar does not exist during its own constructor, so VOTE cannot read the expected governor from it.
         governor = expectedGovernor;
 
-        vote = address(new VOTE{ salt: salt }(name, symbol, comptroller, value));
+        vote = address(new VOTE{ salt: salt }(name, symbol, registrar, value));
 
         // Only needed this during the deployment of VOTE. Can be deleted so save gas.
         delete governor;
@@ -41,7 +41,7 @@ contract VoteDeployer is IVoteDeployer {
     function getDeterministicVoteAddress(
         string memory name,
         string memory symbol,
-        address comptroller,
+        address registrar,
         address value,
         bytes32 salt
     ) public view returns (address deterministicAddress_) {
@@ -55,7 +55,7 @@ contract VoteDeployer is IVoteDeployer {
                             address(this),
                             salt,
                             keccak256(
-                                abi.encodePacked(type(VOTE).creationCode, abi.encode(name, symbol, comptroller, value))
+                                abi.encodePacked(type(VOTE).creationCode, abi.encode(name, symbol, registrar, value))
                             )
                         )
                     )

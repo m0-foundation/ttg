@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import { IGovernor } from "../ImportedInterfaces.sol";
 
-import { IComptroller } from "../../src/comptroller/IComptroller.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
 import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
@@ -19,7 +19,7 @@ contract SPOG_reset is SPOGBaseTest {
         string memory proposalDescription
     ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -31,7 +31,7 @@ contract SPOG_reset is SPOGBaseTest {
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
-        cash.approve(address(comptroller), 12 * deployScript.tax());
+        cash.approve(address(registrar), 12 * deployScript.tax());
 
         // Check the event is emitted
         // TODO: check proposal
@@ -43,15 +43,15 @@ contract SPOG_reset is SPOGBaseTest {
         // Make sure the proposal is immediately (+1 block) votable
         assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
 
-        assertTrue(spogProposalId == proposalId, "comptroller proposal id does not match value governor proposal id");
+        assertTrue(spogProposalId == proposalId, "registrar proposal id does not match value governor proposal id");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
 
     function executeValidProposal() private {
-        IDualGovernor governor = IDualGovernor(comptroller.governor());
+        IDualGovernor governor = IDualGovernor(registrar.governor());
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -66,7 +66,7 @@ contract SPOG_reset is SPOGBaseTest {
         );
 
         // vote on proposal
-        cash.approve(address(comptroller), deployScript.tax());
+        cash.approve(address(registrar), deployScript.tax());
         governor.propose(targets, values, calldatas, description);
 
         // fast forward to an active voting period
@@ -82,8 +82,8 @@ contract SPOG_reset is SPOGBaseTest {
     }
 
     function test_Revert_Reset_WhenNotCalledByGovernance() public {
-        vm.expectRevert(IComptroller.CallerIsNotGovernor.selector);
-        comptroller.reset();
+        vm.expectRevert(IRegistrar.CallerIsNotGovernor.selector);
+        registrar.reset();
     }
 
     function test_Reset_Success() public {
@@ -113,23 +113,23 @@ contract SPOG_reset is SPOGBaseTest {
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
 
-        address governorBeforeFork = comptroller.governor();
+        address governorBeforeFork = registrar.governor();
 
         vm.expectEmit(false, false, false, false);
         address anyAddress = address(0);
         emit ResetExecuted(anyAddress, anyAddress, 0);
         governor.execute(targets, values, calldatas, hashedDescription);
 
-        assertFalse(comptroller.governor() == governorBeforeFork, "Governor was not reset");
+        assertFalse(registrar.governor() == governorBeforeFork, "Governor was not reset");
 
         assertEq(
-            IDualGovernor(comptroller.governor()).voteQuorumNumerator(),
+            IDualGovernor(registrar.governor()).voteQuorumNumerator(),
             65,
             "Governor quorum was not set correctly"
         );
 
         assertEq(
-            IDualGovernor(comptroller.governor()).votingPeriod(),
+            IDualGovernor(registrar.governor()).votingPeriod(),
             216_000,
             "Governor voting delay was not set correctly"
         );

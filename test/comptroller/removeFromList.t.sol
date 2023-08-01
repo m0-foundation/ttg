@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IComptroller } from "../../src/comptroller/IComptroller.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -9,8 +9,8 @@ contract SPOG_RemoveFromList is SPOGBaseTest {
     address internal addressToRemove;
 
     function test_Revert_RemoveFromListWhenNotCallingFromGovernance() public {
-        vm.expectRevert(IComptroller.CallerIsNotGovernor.selector);
-        comptroller.removeFromList(LIST_NAME, addressToRemove);
+        vm.expectRevert(IRegistrar.CallerIsNotGovernor.selector);
+        registrar.removeFromList(LIST_NAME, addressToRemove);
     }
 
     function test_SPOGProposalToRemoveFromAList() public {
@@ -18,7 +18,7 @@ contract SPOG_RemoveFromList is SPOGBaseTest {
 
         // create proposal to remove address from list
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -33,7 +33,7 @@ contract SPOG_RemoveFromList is SPOGBaseTest {
         );
 
         // vote on proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
         governor.propose(targets, values, calldatas, description);
 
         // assert that vault has cash balance paid for proposals
@@ -55,6 +55,6 @@ contract SPOG_RemoveFromList is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
-        assertFalse(comptroller.listContains(LIST_NAME, addressToRemove), "Address was not removed from list");
+        assertFalse(registrar.listContains(LIST_NAME, addressToRemove), "Address was not removed from list");
     }
 }

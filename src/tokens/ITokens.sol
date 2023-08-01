@@ -2,10 +2,10 @@
 pragma solidity 0.8.19;
 
 import { IERC20, IERC20Metadata, IERC20Permit, IVotes } from "../ImportedInterfaces.sol";
-import { IControlledByComptroller } from "../comptroller/IControlledByComptroller.sol";
+import { IControlledByRegistrar } from "../registrar/IControlledByRegistrar.sol";
 
 // TODO: This may not even bee necessary, especially if there is no mint for vote.
-interface ISPOGToken is IControlledByComptroller {
+interface ISPOGToken is IControlledByRegistrar {
     function mint(address to, uint256 amount) external;
 }
 

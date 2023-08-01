@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IComptroller } from "../../src/comptroller/IComptroller.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -15,14 +15,14 @@ contract SPOG_AddToList is SPOGBaseTest {
     }
 
     function test_Revert_AddToListWhenNotCallingFromGovernance() public {
-        vm.expectRevert(IComptroller.CallerIsNotGovernor.selector);
-        comptroller.addToList(LIST_NAME, addressToAdd);
+        vm.expectRevert(IRegistrar.CallerIsNotGovernor.selector);
+        registrar.addToList(LIST_NAME, addressToAdd);
     }
 
     function test_ProposalToAddToAList() public {
         // create proposal to add address to list
         address[] memory targets = new address[](1);
-        targets[0] = address(comptroller);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -37,7 +37,7 @@ contract SPOG_AddToList is SPOGBaseTest {
         );
 
         // vote on proposal
-        cash.approve(address(comptroller), tax);
+        cash.approve(address(registrar), tax);
         governor.propose(targets, values, calldatas, description);
 
         // assert that vault has cash balance paid for proposals
@@ -60,6 +60,6 @@ contract SPOG_AddToList is SPOGBaseTest {
         governor.execute(targets, values, calldatas, hashedDescription);
 
         // assert that address was added to list
-        assertTrue(comptroller.listContains(LIST_NAME, addressToAdd), "Address was not added to list");
+        assertTrue(registrar.listContains(LIST_NAME, addressToAdd), "Address was not added to list");
     }
 }

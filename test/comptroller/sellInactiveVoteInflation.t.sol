@@ -99,16 +99,16 @@ contract SPOG_SellInactiveVoteInflation is SPOGBaseTest {
     //     epochs[0] = governor.currentEpoch();
     //     uint256 activeInflatedAmount;
     //     vm.startPrank(alice);
-    //     comptroller.voteVault().withdraw(epochs, address(governor.vote()));
+    //     registrar.voteVault().withdraw(epochs, address(governor.vote()));
     //     activeInflatedAmount += governor.vote().balanceOf(alice) - aliceBalance;
     //     vm.stopPrank();
     //     vm.startPrank(bob);
-    //     comptroller.voteVault().withdraw(epochs, address(governor.vote()));
+    //     registrar.voteVault().withdraw(epochs, address(governor.vote()));
     //     activeInflatedAmount += governor.vote().balanceOf(bob) - bobBalance;
     //     vm.stopPrank();
     //     vm.startPrank(ernie);
     //     uint256 ernieBefore = governor.vote().balanceOf(ernie);
-    //     comptroller.voteVault().withdraw(epochs, address(governor.vote()));
+    //     registrar.voteVault().withdraw(epochs, address(governor.vote()));
     //     activeInflatedAmount += governor.vote().balanceOf(ernie) - ernieBefore;
     //     vm.stopPrank();
     //     // roll forward another epoch

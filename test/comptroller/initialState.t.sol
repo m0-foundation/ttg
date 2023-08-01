@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IComptroller } from "../../src/comptroller/IComptroller.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
 
-import { Comptroller } from "../../src/comptroller/Comptroller.sol";
+import { Registrar } from "../../src/registrar/Registrar.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -19,14 +19,14 @@ contract SPOG_InitialState is SPOGBaseTest {
     address internal _cash = makeAddr("TestCash");
 
     function test_SPOGHasSetInitialValuesCorrectly() public {
-        assertEq(address(comptroller.governor()), deployScript.governor(), "governor was not set up correctly");
-        assertEq(address(comptroller.vault()), deployScript.vault(), "vault was not set up correctly");
-        assertEq(address(comptroller.cash()), deployScript.cash(), "cash was not set up correctly");
-        assertEq(comptroller.inflator(), deployScript.inflator(), "inflator was not set up correctly");
-        assertEq(comptroller.fixedReward(), deployScript.fixedReward(), "fixedReward was not set up correctly");
-        assertEq(comptroller.tax(), deployScript.tax(), "tax was not set up correctly");
-        assertEq(comptroller.taxLowerBound(), deployScript.taxLowerBound(), "taxLowerBound was not set up correctly");
-        assertEq(comptroller.taxUpperBound(), deployScript.taxUpperBound(), "taxUpperBound was not set up correctly");
+        assertEq(address(registrar.governor()), deployScript.governor(), "governor was not set up correctly");
+        assertEq(address(registrar.vault()), deployScript.vault(), "vault was not set up correctly");
+        assertEq(address(registrar.cash()), deployScript.cash(), "cash was not set up correctly");
+        assertEq(registrar.inflator(), deployScript.inflator(), "inflator was not set up correctly");
+        assertEq(registrar.fixedReward(), deployScript.fixedReward(), "fixedReward was not set up correctly");
+        assertEq(registrar.tax(), deployScript.tax(), "tax was not set up correctly");
+        assertEq(registrar.taxLowerBound(), deployScript.taxLowerBound(), "taxLowerBound was not set up correctly");
+        assertEq(registrar.taxUpperBound(), deployScript.taxUpperBound(), "taxUpperBound was not set up correctly");
 
         assertEq(governor.votingPeriod(), 216_000, "vote period not set correctly");
         assertEq(governor.voteQuorumNumerator(), deployScript.voteQuorum(), "voteQuorum not set correctly");
@@ -40,7 +40,7 @@ contract SPOG_InitialState is SPOGBaseTest {
         address _value = makeAddr("Value");
 
         // if (config.deployer == address(0)) revert ZeroDeployerAddress();
-        Comptroller.Configuration memory configInvalidDeployer = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidDeployer = Registrar.Configuration(
             address(0),
             _value,
             _vault,
@@ -54,11 +54,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroDeployerAddress.selector);
-        new Comptroller(configInvalidDeployer);
+        vm.expectRevert(IRegistrar.ZeroDeployerAddress.selector);
+        new Registrar(configInvalidDeployer);
 
         // if (config.value == address(0)) revert ZeroValueAddress();
-        Comptroller.Configuration memory configInvalidValue = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidValue = Registrar.Configuration(
             address(deployer),
             address(0),
             _vault,
@@ -72,11 +72,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroValueAddress.selector);
-        new Comptroller(configInvalidValue);
+        vm.expectRevert(IRegistrar.ZeroValueAddress.selector);
+        new Registrar(configInvalidValue);
 
         // if (config.vault == address(0)) revert ZeroVaultAddress();
-        Comptroller.Configuration memory configInvalidVault = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidVault = Registrar.Configuration(
             address(deployer),
             _value,
             address(0),
@@ -90,11 +90,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroVaultAddress.selector);
-        new Comptroller(configInvalidVault);
+        vm.expectRevert(IRegistrar.ZeroVaultAddress.selector);
+        new Registrar(configInvalidVault);
 
         // if (config.cash == address(0)) revert ZeroCashAddress();
-        Comptroller.Configuration memory configInvalidCash = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidCash = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -108,11 +108,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroCashAddress.selector);
-        new Comptroller(configInvalidCash);
+        vm.expectRevert(IRegistrar.ZeroCashAddress.selector);
+        new Registrar(configInvalidCash);
 
         // if (config.tax == 0) revert ZeroTax();
-        Comptroller.Configuration memory configInvalidTax = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidTax = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -126,11 +126,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroTax.selector);
-        new Comptroller(configInvalidTax);
+        vm.expectRevert(IRegistrar.ZeroTax.selector);
+        new Registrar(configInvalidTax);
 
         // if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
-        Comptroller.Configuration memory configTaxOutOfRange = Comptroller.Configuration(
+        Registrar.Configuration memory configTaxOutOfRange = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -143,11 +143,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _voteQuorum,
             _valueQuorum
         );
-        vm.expectRevert(IComptroller.TaxOutOfRange.selector);
-        new Comptroller(configTaxOutOfRange);
+        vm.expectRevert(IRegistrar.TaxOutOfRange.selector);
+        new Registrar(configTaxOutOfRange);
 
         // if (config.inflator == 0) revert ZeroInflator();
-        Comptroller.Configuration memory configInvalidInflator = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidInflator = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -161,11 +161,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroInflator.selector);
-        new Comptroller(configInvalidInflator);
+        vm.expectRevert(IRegistrar.ZeroInflator.selector);
+        new Registrar(configInvalidInflator);
 
         // if (config.fixedReward == 0) revert ZeroFixedReward();
-        Comptroller.Configuration memory configInvalidInflation = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidInflation = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -179,11 +179,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroFixedReward.selector);
-        new Comptroller(configInvalidInflation);
+        vm.expectRevert(IRegistrar.ZeroFixedReward.selector);
+        new Registrar(configInvalidInflation);
 
         // if (config.voteQuorum == 0) revert ZeroVoteQuorum();
-        Comptroller.Configuration memory configInvalidVoteQuorum = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidVoteQuorum = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -197,11 +197,11 @@ contract SPOG_InitialState is SPOGBaseTest {
             _valueQuorum
         );
 
-        vm.expectRevert(IComptroller.ZeroVoteQuorum.selector);
-        new Comptroller(configInvalidVoteQuorum);
+        vm.expectRevert(IRegistrar.ZeroVoteQuorum.selector);
+        new Registrar(configInvalidVoteQuorum);
 
         // if (config.valueQuorum == 0) revert ZeroValueQuorum();
-        Comptroller.Configuration memory configInvalidValueQuorum = Comptroller.Configuration(
+        Registrar.Configuration memory configInvalidValueQuorum = Registrar.Configuration(
             address(deployer),
             _value,
             _vault,
@@ -215,17 +215,17 @@ contract SPOG_InitialState is SPOGBaseTest {
             0
         );
 
-        vm.expectRevert(IComptroller.ZeroValueQuorum.selector);
-        new Comptroller(configInvalidValueQuorum);
+        vm.expectRevert(IRegistrar.ZeroValueQuorum.selector);
+        new Registrar(configInvalidValueQuorum);
     }
 
-    function test_fallback_Comptroller() public {
+    function test_fallback_Registrar() public {
         vm.expectRevert();
-        (bool success, ) = address(comptroller).call(abi.encodeWithSignature("doesNotExist()"));
+        (bool success, ) = address(registrar).call(abi.encodeWithSignature("doesNotExist()"));
         assertEq(success, true);
 
         vm.expectRevert();
-        (success, ) = address(comptroller).call{ value: 10_000 }("");
+        (success, ) = address(registrar).call{ value: 10_000 }("");
         assertEq(success, true);
     }
 }

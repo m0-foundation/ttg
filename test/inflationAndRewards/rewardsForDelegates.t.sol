@@ -43,8 +43,8 @@ contract RewardsTest is SPOGBaseTest {
         governor.castVote(proposalId3, yesVote);
         vm.stopPrank();
 
-        uint256 aliceReward = comptroller.fixedReward() / 4;
-        uint256 bobReward = comptroller.fixedReward() / 4;
+        uint256 aliceReward = registrar.fixedReward() / 4;
+        uint256 bobReward = registrar.fixedReward() / 4;
 
         assertEq(
             value.balanceOf(alice),
@@ -78,7 +78,7 @@ contract RewardsTest is SPOGBaseTest {
         vm.prank(bob);
         governor.castVote(proposalId, yesVote);
 
-        uint256 aliceReward = comptroller.fixedReward() / 2;
+        uint256 aliceReward = registrar.fixedReward() / 2;
         uint256 bobReward = 0;
 
         assertEq(aliceStartBalance + aliceReward, value.balanceOf(alice), "Invalid Alice VALUE reward");
