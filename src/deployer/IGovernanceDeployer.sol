@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { ISPOGControlled } from "../interfaces/ISPOGControlled.sol";
+import { IControlledByComptroller } from "../comptroller/IControlledByComptroller.sol";
 
-interface IGovernanceDeployer is ISPOGControlled {
+interface IGovernanceDeployer is IControlledByComptroller {
     error GovernorAddressMismatch(address deployed, address expected);
     error VoteAddressMismatch(address deployed, address expected);
 

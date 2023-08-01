@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
+import { IERC20 } from "../ImportedInterfaces.sol";
 
 import { Test, ERC20DecimalsMock } from "../ImportedContracts.sol";
 

@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { ISPOGControlled } from "../../src/interfaces/ISPOGControlled.sol";
+import { IControlledByComptroller } from "../../src/comptroller/IControlledByComptroller.sol";
 
 import { VALUE } from "../../src/tokens/VALUE.sol";
-
-import { IAccessControl } from "../interfaces/ImportedInterfaces.sol";
 
 import { ERC20Snapshot } from "../ImportedContracts.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
@@ -19,14 +17,14 @@ contract ValueTokenTest is SPOGBaseTest {
     function setUp() public override {
         super.setUp();
 
-        valueToken = new VALUE("SPOGValue", "value", address(spog));
+        valueToken = new VALUE("SPOGValue", "value", address(comptroller));
 
         // Alice can interact with blockchain
         vm.deal({ account: alice, newBalance: 10 ether });
     }
 
-    function test_Revert_Snapshot_WhenCallerIsNotSPOG() public {
-        vm.expectRevert(ISPOGControlled.CallerIsNotSPOG.selector);
+    function test_Revert_Snapshot_WhenCallerIsNotComptroller() public {
+        vm.expectRevert(IControlledByComptroller.CallerIsNotComptroller.selector);
         valueToken.snapshot();
     }
 
@@ -36,8 +34,8 @@ contract ValueTokenTest is SPOGBaseTest {
         valueToken.mint(alice, aliceStartBalance);
         assertEq(valueToken.balanceOf(alice), aliceStartBalance);
 
-        // SPOG takes snapshot
-        vm.prank(address(spog));
+        // Comptroller takes snapshot
+        vm.prank(address(comptroller));
         uint256 snapshotId = valueToken.snapshot();
 
         uint256 aliceSnapshotBalance = ERC20Snapshot(valueToken).balanceOfAt(address(alice), snapshotId);

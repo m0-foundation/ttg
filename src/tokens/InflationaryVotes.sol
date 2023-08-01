@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IInflationaryVotes } from "../interfaces/ITokens.sol";
-import { ISPOG } from "../interfaces/ISPOG.sol";
-import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
+import { IInflationaryVotes } from "./ITokens.sol";
+import { IComptroller } from "../comptroller/IComptroller.sol";
+import { IDualGovernor } from "../governor/IDualGovernor.sol";
 import { IVoteDeployer } from "../deployer/IVoteDeployer.sol";
 
 import { ECDSA, ERC20Permit, Math, SafeCast } from "../ImportedContracts.sol";
 import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
-import { SPOGControlled } from "../periphery/SPOGControlled.sol";
+import { ControlledByComptroller } from "../comptroller/ControlledByComptroller.sol";
 
 /// @notice ERC20Votes with tracking of balances and more flexible movement of voting power
 /// @notice Modified from OpenZeppelin
 /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/extensions/ERC20Votes.sol
 /// @dev Decouples voting power and balances for effective rewards distribution to token owners and delegates
-abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, SPOGControlled {
+abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, ControlledByComptroller {
     struct Checkpoint {
         uint32 fromBlock;
         uint224 amount;
@@ -39,7 +39,7 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, SPOGCont
     mapping(address account => uint256 epoch) private _delegationSwitchEpoch;
     mapping(address account => uint256 epoch) private _lastEpochInflationAccrued;
 
-    constructor(address spog_) SPOGControlled(spog_) {
+    constructor(address comptroller_) ControlledByComptroller(comptroller_) {
         // The caller should be a contract/factory that exposes a `governor`.
         // NOTE: `governor` cannot be a constructor argument in as it will affect the address of this contract.
         // NOTE: Technically, for now, `msg.sender` is the VoteDeployer, but this will remain even once the
@@ -273,7 +273,7 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, SPOGCont
     /// @dev Called during redelegation or inflation withdrawal
     function _accrueInflation(address delegator) internal virtual {
         // calculate inflation for number of active epochs (delegate voted on all active proposals in these epochs)
-        ISPOGGovernor governor_ = ISPOGGovernor(governor);
+        IDualGovernor governor_ = IDualGovernor(governor);
         uint256 currentEpoch = PureEpochs.currentEpoch();
 
         // no inflation for epoch 0
@@ -297,9 +297,9 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, SPOGCont
             uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
             uint256 rewardableBalance = inflation + _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting);
 
-            inflation += ISPOG(spog).getInflation(rewardableBalance);
+            inflation += IComptroller(comptroller).getInflation(rewardableBalance);
             // valueReward +=
-            //     rewardableBalance * ISPOG(spog).fixedReward() / getPastTotalBalanceSupply(epochStart);
+            //     rewardableBalance * IComptroller(comptroller).fixedReward() / getPastTotalBalanceSupply(epochStart);
         }
 
         _inflation[delegator] += inflation;

@@ -5,20 +5,24 @@ import { IGovernanceDeployer } from "./IGovernanceDeployer.sol";
 import { IGovernorDeployer } from "./IGovernorDeployer.sol";
 import { IVoteDeployer } from "./IVoteDeployer.sol";
 
-import { SPOGControlled } from "../periphery/SPOGControlled.sol";
+import { ControlledByComptroller } from "../comptroller/ControlledByComptroller.sol";
 
-contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
+contract GovernanceDeployer is IGovernanceDeployer, ControlledByComptroller {
     address public immutable governorDeployer;
     address public immutable voteDeployer;
 
-    constructor(address spog_, address governorDeployer_, address voteDeployer_) SPOGControlled(spog_) {
+    constructor(
+        address comptroller_,
+        address governorDeployer_,
+        address voteDeployer_
+    ) ControlledByComptroller(comptroller_) {
         governorDeployer = governorDeployer_;
         voteDeployer = voteDeployer_;
     }
 
     function deployGovernance(
         bytes memory deployArguments
-    ) external onlySPOG returns (address governor_, address vote_) {
+    ) external onlyComptroller returns (address governor_, address vote_) {
         (
             string memory voteName,
             string memory voteSymbol,
@@ -40,7 +44,7 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
         uint256 voteQuorum,
         uint256 valueQuorum,
         bytes32 salt
-    ) public onlySPOG returns (address governor_, address vote_) {
+    ) public onlyComptroller returns (address governor_, address vote_) {
         (address expectedGovernor, address expectedVote) = getGovernanceAddresses(
             voteName,
             voteSymbol,
@@ -51,7 +55,14 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
             salt
         );
 
-        vote_ = IVoteDeployer(voteDeployer).deployVote(voteName, voteSymbol, spog, value, expectedGovernor, salt);
+        vote_ = IVoteDeployer(voteDeployer).deployVote(
+            voteName,
+            voteSymbol,
+            comptroller,
+            value,
+            expectedGovernor,
+            salt
+        );
 
         if (vote_ != expectedVote) revert VoteAddressMismatch(vote_, expectedVote);
 
@@ -61,7 +72,7 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
             value,
             voteQuorum,
             valueQuorum,
-            spog,
+            comptroller,
             salt
         );
 
@@ -101,7 +112,7 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
         uint256 valueQuorum,
         bytes32 salt
     ) public view returns (address governor_, address vote_) {
-        vote_ = IVoteDeployer(voteDeployer).getDeterministicVoteAddress(voteName, voteSymbol, spog, value, salt);
+        vote_ = IVoteDeployer(voteDeployer).getDeterministicVoteAddress(voteName, voteSymbol, comptroller, value, salt);
 
         governor_ = IGovernorDeployer(governorDeployer).getDeterministicGovernorAddress(
             governorName,
@@ -109,7 +120,7 @@ contract GovernanceDeployer is IGovernanceDeployer, SPOGControlled {
             value,
             voteQuorum,
             valueQuorum,
-            spog,
+            comptroller,
             salt
         );
     }

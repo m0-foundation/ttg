@@ -7,7 +7,7 @@ interface IVoteDeployer {
     function deployVote(
         string memory name,
         string memory symbol,
-        address spog,
+        address comptroller,
         address value,
         address expectedGovernor,
         bytes32 salt
@@ -16,7 +16,7 @@ interface IVoteDeployer {
     function getDeterministicVoteAddress(
         string memory name,
         string memory symbol,
-        address spog,
+        address comptroller,
         address value,
         bytes32 salt
     ) external view returns (address deterministicAddress_);

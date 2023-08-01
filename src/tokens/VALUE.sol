@@ -3,27 +3,25 @@ pragma solidity 0.8.19;
 
 import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
 
-import { ISPOG } from "../interfaces/ISPOG.sol";
-import { ISPOGControlled } from "../interfaces/ISPOGControlled.sol";
-import { IVALUE } from "../interfaces/ITokens.sol";
-import { ISPOG } from "../interfaces/ISPOG.sol";
+import { IComptroller } from "../comptroller/IComptroller.sol";
+import { IVALUE } from "./ITokens.sol";
 
 import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
-import { SPOGControlled } from "../periphery/SPOGControlled.sol";
+import { ControlledByComptroller } from "../comptroller/ControlledByComptroller.sol";
 
 /// @title VALUE ERC20 token with a built-in snapshot functionality
-/// @dev Snapshot is taken at the moment of reset by SPOG
+/// @dev Snapshot is taken at the moment of reset by Comptroller
 /// @dev This snapshot is used by new Vote token to set initial supply of tokens
 /// @dev All value holders become vote holders of the new Vote governance
-contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, SPOGControlled {
+contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, ControlledByComptroller {
     constructor(
         string memory name,
         string memory symbol,
-        address spog_
-    ) SPOGControlled(spog_) ERC20(name, symbol) ERC20Permit(name) {}
+        address comptroller_
+    ) ControlledByComptroller(comptroller_) ERC20(name, symbol) ERC20Permit(name) {}
 
     modifier onlyGovernor() {
-        if (msg.sender != ISPOG(spog).governor()) revert CallerIsNotGovernor();
+        if (msg.sender != IComptroller(comptroller).governor()) revert CallerIsNotGovernor();
         _;
     }
 
@@ -54,7 +52,7 @@ contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, SPOGControlled {
     /// @notice Takes a snapshot of account balances and returns snapshot id
     /// @return The snapshot id
     function snapshot() external returns (uint256) {
-        if (msg.sender != spog) revert CallerIsNotSPOG();
+        if (msg.sender != comptroller) revert CallerIsNotComptroller();
 
         return _snapshot();
     }
