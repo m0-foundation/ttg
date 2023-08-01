@@ -18,7 +18,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         assertEq(aliceStartBalance, aliceVotes, "Votes and balances are equal, alice uses self-delegation");
 
         // alice votes on proposal 1
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposal1Id, yesVote);
 
         // alice votes didn't change, no inflation of voting power
@@ -34,6 +34,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
 
         // voting period for standard proposal has started
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+        vm.prank(alice);
         governor.castVote(proposal2Id, yesVote);
 
         uint256 aliceVotesAfterSecondVote = vote.getVotes(alice);
@@ -44,6 +45,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         );
 
         // check non-zero inflation
+        vm.prank(alice);
         uint256 inflation = vote.claimInflation();
         assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "No inflation");
 
@@ -70,7 +72,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         assertEq(aliceStartBalance, aliceStartVotes, "Votes and balances are equal, alice uses self-delegation");
 
         // alice votes on proposal 1
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposal1Id, yesVote);
 
         // alice votes didn't change, no inflation of voting power
@@ -83,6 +85,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         );
 
         // check non-zero inflation
+        vm.prank(alice);
         uint256 inflation = vote.claimInflation();
         assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "No inflation");
 
@@ -98,7 +101,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
     function test_NoInflation_EpochWithEmergencyAndResetProposals() public {
         // set up proposals
         (uint256 proposal1Id, , , , ) = proposeEmergencyAppend(alice);
-        (uint256 proposal2Id, , , , ) = proposeReset("Reset proposal", address(cash));
+        (uint256 proposal2Id, , , , ) = proposeReset("Reset proposal");
 
         // emergency proposals voting period has started
         vm.roll(block.number + 2);
@@ -110,7 +113,7 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         assertEq(aliceStartBalance, aliceStartVotes, "Votes and balances are equal, alice uses self-delegation");
 
         // alice votes on emergency proposal
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposal1Id, yesVote);
 
         // alice votes didn't change, no inflation of voting power

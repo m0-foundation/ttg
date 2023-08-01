@@ -6,15 +6,26 @@ import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContra
 import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGControlled } from "../interfaces/ISPOGControlled.sol";
 import { IVALUE } from "../interfaces/ITokens.sol";
+import { ISPOG } from "../interfaces/ISPOG.sol";
 
-import { SPOGToken } from "./SPOGToken.sol";
+import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
+import { SPOGControlled } from "../periphery/SPOGControlled.sol";
 
 /// @title VALUE ERC20 token with a built-in snapshot functionality
 /// @dev Snapshot is taken at the moment of reset by SPOG
 /// @dev This snapshot is used by new Vote token to set initial supply of tokens
 /// @dev All value holders become vote holders of the new Vote governance
-contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
-    constructor(string memory name, string memory symbol) SPOGToken() ERC20(name, symbol) ERC20Permit(name) {}
+contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, SPOGControlled {
+    constructor(
+        string memory name,
+        string memory symbol,
+        address spog_
+    ) SPOGControlled(spog_) ERC20(name, symbol) ERC20Permit(name) {}
+
+    modifier onlyGovernor() {
+        if (msg.sender != ISPOG(spog).governor()) revert CallerIsNotGovernor();
+        _;
+    }
 
     function _beforeTokenTransfer(
         address from,
@@ -48,10 +59,10 @@ contract VALUE is SPOGToken, ERC20Votes, ERC20Snapshot, IVALUE {
         return _snapshot();
     }
 
-    /// @notice Restricts minting to address with MINTER_ROLE
+    /// @notice Restricts minting to the governor.
     /// @param to The address to mint to
     /// @param amount The amount to mint
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) public onlyGovernor {
         _mint(to, amount);
     }
 }

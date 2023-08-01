@@ -41,15 +41,14 @@ contract VoteTokenTest is SPOGBaseTest {
      * Helpers
      */
     function initTokens() private {
-        valueToken = new VALUE("SPOGValue", "value");
-        IAccessControl(address(valueToken)).grantRole(valueToken.MINTER_ROLE(), address(this));
-
-        valueToken.initializeSPOG(address(spog));
+        valueToken = new VALUE("SPOGValue", "value", address(spog));
 
         // Mint initial balances to users
+        vm.startPrank(address(governor));
         valueToken.mint(alice1, aliceStartBalance);
         valueToken.mint(bob1, bobStartBalance);
         valueToken.mint(carol1, carolStartBalance);
+        vm.stopPrank();
 
         // Check initial balances
         assertEq(valueToken.balanceOf(alice1), aliceStartBalance);
@@ -58,21 +57,20 @@ contract VoteTokenTest is SPOGBaseTest {
         assertEq(valueToken.totalSupply(), 140e18);
 
         // Create new VoteToken
-        voteToken = new VOTE("SPOGVote", "vote", address(valueToken));
-        voteToken.initializeSPOG(address(spog));
+        voteToken = new VOTE("SPOGVote", "vote", address(spog), address(valueToken));
     }
 
     function resetGovernance() private {
-        vm.startPrank(address(spog));
-
+        vm.prank(address(spog));
         uint256 snapshotId = valueToken.snapshot();
 
         // Reset VoteToken by SPOG
         // Do not check emitted snapshot id, just confirm that event happened
         vm.expectEmit(false, false, false, false);
         emit ResetInitialized(0);
+
+        vm.prank(address(spog));
         voteToken.reset(snapshotId);
-        vm.stopPrank();
 
         // Check initial Vote balances after reset
         assertEq(voteToken.totalSupply(), 0);
@@ -95,12 +93,14 @@ contract VoteTokenTest is SPOGBaseTest {
         initTokens();
 
         uint256 randomSnapshotId = 10_000;
-        vm.startPrank(address(spog));
+
+        vm.prank(address(spog));
         voteToken.reset(randomSnapshotId);
 
         assertEq(voteToken.resetSnapshotId(), randomSnapshotId);
 
         vm.expectRevert(IVOTE.ResetAlreadyInitialized.selector);
+        vm.prank(address(spog));
         voteToken.reset(randomSnapshotId);
     }
 
@@ -109,15 +109,16 @@ contract VoteTokenTest is SPOGBaseTest {
         resetGovernance();
 
         // Alice claims her tokens
-        vm.startPrank(alice1);
         expectEmit();
         emit PreviousResetSupplyClaimed(address(alice1), aliceStartBalance);
+        vm.prank(alice1);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice1), aliceStartBalance, "Alice should have 50e18 tokens");
 
         // Alice attempts to claim again
         vm.expectRevert(IVOTE.ResetTokensAlreadyClaimed.selector);
+        vm.prank(alice1);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice1), aliceStartBalance, "Alice should have 50e18 tokens");
@@ -127,8 +128,8 @@ contract VoteTokenTest is SPOGBaseTest {
         initTokens();
 
         // Alice claims her tokens
-        vm.startPrank(alice1);
         vm.expectRevert(IVOTE.ResetNotInitialized.selector);
+        vm.prank(alice1);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(alice1), 0, "Alice should have 0 tokens");
@@ -146,8 +147,8 @@ contract VoteTokenTest is SPOGBaseTest {
         resetGovernance();
 
         // Nothing attempts to claim their tokens
-        vm.startPrank(nothing);
         vm.expectRevert(IVOTE.NoResetTokensToClaim.selector);
+        vm.prank(nothing);
         voteToken.claimPreviousSupply();
 
         assertEq(voteToken.balanceOf(nothing), 0, "Balance stays 0");
@@ -163,24 +164,22 @@ contract VoteTokenTest is SPOGBaseTest {
         assertEq(voteToken.balanceOf(bob), 0);
 
         // Alice claims her tokens
-        vm.startPrank(alice1);
         assertEq(voteToken.resetBalanceOf(address(alice1)), aliceStartBalance, "Alice reset balance is incorrect");
+
+        vm.prank(alice1);
         voteToken.claimPreviousSupply();
-        vm.stopPrank();
 
         // Bob claims his tokens
-        vm.startPrank(bob1);
         assertEq(voteToken.resetBalanceOf(address(bob1)), bobStartBalance, "Bob reset balance is incorrect");
+        vm.prank(bob1);
         voteToken.claimPreviousSupply();
-        vm.stopPrank();
 
         assertEq(voteToken.totalSupply(), 110e18);
         assertEq(voteToken.balanceOf(alice1), aliceStartBalance);
         assertEq(voteToken.balanceOf(bob1), bobStartBalance);
 
-        vm.startPrank(bob1);
-
         // Vote balances accounting works
+        vm.prank(bob1);
         voteToken.transfer(alice1, 50e18);
 
         assertEq(voteToken.totalSupply(), 110e18);
@@ -188,6 +187,7 @@ contract VoteTokenTest is SPOGBaseTest {
         assertEq(voteToken.balanceOf(bob1), 10e18);
 
         vm.expectRevert("ERC20: transfer amount exceeds balance");
+        vm.prank(bob1);
         voteToken.transfer(alice1, 20e18);
     }
 }

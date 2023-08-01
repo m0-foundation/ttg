@@ -2,12 +2,10 @@
 pragma solidity 0.8.19;
 
 import { IERC20 } from "../interfaces/ImportedInterfaces.sol";
-import { SafeERC20 } from "../ImportedContracts.sol";
-
-import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE } from "../interfaces/ITokens.sol";
 
+import { SafeERC20 } from "../ImportedContracts.sol";
 import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
 
 /// @title SPOGVault
@@ -15,8 +13,8 @@ import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
 contract SPOGVault is ISPOGVault {
     using SafeERC20 for IERC20;
 
-    /// @notice SPOG governor contract
-    address public immutable governor;
+    /// @notice SPOG value token contract
+    address public immutable value;
 
     /// @dev epoch => token => account => bool
     mapping(uint256 epoch => mapping(address token => mapping(address account => bool isAlreadyWithdrawn)))
@@ -26,9 +24,9 @@ contract SPOGVault is ISPOGVault {
     mapping(uint256 epoch => mapping(address token => uint256 amount)) public deposits;
 
     /// @notice Constructs a new instance of VALUE vault
-    /// @param governor_ SPOG governor contract
-    constructor(address governor_) {
-        governor = governor_;
+    /// @param value_ SPOG value token contract
+    constructor(address value_) {
+        value = value_;
     }
 
     /// @notice Deposit assets for the epoch
@@ -85,8 +83,8 @@ contract SPOGVault is ISPOGVault {
 
         // amount to withdraw = (account votes weight * shared assets) / total votes weight
         // TODO: accounting for leftover/debris here, check overflow ranges ?
-        uint256 totalVotesWeight = IVALUE(ISPOGGovernor(governor).value()).getPastTotalSupply(epochStart);
-        uint256 accountVotesWeight = IVALUE(ISPOGGovernor(governor).value()).getPastVotes(account, epochStart);
+        uint256 totalVotesWeight = IVALUE(value).getPastTotalSupply(epochStart);
+        uint256 accountVotesWeight = IVALUE(value).getPastVotes(account, epochStart);
         uint256 amount = (deposits[epoch][token] * accountVotesWeight) / totalVotesWeight;
 
         emit EpochAssetsWithdrawn(epoch, account, token, amount);

@@ -24,7 +24,6 @@ interface IDualGovernor {
     error InvalidMethod();
     error ListAdminIsNotSPOG();
     error AlreadyVoted();
-    error ZeroSPOGAddress();
     error ZeroVoteAddress();
     error ZeroValueAddress();
     error ZeroVoteQuorumNumerator();
@@ -108,6 +107,6 @@ interface IDualGovernor {
 }
 
 // NOTE: Openzeppelin erroneously declared `IGovernor` as abstract contract, so this needs to follow suit.
-abstract contract ISPOGGovernor is IGovernor, IDualGovernor, ISPOGControlled {
+abstract contract ISPOGGovernor is ISPOGControlled, IDualGovernor, IGovernor {
 
 }

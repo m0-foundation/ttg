@@ -68,8 +68,6 @@ contract SPOG_emergency is SPOGBaseTest {
         internal
         returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32)
     {
-        setUp();
-
         vm.prank(address(spog));
         // assert that address is not in the list
         assertFalse(spog.listContains(LIST_NAME, alice), "Address is in the list");
@@ -180,13 +178,11 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
@@ -219,13 +215,11 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         governor.execute(targets, values, calldatas, hashedDescription);
 
@@ -255,13 +249,11 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         governor.execute(targets, values, calldatas, hashedDescription);
 
@@ -314,9 +306,8 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, noVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         vm.expectRevert("Governor: proposal not successful");
         governor.execute(targets, values, calldatas, hashedDescription);
@@ -359,13 +350,11 @@ contract SPOG_emergency is SPOGBaseTest {
         // cast vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // check proposal is succeeded
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");

@@ -11,7 +11,7 @@ interface ISPOGVault {
     error EpochWithNoAssets();
     error AlreadyWithdrawn();
 
-    function governor() external returns (address);
+    function value() external returns (address);
 
     function deposit(uint256 epoch, address token, uint256 amount) external;
 

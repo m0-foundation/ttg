@@ -17,7 +17,7 @@ contract SPOG_change is SPOGBaseTest {
     address public charlie = createUser("charlie");
 
     function test_Revert_ChangeTaxRange_WhenNotCalledByGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.changeTaxRange(10e18, 12e18);
     }
 
@@ -34,15 +34,17 @@ contract SPOG_change is SPOGBaseTest {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // give charlie vote power
+        vm.prank(address(governor));
         vote.mint(charlie, 95e18);
-        vm.startPrank(charlie);
+
+        vm.prank(charlie);
         vote.delegate(charlie);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
@@ -79,15 +81,17 @@ contract SPOG_change is SPOGBaseTest {
         uint256 taxUpperBound = spog.taxUpperBound();
 
         // give charlie vote power
+        vm.prank(address(governor));
         value.mint(charlie, 95e18);
-        vm.startPrank(charlie);
+
+        vm.prank(charlie);
         value.delegate(charlie);
 
         // fast forward to an active voting period
         vm.roll(block.number + governor.votingDelay() + 1);
 
+        vm.prank(charlie);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         (uint256 noVoteVotes, uint256 yesVoteVotes) = governor.proposalVotes(proposalId);
         (uint256 noValueVotes, uint256 yesValueVotes) = governor.proposalValueVotes(proposalId);
@@ -153,13 +157,11 @@ contract SPOG_change is SPOGBaseTest {
         // vote and value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
@@ -211,13 +213,11 @@ contract SPOG_change is SPOGBaseTest {
         // vote and value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);
@@ -270,17 +270,14 @@ contract SPOG_change is SPOGBaseTest {
             "not enough votes to reach quorum"
         );
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(carol);
+        vm.prank(carol);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // fast forward to end of voting period
         vm.roll(block.number + governor.votingPeriod() + 1);

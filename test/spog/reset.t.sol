@@ -9,15 +9,46 @@ import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_reset is SPOGBaseTest {
-    event ResetExecuted(address indexed newGovernor, uint256 indexed snapshotId);
+    event ResetExecuted(address indexed newGovernor, address indexed newVote, uint256 indexed snapshotId);
 
     /******************************************************************************************************************/
     /*** HELPERS                                                                                                    ***/
     /******************************************************************************************************************/
 
-    function executeValidProposal() private {
-        setUp();
+    function proposeGovernanceReset(
+        string memory proposalDescription
+    ) private returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
+        address[] memory targets = new address[](1);
+        targets[0] = address(spog);
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        bytes[] memory calldatas = new bytes[](1);
+        bytes memory callData = abi.encodeWithSignature("reset()");
+        string memory description = proposalDescription;
+        calldatas[0] = callData;
 
+        bytes32 hashedDescription = keccak256(abi.encodePacked(description));
+        uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
+
+        // create proposal
+        cash.approve(address(spog), 12 * deployScript.tax());
+
+        // Check the event is emitted
+        // TODO: check proposal
+        // expectEmit();
+        // emit NewValueQuorumProposal(proposalId);
+
+        uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
+
+        // Make sure the proposal is immediately (+1 block) votable
+        assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
+
+        assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
+
+        return (proposalId, targets, values, calldatas, hashedDescription);
+    }
+
+    function executeValidProposal() private {
         ISPOGGovernor governor = ISPOGGovernor(spog.governor());
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
@@ -51,8 +82,8 @@ contract SPOG_reset is SPOGBaseTest {
     }
 
     function test_Revert_Reset_WhenNotCalledByGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
-        spog.reset(address(governor));
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
+        spog.reset();
     }
 
     function test_Reset_Success() public {
@@ -62,7 +93,7 @@ contract SPOG_reset is SPOGBaseTest {
             uint256[] memory values,
             bytes[] memory calldatas,
             bytes32 hashedDescription
-        ) = proposeReset("Propose reset of vote governance", address(value));
+        ) = proposeReset("Propose reset of vote governance");
 
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
@@ -73,13 +104,11 @@ contract SPOG_reset is SPOGBaseTest {
         // value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");
@@ -88,21 +117,24 @@ contract SPOG_reset is SPOGBaseTest {
 
         vm.expectEmit(false, false, false, false);
         address anyAddress = address(0);
-        emit ResetExecuted(anyAddress, 0);
+        emit ResetExecuted(anyAddress, anyAddress, 0);
         governor.execute(targets, values, calldatas, hashedDescription);
 
         assertFalse(spog.governor() == governorBeforeFork, "Governor was not reset");
 
-        assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 5, "Governor quorum was not set correctly");
+        assertEq(ISPOGGovernor(spog.governor()).voteQuorumNumerator(), 65, "Governor quorum was not set correctly");
 
         assertEq(ISPOGGovernor(spog.governor()).votingPeriod(), 216_000, "Governor voting delay was not set correctly");
+
+        updateAddresses();
+        initializeSelf();
 
         // Make sure governance is functional
         executeValidProposal();
     }
 
     function test_Reset_ValidateProposalState() public {
-        (uint256 proposalId, , , , ) = proposeReset("Propose reset of vote governance", address(value));
+        (uint256 proposalId, , , , ) = proposeReset("Propose reset of vote governance");
 
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Pending, "Not in pending state");
 
@@ -113,13 +145,11 @@ contract SPOG_reset is SPOGBaseTest {
         // value holders vote on proposal
         governor.castVote(proposalId, yesVote);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // proposal is now in succeeded state, it reached quorum
         assertTrue(governor.state(proposalId) == IGovernor.ProposalState.Succeeded, "Not in succeeded state");

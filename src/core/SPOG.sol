@@ -6,6 +6,7 @@ import { ISPOG } from "../interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../interfaces/periphery/ISPOGVault.sol";
 import { IVALUE, IVOTE } from "../interfaces/ITokens.sol";
+import { IGovernanceDeployer } from "../deployer/IGovernanceDeployer.sol";
 
 import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
 
@@ -23,7 +24,8 @@ contract SPOG is ISPOG {
 
     // TODO: Drop the need for a struct for the constructor. Use named arguments instead.
     struct Configuration {
-        address governor;
+        address deployer;
+        address value;
         address vault;
         address cash;
         uint256 tax;
@@ -31,7 +33,13 @@ contract SPOG is ISPOG {
         uint256 taxUpperBound;
         uint256 inflator;
         uint256 fixedReward;
+        uint256 voteQuorum;
+        uint256 valueQuorum;
     }
+
+    string private constant VOTE_NAME = "SPOGVote";
+    string private constant VOTE_SYMBOL = "VOTE";
+    string private constant GOVERNOR_NAME = "DualGovernor";
 
     /// TODO find the right one for better precision
     uint256 private constant _INFLATOR_SCALE = 100;
@@ -48,6 +56,9 @@ contract SPOG is ISPOG {
     /// @notice VOTE inflation rate per epoch
     uint256 public immutable inflator;
 
+    /// @notice Deployer of Governance contracts.
+    address public immutable deployer;
+
     /// @notice Governor, upgradable via `reset` by value holders
     address public governor;
 
@@ -63,8 +74,8 @@ contract SPOG is ISPOG {
     mapping(bytes32 key => bytes32 value) internal _valueAt;
 
     /// @dev Modifier checks if caller is a governor address
-    modifier onlyGovernance() {
-        if (msg.sender != governor) revert OnlyGovernor();
+    modifier onlyGovernor() {
+        if (msg.sender != governor) revert CallerIsNotGovernor();
 
         _;
     }
@@ -73,19 +84,28 @@ contract SPOG is ISPOG {
     /// @param config The configuration data for the SPOG
     constructor(Configuration memory config) {
         // Sanity checks
-        if (config.governor == address(0)) revert ZeroGovernorAddress();
+        if (config.deployer == address(0)) revert ZeroDeployerAddress();
+        if (config.value == address(0)) revert ZeroValueAddress();
         if (config.vault == address(0)) revert ZeroVaultAddress();
         if (config.cash == address(0)) revert ZeroCashAddress();
         if (config.tax == 0) revert ZeroTax();
         if (config.tax < config.taxLowerBound || config.tax > config.taxUpperBound) revert TaxOutOfRange();
         if (config.inflator == 0) revert ZeroInflator();
         if (config.fixedReward == 0) revert ZeroFixedReward();
+        if (config.voteQuorum == 0) revert ZeroVoteQuorum();
+        if (config.valueQuorum == 0) revert ZeroValueQuorum();
 
-        // Set configuration data
-        governor = config.governor;
+        deployer = config.deployer;
 
-        // Initialize governor
-        ISPOGGovernor(governor).initializeSPOG(address(this));
+        (governor, ) = IGovernanceDeployer(deployer).deployGovernance(
+            VOTE_NAME,
+            VOTE_SYMBOL,
+            GOVERNOR_NAME,
+            config.value,
+            config.voteQuorum,
+            config.valueQuorum,
+            bytes32(block.number)
+        );
 
         vault = config.vault;
         cash = config.cash;
@@ -99,21 +119,21 @@ contract SPOG is ISPOG {
     /// @notice Add an address to a list
     /// @param listName The name of the list to which the address will be added.
     /// @param account The address to be added to the list
-    function addToList(bytes32 listName, address account) external onlyGovernance {
+    function addToList(bytes32 listName, address account) external onlyGovernor {
         _addToList(listName, account);
     }
 
     /// @notice Remove an address from a list
     /// @param listName The name of the list from which the address will be removed
     /// @param account The address to be removed from the list
-    function removeFromList(bytes32 listName, address account) external onlyGovernance {
+    function removeFromList(bytes32 listName, address account) external onlyGovernor {
         _removeFromList(listName, account);
     }
 
     /// @notice Change the protocol configs
     /// @param valueName The name of the config to be updated
     /// @param value The value to update the config to
-    function updateConfig(bytes32 valueName, bytes32 value) external onlyGovernance {
+    function updateConfig(bytes32 valueName, bytes32 value) external onlyGovernor {
         _updateConfig(valueName, value);
     }
 
@@ -121,7 +141,7 @@ contract SPOG is ISPOG {
     /// @param emergencyType The type of emergency method to be called (See enum in ISPOG)
     /// @param callData The data to be used for the target method
     /// @dev Emergency methods are encoded much like change proposals
-    function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernance {
+    function emergency(uint8 emergencyType, bytes calldata callData) external onlyGovernor {
         EmergencyType emergencyType_ = EmergencyType(emergencyType);
 
         emit EmergencyExecuted(emergencyType, callData);
@@ -148,26 +168,33 @@ contract SPOG is ISPOG {
     }
 
     /// @notice Reset current governor, special value governance method
-    /// @param newGovernor The address of the new governor
-    function reset(address newGovernor) external onlyGovernance {
-        // NOTE: This function already ensures `newGovernor` implements `initializeSPOG`, `value`, and `vote`.
-        //       It does not ensure `newGovernor` implements `currentEpoch` for `chargeFee`.
-        governor = newGovernor;
-
-        // Important: initialize SPOG address in the new vote governor
-        ISPOGGovernor(governor).initializeSPOG(address(this));
+    function reset() external onlyGovernor {
+        ISPOGGovernor governor_ = ISPOGGovernor(governor);
+        IVOTE vote_ = IVOTE(governor_.vote());
+        IVALUE value_ = IVALUE(governor_.value());
 
         // Take snapshot of value token balances at the moment of reset
         // Update reset snapshot id for the voting token
-        uint256 resetId = IVALUE(ISPOGGovernor(governor).value()).snapshot();
-        IVOTE(ISPOGGovernor(governor).vote()).reset(resetId);
+        uint256 resetId = value_.snapshot();
+        vote_.reset(resetId);
 
-        emit ResetExecuted(newGovernor, resetId);
+        address vote;
+        (governor, vote) = IGovernanceDeployer(deployer).deployGovernance(
+            vote_.name(),
+            vote_.symbol(),
+            governor_.name(),
+            address(value_),
+            governor_.voteQuorumNumerator(),
+            governor_.valueQuorumNumerator(),
+            bytes32(block.number)
+        );
+
+        emit ResetExecuted(governor, vote, resetId);
     }
 
     /// @notice Change the tax rate which is used to calculate the proposal fee
     /// @param newTax The new tax rate
-    function changeTax(uint256 newTax) external onlyGovernance {
+    function changeTax(uint256 newTax) external onlyGovernor {
         if (newTax < taxLowerBound || newTax > taxUpperBound) revert TaxOutOfRange();
 
         emit TaxChanged(tax, newTax);
@@ -178,7 +205,7 @@ contract SPOG is ISPOG {
     /// @notice Change the tax range which is used to calculate the proposal fee
     /// @param newTaxLowerBound The new lower bound of the tax range
     /// @param newTaxUpperBound The new upper bound of the tax range
-    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external onlyGovernance {
+    function changeTaxRange(uint256 newTaxLowerBound, uint256 newTaxUpperBound) external onlyGovernor {
         if (newTaxLowerBound > newTaxUpperBound) revert InvalidTaxRange();
 
         emit TaxRangeChanged(taxLowerBound, newTaxLowerBound, taxUpperBound, newTaxUpperBound);
@@ -189,7 +216,7 @@ contract SPOG is ISPOG {
 
     /// @notice Charge fee for calling a governance function
     /// @param account The address of the caller
-    function chargeFee(address account, bytes4 /*func*/) external onlyGovernance returns (uint256) {
+    function chargeFee(address account, bytes4 /*func*/) external onlyGovernor returns (uint256) {
         // transfer the amount from the caller to the SPOG
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(cash).safeTransferFrom(account, address(this), tax);

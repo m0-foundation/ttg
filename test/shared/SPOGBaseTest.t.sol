@@ -7,6 +7,7 @@ import { ISPOG } from "../../src/interfaces/ISPOG.sol";
 import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
 import { ISPOGVault } from "../../src/interfaces/periphery/ISPOGVault.sol";
 import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
+import { IGovernanceDeployer } from "../../src/deployer/IGovernanceDeployer.sol";
 
 import { VOTE } from "../../src/tokens/VOTE.sol";
 import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
@@ -19,12 +20,14 @@ contract SPOGBaseTest is BaseTest {
 
     SPOGDeployScript public deployScript;
 
+    IERC20 public cash;
+    IGovernanceDeployer public deployer;
     ISPOG public spog;
     ISPOGGovernor public governor;
-    IVOTE public vote;
-    IVALUE public value;
     ISPOGVault public vault;
-    IERC20 public cash;
+    IVALUE public value;
+    IVOTE public vote;
+
     uint256 public tax;
 
     address public alice = createUser("alice");
@@ -46,43 +49,69 @@ contract SPOGBaseTest is BaseTest {
         deployScript.run();
 
         spog = ISPOG(deployScript.spog());
-        governor = ISPOGGovernor(deployScript.governor());
-        cash = IERC20(deployScript.cash());
-        vote = IVOTE(deployScript.vote());
-        value = IVALUE(deployScript.value());
-        vault = ISPOGVault(deployScript.vault());
-        tax = deployScript.tax();
 
-        // mint vote tokens and self-delegate
-        vote.mint(address(this), amountToMint);
-        vote.delegate(address(this));
+        updateAddresses();
 
-        // mint value tokens and self-delegate
-        value.mint(address(this), amountToMint);
-        value.delegate(address(this));
+        // Initialize self
+        // TODO: Remove the need for this.
+        initializeSelf();
 
         // Initialize users initial token balances
         fundUsers();
     }
 
+    function updateAddresses() internal {
+        vault = ISPOGVault(spog.vault());
+        cash = IERC20(spog.cash());
+        deployer = IGovernanceDeployer(spog.deployer());
+        governor = ISPOGGovernor(spog.governor());
+        value = IVALUE(governor.value());
+        vote = IVOTE(governor.vote());
+        tax = spog.tax();
+    }
+
+    // TODO: Remove the need for this.
+    function initializeSelf() internal {
+        // mint vote tokens and self-delegate
+        vm.prank(address(governor));
+        vote.mint(address(this), amountToMint);
+
+        vote.delegate(address(this));
+
+        // mint value tokens and self-delegate
+        vm.prank(address(governor));
+        value.mint(address(this), amountToMint);
+
+        value.delegate(address(this));
+    }
+
     function fundUsers() internal {
         // mint VOTE and VALUE tokens to alice, bob and carol
+        vm.startPrank(address(governor));
         vote.mint(alice, amountToMint);
         value.mint(alice, amountToMint);
+        vm.stopPrank();
+
         vm.startPrank(alice);
         vote.delegate(alice); // self delegate
         value.delegate(alice); // self delegate
         vm.stopPrank();
 
+        vm.startPrank(address(governor));
         vote.mint(bob, amountToMint);
         value.mint(bob, amountToMint);
+        vm.stopPrank();
+
         vm.startPrank(bob);
         vote.delegate(bob); // self delegate
         value.delegate(bob); // self delegate
         vm.stopPrank();
 
+        vm.startPrank(address(governor));
         vote.mint(carol, amountToMint);
         value.mint(carol, amountToMint);
+        vm.stopPrank();
+
         vm.startPrank(carol);
         vote.delegate(carol); // self delegate
         value.delegate(carol); // self delegate
@@ -188,16 +217,14 @@ contract SPOGBaseTest is BaseTest {
     }
 
     function proposeReset(
-        string memory proposalDescription,
-        address valueToken
+        string memory proposalDescription
     ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
         targets[0] = address(spog);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
-        address newGovernor = createNewGovernor(valueToken);
-        bytes memory callData = abi.encodeWithSignature("reset(address)", newGovernor);
+        bytes memory callData = abi.encodeWithSignature("reset()");
         string memory description = proposalDescription;
         calldatas[0] = callData;
 
@@ -215,26 +242,6 @@ contract SPOGBaseTest is BaseTest {
         assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
-    }
-
-    function createNewGovernor(address valueToken) internal returns (address) {
-        // deploy vote governor from factory
-        VOTE newVoteToken = new VOTE("new SPOGVote", "vote", valueToken);
-        // grant minter role to new voteToken deployer
-        IAccessControl(address(newVoteToken)).grantRole(newVoteToken.MINTER_ROLE(), address(this));
-
-        uint256 voteQuorum = 5;
-        uint256 valueQuorum = 5;
-
-        DualGovernor newGovernor = new DualGovernor(
-            "new SPOGGovernor",
-            address(newVoteToken),
-            valueToken,
-            voteQuorum,
-            valueQuorum
-        );
-
-        return address(newGovernor);
     }
 
     function proposeTaxRangeChange(

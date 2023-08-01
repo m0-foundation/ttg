@@ -84,9 +84,9 @@ contract VaultTest is SPOGBaseTest {
         );
 
         // second value holder withdraws assets
-        vm.startPrank(alice);
         uint256 initialAliceBalanceOfCash = cash.balanceOf(address(alice));
 
+        vm.prank(alice);
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalAliceBalanceOfCash = cash.balanceOf(address(alice));
@@ -97,12 +97,10 @@ contract VaultTest is SPOGBaseTest {
             "Vault should have balance of Cash value"
         );
 
-        vm.stopPrank();
-
         // third value holder withdraws assets
-        vm.startPrank(bob);
         uint256 initialBobBalanceOfCash = cash.balanceOf(address(bob));
 
+        vm.prank(bob);
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalBobBalanceOfCash = cash.balanceOf(address(bob));
@@ -113,12 +111,10 @@ contract VaultTest is SPOGBaseTest {
             "Vault should have balance of Cash value"
         );
 
-        vm.stopPrank();
-
         // last value holder withdraws assets
-        vm.startPrank(carol);
         uint256 initialCarolBalanceOfCash = cash.balanceOf(address(carol));
 
+        vm.prank(carol);
         vault.withdraw(epochsToGetRewardsFor, address(cash));
 
         uint256 finalCarolBalanceOfCash = cash.balanceOf(address(carol));
@@ -128,8 +124,6 @@ contract VaultTest is SPOGBaseTest {
             initialCarolBalanceOfCash + rewardAmountToReceive,
             "Vault should have balance of Cash value"
         );
-
-        vm.stopPrank();
     }
 
     function test_ClaimRewardsByValueHolders_For_Various_Epoch() public {
@@ -176,11 +170,11 @@ contract VaultTest is SPOGBaseTest {
         assertLt(balanceOfVaultAfter, balanceOfVaultBefore, "Vault should have less balance of Cash value");
 
         // alice withdraws assets
-        vm.startPrank(alice);
         uint256 initialAliceBalanceOfCash = cash.balanceOf(address(alice));
 
         uint256 balanceOfVaultBeforeAlice = cash.balanceOf(address(vault));
 
+        vm.prank(alice);
         vault.withdraw(epochs, address(cash));
 
         uint256 finalAliceBalanceOfCash = cash.balanceOf(address(alice));
@@ -190,20 +184,22 @@ contract VaultTest is SPOGBaseTest {
         assertGt(finalAliceBalanceOfCash, initialAliceBalanceOfCash, "Alice should have more balance of Cash value");
 
         assertLt(balanceOfVaultAfterAlice, balanceOfVaultBeforeAlice, "Vault should have less balance of Cash value");
-        vm.stopPrank();
     }
 
     function test_deposit() public {
         // deposit assets for previous epoch
         uint256 epoch = governor.currentEpoch();
+
+        vm.prank(address(governor));
         vote.mint(address(spog), 1000e18);
-        vm.startPrank(address(spog));
+
+        vm.prank(address(spog));
         vote.approve(address(vault), 1000e18);
 
         expectEmit();
         emit EpochAssetsDeposited(epoch, address(vote), 1000e18);
+        vm.prank(address(spog));
         vault.deposit(epoch, address(vote), 1000e18);
-        vm.stopPrank();
 
         assertEq(vote.balanceOf(address(vault)), 1000e18);
     }

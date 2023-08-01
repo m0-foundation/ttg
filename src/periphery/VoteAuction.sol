@@ -12,10 +12,12 @@ contract VoteAuction is IVoteAuction, Initializable {
     using SafeERC20 for IERC20;
 
     error AlreadyInitialized();
+    error AuctionBalanceInsufficient();
     error AuctionEnded();
     error AuctionNotEnded();
-    error AuctionBalanceInsufficient();
-    error OnlyVault();
+    error CallerIsNotVault();
+
+    // TODO: Many of these can be immutable.
 
     address public auctionToken;
     address public paymentToken;
@@ -34,7 +36,7 @@ contract VoteAuction is IVoteAuction, Initializable {
     uint256 private constant _CURVE_STEPS = 20;
 
     modifier onlyVault() {
-        if (msg.sender != vault) revert OnlyVault();
+        if (msg.sender != vault) revert CallerIsNotVault();
 
         _;
     }
@@ -44,6 +46,7 @@ contract VoteAuction is IVoteAuction, Initializable {
         _disableInitializers();
     }
 
+    // TODO: Not sure why this is needed instead of just a larger constructor. Will revisit.
     /// @notice Initializes the auction contract
     /// @param auctionToken_ The address of the ERC20 token being auctioned
     /// @param paymentToken_ The address of the ERC20 token used as payment

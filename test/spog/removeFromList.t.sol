@@ -9,7 +9,7 @@ contract SPOG_RemoveFromList is SPOGBaseTest {
     address internal addressToRemove;
 
     function test_Revert_RemoveFromListWhenNotCallingFromGovernance() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.removeFromList(LIST_NAME, addressToRemove);
     }
 

@@ -7,7 +7,7 @@ import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_ChangeConfig is SPOGBaseTest {
     function test_updateConfig_notGovernor() public {
-        vm.expectRevert(ISPOG.OnlyGovernor.selector);
+        vm.expectRevert(ISPOG.CallerIsNotGovernor.selector);
         spog.updateConfig("someKey", "someValue");
     }
 

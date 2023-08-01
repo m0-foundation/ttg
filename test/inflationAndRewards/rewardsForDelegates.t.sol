@@ -20,7 +20,7 @@ contract RewardsTest is SPOGBaseTest {
         assertEq(vote.getVotes(alice), vote.getVotes(bob), "Alice and Bob should have same voting power before voting");
 
         // alice votes on proposal 1
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
 
         uint256 aliceBalanceAfterVoting = value.balanceOf(alice);
@@ -31,6 +31,7 @@ contract RewardsTest is SPOGBaseTest {
         );
 
         // alice votes on proposal 2 and 3
+        vm.startPrank(alice);
         governor.castVote(proposalId2, yesVote);
         governor.castVote(proposalId3, noVote);
         vm.stopPrank();
@@ -58,9 +59,8 @@ contract RewardsTest is SPOGBaseTest {
         // set up proposals
         (uint256 proposalId, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
 
-        vm.startPrank(bob);
+        vm.prank(bob);
         vote.delegate(alice);
-        vm.stopPrank();
 
         // voting period started
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
@@ -71,14 +71,12 @@ contract RewardsTest is SPOGBaseTest {
         assertEq(aliceStartBalance, bobStartBalance, "Alice and Bob should have same value balance before voting");
 
         // alice votes on proposal 1
-        vm.startPrank(alice);
+        vm.prank(alice);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         // bob votes on proposal 1, 2 and 3
-        vm.startPrank(bob);
+        vm.prank(bob);
         governor.castVote(proposalId, yesVote);
-        vm.stopPrank();
 
         uint256 aliceReward = spog.fixedReward() / 2;
         uint256 bobReward = 0;
