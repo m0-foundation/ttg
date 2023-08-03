@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
-import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
+import { IDualGovernor, IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 import { IVault } from "../../src/vault/IVault.sol";
 import { IVOTE, IVALUE } from "../../src/tokens/ITokens.sol";
 import { IGovernanceDeployer } from "../../src/deployer/IGovernanceDeployer.sol";
@@ -268,7 +268,7 @@ contract SPOGBaseTest is BaseTest {
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit Proposal(epoch, proposalId, IDualGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, IDualGovernorQuorum.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "registrar proposal ids don't match");
 

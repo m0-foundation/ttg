@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../ImportedInterfaces.sol";
-import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
+import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -45,7 +45,7 @@ contract DualGovernorTest is SPOGBaseTest {
         uint256 voteBalance = vote.balanceOf(address(this));
 
         // revert happens when voting on proposal before voting period has started
-        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
+        vm.expectRevert(IDualGovernorQuorum.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId, yesVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
@@ -79,7 +79,7 @@ contract DualGovernorTest is SPOGBaseTest {
         vm.expectRevert();
         governor.castVote(proposalId, yesVote);
 
-        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
+        vm.expectRevert(IDualGovernorQuorum.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId2, noVote);
 
         // check proposal is pending. Note voting is not active until voteDelay is reached
@@ -118,7 +118,7 @@ contract DualGovernorTest is SPOGBaseTest {
         // vote balance of voter before casting vote on proposal 3
         uint256 voteBalanceForProposal3 = vote.getVotes(address(this));
 
-        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
+        vm.expectRevert(IDualGovernorQuorum.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId3, noVote);
 
         assertTrue(
@@ -279,7 +279,7 @@ contract DualGovernorTest is SPOGBaseTest {
         cash.approve(address(registrar), tax);
 
         // revert when method is not supported
-        vm.expectRevert(IDualGovernor.TooManyTargets.selector);
+        vm.expectRevert(IDualGovernorQuorum.TooManyTargets.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -296,7 +296,7 @@ contract DualGovernorTest is SPOGBaseTest {
         cash.approve(address(registrar), tax);
 
         // revert when proposal expects ETH value
-        vm.expectRevert(IDualGovernor.InvalidValue.selector);
+        vm.expectRevert(IDualGovernorQuorum.InvalidValue.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -314,7 +314,7 @@ contract DualGovernorTest is SPOGBaseTest {
         cash.approve(address(registrar), tax);
 
         // revert when proposal has invalid target
-        vm.expectRevert(IDualGovernor.InvalidTarget.selector);
+        vm.expectRevert(IDualGovernorQuorum.InvalidTarget.selector);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -330,7 +330,7 @@ contract DualGovernorTest is SPOGBaseTest {
         // approve cash spend for proposal
         cash.approve(address(registrar), tax);
         // revert when method signature is not supported
-        vm.expectRevert(IDualGovernor.InvalidMethod.selector);
+        vm.expectRevert(IDualGovernorQuorum.InvalidMethod.selector);
         governor.propose(targets, values, calldatas, description);
     }
 

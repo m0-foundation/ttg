@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
-import { IDualGovernorQuorum } from "./IDualGovernorQuorum.sol";
+import { IDualGovernor } from "./IDualGovernor.sol";
 import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
 
 import { Checkpoints, Governor, SafeCast } from "../ImportedContracts.sol";
@@ -9,7 +9,7 @@ import { Checkpoints, Governor, SafeCast } from "../ImportedContracts.sol";
 /// @title Governor contract to track quorum for both value and vote tokens
 /// @notice Governor adjusted to track double quorums for SPOG proposals
 /// @dev Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/governance/extensions/GovernorVotesQuorumFraction.sol
-abstract contract DualGovernorQuorum is IDualGovernorQuorum, Governor {
+abstract contract DualGovernorQuorum is IDualGovernor, Governor {
     using Checkpoints for Checkpoints.Trace224;
 
     /// @notice The vote token of SPOG governance

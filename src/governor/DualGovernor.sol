@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import { IGovernor } from "../ImportedInterfaces.sol";
-import { IDualGovernor } from "./IDualGovernor.sol";
 import { IRegistrar } from "../registrar/IRegistrar.sol";
 import { IVALUE, IVOTE } from "../tokens/ITokens.sol";
 
@@ -12,7 +11,7 @@ import { PureEpochs } from "../pureEpochs/PureEpochs.sol";
 
 /// @title SPOG Dual Governor Contract
 /// @notice This contract is used to govern the SPOG protocol, adjusted to to have double token nature of governance
-contract DualGovernor is IDualGovernor, DualGovernorQuorum {
+contract DualGovernor is DualGovernorQuorum {
     struct EpochBasic {
         uint256 numProposals;
         uint256 totalVotesWeight;
@@ -36,7 +35,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     address public immutable registrar;
 
     /// @notice The list of emergency proposals, (proposalId => true)
-    mapping(uint256 proposalId => bool isEmergencyProposal) public override emergencyProposals;
+    mapping(uint256 proposalId => bool isEmergencyProposal) public emergencyProposals;
 
     /// @dev The indicator of voting with `MINIMUM_VOTING_DELAY` delay is required proposal
     bool private _emergencyVotingIsOn;
@@ -72,7 +71,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     // TODO: Is `currentEpoch` a standard interface? If not, just `epoch` may be better.
     /// @notice Gets the current epoch number - 0, 1, 2, 3, .. etc
     /// @return current epoch number
-    function currentEpoch() public view override returns (uint256) {
+    function currentEpoch() public view returns (uint256) {
         return PureEpochs.currentEpoch();
     }
 
@@ -80,7 +79,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @notice Gets the start block number of the given epoch
     /// @param epoch The epoch number
     /// @return `block.number` of the start of the epoch
-    function startOf(uint256 epoch) public pure override returns (uint256) {
+    function startOf(uint256 epoch) public pure returns (uint256) {
         return PureEpochs.getBlockNumberOfEpochStart(epoch);
     }
 
@@ -106,7 +105,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @dev Returns whether the given function selector is a governed method
     /// @param func The function selector
     /// @return true if the function is governed, false otherwise
-    function isGovernedMethod(bytes4 func) public pure override returns (bool) {
+    function isGovernedMethod(bytes4 func) public pure returns (bool) {
         return func == this.updateVoteQuorumNumerator.selector || func == this.updateValueQuorumNumerator.selector;
     }
 
@@ -168,7 +167,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @dev Allows batch voting
     /// @param proposalIds The ids of the proposals
     /// @param votes The values of the votes
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public override {
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata votes) public {
         address voter = _msgSender();
         require(proposalIds.length == votes.length, "DualGovernor: proposalIds and votes length mismatch");
 
@@ -261,11 +260,11 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @notice Gets total vote weight power for the epoch
     /// @param epoch The epoch number to get total vote weight for
     /// @return The total vote weight power for the epoch
-    function epochTotalVotesWeight(uint256 epoch) external view override returns (uint256) {
+    function epochTotalVotesWeight(uint256 epoch) external view returns (uint256) {
         return _epochBasic[epoch].totalVotesWeight;
     }
 
-    function finishedVotingAt(uint256 epoch, address account) external view override returns (uint256) {
+    function finishedVotingAt(uint256 epoch, address account) external view returns (uint256) {
         return _epochBasic[epoch].finishedVotingAt[account];
     }
 
@@ -273,7 +272,7 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     /// @param epoch The epoch number to check
     /// @param account The account to check
     /// @return True if account voted on all proposals in the epoch
-    function hasFinishedVoting(uint256 epoch, address account) external view override returns (bool) {
+    function hasFinishedVoting(uint256 epoch, address account) external view returns (bool) {
         EpochBasic storage epochBasic = _epochBasic[epoch];
         return _hasFinishedVoting(epochBasic, account);
     }
@@ -367,13 +366,13 @@ contract DualGovernor is IDualGovernor, DualGovernorQuorum {
     }
 
     /// @notice Implements OZ Governor counting module interface
-    function proposalVotes(uint256 proposalId) public view override returns (uint256, uint256) {
+    function proposalVotes(uint256 proposalId) public view returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.voteNoVotes, proposalVote.voteYesVotes);
     }
 
     /// @notice Returns total value votes for proposal
-    function proposalValueVotes(uint256 proposalId) public view override returns (uint256, uint256) {
+    function proposalValueVotes(uint256 proposalId) public view returns (uint256, uint256) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
         return (proposalVote.valueNoVotes, proposalVote.valueYesVotes);
     }

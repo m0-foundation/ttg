@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
+import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -13,7 +13,7 @@ contract InflationTest is SPOGBaseTest {
         (uint256 proposalId3, , , , ) = proposeAddingAnAddressToList(makeAddr("Omega"));
 
         // cannot vote in epoch 0
-        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
+        vm.expectRevert(IDualGovernorQuorum.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId, yesVote);
 
         // voting period started

@@ -4,12 +4,16 @@ pragma solidity 0.8.19;
 import { IGovernor } from "../ImportedInterfaces.sol";
 
 import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
-import { IDualGovernor } from "../../src/governor/IDualGovernor.sol";
+import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
 contract SPOG_change is SPOGBaseTest {
-    event Proposal(uint256 indexed epoch, uint256 indexed proposalId, IDualGovernor.ProposalType indexed proposalType);
+    event Proposal(
+        uint256 indexed epoch,
+        uint256 indexed proposalId,
+        IDualGovernorQuorum.ProposalType indexed proposalType
+    );
     event TaxRangeChanged(uint256 oldLowerRange, uint256 newLowerRange, uint256 oldUpperRange, uint256 newUpperRange);
     event ValueQuorumNumeratorUpdated(uint256 oldValueQuorumNumerator, uint256 newValueQuorumNumerator);
     event VoteQuorumNumeratorUpdated(uint256 oldVoteQuorumNumerator, uint256 newVoteQuorumNumerator);
@@ -203,7 +207,7 @@ contract SPOG_change is SPOGBaseTest {
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit Proposal(epoch, proposalId, IDualGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, IDualGovernorQuorum.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "registrar proposal ids don't match");
 
@@ -255,7 +259,7 @@ contract SPOG_change is SPOGBaseTest {
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit Proposal(epoch, proposalId, IDualGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, IDualGovernorQuorum.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
         assertTrue(spogProposalId == proposalId, "registrar proposal ids don't match");
 
