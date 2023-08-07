@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IERC20, IAccessControl } from "../interfaces/ImportedInterfaces.sol";
-
-import { ISPOG } from "../../src/interfaces/ISPOG.sol";
-import { ISPOGGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
-import { ISPOGVault } from "../../src/interfaces/periphery/ISPOGVault.sol";
-import { IVOTE, IVALUE } from "../../src/interfaces/ITokens.sol";
+import { IRegistrar } from "../../src/registrar/IRegistrar.sol";
+import { IDualGovernor, IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
+import { IVault } from "../../src/vault/IVault.sol";
+import { IVOTE, IVALUE } from "../../src/tokens/ITokens.sol";
 import { IGovernanceDeployer } from "../../src/deployer/IGovernanceDeployer.sol";
 
+import { IERC20 } from "../ImportedInterfaces.sol";
+
 import { VOTE } from "../../src/tokens/VOTE.sol";
-import { DualGovernor } from "../../src/core/governor/DualGovernor.sol";
+import { DualGovernor } from "../../src/governor/DualGovernor.sol";
 
 import { SPOGDeployScript } from "../../script/SPOGDeploy.s.sol";
 import { BaseTest } from "./BaseTest.t.sol";
@@ -22,9 +22,9 @@ contract SPOGBaseTest is BaseTest {
 
     IERC20 public cash;
     IGovernanceDeployer public deployer;
-    ISPOG public spog;
-    ISPOGGovernor public governor;
-    ISPOGVault public vault;
+    IRegistrar public registrar;
+    IDualGovernor public governor;
+    IVault public vault;
     IVALUE public value;
     IVOTE public vote;
 
@@ -48,7 +48,7 @@ contract SPOGBaseTest is BaseTest {
         deployScript = new SPOGDeployScript();
         deployScript.run();
 
-        spog = ISPOG(deployScript.spog());
+        registrar = IRegistrar(deployScript.registrar());
 
         updateAddresses();
 
@@ -61,13 +61,13 @@ contract SPOGBaseTest is BaseTest {
     }
 
     function updateAddresses() internal {
-        vault = ISPOGVault(spog.vault());
-        cash = IERC20(spog.cash());
-        deployer = IGovernanceDeployer(spog.deployer());
-        governor = ISPOGGovernor(spog.governor());
+        vault = IVault(registrar.vault());
+        cash = IERC20(registrar.cash());
+        deployer = IGovernanceDeployer(registrar.deployer());
+        governor = IDualGovernor(registrar.governor());
         value = IVALUE(governor.value());
         vote = IVOTE(governor.vote());
-        tax = spog.tax();
+        tax = registrar.tax();
     }
 
     // TODO: Remove the need for this.
@@ -142,7 +142,7 @@ contract SPOGBaseTest is BaseTest {
     {
         // create proposal to add address to list
         targets = new address[](1);
-        targets[0] = address(spog);
+        targets[0] = address(registrar);
         values = new uint256[](1);
         values[0] = 0;
         calldatas = new bytes[](1);
@@ -152,7 +152,7 @@ contract SPOGBaseTest is BaseTest {
         (hashedDescription, proposalId) = getProposalIdAndHashedDescription(targets, values, calldatas, description);
 
         // vote on proposal
-        cash.approve(address(spog), tax);
+        cash.approve(address(registrar), tax);
         governor.propose(targets, values, calldatas, description);
     }
 
@@ -186,14 +186,14 @@ contract SPOGBaseTest is BaseTest {
 
         // the emergency proposal
         address[] memory targets = new address[](1);
-        targets[0] = address(spog);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
 
         calldatas[0] = abi.encodeWithSignature(
             "emergency(uint8,bytes)",
-            uint8(ISPOG.EmergencyType.AddToList),
+            uint8(IRegistrar.EmergencyType.AddToList),
             callData
         );
 
@@ -206,7 +206,7 @@ contract SPOGBaseTest is BaseTest {
             description
         );
 
-        cash.approve(address(spog), tax);
+        cash.approve(address(registrar), tax);
 
         // TODO: Check that `NewEmergencyProposal` event is emitted
         // expectEmit();
@@ -220,7 +220,7 @@ contract SPOGBaseTest is BaseTest {
         string memory proposalDescription
     ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
-        targets[0] = address(spog);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -232,14 +232,14 @@ contract SPOGBaseTest is BaseTest {
         uint256 proposalId = governor.hashProposal(targets, values, calldatas, hashedDescription);
 
         // create proposal
-        cash.approve(address(spog), 12 * deployScript.tax());
+        cash.approve(address(registrar), 12 * deployScript.tax());
 
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
 
         // Make sure the proposal is immediately (+1 block) votable
         assertEq(governor.proposalSnapshot(proposalId), block.number + 1);
 
-        assertTrue(spogProposalId == proposalId, "spog proposal id does not match value governor proposal id");
+        assertTrue(spogProposalId == proposalId, "registrar proposal id does not match value governor proposal id");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }
@@ -248,7 +248,7 @@ contract SPOGBaseTest is BaseTest {
         string memory proposalDescription
     ) internal returns (uint256, address[] memory, uint256[] memory, bytes[] memory, bytes32) {
         address[] memory targets = new address[](1);
-        targets[0] = address(spog);
+        targets[0] = address(registrar);
         uint256[] memory values = new uint256[](1);
         values[0] = 0;
         bytes[] memory calldatas = new bytes[](1);
@@ -262,15 +262,15 @@ contract SPOGBaseTest is BaseTest {
         // uint256 epoch = governor.currentEpoch();
 
         // create proposal
-        cash.approve(address(spog), tax);
+        cash.approve(address(registrar), tax);
 
         // TODO: add checks for 2 emitted events
         // expectEmit();
         // emit ProposalCreated();
         // expectEmit();
-        // emit Proposal(epoch, proposalId, ISPOGGovernor.ProposalType.Double);
+        // emit Proposal(epoch, proposalId, IDualGovernorQuorum.ProposalType.Double);
         uint256 spogProposalId = governor.propose(targets, values, calldatas, description);
-        assertTrue(spogProposalId == proposalId, "spog proposal ids don't match");
+        assertTrue(spogProposalId == proposalId, "registrar proposal ids don't match");
 
         return (proposalId, targets, values, calldatas, hashedDescription);
     }

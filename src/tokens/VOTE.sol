@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
-import { IVOTE } from "../interfaces/ITokens.sol";
+import { IVOTE } from "./ITokens.sol";
 
 import { ERC20, ERC20Permit, ERC20Snapshot } from "../ImportedContracts.sol";
 import { InflationaryVotes } from "./InflationaryVotes.sol";
 
 /// @title VOTE token with built-in inflation
 /// @dev It relies of snapshotted balances of VALUE token holders at the moment of reset
-/// @dev Snapshot is taken at the moment of reset by SPOG
+/// @dev Snapshot is taken at the moment of reset by Registrar
 /// @dev Previous value holders can mint new supply of Vote tokens to themselves
 contract VOTE is IVOTE, InflationaryVotes {
     /// @notice value token to take snapshot from
@@ -23,22 +23,22 @@ contract VOTE is IVOTE, InflationaryVotes {
     /// @notice Constructs the VOTE token
     /// @param name Name of the token
     /// @param symbol Symbol of the token
-    /// @param spog Address of the SPOG contract
+    /// @param registrar Address of the Registrar contract
     /// @param value_ Address of the VALUE token for reset
     constructor(
         string memory name,
         string memory symbol,
-        address spog,
+        address registrar,
         address value_
-    ) InflationaryVotes(spog) ERC20(name, symbol) ERC20Permit(name) {
+    ) InflationaryVotes(registrar) ERC20(name, symbol) ERC20Permit(name) {
         value = value_;
     }
 
-    /// @notice SPOG initializes reset snapshot
+    /// @notice Registrar initializes reset snapshot
     /// @param resetSnapshotId_ Snapshot id of the moment of reset
     function reset(uint256 resetSnapshotId_) external {
         if (resetSnapshotId != 0) revert ResetAlreadyInitialized();
-        if (msg.sender != spog) revert CallerIsNotSPOG();
+        if (msg.sender != registrar) revert CallerIsNotRegistrar();
 
         resetSnapshotId = resetSnapshotId_;
 

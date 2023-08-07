@@ -1,29 +1,25 @@
 // SPDX-License-Identifier: GLP-3.0
 pragma solidity 0.8.19;
 
-import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
-
-import { ISPOG } from "../interfaces/ISPOG.sol";
-import { ISPOGControlled } from "../interfaces/ISPOGControlled.sol";
-import { IVALUE } from "../interfaces/ITokens.sol";
-import { ISPOG } from "../interfaces/ISPOG.sol";
+import { IRegistrar } from "../registrar/IRegistrar.sol";
+import { IVALUE } from "./ITokens.sol";
 
 import { ERC20, ERC20Permit, ERC20Snapshot, ERC20Votes } from "../ImportedContracts.sol";
-import { SPOGControlled } from "../periphery/SPOGControlled.sol";
+import { ControlledByRegistrar } from "../registrar/ControlledByRegistrar.sol";
 
 /// @title VALUE ERC20 token with a built-in snapshot functionality
-/// @dev Snapshot is taken at the moment of reset by SPOG
+/// @dev Snapshot is taken at the moment of reset by Registrar
 /// @dev This snapshot is used by new Vote token to set initial supply of tokens
 /// @dev All value holders become vote holders of the new Vote governance
-contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, SPOGControlled {
+contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, ControlledByRegistrar {
     constructor(
         string memory name,
         string memory symbol,
-        address spog_
-    ) SPOGControlled(spog_) ERC20(name, symbol) ERC20Permit(name) {}
+        address registrar_
+    ) ControlledByRegistrar(registrar_) ERC20(name, symbol) ERC20Permit(name) {}
 
     modifier onlyGovernor() {
-        if (msg.sender != ISPOG(spog).governor()) revert CallerIsNotGovernor();
+        if (msg.sender != IRegistrar(registrar).governor()) revert CallerIsNotGovernor();
         _;
     }
 
@@ -54,7 +50,7 @@ contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, SPOGControlled {
     /// @notice Takes a snapshot of account balances and returns snapshot id
     /// @return The snapshot id
     function snapshot() external returns (uint256) {
-        if (msg.sender != spog) revert CallerIsNotSPOG();
+        if (msg.sender != registrar) revert CallerIsNotRegistrar();
 
         return _snapshot();
     }

@@ -40,17 +40,17 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
         uint256 aliceVotesAfterSecondVote = vote.getVotes(alice);
         assertEq(
             aliceVotesAfterSecondVote,
-            aliceVotes + (spog.inflator() * aliceVotes) / 100,
+            aliceVotes + (registrar.inflator() * aliceVotes) / 100,
             "No voting power inflation for emergency proposal"
         );
 
         // check non-zero inflation
         vm.prank(alice);
         uint256 inflation = vote.claimInflation();
-        assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "No inflation");
+        assertEq(inflation, (aliceStartBalance * registrar.inflator()) / 100, "No inflation");
 
         // check that value reward was given
-        uint256 aliceReward = spog.fixedReward() / 4;
+        uint256 aliceReward = registrar.fixedReward() / 4;
         assertEq(
             value.balanceOf(alice),
             aliceValueStartBalance + aliceReward,
@@ -80,17 +80,17 @@ contract InflationPerProposalTypeTest is SPOGBaseTest {
 
         assertEq(
             aliceVotes,
-            aliceStartVotes + (spog.inflator() * aliceStartVotes) / 100,
+            aliceStartVotes + (registrar.inflator() * aliceStartVotes) / 100,
             "No voting power inflation for emergency proposal"
         );
 
         // check non-zero inflation
         vm.prank(alice);
         uint256 inflation = vote.claimInflation();
-        assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "No inflation");
+        assertEq(inflation, (aliceStartBalance * registrar.inflator()) / 100, "No inflation");
 
         // check that value reward was given
-        uint256 aliceReward = spog.fixedReward() / 4;
+        uint256 aliceReward = registrar.fixedReward() / 4;
         assertEq(
             value.balanceOf(alice),
             aliceValueStartBalance + aliceReward,

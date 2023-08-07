@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import { IGovernorDeployer } from "./IGovernorDeployer.sol";
 
-import { DualGovernor } from "../core/governor/DualGovernor.sol";
+import { DualGovernor } from "../governor/DualGovernor.sol";
 
 contract GovernorDeployer is IGovernorDeployer {
     address public owner;
@@ -24,10 +24,10 @@ contract GovernorDeployer is IGovernorDeployer {
         address value,
         uint256 voteQuorum,
         uint256 valueQuorum,
-        address spog,
+        address registrar,
         bytes32 salt
     ) public onlyOwner returns (address governor_) {
-        governor_ = address(new DualGovernor{ salt: salt }(name, vote, value, voteQuorum, valueQuorum, spog));
+        governor_ = address(new DualGovernor{ salt: salt }(name, vote, value, voteQuorum, valueQuorum, registrar));
     }
 
     /// @dev Returns the deterministic address of a proxy given some salt.
@@ -37,7 +37,7 @@ contract GovernorDeployer is IGovernorDeployer {
         address value,
         uint256 voteQuorum,
         uint256 valueQuorum,
-        address spog,
+        address registrar,
         bytes32 salt
     ) public view returns (address deterministicAddress_) {
         // See https://docs.soliditylang.org/en/v0.8.7/control-structures.html#salted-contract-creations-create2
@@ -52,7 +52,7 @@ contract GovernorDeployer is IGovernorDeployer {
                             keccak256(
                                 abi.encodePacked(
                                     type(DualGovernor).creationCode,
-                                    abi.encode(name, vote, value, voteQuorum, valueQuorum, spog)
+                                    abi.encode(name, vote, value, voteQuorum, valueQuorum, registrar)
                                 )
                             )
                         )

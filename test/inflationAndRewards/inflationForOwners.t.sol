@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IDualGovernor } from "../../src/interfaces/ISPOGGovernor.sol";
+import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
@@ -13,7 +13,7 @@ contract InflationTest is SPOGBaseTest {
         (uint256 proposalId3, , , , ) = proposeAddingAnAddressToList(makeAddr("Omega"));
 
         // cannot vote in epoch 0
-        vm.expectRevert(IDualGovernor.ProposalIsNotInActiveState.selector);
+        vm.expectRevert(IDualGovernorQuorum.ProposalIsNotInActiveState.selector);
         governor.castVote(proposalId, yesVote);
 
         // voting period started
@@ -47,7 +47,7 @@ contract InflationTest is SPOGBaseTest {
         );
 
         uint256 aliceVotesAfterAllProposals = vote.getVotes(alice);
-        uint256 votesAfterVoting = aliceVotes + (spog.inflator() * aliceVotes) / 100;
+        uint256 votesAfterVoting = aliceVotes + (registrar.inflator() * aliceVotes) / 100;
 
         assertEq(
             aliceVotesAfterAllProposals,
@@ -57,7 +57,7 @@ contract InflationTest is SPOGBaseTest {
 
         vm.prank(alice);
         uint256 inflation = vote.claimInflation();
-        assertEq(inflation, (aliceStartBalance * spog.inflator()) / 100, "Alice should have accrued inflation");
+        assertEq(inflation, (aliceStartBalance * registrar.inflator()) / 100, "Alice should have accrued inflation");
 
         assertEq(vote.balanceOf(alice), aliceStartBalance + inflation, "Alice should have more vote tokens");
     }
@@ -92,8 +92,8 @@ contract InflationTest is SPOGBaseTest {
 
         uint256 aliceVotesAfterFirstVote = vote.getVotes(alice);
         uint256 bobVotesAfterFirstVote = vote.getVotes(bob);
-        assertEq(bobVotesAfterFirstVote, (bobStartVotes * (100 + spog.inflator())) / 100);
-        assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + spog.inflator())) / 100);
+        assertEq(bobVotesAfterFirstVote, (bobStartVotes * (100 + registrar.inflator())) / 100);
+        assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + registrar.inflator())) / 100);
         assertEq(vote.getVotes(carol), carolStartVotes);
 
         // fast forward to end of voting period
@@ -112,7 +112,7 @@ contract InflationTest is SPOGBaseTest {
         // fast forward to end of voting period
         vm.roll(governor.startOf(governor.currentEpoch() + 1));
 
-        assertEq(vote.getVotes(alice), (aliceVotesAfterFirstVote * (100 + spog.inflator())) / 100);
+        assertEq(vote.getVotes(alice), (aliceVotesAfterFirstVote * (100 + registrar.inflator())) / 100);
         assertEq(vote.getVotes(bob), bobVotesAfterFirstVote);
         // carol has no inflation, didn't vote on proposals
         assertEq(vote.getVotes(carol), carolStartVotes);
@@ -151,7 +151,7 @@ contract InflationTest is SPOGBaseTest {
         governor.castVote(proposal1Id, yesVote);
 
         uint256 aliceVotesAfterFirstVote = vote.getVotes(alice);
-        assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + spog.inflator())) / 100);
+        assertEq(aliceVotesAfterFirstVote, (aliceStartVotes * (100 + registrar.inflator())) / 100);
 
         uint256 bobVotes = vote.getVotes(bob);
         assertEq(bobVotes, 100e18);

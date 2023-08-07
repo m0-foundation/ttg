@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { IVALUE, IVOTE } from "../src/interfaces/ITokens.sol";
+import { IVALUE, IVOTE } from "../src/tokens/ITokens.sol";
 
 import { console, ERC20Mock } from "./ImportedContracts.sol";
 import { BaseScript } from "./shared/Base.s.sol";
