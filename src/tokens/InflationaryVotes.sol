@@ -251,6 +251,11 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
 
         _updateBalanceCheckpoints(from, to, amount);
         _moveVotingPower(delegates(from), delegates(to), amount);
+
+        // Automatically delegate to self if not already delegated
+        if (delegates(to) == address(0)) {
+            _delegate(to, to);
+        }
     }
 
     /// @dev Change delegation for `delegator` to `delegatee`.

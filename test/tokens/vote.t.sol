@@ -79,6 +79,53 @@ contract VoteTokenTest is SPOGBaseTest {
     /**
      * Test Functions
      */
+
+    function testAutomaticSelfDelegation() public {
+        initTokens();
+        resetGovernance();
+
+        // Alice claims her tokens
+        assertEq(voteToken.resetBalanceOf(address(alice1)), aliceStartBalance, "Alice reset balance is incorrect");
+
+        vm.prank(alice1);
+        voteToken.claimPreviousSupply();
+
+        // Bob claims his tokens
+        assertEq(voteToken.resetBalanceOf(address(bob1)), bobStartBalance, "Bob reset balance is incorrect");
+        vm.prank(bob1);
+        voteToken.claimPreviousSupply();
+
+        assertEq(voteToken.totalSupply(), 110e18);
+        assertEq(voteToken.balanceOf(alice1), aliceStartBalance);
+        assertEq(voteToken.balanceOf(bob1), bobStartBalance);
+
+        // Ensure that Alice and Bob are self-delegated
+        assertEq(voteToken.delegates(alice1), alice1);
+        assertEq(voteToken.delegates(bob1), bob1);
+        assertEq(voteToken.getVotes(alice1), aliceStartBalance);
+        assertEq(voteToken.getVotes(bob1), bobStartBalance);
+
+        // Bob transfers his tokens to Alice...
+        vm.prank(bob1);
+        voteToken.transfer(alice1, 25e18);
+
+        // ...and Alice successfully automatically delegates these additional tokens to herself
+        assertEq(voteToken.delegates(alice1), alice1);
+        assertEq(voteToken.getVotes(alice1), aliceStartBalance + 25e18);
+
+        // Alice now delegates to Bob
+        vm.prank(alice1);
+        voteToken.delegate(bob1);
+
+        // Bob now transfers more tokens to Alice...
+        vm.prank(bob1);
+        voteToken.transfer(alice1, 25e18);
+
+        // ...and Alice successfully automatically delegates these additional tokens to Bob
+        assertEq(voteToken.delegates(alice1), bob1);
+        assertEq(voteToken.getVotes(bob1), voteToken.balanceOf(alice1) + voteToken.balanceOf(bob1));
+    }
+
     function test_Revert_reset_WhenCallerIsNotRegistrar() public {
         initTokens();
 
