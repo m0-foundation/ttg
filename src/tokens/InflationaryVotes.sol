@@ -52,6 +52,11 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
         _;
     }
 
+    /// @notice Helper function to make inflation visible
+    function getInternalInflation(address account) external view returns (uint256) {
+        return _inflation[account];
+    }
+
     /// @notice Get the address `account` is currently delegating to.
     function delegates(address account) public view virtual returns (address) {
         return _delegates[account];

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+import { console2 } from "../ImportedContracts.sol";
+
 import { IControlledByRegistrar } from "../../src/registrar/IControlledByRegistrar.sol";
 import { IVOTE } from "../../src/tokens/ITokens.sol";
 
@@ -8,6 +10,7 @@ import { VALUE } from "../../src/tokens/VALUE.sol";
 import { VOTE } from "../../src/tokens/VOTE.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
+
 
 contract VoteTokenTest is SPOGBaseTest {
     address alice1 = createUser("alice1");
@@ -187,5 +190,35 @@ contract VoteTokenTest is SPOGBaseTest {
         vm.expectRevert("ERC20: transfer amount exceeds balance");
         vm.prank(bob1);
         voteToken.transfer(alice1, 20e18);
+    }
+
+    function testDelegation() public {
+        initTokens();
+        resetGovernance();
+    
+        address user1 = createUser("alice1");
+        address user2 = createUser("bob1");
+    
+        // get inflationary balance of user1
+        uint256 user1Inflation = voteToken.getInternalInflation(user1);
+        console2.logUint(user1Inflation);
+
+        // user1 delegates to user2
+        vm.prank(user1);
+        voteToken.delegate(user2);
+
+        // user1 should have 0 votes
+        // user2 should have 100 votes
+        assertEq(voteToken.getVotes(user1), 0);
+        assertEq(voteToken.getVotes(user2), 100);
+
+        // user1 re-delegates to user2
+        vm.prank(user1);
+        voteToken.delegate(user2);
+
+        // user1 should have 0 votes
+        // user2 should have 100 votes
+        assertEq(voteToken.getVotes(user1), 0);
+        assertEq(voteToken.getVotes(user2), 100);
     }
 }

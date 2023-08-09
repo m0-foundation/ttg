@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
+import { VOTE } from "../../src/tokens/VOTE.sol";
+import { console2 } from "../ImportedContracts.sol";
 
 contract InflationTest is SPOGBaseTest {
     function test_UserVoteInflationAfterVotingOnAllProposals() public {
@@ -639,5 +641,145 @@ contract InflationTest is SPOGBaseTest {
             vote.balanceOf(alice) + vote.balanceOf(bob) + vote.balanceOf(carol),
             "Invalid total votes and balances"
         );
+    }
+
+    function test_VotingPowerForDelegatesWithDupedDelegation() public {
+        // all users self-delegate at the beginning
+        assertEq(vote.getVotes(alice), 100e18);
+        assertEq(vote.getVotes(bob), 100e18);
+        assertEq(vote.getVotes(carol), 100e18);
+        uint256 extraTotalVotes = vote.totalVotes() - 300e18;
+
+        // epoch - set up proposals
+        (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+
+        // voting period started
+        // TODO no +1 here
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        // alice votes on proposal 1
+        vm.prank(alice);
+        governor.castVote(proposal1Id, yesVote);
+        assertEq(vote.getVotes(alice), 120e18);
+
+        vm.prank(alice);
+        uint256 aliceInflation = vote.claimInflation();
+        assertEq(aliceInflation, 20e18, "Alice: Invalid inflation");
+
+        vm.prank(bob);
+        vote.transfer(carol, 50e18);
+
+        // bob votes on proposal 1
+        vm.prank(bob);
+        governor.castVote(proposal1Id, yesVote);
+
+        // takes into account voting power at the beginning of epoch
+        assertEq(vote.getVotes(bob), 60e18);
+
+        vm.prank(bob);
+        uint256 bobInflation = vote.claimInflation();
+        assertEq(bobInflation, 10e18, "Bob: Invalid inflation");
+
+        // carol votes on proposal 1
+        vm.prank(carol);
+        governor.castVote(proposal1Id, yesVote);
+
+        // takes into account voting power at the beginning of epoch
+        assertEq(vote.getVotes(carol), 170e18);
+
+        console2.log("1 -- Carol Votes Before Claiming Inflation:", vote.getVotes(carol)/1e18);
+        console2.log("1 -- Carol Internal Inflation Before Claiming Inflation:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("1 -- Bob Votes Before Claiming Inflation:", vote.getVotes(bob)/1e18);
+        console2.log("1 -- Bob Internal Inflation Before Claiming Inflation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+
+        vm.prank(carol);
+        vote.delegate(carol);
+
+        console2.log("2 -- Carol Votes After Delegation to Self:", vote.getVotes(carol)/1e18);
+        console2.log("2 -- Carol Internal Inflation After Delegation to Self:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("2 -- Bob Votes After Delegation to Self:", vote.getVotes(bob)/1e18);
+        console2.log("2 -- Bob Internal Inflation After Delegation to Self:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+
+        vm.prank(carol);
+        vote.delegate(bob);
+
+        console2.log("3 -- Carol Votes After Delegation to Bob:", vote.getVotes(carol)/1e18);
+        console2.log("3 -- Carol Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("3 -- Bob Votes After Delegation to Bob:", vote.getVotes(bob)/1e18);
+        console2.log("3 -- Bob Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+    
+        vm.prank(carol);
+        uint256 carolInflation = vote.claimInflation();
+        
+        console2.log("4 -- Carol Votes After Claiming Inflation:", vote.getVotes(carol)/1e18);
+        console2.log("4 -- Carol Internal Inflation After Claiming Inflation:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("4 -- Bob Votes After Claiming Inflation:", vote.getVotes(bob)/1e18);
+        console2.log("4 -- Bob Internal Inflation After Claiming Inflation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+    }
+
+    function test_VotingPowerForDelegatesWithDupedDelegationAlternate() public {
+        // all users self-delegate at the beginning
+        assertEq(vote.getVotes(alice), 100e18);
+        assertEq(vote.getVotes(bob), 100e18);
+        assertEq(vote.getVotes(carol), 100e18);
+        uint256 extraTotalVotes = vote.totalVotes() - 300e18;
+
+        // epoch - set up proposals
+        (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+
+        // voting period started
+        // TODO no +1 here
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        // alice votes on proposal 1
+        vm.prank(alice);
+        governor.castVote(proposal1Id, yesVote);
+        assertEq(vote.getVotes(alice), 120e18);
+
+        vm.prank(alice);
+        uint256 aliceInflation = vote.claimInflation();
+        assertEq(aliceInflation, 20e18, "Alice: Invalid inflation");
+
+        vm.prank(bob);
+        vote.transfer(carol, 50e18);
+
+        // bob votes on proposal 1
+        vm.prank(bob);
+        governor.castVote(proposal1Id, yesVote);
+
+        // takes into account voting power at the beginning of epoch
+        assertEq(vote.getVotes(bob), 60e18);
+
+        vm.prank(bob);
+        uint256 bobInflation = vote.claimInflation();
+        assertEq(bobInflation, 10e18, "Bob: Invalid inflation");
+
+        // carol votes on proposal 1
+        vm.prank(carol);
+        governor.castVote(proposal1Id, yesVote);
+
+        // takes into account voting power at the beginning of epoch
+        assertEq(vote.getVotes(carol), 170e18);
+
+        console2.log("1 -- Carol Votes Before Claiming Inflation:", vote.getVotes(carol)/1e18);
+        console2.log("1 -- Carol Internal Inflation Before Claiming Inflation:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("1 -- Bob Votes Before Claiming Inflation:", vote.getVotes(bob)/1e18);
+        console2.log("1 -- Bob Internal Inflation Before Claiming Inflation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+
+        vm.prank(carol);
+        vote.claimInflation();
+
+        console2.log("2 -- Carol Votes After Delegation to Self:", vote.getVotes(carol)/1e18);
+        console2.log("2 -- Carol Internal Inflation After Delegation to Self:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("2 -- Bob Votes After Delegation to Self:", vote.getVotes(bob)/1e18);
+        console2.log("2 -- Bob Internal Inflation After Delegation to Self:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+
+        vm.prank(carol);
+        vote.delegate(bob);
+
+        console2.log("3 -- Carol Votes After Delegation to Bob:", vote.getVotes(carol)/1e18);
+        console2.log("3 -- Carol Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("3 -- Bob Votes After Delegation to Bob:", vote.getVotes(bob)/1e18);
+        console2.log("3 -- Bob Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
     }
 }
