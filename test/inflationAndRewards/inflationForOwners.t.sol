@@ -687,18 +687,18 @@ contract InflationTest is SPOGBaseTest {
         // takes into account voting power at the beginning of epoch
         assertEq(vote.getVotes(carol), 170e18);
 
-        console2.log("1 -- Carol Votes Before Claiming Inflation:", vote.getVotes(carol)/1e18);
-        console2.log("1 -- Carol Internal Inflation Before Claiming Inflation:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
-        console2.log("1 -- Bob Votes Before Claiming Inflation:", vote.getVotes(bob)/1e18);
-        console2.log("1 -- Bob Internal Inflation Before Claiming Inflation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+        console2.log("1 -- Carol Votes Before Carol Self Delegation:", vote.getVotes(carol)/1e18);
+        console2.log("1 -- Carol Internal Inflation Before Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("1 -- Bob Votes Before Carol Self Delegation:", vote.getVotes(bob)/1e18);
+        console2.log("1 -- Bob Internal Inflation Before Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
         vm.prank(carol);
         vote.delegate(carol);
 
-        console2.log("2 -- Carol Votes After Delegation to Self:", vote.getVotes(carol)/1e18);
-        console2.log("2 -- Carol Internal Inflation After Delegation to Self:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
-        console2.log("2 -- Bob Votes After Delegation to Self:", vote.getVotes(bob)/1e18);
-        console2.log("2 -- Bob Internal Inflation After Delegation to Self:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+        console2.log("2 -- Carol Votes After Carol Self Delegation", vote.getVotes(carol)/1e18);
+        console2.log("2 -- Carol Internal Inflation After Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
+        console2.log("2 -- Bob Votes After Carol Self Delegation:", vote.getVotes(bob)/1e18);
+        console2.log("2 -- Bob Internal Inflation After Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
         vm.prank(carol);
         vote.delegate(bob);
