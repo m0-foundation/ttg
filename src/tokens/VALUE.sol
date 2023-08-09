@@ -37,6 +37,11 @@ contract VALUE is IVALUE, ERC20Votes, ERC20Snapshot, ControlledByRegistrar {
         uint256 amount
     ) internal virtual override(ERC20, ERC20Votes) {
         super._afterTokenTransfer(from, to, amount);
+
+        // Automatically delegate to self if not already delegated
+        if (delegates(to) == address(0)) {
+            _delegate(to, to);
+        }
     }
 
     function _burn(address account, uint256 amount) internal virtual override(ERC20, ERC20Votes) {

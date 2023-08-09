@@ -51,4 +51,57 @@ contract ValueTokenTest is SPOGBaseTest {
 
         assertEq(valueToken.balanceOf(user), 100);
     }
+
+    function testAutomaticSelfDelegationOnMint() public {
+        address user = createUser("user");
+
+        // mint tokens to the user
+        vm.prank(address(governor));
+        valueToken.mint(user, 100);
+
+        // ensure that they are auto-self-delegated
+        assertEq(valueToken.delegates(user), user);
+        assertEq(valueToken.getVotes(user), 100);
+    }
+
+    function testAutomaticSelfDelegationOnTransfer() public {
+        address user1 = createUser("user1");
+        address user2 = createUser("user2");
+
+        // mint tokens to the user
+        vm.prank(address(governor));
+        valueToken.mint(user1, 100);
+
+        // user1 transfers to user2; they should be delegated to self
+        vm.prank(user1);
+        valueToken.transfer(user2, 100);
+        assertEq(valueToken.delegates(user1), user1);
+        assertEq(valueToken.delegates(user2), user2);
+        assertEq(valueToken.getVotes(user1), 0);
+        assertEq(valueToken.getVotes(user2), 100);
+    
+        // user2 delegates to user1
+        vm.prank(user2);
+        valueToken.delegate(user1);
+        assertEq(valueToken.delegates(user1), user1);
+        assertEq(valueToken.delegates(user2), user1);
+        assertEq(valueToken.getVotes(user1), 100);
+        assertEq(valueToken.getVotes(user2), 0);
+
+        // user2 transfers 50 tokens to user1
+        vm.prank(user2);
+        valueToken.transfer(user1, 50);
+        assertEq(valueToken.delegates(user1), user1);
+        assertEq(valueToken.delegates(user2), user1);
+        assertEq(valueToken.getVotes(user1), 100);
+        assertEq(valueToken.getVotes(user2), 0);
+
+        // user1 transfer 1 token to user2
+        vm.prank(user1);
+        valueToken.transfer(user2, 1);
+        assertEq(valueToken.delegates(user1), user1);
+        assertEq(valueToken.delegates(user2), user1);
+        assertEq(valueToken.getVotes(user1), 100);
+        assertEq(valueToken.getVotes(user2), 0);
+    }
 }
