@@ -718,7 +718,7 @@ contract InflationTest is SPOGBaseTest {
         console2.log("2 -- Bob Voting Power After Carol Self Delegation:", vote.getVotes(bob)/1e18);
         console2.log("2 -- Bob Internal Inflation After Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
-        console2.log("\nAttempt to have Carol transfer her balance of", vote.balanceOf(carol)/1e18, "to Bob...\n");
+        console2.log("\nAttempting to have Carol transfer her balance of", vote.balanceOf(carol)/1e18, "to Bob...\n");
 
         vm.prank(carol);
         vote.transfer(bob, vote.balanceOf(carol));
