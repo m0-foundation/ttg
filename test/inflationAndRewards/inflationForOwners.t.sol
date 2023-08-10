@@ -706,6 +706,7 @@ contract InflationTest is SPOGBaseTest {
         console2.log("1 -- Bob Votes Before Carol Self Delegation:", vote.getVotes(bob)/1e18);
         console2.log("1 -- Bob Internal Inflation Before Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
+        console2.log("\nCarol delegates to herself.\n");
 
         vm.prank(carol);
         vote.delegate(carol);
@@ -717,28 +718,32 @@ contract InflationTest is SPOGBaseTest {
         console2.log("2 -- Bob Votes After Carol Self Delegation:", vote.getVotes(bob)/1e18);
         console2.log("2 -- Bob Internal Inflation After Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
+        console2.log("\nCarol transfers her balance of", vote.balanceOf(carol)/1e18, "to Bob.\n");
+
         vm.prank(carol);
+        vote.transfer(bob, vote.balanceOf(carol));
 
-        // Carol attempts to transfer all 170 tokens that she has to Bob.
-        vote.transfer(bob, 170e18);
-
-        console2.log("3 -- Carol Votes Balance After Carol Transfer to Bob:", vote.getVotes(carol)/1e18);
+        console2.log("3 -- Carol Votes Balance After Carol Transfer to Bob:", vote.balanceOf(carol)/1e18);
         console2.log("3 -- Carol Votes After Carol Transfer to Bob:", vote.getVotes(carol)/1e18);
         console2.log("3 -- Carol Internal Inflation After Carol Transfer to Bob:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
-        console2.log("3 -- Bob Votes Balance After Carol Transfer to Bob:", vote.getVotes(bob)/1e18);
+        console2.log("3 -- Bob Votes Balance After Carol Transfer to Bob:", vote.balanceOf(bob)/1e18);
         console2.log("3 -- Bob Votes After Carol Transfer to Bob:", vote.getVotes(bob)/1e18);
         console2.log("3 -- Bob Internal Inflation After Carol Transfer to Bob:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
+
+        console2.log("\nCarol delegates to Bob.\n");
 
         vm.prank(carol);
         vote.delegate(bob);
 
-        console2.log("4 -- Carol Votes Balance After Carol Delegation to Bob:", vote.getVotes(carol)/1e18);
+        console2.log("4 -- Carol Votes Balance After Carol Delegation to Bob:", vote.balanceOf(carol)/1e18);
         console2.log("4 -- Carol Votes After Delegation to Bob:", vote.getVotes(carol)/1e18);
         console2.log("4 -- Carol Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(carol)/1e18);
-        console2.log("4 -- Bob Votes Balance After Carol Delegation to Bob:", vote.getVotes(bob)/1e18);
+        console2.log("4 -- Bob Votes Balance After Carol Delegation to Bob:", vote.balanceOf(bob)/1e18);
         console2.log("4 -- Bob Votes After Delegation to Bob:", vote.getVotes(bob)/1e18);
         console2.log("4 -- Bob Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
     
+        console2.log("\nCarol claims inflation.\n");
+
         vm.prank(carol);
         uint256 carolInflation = vote.claimInflation();
         
