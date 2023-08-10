@@ -706,7 +706,7 @@ contract InflationTest is SPOGBaseTest {
         console2.log("1 -- Bob Votes Before Carol Self Delegation:", vote.getVotes(bob)/1e18);
         console2.log("1 -- Bob Internal Inflation Before Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
-        console2.log("\nCarol delegates to herself.\n");
+        console2.log("\nAttempting to have Carol delegate to herself...\n");
 
         vm.prank(carol);
         vote.delegate(carol);
@@ -718,7 +718,7 @@ contract InflationTest is SPOGBaseTest {
         console2.log("2 -- Bob Voting Power After Carol Self Delegation:", vote.getVotes(bob)/1e18);
         console2.log("2 -- Bob Internal Inflation After Carol Self Delegation:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
-        console2.log("\nCarol transfers her balance of", vote.balanceOf(carol)/1e18, "to Bob.\n");
+        console2.log("\nAttempt to have Carol transfer her balance of", vote.balanceOf(carol)/1e18, "to Bob...\n");
 
         vm.prank(carol);
         vote.transfer(bob, vote.balanceOf(carol));
@@ -730,7 +730,7 @@ contract InflationTest is SPOGBaseTest {
         console2.log("3 -- Bob Voting Power After Carol Transfer to Bob:", vote.getVotes(bob)/1e18);
         console2.log("3 -- Bob Internal Inflation After Carol Transfer to Bob:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
 
-        console2.log("\nCarol delegates to Bob.\n");
+        console2.log("\nAttempting to have Carol delegate to Bob...\n");
 
         vm.prank(carol);
         vote.delegate(bob);
@@ -742,7 +742,7 @@ contract InflationTest is SPOGBaseTest {
         console2.log("4 -- Bob Voting Power After Delegation to Bob:", vote.getVotes(bob)/1e18);
         console2.log("4 -- Bob Internal Inflation After Delegation to Bob:", VOTE(address(vote)).getInternalInflation(bob)/1e18);
     
-        console2.log("\nCarol claims inflation.\n");
+        console2.log("\nAttempting to have Carol claim her inflation...\n");
 
         vm.prank(carol);
         uint256 carolInflation = vote.claimInflation();
