@@ -184,19 +184,24 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
     function claimInflation() external returns (uint256) {
         address sender = _msgSender();
 
+        // first, accrue inflation to the sender
         _accrueInflation(sender);
 
+        // store it
         uint256 reward = _inflation[sender];
 
         if (reward == 0) return 0;
 
+        // set sender's inflation to 0
         _inflation[sender] = 0;
 
+        // store whoever the sender is delegating to
         address currentDelegate = delegates(sender);
 
+        // mint the inflation to the sender
         _mint(sender, reward);
 
-        /// prevents double counting of current delegate's voting power
+        // burn voting power from the sender's delegate equal to the inflation received
         _burnVotingPower(currentDelegate, reward);
 
         emit RewardsWithdrawn(sender, currentDelegate, reward);
@@ -284,10 +289,10 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
         // no inflation for epoch 0
         if (currentEpoch == 0) return;
 
+        // get address of the current delegate for the delegator
         address currentDelegate = delegates(delegator);
 
         uint256 inflation;
-        // uint256 valueReward;
         uint256 startEpoch = _lastEpochInflationAccrued[delegator];
 
         // TODO make cycle looping safe
@@ -322,6 +327,7 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
         // TODO: return vote inflation and value rewards amounts ?
     }
 
+    // When _moveVotingPower is called, we literally move a number of votes from src to dst, unless either is the zero address
     function _moveVotingPower(address src, address dst, uint256 amount) private {
         if (src == dst || amount == 0) return;
 
