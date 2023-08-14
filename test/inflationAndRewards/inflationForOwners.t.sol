@@ -5,6 +5,8 @@ import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
+import "forge-std/console.sol";
+
 contract InflationTest is SPOGBaseTest {
     function test_UserVoteInflationAfterVotingOnAllProposals() public {
         // set up proposals
@@ -674,6 +676,61 @@ contract InflationTest is SPOGBaseTest {
         vm.prank(bob);
         uint256 bobInflation = vote.claimInflation();
         assertEq(bobInflation, 0, "No inflation for bob");
+    }
+
+    function test_0x52_issue_transfers() public {
+        // epoch - set up proposals
+        (uint256 proposal1Id, , , , ) = proposeAddingAnAddressToList(makeAddr("Alpha"));
+
+        address delegatee = createUser("delegatee");
+
+        vm.prank(alice);
+        vote.delegate(delegatee);
+
+        // voting period started
+        // TODO no +1 here
+        vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
+
+        console.log("alice balance 1 = ", vote.balanceOf(alice));
+
+        uint256 aliceBalance = vote.balanceOf(alice);
+        vm.prank(alice);
+        vote.transfer(carol, aliceBalance);
+
+        console.log("alice balance 2 = ", vote.balanceOf(alice));
+        // vote.delegate(alice);
+
+        vm.prank(bob);
+        vote.delegate(delegatee);
+
+        uint256 delegateeVotesBeforeVoting = vote.getVotes(delegatee);
+        console.log("delegate votes before voting = ", delegateeVotesBeforeVoting);
+
+        vm.prank(delegatee);
+        governor.castVote(proposal1Id, yesVote);
+
+        console.log("delegate votes after voting = ", vote.getVotes(delegatee));
+
+        // vm.prank(carol);
+        // governor.castVote(proposal1Id, yesVote);
+
+        console.log("carol votes after voting = ", vote.getVotes(carol));
+
+        // assertEq(vote.getVotes(delegatee), delegateeVotesBeforeVoting, "Incorrect inflation of voting power");
+
+        vm.prank(alice);
+        uint256 aliceInflation = vote.claimInflation();
+        console.log("alice inflation = ", aliceInflation);
+        // assertEq(aliceInflation, 0, "No inflation for alice");
+
+        vm.prank(bob);
+        uint256 bobInflation = vote.claimInflation();
+        console.log("bob inflation = ", bobInflation);
+
+        vm.prank(carol);
+        uint256 carolInflation = vote.claimInflation();
+        console.log("carol inflation = ", carolInflation);
+        // assertEq(bobInflation, 0, "No inflation for bob");
     }
 
     function test_inflationStuckInDelegate() external {
