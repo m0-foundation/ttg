@@ -41,6 +41,8 @@ interface IInflationaryVotes is IVotes, IERC20, IERC20Metadata, IERC20Permit, IS
     function addVotingPower(address account, uint256 amount) external;
 
     function claimInflation() external returns (uint256);
+
+    function removedVotes(uint256 epoch, address account) external view returns (uint256);
 }
 
 interface IVOTE is IInflationaryVotes {

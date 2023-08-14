@@ -39,6 +39,8 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
     mapping(address account => uint256 epoch) private _delegationSwitchEpoch;
     mapping(address account => uint256 epoch) private _lastEpochInflationAccrued;
 
+    mapping(uint256 epoch => mapping(address account => uint256 amount)) public removedVotes;
+
     constructor(address registrar_) ControlledByRegistrar(registrar_) {
         // The caller should be a contract/factory that exposes a `governor`.
         // NOTE: `governor` cannot be a constructor argument in as it will affect the address of this contract.
@@ -255,13 +257,19 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
 
     /// @dev Change delegation for `delegator` to `delegatee`.
     function _delegate(address delegator, address delegatee) internal virtual {
-        // voting power
+        // accrue inflation for previous delegation before switching
         _accrueInflation(delegator);
 
         address currentDelegate = delegates(delegator);
+        uint256 currentEpoch = PureEpochs.currentEpoch();
         uint256 delegatorBalance = balanceOf(delegator) + _inflation[delegator];
 
-        _delegationSwitchEpoch[delegator] = PureEpochs.currentEpoch();
+        // saved removed votes for current epoch
+        if (_delegationSwitchEpoch[delegator] != currentEpoch) {
+            removedVotes[currentEpoch][currentDelegate] += delegatorBalance;
+        }
+
+        _delegationSwitchEpoch[delegator] = currentEpoch;
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
