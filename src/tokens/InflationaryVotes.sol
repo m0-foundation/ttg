@@ -39,6 +39,7 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
     mapping(address account => uint256 epoch) private _delegationSwitchEpoch;
     mapping(address account => uint256 epoch) private _lastEpochInflationAccrued;
 
+    mapping(uint256 epoch => mapping(address account => uint256 amount)) public addedVotes;
     mapping(uint256 epoch => mapping(address account => uint256 amount)) public removedVotes;
 
     constructor(address registrar_) ControlledByRegistrar(registrar_) {
@@ -265,9 +266,10 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
         uint256 delegatorBalance = balanceOf(delegator) + _inflation[delegator];
 
         // saved removed votes for current epoch
-        if (_delegationSwitchEpoch[delegator] != currentEpoch) {
-            removedVotes[currentEpoch][currentDelegate] += delegatorBalance;
-        }
+
+        // if (_delegationSwitchEpoch[delegator] != currentEpoch) {
+        //     removedVotes[currentEpoch][currentDelegate] += delegatorBalance;
+        // }
 
         _delegationSwitchEpoch[delegator] = currentEpoch;
         _delegates[delegator] = delegatee;
@@ -327,6 +329,15 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
 
     function _moveVotingPower(address src, address dst, uint256 amount) private {
         if (src == dst || amount == 0) return;
+
+        uint256 currentEpoch = PureEpochs.currentEpoch();
+        if (addedVotes[currentEpoch][src] >= amount) {
+            addedVotes[currentEpoch][src] -= amount;
+        } else {
+            removedVotes[currentEpoch][src] += (amount - addedVotes[currentEpoch][src]);
+        }
+
+        addedVotes[currentEpoch][dst] += amount;
 
         if (src != address(0)) {
             (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(_votesCheckpoints[src], _subtract, amount);

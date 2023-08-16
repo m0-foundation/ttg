@@ -156,11 +156,9 @@ abstract contract DualGovernorQuorum is IDualGovernor, Governor {
         uint256 timepoint,
         bytes memory /*params*/
     ) internal view virtual returns (uint256) {
-        uint256 currentVotes = IVOTE(vote).getVotes(account);
         uint256 epoch = PureEpochs.currentEpoch();
-        uint256 removedVotes = IVOTE(vote).removedVotes(epoch, account);
-        uint256 minWithoutRemoved = removedVotes > currentVotes ? 0 : currentVotes - removedVotes;
-        return _min(IVOTE(vote).getPastVotes(account, timepoint), minWithoutRemoved);
+        uint256 deltaVotes = IVOTE(vote).removedVotes(epoch, account);
+        return IVOTE(vote).getPastVotes(account, timepoint) - deltaVotes;
     }
 
     /// @dev Returns value votes for the account at the given timepoint
