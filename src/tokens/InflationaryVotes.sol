@@ -39,11 +39,11 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
     mapping(address account => uint256 epoch) private _delegationSwitchEpoch;
     mapping(address account => uint256 epoch) private _lastEpochInflationAccrued;
 
-    mapping(uint256 epoch => mapping(address account => uint256 amount)) public addedVotes;
-    mapping(uint256 epoch => mapping(address account => uint256 amount)) public removedVotes;
+    mapping(uint256 epoch => mapping(address delegate => uint256 amount)) public addedVotes;
+    mapping(uint256 epoch => mapping(address delegate => uint256 amount)) public removedVotes;
 
-    mapping(uint256 epoch => mapping(address account => uint256 amount)) public addedTokens;
-    mapping(uint256 epoch => mapping(address account => uint256 amount)) public removedTokens;
+    mapping(uint256 epoch => mapping(address owner => uint256 amount)) public addedTokens;
+    mapping(uint256 epoch => mapping(address owner => uint256 amount)) public removedTokens;
 
     constructor(address registrar_) ControlledByRegistrar(registrar_) {
         // The caller should be a contract/factory that exposes a `governor`.
@@ -258,10 +258,15 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
         _updateBalanceCheckpoints(from, to, amount);
 
         uint256 currentEpoch = PureEpochs.currentEpoch();
-        if (addedTokens[currentEpoch][from] >= amount) {
-            addedTokens[currentEpoch][from] -= amount;
-        } else {
-            removedTokens[currentEpoch][from] += (amount - addedTokens[currentEpoch][from]);
+        if (
+            currentEpoch != _delegationSwitchEpoch[from] ||
+            !IDualGovernor(governor).hasFinishedVoting(currentEpoch, delegates(from))
+        ) {
+            if (addedTokens[currentEpoch][from] >= amount) {
+                addedTokens[currentEpoch][from] -= amount;
+            } else {
+                removedTokens[currentEpoch][from] += (amount - addedTokens[currentEpoch][from]);
+            }
         }
 
         addedTokens[currentEpoch][to] += amount;
