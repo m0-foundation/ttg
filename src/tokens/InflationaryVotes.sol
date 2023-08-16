@@ -42,6 +42,9 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
     mapping(uint256 epoch => mapping(address account => uint256 amount)) public addedVotes;
     mapping(uint256 epoch => mapping(address account => uint256 amount)) public removedVotes;
 
+    mapping(uint256 epoch => mapping(address account => uint256 amount)) public addedTokens;
+    mapping(uint256 epoch => mapping(address account => uint256 amount)) public removedTokens;
+
     constructor(address registrar_) ControlledByRegistrar(registrar_) {
         // The caller should be a contract/factory that exposes a `governor`.
         // NOTE: `governor` cannot be a constructor argument in as it will affect the address of this contract.
@@ -253,6 +256,16 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
         super._afterTokenTransfer(from, to, amount);
 
         _updateBalanceCheckpoints(from, to, amount);
+
+        uint256 currentEpoch = PureEpochs.currentEpoch();
+        if (addedTokens[currentEpoch][from] >= amount) {
+            addedTokens[currentEpoch][from] -= amount;
+        } else {
+            removedTokens[currentEpoch][from] += (amount - addedTokens[currentEpoch][from]);
+        }
+
+        addedTokens[currentEpoch][to] += amount;
+
         _moveVotingPower(delegates(from), delegates(to), amount);
     }
 
@@ -303,9 +316,7 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
 
             uint256 epochStart = PureEpochs.getBlockNumberOfEpochStart(epoch);
             uint256 balanceAtStartOfEpoch = getPastBalance(delegator, epochStart);
-            uint256 delegateFinishedVotingAt = governor_.finishedVotingAt(epoch, currentDelegate);
-            uint256 balanceWhenDelegateFinishedVoting = getPastBalance(delegator, delegateFinishedVotingAt);
-            uint256 rewardableBalance = inflation + _min(balanceAtStartOfEpoch, balanceWhenDelegateFinishedVoting);
+            uint256 rewardableBalance = inflation + (balanceAtStartOfEpoch - removedTokens[epoch][delegator]);
 
             inflation += IRegistrar(registrar).getInflation(rewardableBalance);
             // valueReward +=
