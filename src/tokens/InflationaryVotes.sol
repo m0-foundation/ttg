@@ -259,7 +259,7 @@ abstract contract InflationaryVotes is IInflationaryVotes, ERC20Permit, Controll
 
         uint256 currentEpoch = PureEpochs.currentEpoch();
         if (
-            currentEpoch != _delegationSwitchEpoch[from] ||
+            currentEpoch != _delegationSwitchEpoch[from] &&
             !IDualGovernor(governor).hasFinishedVoting(currentEpoch, delegates(from))
         ) {
             if (addedTokens[currentEpoch][from] >= amount) {
