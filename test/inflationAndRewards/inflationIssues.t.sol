@@ -5,8 +5,6 @@ import { IDualGovernorQuorum } from "../../src/governor/IDualGovernor.sol";
 
 import { SPOGBaseTest } from "../shared/SPOGBaseTest.t.sol";
 
-import "forge-std/console.sol";
-
 contract InflationTest is SPOGBaseTest {
     function test_0x52_issue() public {
         // epoch - set up proposals
@@ -185,17 +183,12 @@ contract InflationTest is SPOGBaseTest {
         vote.transfer(david, 50e18);
         assertEq(vote.getVotes(david), davidStartVotes, "david votes are incorrect");
 
-        console.log("alice balance = ", vote.balanceOf(alice) / 1e18);
-        console.log("david balance = ", vote.balanceOf(david) / 1e18);
-
         // voting period started
         // TODO no +1 here
         vm.roll(governor.startOf(governor.currentEpoch() + 1) + 1);
 
         vm.prank(alice);
         vote.transfer(david, 10e18);
-        console.log("alice balance = ", vote.balanceOf(alice) / 1e18);
-        console.log("david balance = ", vote.balanceOf(david) / 1e18);
 
         // alice - balance 40
 
@@ -204,65 +197,25 @@ contract InflationTest is SPOGBaseTest {
 
         // david - balance 20
 
-        console.log("david votes = ", vote.getVotes(david) / 1e18);
         // assertEq(vote.getVotes(david), davidStartVotes - 30e18, "david votes are incorrect");
 
         vm.prank(david);
         governor.castVote(proposal1Id, yesVote);
 
-        // uint256 votesSurplus = vote.getVotes(david) - davidStartVotes;
-        console.log("david votes after voting = ", vote.getVotes(david) / 1e18);
-
         vm.prank(david);
         uint256 davidInflation = vote.claimInflation();
-        console.log("david inflation = ", davidInflation / 1e18);
+
+        address eve = createUser("eve");
+        vm.prank(alice);
+        vote.delegate(eve);
 
         vm.prank(alice);
         uint256 aliceInflation = vote.claimInflation();
-        console.log("alice inflation = ", aliceInflation / 1e18);
 
-        console.log("david votes after voting = ", vote.getVotes(david) / 1e18);
-
-        // vm.prank(carol);
-        // vote.transfer(david, 10e18);
-
-        // vm.prank(david);
-        // vote.transfer(carol, 5e18);
-
-        // vm.prank(alice);
-        // vote.delegate(alice);
-
-        // vm.prank(bob);
-        // vote.delegate(david);
-
-        // vm.prank(carol);
-        // vote.transfer(david, 10e18);
-
-        // uint256 davidVotesBeforeVoting = vote.getVotes(david);
-
-        // vm.prank(david);
-        // governor.castVote(proposal1Id, yesVote);
-
-        // vm.prank(carol);
-        // governor.castVote(proposal1Id, yesVote);
-
-        // assertEq(vote.getVotes(david), davidVotesBeforeVoting, "Incorrect inflation of voting power");
-
-        // vm.prank(alice);
-        // uint256 aliceInflation = vote.claimInflation();
-        // assertEq(aliceInflation, 0, "No inflation for alice");
-
-        // vm.prank(bob);
-        // uint256 bobInflation = vote.claimInflation();
-        // assertEq(bobInflation, 0, "No inflation for bob");
-
-        // vm.prank(david);
-        // uint256 davidInflation = vote.claimInflation();
-        // assertEq(davidInflation, 0, "No inflation for david");
-
-        // vm.prank(carol);
-        // uint256 carolInflation = vote.claimInflation();
-        // console.log("carol inflation = ", carolInflation);
-        // // assertEq(carolInflation, 0e18, "Wrong inflation for carol");
+        assertEq(
+            vote.balanceOf(alice) + vote.balanceOf(david) + vote.balanceOf(eve),
+            vote.getVotes(david) + vote.getVotes(alice) + vote.getVotes(eve),
+            "Incorrect inflation of voting power"
+        );
     }
 }
