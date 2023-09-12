@@ -1,21 +1,34 @@
 [profile.default]
-contracts = "src"
 src = "src"
 test = "test"
+script = "script"
 out = "out"
 libs = ["lib"]
+cache = true
+cache_path = "cache"
+broadcast = "broadcast"
+gas_reports = ["*"]
+gas_reports_ignore = []
 solc-version = "0.8.19"
-block_number = 17_740_856
-block_timestamp = 1_689_934_508
 optimizer = false
 verbosity = 3
-gas_reports_ignore = ["SPOGDeployScript"]
+ignored_error_codes = []
+block_number = 17_740_856
+block_timestamp = 1_689_934_508
+
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 256
+depth = 15
+
+[profile.production]
+optimizer = true
+optimizer_runs = 999999
+build_info = true
+sizes = true
 
 [rpc_endpoints]
 localhost = "http://127.0.0.1:8545"
 sepolia = "https://rpc.sepolia.org"
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config
-
-[profile.production]
-optimizer       = true    # Enable or disable the solc optimizer
-optimizer_runs  = 999999  # The number of optimizer runs
