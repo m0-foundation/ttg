@@ -1,13 +1,21 @@
 [profile.default]
+contracts = "src"
 src = "src"
+test = "test"
 out = "out"
 libs = ["lib"]
 solc-version = "0.8.19"
 block_number = 17_740_856
 block_timestamp = 1_689_934_508
-gas_reports_ignore = ["SPOGDeployScript", "ERC20GodMode", "ERC20Mock", "MockContract", "MockConfig", "MockGovernedContract", "MockGovernedContract2", "MockSPOG", "MockConfigNoERC165", "MockConfigWithERC165", "MockConfigWithERC165v2", "MockSPOGGovernor"]
+optimizer = false
+verbosity = 3
+gas_reports_ignore = ["SPOGDeployScript"]
 
 [rpc_endpoints]
 localhost = "http://127.0.0.1:8545"
 sepolia = "https://rpc.sepolia.org"
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
+
+[profile.production]
+optimizer       = true    # Enable or disable the solc optimizer
+optimizer_runs  = 999999  # The number of optimizer runs

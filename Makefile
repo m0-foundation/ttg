@@ -19,3 +19,15 @@ deploy-spog-qa-sepolia :; forge script script/LocalTestDeployScript.s.sol --rpc-
 
 # Run slither
 slither :; forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json .
+
+build:
+	@./build.sh -p production
+
+tests:
+	@./test.sh -p default
+
+gas:
+	@./test.sh -p production -g
+
+sizes:
+	@./build.sh -p production -s

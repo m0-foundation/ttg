@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity 0.8.19;
+
+import { IEpochBasedVoteToken } from "./IEpochBasedVoteToken.sol";
+
+interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
+    error AlreadyParticipated();
+
+    error NotGovernor();
+
+    error NotVotePeriod();
+
+    error VotePeriod();
+
+    /******************************************************************************************************************\
+     *                                     External/Public Interactive Functions                                      *
+    \******************************************************************************************************************/
+
+    function markParticipation(address delegatee_) external;
+
+    /******************************************************************************************************************\
+     *                                      External/Public View/Pure Functions                                       *
+    \******************************************************************************************************************/
+
+    function governor() external view returns (address governor);
+
+    function hasParticipatedAt(address delegatee, uint256 epoch) external view returns (bool participated);
+
+    function participationInflation() external view returns (uint256 participationInflation);
+
+    function ONE() external pure returns (uint256 one);
+}
