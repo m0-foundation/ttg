@@ -11,7 +11,7 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
     address public immutable registrar;
     address public immutable zeroToken;
 
-    uint256 public nonce = 1;
+    uint256 public nonce;
 
     modifier onlyRegistrar() {
         if (msg.sender != registrar) revert CallerIsNotRegistrar();
@@ -53,6 +53,6 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {
-        nextDeploy_ = ContractHelper.getContractFrom(address(this), nonce);
+        nextDeploy_ = ContractHelper.getContractFrom(address(this), nonce + 1);
     }
 }

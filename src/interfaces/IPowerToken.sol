@@ -5,32 +5,43 @@ pragma solidity 0.8.19;
 import { IEpochBasedInflationaryVoteToken } from "./IEpochBasedInflationaryVoteToken.sol";
 
 interface IPowerToken is IEpochBasedInflationaryVoteToken {
-    event Buy(address indexed buyer, uint256 amount, uint256 cost);
-    event EpochMarkedActive(uint256 indexed epoch);
-
     error AlreadyClaimed();
 
-    function activeEpochs() external view returns (uint256 activeEpochs_);
+    error EpochAlreadyActive();
 
-    function amountToAuction() external view returns (uint256 amountToAuction_);
+    error InsufficientAuctionSupply();
 
-    function auctionSlope() external view returns (uint256 auctionSlope_);
+    error NotGovernor();
+
+    error TransferFromFailed();
+
+    event Buy(address indexed buyer, uint256 amount, uint256 cost);
+
+    event EpochMarkedActive(uint256 indexed epoch);
+
+    function activeEpochs() external view returns (uint256 activeEpochs);
+
+    function amountToAuction() external view returns (uint256 amountToAuction);
 
     function bootstrapEpoch() external view returns (uint256 bootstrapEpoch);
 
     function bootstrapToken() external view returns (address bootstrapToken);
 
-    function buy(uint256 amount_, address destination_) external;
+    function buy(uint256 amount, address destination) external;
 
     // TODO: buyWithPermit
 
-    function cash() external view returns (address cash_);
+    function cash() external view returns (address cash);
 
-    function getCost(uint256 amount_) external view returns (uint256 price_);
+    function getCost(uint256 amount) external view returns (uint256 price);
 
-    function isActiveEpoch(uint256 epoch_) external view returns (bool isActiveEpoch_);
+    function governor() external view returns (address governor);
+
+    function isActiveEpoch(uint256 epoch) external view returns (bool isActiveEpoch);
 
     function markEpochActive() external;
 
-    function treasury() external view returns (address treasury_);
+    function markParticipation(address delegatee) external;
+
+    function treasury() external view returns (address treasury);
 }

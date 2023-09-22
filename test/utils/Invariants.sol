@@ -2,8 +2,8 @@
 
 pragma solidity 0.8.19;
 
-import { IERC20 } from "../src/interfaces/IERC20.sol";
-import { IERC5805 } from "../src/interfaces/IERC5805.sol";
+import { IERC20 } from "../../src/interfaces/IERC20.sol";
+import { IERC5805 } from "../../src/interfaces/IERC5805.sol";
 
 library Invariants {
     // Invariant 1: Sum of all accounts' voting powers is equal to total supply.

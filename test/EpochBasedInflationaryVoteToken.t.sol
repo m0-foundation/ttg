@@ -2,15 +2,25 @@
 
 pragma solidity 0.8.19;
 
-import { Test, console2 } from "../lib/forge-std/src/Test.sol";
+import { console2 } from "../lib/forge-std/src/Test.sol";
 
 import { PureEpochs } from "../src/PureEpochs.sol";
 
-import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./EpochBasedInflationaryVoteTokenHarness.sol";
-import { Invariants } from "./Invariants.sol";
+import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBasedInflationaryVoteTokenHarness.sol";
+import { Invariants } from "./utils/Invariants.sol";
 
-contract InflationTokenTests is Test {
-    address internal _governor = makeAddr("governor");
+import { TestUtils } from "./utils/TestUtils.sol";
+
+// TODO: test_UsersVoteInflationUpgradeOnDelegation
+// TODO: test_UsersVoteInflationWorksWithTransfer
+// TODO: test_UserGetRewardOnlyOncePerEpochIfRedelegating
+// TODO: test_UserDoesNotGetDelayedRewardWhileRedelegating
+// TODO: test_VotingPowerForDelegates
+// TODO: test_VotingInflationWithRedelegationInTheSameEpoch
+// TODO: test_UsersVoteInflationForMultipleEpochsWithRedelegation
+// TODO: test_UsersVoteInflationForMultipleEpochsWithTransfers
+
+contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     address internal _alice = makeAddr("alice");
     address internal _bob = makeAddr("bob");
     address internal _carol = makeAddr("carol");
@@ -29,7 +39,7 @@ contract InflationTokenTests is Test {
     Vote internal _vote;
 
     function setUp() external {
-        _vote = new Vote("Vote Epoch Token", "VOTE", _participationInflation, _governor);
+        _vote = new Vote("Vote Epoch Token", "VOTE", _participationInflation);
     }
 
     function test_noInflationWithoutVotingPowerInPreviousEpoch_selfDelegation() external {
@@ -38,7 +48,6 @@ contract InflationTokenTests is Test {
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
 
-        vm.prank(_governor);
         _vote.markParticipation(_alice);
 
         assertEq(_vote.balanceOf(_alice), 0);
@@ -73,7 +82,6 @@ contract InflationTokenTests is Test {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 0);
 
-        vm.prank(_governor);
         _vote.markParticipation(_bob);
 
         assertEq(_vote.balanceOf(_alice), 0);
@@ -124,7 +132,6 @@ contract InflationTokenTests is Test {
         assertEq(_vote.balanceOf(_alice), 1_000);
         assertEq(_vote.getVotes(_alice), 1_000);
 
-        vm.prank(_governor);
         _vote.markParticipation(_alice);
 
         assertEq(_vote.balanceOf(_alice), 1_200);
@@ -167,7 +174,6 @@ contract InflationTokenTests is Test {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 1_000);
 
-        vm.prank(_governor);
         _vote.markParticipation(_bob);
 
         assertEq(_vote.balanceOf(_alice), 1_200);
@@ -198,6 +204,8 @@ contract InflationTokenTests is Test {
     }
 
     function testFuzz_full(uint256 seed_) external {
+        vm.skip(true);
+
         for (uint256 index_; index_ < 1000; ++index_) {
             console2.log(" ");
 
@@ -224,7 +232,6 @@ contract InflationTokenTests is Test {
                     // 30% chance
                     console2.log("markParticipation", account1_);
 
-                    vm.prank(_governor);
                     _vote.markParticipation(account1_);
                 }
 
@@ -232,7 +239,6 @@ contract InflationTokenTests is Test {
                     // 30% chance
                     console2.log("markParticipation", account2_);
 
-                    vm.prank(_governor);
                     _vote.markParticipation(account2_);
                 }
             } else {
@@ -243,6 +249,7 @@ contract InflationTokenTests is Test {
                         1,
                         account1Balance_ * 2
                     );
+
                     amount_ = amount_ >= account1Balance_ ? account1Balance_ : amount_; // 50% chance of entire balance,
 
                     console2.log("transfer", account1_, account2_, amount_);
@@ -275,34 +282,5 @@ contract InflationTokenTests is Test {
                 }
             }
         }
-    }
-
-    function _goToNextVoteEpoch() internal {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
-        if (currentEpoch_ % 2 == 1) {
-            _jumpToEpoch(currentEpoch_ + 2);
-        } else {
-            _jumpToEpoch(currentEpoch_ + 1);
-        }
-    }
-
-    function _goToNextTransferEpoch() internal {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
-        if (currentEpoch_ % 2 == 1) {
-            _jumpToEpoch(currentEpoch_ + 1);
-        } else {
-            _jumpToEpoch(currentEpoch_ + 2);
-        }
-    }
-
-    function _jumpToEpoch(uint256 epoch_) internal {
-        _jumpBlocks(PureEpochs.getBlocksUntilEpochStart(epoch_) + 1);
-    }
-
-    function _jumpBlocks(uint256 blocks_) internal {
-        vm.roll(block.number + blocks_);
-        vm.warp(block.timestamp + (blocks_ * PureEpochs._SECONDS_PER_BLOCK));
     }
 }

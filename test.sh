@@ -26,8 +26,8 @@ then
 else
     if [ "$gas" = false ];
     then
-        forge test --match-test "$test";
+        forge test --match-test "$test" -vvvv;
     else
-        forge test --match-test "$test" --gas-report;
+        forge test --match-test "$test" --gas-report -vvvv;
     fi
 fi

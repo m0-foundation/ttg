@@ -25,7 +25,7 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                     External/Public Interactive Functions                                      *
+    |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
     function approve(address spender_, uint256 amount_) external returns (bool success_) {
@@ -81,7 +81,7 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                      External/Public View/Pure Functions                                       *
+    |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
     function allowance(address account_, address spender_) external view returns (uint256 allowance_) {
@@ -101,7 +101,7 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                         Internal Interactive Functions                                         *
+    |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
     function _approve(address account_, address spender_, uint256 amount_) internal virtual {
@@ -121,7 +121,7 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
     function _transfer(address sender_, address recipient_, uint256 amount_) internal virtual;
 
     /******************************************************************************************************************\
-     *                                          Internal View/Pure Functions                                          *
+    |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     function _getPermitDigest(

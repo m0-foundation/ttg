@@ -13,7 +13,7 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     error TransferToSelf();
 
     /******************************************************************************************************************\
-     *                                      External/Public View/Pure Functions                                       *
+    |                                      External/Public View/Pure Functions                                         |
     \******************************************************************************************************************/
 
     function balanceOfAt(address account, uint256 epoch) external view returns (uint256 balance);

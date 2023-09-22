@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity 0.8.19;
+
+import { DualGovernor } from "../../src/DualGovernor.sol";
+
+contract DualGovernorHarness is DualGovernor {
+    constructor(
+        address cash_,
+        address registrar_,
+        address zeroToken_,
+        address powerToken_,
+        uint256 proposalFee_,
+        uint256 minProposalFee_,
+        uint256 maxProposalFee_,
+        uint256 reward_,
+        uint16 zeroTokenQuorumRatio_,
+        uint16 powerTokenQuorumRatio_
+    )
+        DualGovernor(
+            cash_,
+            registrar_,
+            zeroToken_,
+            powerToken_,
+            proposalFee_,
+            minProposalFee_,
+            maxProposalFee_,
+            reward_,
+            zeroTokenQuorumRatio_,
+            powerTokenQuorumRatio_
+        )
+    {}
+
+    function setProposal(
+        uint256 proposalId_,
+        address proposer_,
+        uint256 voteStart_,
+        uint256 voteEnd_,
+        bool executed_,
+        bool canceled_,
+        ProposalType proposalType_
+    ) external {
+        _proposals[proposalId_] = Proposal({
+            proposer: proposer_,
+            voteStart: uint16(voteStart_),
+            voteEnd: uint16(voteEnd_),
+            executed: executed_,
+            canceled: canceled_,
+            proposalType: proposalType_
+        });
+    }
+
+    function setNumberOfProposals(uint256 epoch_, uint256 numberOfProposals_) external {
+        _numberOfProposals[epoch_] = numberOfProposals_;
+    }
+}

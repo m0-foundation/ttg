@@ -72,18 +72,20 @@ contract Registrar is IRegistrar {
 
         address cash_ = IDualGovernor(governor).cash();
 
-        address governor_ = governor = IDualGovernorDeployer(dualGovernorDeployer).deploy(
+        address oldGovernor_ = governor;
+
+        address newGovernor_ = governor = IDualGovernorDeployer(dualGovernorDeployer).deploy(
             cash_,
             powerToken_,
-            _STARTING_PROPOSAL_FEE,
-            _STARTING_MIN_PROPOSAL_FEE,
-            _STARTING_MAX_PROPOSAL_FEE,
-            _STARTING_REWARD,
-            _STARTING_ZERO_TOKEN_QUORUM_RATIO,
-            _STARTING_POWER_TOKEN_QUORUM_RATIO
+            IDualGovernor(oldGovernor_).proposalFee(),
+            IDualGovernor(oldGovernor_).minProposalFee(),
+            IDualGovernor(oldGovernor_).maxProposalFee(),
+            IDualGovernor(oldGovernor_).reward(),
+            uint16(IDualGovernor(oldGovernor_).zeroTokenQuorumRatio()),
+            uint16(IDualGovernor(oldGovernor_).powerTokenQuorumRatio())
         );
 
-        IPowerTokenDeployer(zeroTokenDeployer).deploy(governor_, cash_);
+        IPowerTokenDeployer(zeroTokenDeployer).deploy(newGovernor_, cash_);
     }
 
     function get(bytes32 key_) external view returns (bytes32 value_) {
@@ -100,6 +102,14 @@ contract Registrar is IRegistrar {
 
     function listContains(bytes32 list_, address account_) external view returns (bool contains_) {
         contains_ = _valueAt[_getKeyInSet(list_, account_)] == bytes32(uint256(1));
+    }
+
+    function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool contains_) {
+        for (uint256 index_; index_ < accounts_.length; ++index_) {
+            if (_valueAt[_getKeyInSet(list_, accounts_[index_])] != bytes32(uint256(1))) return false;
+        }
+
+        return true;
     }
 
     function _getKeyInSet(bytes32 list_, address account_) private pure returns (bytes32 key_) {

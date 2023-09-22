@@ -30,7 +30,7 @@ abstract contract ERC712 is IERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                      External/Public View/Pure Functions                                       *
+    |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
     function nonces(address account_) external view returns (uint256 nonce_) {
@@ -42,7 +42,7 @@ abstract contract ERC712 is IERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                          Internal View/Pure Functions                                          *
+    |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     function _getDigest(bytes32 internalDigest_) internal view returns (bytes32 digest_) {

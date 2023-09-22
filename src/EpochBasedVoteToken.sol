@@ -35,7 +35,7 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     ) ERC20Permit(symbol_, decimals_) ERC712(name_) {}
 
     /******************************************************************************************************************\
-     *                                      External/Public View/Pure Functions                                       *
+    |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
     function balanceOf(address account_) external view virtual returns (uint256 balance_) {
@@ -79,7 +79,7 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     }
 
     /******************************************************************************************************************\
-     *                                         Internal Interactive Functions                                         *
+    |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual override {
@@ -200,7 +200,7 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     }
 
     /******************************************************************************************************************\
-     *                                          Internal View/Pure Functions                                          *
+    |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     function _getLatestAccount(AccountEpoch[] storage accountEpochs_) internal view returns (address account_) {

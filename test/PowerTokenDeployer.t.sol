@@ -2,12 +2,11 @@
 
 pragma solidity 0.8.19;
 
-import { Test, console2 } from "../lib/forge-std/src/Test.sol";
+import { Test } from "../lib/forge-std/src/Test.sol";
 
 import { PowerTokenDeployer } from "../src/PowerTokenDeployer.sol";
-import { PureEpochs } from "../src/PureEpochs.sol";
 
-import { MockEpochBasedVoteToken } from "./Mocks.sol";
+import { MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 
 contract DeployerTests is Test {
     address internal _cash = makeAddr("cash");
@@ -21,8 +20,6 @@ contract DeployerTests is Test {
     function setUp() external {
         _zeroToken = new MockEpochBasedVoteToken();
         _powerTokenDeployer = new PowerTokenDeployer(_registrar, _treasury, address(_zeroToken));
-
-        _zeroToken.setTotalSupplyAt(PureEpochs.currentEpoch() - 1, 1_000_000 * 1e6);
     }
 
     function test_deployAddress() external {

@@ -18,28 +18,20 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
 
     uint256 public constant ONE = 10_000; // 100% in basis points.
 
-    address internal immutable _governor;
-
     uint256 internal immutable _participationInflation; // In basis points.
 
     mapping(address delegatee => VoidEpoch[] participationEpochs) internal _participations;
 
     mapping(address account => VoidEpoch[] lastSyncEpochs) internal _lastSyncs;
 
-    modifier notDuringVotePeriod() {
-        _revertIfInVotePeriod();
+    modifier notDuringVoteEpoch() {
+        _revertIfInVoteEpoch();
 
         _;
     }
 
-    modifier onlyDuringVotePeriod() {
-        _revertIfNotInVotePeriod();
-
-        _;
-    }
-
-    modifier onlGovernor() {
-        if (msg.sender != _governor) revert NotGovernor();
+    modifier onlyDuringVoteEpoch() {
+        _revertIfNotInVoteEpoch();
 
         _;
     }
@@ -47,28 +39,13 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     constructor(
         string memory name_,
         string memory symbol_,
-        uint256 participationInflation_,
-        address governor_
+        uint256 participationInflation_
     ) EpochBasedVoteToken(name_, symbol_, 0) {
         _participationInflation = participationInflation_;
-        _governor = governor_;
     }
 
     /******************************************************************************************************************\
-     *                                     External/Public Interactive Functions                                      *
-    \******************************************************************************************************************/
-
-    function markParticipation(address delegatee_) external onlGovernor onlyDuringVotePeriod {
-        if (!_updateParticipation(delegatee_)) revert AlreadyParticipated();
-
-        uint256 inflation_ = _getInflation(_getLatestValue(_votingPowers[delegatee_]));
-
-        _update(_totalSupplies, _add, inflation_);
-        _updateVotingPower(delegatee_, _add, inflation_);
-    }
-
-    /******************************************************************************************************************\
-     *                                      External/Public View/Pure Functions                                       *
+    |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
     function balanceOf(
@@ -84,10 +61,6 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         balance_ = _getValueAt(_balances[account_], epoch_) + _getInflationOfAt(account_, epoch_);
     }
 
-    function governor() external view returns (address governor_) {
-        governor_ = _governor;
-    }
-
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
         participated_ = _getParticipationAt(delegatee_, epoch_);
     }
@@ -97,15 +70,24 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     }
 
     /******************************************************************************************************************\
-     *                                         Internal Interactive Functions                                         *
+    |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
-    function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVotePeriod {
+    function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVoteEpoch {
         _sync(delegator_);
         super._delegate(delegator_, newDelegatee_);
     }
 
-    function _mint(address recipient_, uint256 amount_) internal virtual override notDuringVotePeriod {
+    function _markParticipation(address delegatee_) internal onlyDuringVoteEpoch {
+        if (!_updateParticipation(delegatee_)) revert AlreadyParticipated();
+
+        uint256 inflation_ = _getInflation(_getLatestValue(_votingPowers[delegatee_]));
+
+        _update(_totalSupplies, _add, inflation_);
+        _updateVotingPower(delegatee_, _add, inflation_);
+    }
+
+    function _mint(address recipient_, uint256 amount_) internal virtual override notDuringVoteEpoch {
         _sync(recipient_);
         super._mint(recipient_, amount_);
     }
@@ -119,7 +101,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         address sender_,
         address recipient_,
         uint256 amount_
-    ) internal virtual override notDuringVotePeriod {
+    ) internal virtual override notDuringVoteEpoch {
         _sync(sender_);
         _sync(recipient_);
         super._transfer(sender_, recipient_, amount_);
@@ -141,7 +123,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     }
 
     /******************************************************************************************************************\
-     *                                          Internal View/Pure Functions                                          *
+    |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     function _getInflation(uint256 amount_) internal view returns (uint256 inflation_) {
@@ -214,12 +196,12 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         } while (index_ > 0);
     }
 
-    function _revertIfInVotePeriod() internal view {
-        if (_isVotingEpoch(PureEpochs.currentEpoch())) revert VotePeriod();
+    function _revertIfInVoteEpoch() internal view {
+        if (_isVotingEpoch(PureEpochs.currentEpoch())) revert VoteEpoch();
     }
 
-    function _revertIfNotInVotePeriod() internal view {
-        if (!_isVotingEpoch(PureEpochs.currentEpoch())) revert NotVotePeriod();
+    function _revertIfNotInVoteEpoch() internal view {
+        if (!_isVotingEpoch(PureEpochs.currentEpoch())) revert NotVoteEpoch();
     }
 
     function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {

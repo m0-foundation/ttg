@@ -18,29 +18,51 @@ interface IDualGovernor is IGovernorBySig {
     }
 
     event ProposalFeeSet(uint256 proposalFee);
+
     event ProposalFeeRangeSet(uint256 minProposalFee, uint256 maxProposalFee);
+
     event ZeroTokenQuorumRatioSet(uint16 zeroTokenQuorumRatio);
+
     event PowerTokenQuorumRatioSet(uint16 powerTokenQuorumRatio);
 
     error AlreadyVoted();
+
     error EpochHasNoProposals();
+
     error ExecutionFailed(bytes data);
+
     error InvalidCalldatasLength();
+
     error InvalidPowerTokenAddress();
+
     error InvalidProposalFeeRange();
+
     error InvalidProposalType();
+
     error InvalidTarget();
+
     error InvalidTargetsLength();
+
     error InvalidValue();
+
     error InvalidValuesLength();
+
     error InvalidZeroTokenAddress();
+
     error NotSelf();
+
     error ProposalDoesNotExist();
+
     error ProposalExists();
+
     error ProposalFeeOutOfRange(uint256 minProposalFee, uint256 maxProposalFee);
+
     error ProposalIsNotInActiveState(ProposalState state);
+
     error ProposalNotSuccessful();
+
     error ZeroCashAddress();
+
     error ZeroRegistrarAddress();
 
     function cash() external view returns (address cash);

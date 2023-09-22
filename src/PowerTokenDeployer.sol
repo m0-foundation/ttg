@@ -11,7 +11,7 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
     address public immutable treasury;
     address public immutable zeroToken;
 
-    uint256 public nonce = 1;
+    uint256 public nonce;
 
     modifier onlyRegistrar() {
         if (msg.sender != registrar) revert CallerIsNotRegistrar();
@@ -32,6 +32,6 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {
-        nextDeploy_ = ContractHelper.getContractFrom(address(this), nonce);
+        nextDeploy_ = ContractHelper.getContractFrom(address(this), nonce + 1);
     }
 }

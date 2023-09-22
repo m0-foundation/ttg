@@ -2,8 +2,14 @@
 
 pragma solidity 0.8.19;
 
-import { IEpochBasedMintableVoteToken } from "./IEpochBasedMintableVoteToken.sol";
+import { IEpochBasedVoteToken } from "./IEpochBasedVoteToken.sol";
 
-interface IZeroToken is IEpochBasedMintableVoteToken {
+interface IZeroToken is IEpochBasedVoteToken {
     error LengthMismatch(uint256 length1, uint256 length2);
+
+    error NotGovernor();
+
+    function mint(address recipient, uint256 amount) external;
+
+    function registrar() external view returns (address registrar);
 }

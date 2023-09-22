@@ -15,7 +15,7 @@ abstract contract ERC5805 is IERC5805, ERC712 {
     bytes32 public constant DELEGATION_TYPEHASH = 0xe48329057bfd03d55e49b547132e39cffd9c1820ad7b9d4c5307691425d15adf;
 
     /******************************************************************************************************************\
-     *                                     External/Public Interactive Functions                                      *
+    |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
     function delegate(address delegatee_) external {
@@ -46,13 +46,13 @@ abstract contract ERC5805 is IERC5805, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                         Internal Interactive Functions                                         *
+    |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual;
 
     /******************************************************************************************************************\
-     *                                          Internal View/Pure Functions                                          *
+    |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     function _getDelegationDigest(

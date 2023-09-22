@@ -107,7 +107,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                     External/Public Interactive Functions                                      *
+    |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
     function castVote(uint256 proposalId_, uint8 support_) external returns (uint256 weight_) {
@@ -235,17 +235,18 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         proposalId_ = hashProposal(targets_, values_, calldatas_, keccak256(bytes(description_)));
 
-        if (_proposals[proposalId_].voteStart != 0) revert ProposalExists();
+        if (_proposals[proposalId_].proposer != address(0)) revert ProposalExists();
 
         bytes4 func_ = bytes4(calldatas_[0]);
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
         ProposalType proposalType_ = _getProposalType(func_);
 
-        (uint256 voteStart_, uint256 voteEnd_) = proposalType_ == ProposalType.Emergency // Voting takes place from the `currentEpoch` to `currentEpoch + 1`, inclusively.
-            ? (currentEpoch_, currentEpoch_ + 1) // Voting takes place only during the epoch `currentEpoch + votingDelay()`.
-            : (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay());
+        (uint256 voteStart_, uint256 voteEnd_) = (proposalType_ == ProposalType.Emergency ||
+            proposalType_ == ProposalType.Zero)
+            ? (currentEpoch_, currentEpoch_ + 1)
+            : (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay() + 1);
 
-        if (proposalType_ != ProposalType.Emergency) {
+        if (proposalType_ == ProposalType.Power) {
             _numberOfProposals[voteStart_] += 1;
         }
 
@@ -272,7 +273,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                      External/Public View/Pure Functions                                       *
+    |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
     function CLOCK_MODE() external pure returns (string memory clockMode_) {
@@ -302,6 +303,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         bytes[] memory calldatas_,
         bytes32 descriptionHash_
     ) public pure returns (uint256 proposalId_) {
+        // TODO: replace `descriptionHash_` with the epoch to prevent duplication.
         proposalId_ = uint256(keccak256(abi.encode(targets_, values_, calldatas_, descriptionHash_)));
     }
 
@@ -386,7 +388,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         uint256 voteEnd_ = proposal_.voteEnd;
 
-        if (proposal_.proposalType == ProposalType.Emergency) {
+        if (proposal_.proposalType == ProposalType.Emergency || proposal_.proposalType == ProposalType.Zero) {
             if (_quorumReached(proposalId_) && _voteSucceeded(proposalId_)) {
                 return currentEpoch_ > voteEnd_ ? ProposalState.Expired : ProposalState.Succeeded;
             }
@@ -421,7 +423,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                               Proposal Functions                                               *
+    |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
     function addToList(bytes32 list_, address account_) external onlySelf {
@@ -449,21 +451,19 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     function setProposalFee(uint256 newProposalFee_) external onlySelf {
-        uint256 minProposalFee_ = _minProposalFee;
-        uint256 maxProposalFee_ = _maxProposalFee;
-
-        if (newProposalFee_ < minProposalFee_ || newProposalFee_ > maxProposalFee_) {
-            revert ProposalFeeOutOfRange(minProposalFee_, maxProposalFee_);
-        }
-
-        emit ProposalFeeSet(_proposalFee = newProposalFee_);
+        _setProposalFee(_minProposalFee, _maxProposalFee, newProposalFee_);
     }
 
-    function setProposalFeeRange(uint256 newMinProposalFee_, uint256 newMaxProposalFee_) external onlySelf {
-        // TODO: What if current fee is outside of new range?
+    function setProposalFeeRange(
+        uint256 newMinProposalFee_,
+        uint256 newMaxProposalFee_,
+        uint256 newProposalFee_
+    ) external onlySelf {
         if (newMinProposalFee_ > newMaxProposalFee_) revert InvalidProposalFeeRange();
 
         emit ProposalFeeRangeSet(_minProposalFee = newMinProposalFee_, _maxProposalFee = newMaxProposalFee_);
+
+        _setProposalFee(newMinProposalFee_, newMaxProposalFee_, newProposalFee_);
     }
 
     function setZeroTokenQuorumRatio(uint16 newZeroTokenQuorumRatio_) external onlySelf {
@@ -479,7 +479,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     /******************************************************************************************************************\
-     *                                         Internal Interactive Functions                                         *
+    |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
     function _castVotes(
@@ -548,7 +548,8 @@ contract DualGovernor is IDualGovernor, ERC712 {
         // NOTE: `weight_` is technically correct, but not discernable.
         emit VoteCast(voter_, proposalId_, support_, weight_, reason_);
 
-        if (proposal_.proposalType == ProposalType.Emergency) return weight_;
+        // Only Power proposals are mandatory and result in inflation if they are all voted on.
+        if (proposal_.proposalType != ProposalType.Power) return weight_;
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
@@ -569,12 +570,20 @@ contract DualGovernor is IDualGovernor, ERC712 {
         IRegistrar(_registrar).removeFromList(list_, account_);
     }
 
+    function _setProposalFee(uint256 minProposalFee_, uint256 maxProposalFee_, uint256 newProposalFee_) internal {
+        if (newProposalFee_ < minProposalFee_ || newProposalFee_ > maxProposalFee_) {
+            revert ProposalFeeOutOfRange(minProposalFee_, maxProposalFee_);
+        }
+
+        emit ProposalFeeSet(_proposalFee = newProposalFee_);
+    }
+
     function _updateConfig(bytes32 key_, bytes32 value_) internal {
         IRegistrar(_registrar).updateConfig(key_, value_);
     }
 
     /******************************************************************************************************************\
-     *                                          Internal View/Pure Functions                                          *
+    |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     function _getBallotDigest(uint256 proposalId_, uint8 support_) internal view returns (bytes32 digest_) {
@@ -624,7 +633,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
             func_ == this.setProposalFeeRange.selector
         ) return ProposalType.Double;
 
-        if (func_ == this.reset.selector) return ProposalType.Zero;
+        if (func_ == this.reset.selector) return ProposalType.Zero; // TODO: This should be like an emergency.
 
         revert InvalidProposalType();
     }
