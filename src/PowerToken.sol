@@ -20,7 +20,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     uint256 public constant INITIAL_SUPPLY = 1_000_000_000;
 
     address internal immutable _bootstrapToken;
-    address internal immutable _cash;
+    address internal immutable _cashToken;
     address internal immutable _governor;
     address internal immutable _treasury;
 
@@ -39,12 +39,12 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     constructor(
         address governor_,
-        address cash_,
+        address cashToken_,
         address treasury_,
         address bootstrapToken_
     ) EpochBasedInflationaryVoteToken("Power Token", "POWER", ONE / 10) {
         // TODO: Validation.
-        _cash = cash_;
+        _cashToken = cashToken_;
         _treasury = treasury_;
         _governor = governor_;
 
@@ -64,8 +64,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         emit Buy(msg.sender, amount_, cost_);
 
-        // TODO: Perhaps `_cash` should come from the governor?
-        if (!ERC20Helper.transferFrom(_cash, msg.sender, _treasury, cost_)) revert TransferFromFailed();
+        // TODO: Perhaps `_cashToken` should come from the governor?
+        if (!ERC20Helper.transferFrom(_cashToken, msg.sender, _treasury, cost_)) revert TransferFromFailed();
 
         _mint(destination_, amount_);
     }
@@ -133,8 +133,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         bootstrapToken_ = _bootstrapToken;
     }
 
-    function cash() external view returns (address cash_) {
-        cash_ = _cash;
+    function cashToken() external view returns (address cashToken_) {
+        cashToken_ = _cashToken;
     }
 
     function getCost(uint256 amount_) public view returns (uint256 cost_) {

@@ -6,7 +6,7 @@ import { DualGovernor } from "../../src/DualGovernor.sol";
 
 contract DualGovernorHarness is DualGovernor {
     constructor(
-        address cash_,
+        address cashToken_,
         address registrar_,
         address zeroToken_,
         address powerToken_,
@@ -18,7 +18,7 @@ contract DualGovernorHarness is DualGovernor {
         uint16 powerTokenQuorumRatio_
     )
         DualGovernor(
-            cash_,
+            cashToken_,
             registrar_,
             zeroToken_,
             powerToken_,

@@ -15,7 +15,11 @@ contract MockEpochBasedVoteToken {
 }
 
 contract MockPowerTokenDeployer {
-    function deploy(address governor_, address cash_) external view returns (address deployed_) {}
+    function deploy(
+        address governor_,
+        address cashToken_,
+        address bootstrapToken_
+    ) external view returns (address deployed_) {}
 
     function getNextDeploy() external view returns (address nextDeploy_) {}
 }
@@ -28,7 +32,7 @@ contract MockDualGovernorDeployer {
     }
 
     function deploy(
-        address cash_,
+        address cashToken_,
         address powerToken_,
         uint256 proposalFee_,
         uint256 minProposalFee_,
@@ -42,17 +46,19 @@ contract MockDualGovernorDeployer {
 }
 
 contract MockDualGovernor {
-    function cash() external view returns (address cash_) {}
+    function cashToken() external view returns (address cashToken_) {}
 
     function maxProposalFee() external view returns (uint256 maxProposalFee_) {}
 
     function minProposalFee() external view returns (uint256 minProposalFee_) {}
 
+    function powerTokenQuorumRatio() external view returns (uint256 powerTokenQuorumRatio_) {}
+
     function proposalFee() external view returns (uint256 proposalFee_) {}
 
     function reward() external view returns (uint256 reward_) {}
 
-    function powerTokenQuorumRatio() external view returns (uint256 powerTokenQuorumRatio_) {}
+    function zeroToken() external view returns (address zeroToken_) {}
 
     function zeroTokenQuorumRatio() external view returns (uint256 zeroTokenQuorumRatio_) {}
 }

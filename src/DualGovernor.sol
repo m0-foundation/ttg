@@ -49,7 +49,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     bytes32 public constant BALLOTS_WITH_REASON_TYPEHASH =
         0x4a8d949a35428f9a377e2e2b89d8883cda4fbc8055ff94f098fc4955c82d42ff;
 
-    address internal immutable _cash;
+    address internal immutable _cashToken;
     address internal immutable _registrar;
     address internal immutable _zeroToken;
     address internal immutable _powerToken;
@@ -80,7 +80,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     constructor(
-        address cash_,
+        address cashToken_,
         address registrar_,
         address zeroToken_,
         address powerToken_,
@@ -91,7 +91,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         uint16 zeroTokenQuorumRatio_,
         uint16 powerTokenQuorumRatio_
     ) ERC712("DualGovernor") {
-        if ((_cash = cash_) == address(0)) revert ZeroCashAddress();
+        if ((_cashToken = cashToken_) == address(0)) revert ZeroCashTokenAddress();
         if ((_registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
         if ((_zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
         if ((_powerToken = powerToken_) == address(0)) revert InvalidPowerTokenAddress();
@@ -231,7 +231,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (calldatas_.length != 1) revert InvalidCalldatasLength();
 
-        ERC20Helper.transferFrom(_cash, msg.sender, address(this), _proposalFee); // TODO: Send elsewhere.
+        ERC20Helper.transferFrom(_cashToken, msg.sender, address(this), _proposalFee); // TODO: Send elsewhere.
 
         proposalId_ = hashProposal(targets_, values_, calldatas_, keccak256(bytes(description_)));
 
@@ -285,8 +285,8 @@ contract DualGovernor is IDualGovernor, ERC712 {
         // TODO: Implement.
     }
 
-    function cash() external view returns (address cash_) {
-        cash_ = _cash;
+    function cashToken() external view returns (address cashToken_) {
+        cashToken_ = _cashToken;
     }
 
     function clock() external view returns (uint48 clock_) {

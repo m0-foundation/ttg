@@ -6,7 +6,7 @@ interface IDualGovernorDeployer {
     error CallerIsNotRegistrar();
 
     function deploy(
-        address cash,
+        address cashToken,
         address powerToken,
         uint256 proposalFee,
         uint256 minProposalFee,

@@ -61,11 +61,11 @@ interface IDualGovernor is IGovernorBySig {
 
     error ProposalNotSuccessful();
 
-    error ZeroCashAddress();
+    error ZeroCashTokenAddress();
 
     error ZeroRegistrarAddress();
 
-    function cash() external view returns (address cash);
+    function cashToken() external view returns (address cashToken);
 
     function maxProposalFee() external view returns (uint256 maxProposalFee);
 

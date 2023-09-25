@@ -19,7 +19,7 @@ contract DualGovernorTests is Test {
     uint256 internal constant _ONE = 10_000;
 
     address internal _alice = makeAddr("alice");
-    address internal _cash = makeAddr("cash");
+    address internal _cashToken = makeAddr("cashToken");
     address internal _registrar = makeAddr("registrar");
 
     DualGovernorHarness internal _dualGovernor;
@@ -31,7 +31,7 @@ contract DualGovernorTests is Test {
         _zeroToken = new MockZeroToken();
 
         _dualGovernor = new DualGovernorHarness(
-            _cash,
+            _cashToken,
             _registrar,
             address(_zeroToken),
             address(_powerToken),

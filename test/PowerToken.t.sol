@@ -38,10 +38,10 @@ contract PowerTokenTests is TestUtils {
 
     PowerToken internal _powerToken;
     MockBootstrapToken internal _bootstrapToken;
-    MockCashToken internal _cash;
+    MockCashToken internal _cashToken;
 
     function setUp() external {
-        _cash = new MockCashToken();
+        _cashToken = new MockCashToken();
         _bootstrapToken = new MockBootstrapToken();
 
         _bootstrapToken.setTotalSupply(15_000_000 * 1e6);
@@ -50,12 +50,12 @@ contract PowerTokenTests is TestUtils {
             _bootstrapToken.setBalance(_initialAccounts[index_], _initialAmounts[index_]);
         }
 
-        _powerToken = new PowerToken(_governor, address(_cash), _treasury, address(_bootstrapToken));
+        _powerToken = new PowerToken(_governor, address(_cashToken), _treasury, address(_bootstrapToken));
     }
 
     function test_initialState() external {
         assertEq(_powerToken.bootstrapToken(), address(_bootstrapToken));
-        assertEq(_powerToken.cash(), address(_cash));
+        assertEq(_powerToken.cashToken(), address(_cashToken));
         assertEq(_powerToken.governor(), _governor);
         assertEq(_powerToken.treasury(), _treasury);
         assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
@@ -172,7 +172,7 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextVoteEpoch();
 
-        _cash.setTransferFromSuccess(true);
+        _cashToken.setTransferFromSuccess(true);
 
         vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector);
         vm.prank(_account);
@@ -195,12 +195,12 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextTransferEpoch();
 
-        _cash.setTransferFromSuccess(true);
+        _cashToken.setTransferFromSuccess(true);
 
         uint256 oneBasisPointOfTotalSupply_ = _powerToken.totalSupplyAt(PureEpochs.currentEpoch() - 1) / 10_000;
 
         vm.expectCall(
-            address(_cash),
+            address(_cashToken),
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _treasury, 1 * (1 << 99))
         );
         vm.prank(_account);

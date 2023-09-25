@@ -8,30 +8,39 @@ import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 
 import { Registrar } from "../src/Registrar.sol";
 
-import { MockPowerTokenDeployer, MockDualGovernorDeployer, MockDualGovernor } from "./utils/Mocks.sol";
+import { MockBootstrapToken, MockPowerTokenDeployer, MockDualGovernorDeployer, MockDualGovernor } from "./utils/Mocks.sol";
 
 contract RegistrarTests is Test {
-    address internal _cash = makeAddr("cash");
+    address internal _cashToken = makeAddr("cashToken");
     address internal _account1 = makeAddr("account1");
     address internal _account2 = makeAddr("account2");
     address internal _account3 = makeAddr("account3");
 
     Registrar internal _registrar;
+    MockBootstrapToken internal _bootstrapToken;
     MockPowerTokenDeployer internal _powerTokenDeployer;
-    MockDualGovernorDeployer internal _dualGovernorDeployer;
+    MockDualGovernorDeployer internal _governorDeployer;
     MockDualGovernor internal _governor;
 
     function setUp() external {
+        _bootstrapToken = new MockBootstrapToken();
         _powerTokenDeployer = new MockPowerTokenDeployer();
-        _dualGovernorDeployer = new MockDualGovernorDeployer();
+        _governorDeployer = new MockDualGovernorDeployer();
         _governor = new MockDualGovernor();
-        _dualGovernorDeployer.setNextDeploy(address(_governor));
+        _governorDeployer.setNextDeploy(address(_governor));
 
-        _registrar = new Registrar(address(_dualGovernorDeployer), address(_powerTokenDeployer), _cash);
+        _registrar = new Registrar(
+            address(_governorDeployer),
+            address(_powerTokenDeployer),
+            address(_bootstrapToken),
+            _cashToken
+        );
     }
 
     function test_initialState() external {
         assertEq(_registrar.governor(), address(_governor));
+        assertEq(_registrar.governorDeployer(), address(_governorDeployer));
+        assertEq(_registrar.powerTokenDeployer(), address(_powerTokenDeployer));
     }
 
     function test_updateConfig_notGovernor() external {
@@ -152,7 +161,7 @@ contract RegistrarTests is Test {
     function test_reset() external {
         address newGovernor_ = makeAddr("newGovernor");
 
-        _dualGovernorDeployer.setNextDeploy(newGovernor_);
+        _governorDeployer.setNextDeploy(newGovernor_);
 
         vm.prank(address(_governor));
         _registrar.reset();

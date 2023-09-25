@@ -31,7 +31,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     // TODO: buyWithPermit
 
-    function cash() external view returns (address cash);
+    function cashToken() external view returns (address cashToken);
 
     function getCost(uint256 amount) external view returns (uint256 price);
 

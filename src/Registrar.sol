@@ -18,8 +18,8 @@ contract Registrar is IRegistrar {
     uint16 internal constant _STARTING_POWER_TOKEN_QUORUM_RATIO = uint16(_ONE / 2);
     uint16 internal constant _STARTING_ZERO_TOKEN_QUORUM_RATIO = uint16(_ONE / 2);
 
-    address public immutable dualGovernorDeployer;
-    address public immutable zeroTokenDeployer;
+    address public immutable governorDeployer;
+    address public immutable powerTokenDeployer;
 
     address public governor;
 
@@ -31,14 +31,14 @@ contract Registrar is IRegistrar {
         _;
     }
 
-    constructor(address dualGovernorDeployer_, address zeroTokenDeployer_, address cash_) {
-        dualGovernorDeployer = dualGovernorDeployer_;
-        zeroTokenDeployer = zeroTokenDeployer_;
+    constructor(address governorDeployer_, address powerTokenDeployer_, address bootstrapToken_, address cashToken_) {
+        governorDeployer = governorDeployer_;
+        powerTokenDeployer = powerTokenDeployer_;
 
-        address powerToken_ = IPowerTokenDeployer(zeroTokenDeployer_).getNextDeploy();
+        address powerToken_ = IPowerTokenDeployer(powerTokenDeployer_).getNextDeploy();
 
-        address governor_ = governor = IDualGovernorDeployer(dualGovernorDeployer_).deploy(
-            cash_,
+        address governor_ = governor = IDualGovernorDeployer(governorDeployer_).deploy(
+            cashToken_,
             powerToken_,
             _STARTING_PROPOSAL_FEE,
             _STARTING_MIN_PROPOSAL_FEE,
@@ -48,7 +48,7 @@ contract Registrar is IRegistrar {
             _STARTING_POWER_TOKEN_QUORUM_RATIO
         );
 
-        IPowerTokenDeployer(zeroTokenDeployer_).deploy(governor_, cash_);
+        IPowerTokenDeployer(powerTokenDeployer_).deploy(governor_, cashToken_, bootstrapToken_);
     }
 
     function addToList(bytes32 list_, address account_) external onlyGovernor {
@@ -68,14 +68,14 @@ contract Registrar is IRegistrar {
     }
 
     function reset() external onlyGovernor {
-        address powerToken_ = IPowerTokenDeployer(zeroTokenDeployer).getNextDeploy();
+        address powerToken_ = IPowerTokenDeployer(powerTokenDeployer).getNextDeploy();
 
-        address cash_ = IDualGovernor(governor).cash();
+        address cashToken_ = IDualGovernor(governor).cashToken();
 
         address oldGovernor_ = governor;
 
-        address newGovernor_ = governor = IDualGovernorDeployer(dualGovernorDeployer).deploy(
-            cash_,
+        address newGovernor_ = governor = IDualGovernorDeployer(governorDeployer).deploy(
+            cashToken_,
             powerToken_,
             IDualGovernor(oldGovernor_).proposalFee(),
             IDualGovernor(oldGovernor_).minProposalFee(),
@@ -85,7 +85,11 @@ contract Registrar is IRegistrar {
             uint16(IDualGovernor(oldGovernor_).powerTokenQuorumRatio())
         );
 
-        IPowerTokenDeployer(zeroTokenDeployer).deploy(newGovernor_, cash_);
+        IPowerTokenDeployer(powerTokenDeployer).deploy(
+            newGovernor_,
+            cashToken_,
+            IDualGovernor(oldGovernor_).zeroToken()
+        );
     }
 
     function get(bytes32 key_) external view returns (bytes32 value_) {

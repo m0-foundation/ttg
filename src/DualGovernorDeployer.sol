@@ -25,7 +25,7 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
     }
 
     function deploy(
-        address cash_,
+        address cashToken_,
         address powerToken_,
         uint256 proposalFee_,
         uint256 minProposalFee_,
@@ -38,7 +38,7 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
 
         deployed_ = address(
             new DualGovernor(
-                cash_,
+                cashToken_,
                 registrar,
                 zeroToken,
                 powerToken_,
