@@ -33,4 +33,4 @@ sizes:
 	@./build.sh -p production -s
 
 clean:
-	forge clean
+	forge clean && rm -rf ./abi && rm -rf ./types
