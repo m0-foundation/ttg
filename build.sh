@@ -16,7 +16,7 @@ echo Using profile: $FOUNDRY_PROFILE
 
 if [ "$sizes" = false ];
 then
-    forge build;
+    forge build --skip '*/test/**' --skip '*/script/**' --skip '*/lib/forge-std/**';
 else
-    forge build --sizes;
+    forge build --skip '*/test/**' --skip '*/script/**' --skip '*/lib/forge-std/**' --sizes;
 fi

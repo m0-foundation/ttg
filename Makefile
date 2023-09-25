@@ -31,3 +31,6 @@ gas:
 
 sizes:
 	@./build.sh -p production -s
+
+clean:
+	forge clean
