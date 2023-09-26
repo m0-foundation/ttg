@@ -12,6 +12,7 @@ import { MockBootstrapToken, MockPowerTokenDeployer, MockDualGovernorDeployer, M
 
 contract RegistrarTests is Test {
     address internal _cashToken = makeAddr("cashToken");
+    address internal _zeroToken = makeAddr("zeroToken");
     address internal _account1 = makeAddr("account1");
     address internal _account2 = makeAddr("account2");
     address internal _account3 = makeAddr("account3");
@@ -29,6 +30,8 @@ contract RegistrarTests is Test {
         _governor = new MockDualGovernor();
         _governorDeployer.setNextDeploy(address(_governor));
 
+        _governor.setZeroToken(_zeroToken);
+
         _registrar = new Registrar(
             address(_governorDeployer),
             address(_powerTokenDeployer),
@@ -41,6 +44,7 @@ contract RegistrarTests is Test {
         assertEq(_registrar.governor(), address(_governor));
         assertEq(_registrar.governorDeployer(), address(_governorDeployer));
         assertEq(_registrar.powerTokenDeployer(), address(_powerTokenDeployer));
+        assertEq(_registrar.zeroToken(), address(_zeroToken));
     }
 
     function test_updateConfig_notGovernor() external {

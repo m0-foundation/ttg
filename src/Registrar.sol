@@ -20,6 +20,7 @@ contract Registrar is IRegistrar {
 
     address public immutable governorDeployer;
     address public immutable powerTokenDeployer;
+    address public immutable zeroToken;
 
     address public governor;
 
@@ -47,6 +48,8 @@ contract Registrar is IRegistrar {
             _STARTING_ZERO_TOKEN_QUORUM_RATIO,
             _STARTING_POWER_TOKEN_QUORUM_RATIO
         );
+
+        zeroToken = IDualGovernor(governor_).zeroToken();
 
         IPowerTokenDeployer(powerTokenDeployer_).deploy(governor_, cashToken_, bootstrapToken_);
     }
@@ -85,11 +88,7 @@ contract Registrar is IRegistrar {
             uint16(IDualGovernor(oldGovernor_).powerTokenQuorumRatio())
         );
 
-        IPowerTokenDeployer(powerTokenDeployer).deploy(
-            newGovernor_,
-            cashToken_,
-            IDualGovernor(oldGovernor_).zeroToken()
-        );
+        IPowerTokenDeployer(powerTokenDeployer).deploy(newGovernor_, cashToken_, zeroToken);
     }
 
     function get(bytes32 key_) external view returns (bytes32 value_) {

@@ -264,6 +264,19 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
+  {
+    inputs: [],
+    name: "zeroToken",
+    outputs: [
+      {
+        internalType: "address",
+        name: "zeroToken",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const;
 
 export class IRegistrar__factory {

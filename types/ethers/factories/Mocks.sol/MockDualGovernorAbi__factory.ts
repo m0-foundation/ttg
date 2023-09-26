@@ -89,12 +89,25 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "zeroToken_",
+        type: "address",
+      },
+    ],
+    name: "setZeroToken",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "zeroToken",
     outputs: [
       {
         internalType: "address",
-        name: "zeroToken_",
+        name: "",
         type: "address",
       },
     ],

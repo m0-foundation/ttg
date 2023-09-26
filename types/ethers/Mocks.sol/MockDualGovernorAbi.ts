@@ -6,6 +6,8 @@ import type {
   BigNumber,
   BytesLike,
   CallOverrides,
+  ContractTransaction,
+  Overrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -27,6 +29,7 @@ export interface MockDualGovernorAbiInterface extends utils.Interface {
     "powerTokenQuorumRatio()": FunctionFragment;
     "proposalFee()": FunctionFragment;
     "reward()": FunctionFragment;
+    "setZeroToken(address)": FunctionFragment;
     "zeroToken()": FunctionFragment;
     "zeroTokenQuorumRatio()": FunctionFragment;
   };
@@ -45,6 +48,8 @@ export interface MockDualGovernorAbiInterface extends utils.Interface {
       | "proposalFee()"
       | "reward"
       | "reward()"
+      | "setZeroToken"
+      | "setZeroToken(address)"
       | "zeroToken"
       | "zeroToken()"
       | "zeroTokenQuorumRatio"
@@ -90,6 +95,14 @@ export interface MockDualGovernorAbiInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "reward", values?: undefined): string;
   encodeFunctionData(functionFragment: "reward()", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "setZeroToken",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setZeroToken(address)",
+    values: [string]
+  ): string;
   encodeFunctionData(functionFragment: "zeroToken", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "zeroToken()",
@@ -143,6 +156,14 @@ export interface MockDualGovernorAbiInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "reward", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "reward()", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setZeroToken",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setZeroToken(address)",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "zeroToken", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "zeroToken()",
@@ -235,13 +256,19 @@ export interface MockDualGovernorAbi extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { reward_: BigNumber }>;
 
-    zeroToken(
-      overrides?: CallOverrides
-    ): Promise<[string] & { zeroToken_: string }>;
+    setZeroToken(
+      zeroToken_: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-    "zeroToken()"(
-      overrides?: CallOverrides
-    ): Promise<[string] & { zeroToken_: string }>;
+    "setZeroToken(address)"(
+      zeroToken_: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    zeroToken(overrides?: CallOverrides): Promise<[string]>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<[string]>;
 
     zeroTokenQuorumRatio(
       overrides?: CallOverrides
@@ -276,6 +303,16 @@ export interface MockDualGovernorAbi extends BaseContract {
 
   "reward()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+  setZeroToken(
+    zeroToken_: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "setZeroToken(address)"(
+    zeroToken_: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   zeroToken(overrides?: CallOverrides): Promise<string>;
 
   "zeroToken()"(overrides?: CallOverrides): Promise<string>;
@@ -308,6 +345,13 @@ export interface MockDualGovernorAbi extends BaseContract {
     reward(overrides?: CallOverrides): Promise<BigNumber>;
 
     "reward()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    setZeroToken(zeroToken_: string, overrides?: CallOverrides): Promise<void>;
+
+    "setZeroToken(address)"(
+      zeroToken_: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     zeroToken(overrides?: CallOverrides): Promise<string>;
 
@@ -344,6 +388,16 @@ export interface MockDualGovernorAbi extends BaseContract {
     reward(overrides?: CallOverrides): Promise<BigNumber>;
 
     "reward()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    setZeroToken(
+      zeroToken_: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "setZeroToken(address)"(
+      zeroToken_: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
 
     zeroToken(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -386,6 +440,16 @@ export interface MockDualGovernorAbi extends BaseContract {
     reward(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "reward()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    setZeroToken(
+      zeroToken_: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "setZeroToken(address)"(
+      zeroToken_: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
 
     zeroToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

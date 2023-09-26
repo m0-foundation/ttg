@@ -34,4 +34,6 @@ interface IRegistrar {
     function reset() external;
 
     function updateConfig(bytes32 key, bytes32 value) external;
+
+    function zeroToken() external view returns (address zeroToken);
 }

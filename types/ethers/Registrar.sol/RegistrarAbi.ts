@@ -38,6 +38,7 @@ export interface RegistrarAbiInterface extends utils.Interface {
     "removeFromList(bytes32,address)": FunctionFragment;
     "reset()": FunctionFragment;
     "updateConfig(bytes32,bytes32)": FunctionFragment;
+    "zeroToken()": FunctionFragment;
   };
 
   getFunction(
@@ -60,6 +61,8 @@ export interface RegistrarAbiInterface extends utils.Interface {
       | "reset()"
       | "updateConfig"
       | "updateConfig(bytes32,bytes32)"
+      | "zeroToken"
+      | "zeroToken()"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -125,6 +128,11 @@ export interface RegistrarAbiInterface extends utils.Interface {
     functionFragment: "updateConfig(bytes32,bytes32)",
     values: [BytesLike, BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "zeroToken", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "zeroToken()",
+    values?: undefined
+  ): string;
 
   decodeFunctionResult(functionFragment: "addToList", data: BytesLike): Result;
   decodeFunctionResult(
@@ -181,6 +189,11 @@ export interface RegistrarAbiInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "updateConfig(bytes32,bytes32)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "zeroToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "zeroToken()",
     data: BytesLike
   ): Result;
 
@@ -351,6 +364,10 @@ export interface RegistrarAbi extends BaseContract {
       value_: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
+
+    zeroToken(overrides?: CallOverrides): Promise<[string]>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<[string]>;
   };
 
   addToList(
@@ -428,6 +445,10 @@ export interface RegistrarAbi extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  zeroToken(overrides?: CallOverrides): Promise<string>;
+
+  "zeroToken()"(overrides?: CallOverrides): Promise<string>;
+
   callStatic: {
     addToList(
       list_: BytesLike,
@@ -499,6 +520,10 @@ export interface RegistrarAbi extends BaseContract {
       value_: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    zeroToken(overrides?: CallOverrides): Promise<string>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {
@@ -607,6 +632,10 @@ export interface RegistrarAbi extends BaseContract {
       value_: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
+
+    zeroToken(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -693,5 +722,9 @@ export interface RegistrarAbi extends BaseContract {
       value_: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
+
+    zeroToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

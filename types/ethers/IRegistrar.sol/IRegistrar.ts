@@ -38,6 +38,7 @@ export interface IRegistrarInterface extends utils.Interface {
     "removeFromList(bytes32,address)": FunctionFragment;
     "reset()": FunctionFragment;
     "updateConfig(bytes32,bytes32)": FunctionFragment;
+    "zeroToken()": FunctionFragment;
   };
 
   getFunction(
@@ -60,6 +61,8 @@ export interface IRegistrarInterface extends utils.Interface {
       | "reset()"
       | "updateConfig"
       | "updateConfig(bytes32,bytes32)"
+      | "zeroToken"
+      | "zeroToken()"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -125,6 +128,11 @@ export interface IRegistrarInterface extends utils.Interface {
     functionFragment: "updateConfig(bytes32,bytes32)",
     values: [BytesLike, BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "zeroToken", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "zeroToken()",
+    values?: undefined
+  ): string;
 
   decodeFunctionResult(functionFragment: "addToList", data: BytesLike): Result;
   decodeFunctionResult(
@@ -181,6 +189,11 @@ export interface IRegistrarInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "updateConfig(bytes32,bytes32)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "zeroToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "zeroToken()",
     data: BytesLike
   ): Result;
 
@@ -363,6 +376,14 @@ export interface IRegistrar extends BaseContract {
       value: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
+
+    zeroToken(
+      overrides?: CallOverrides
+    ): Promise<[string] & { zeroToken: string }>;
+
+    "zeroToken()"(
+      overrides?: CallOverrides
+    ): Promise<[string] & { zeroToken: string }>;
   };
 
   addToList(
@@ -440,6 +461,10 @@ export interface IRegistrar extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  zeroToken(overrides?: CallOverrides): Promise<string>;
+
+  "zeroToken()"(overrides?: CallOverrides): Promise<string>;
+
   callStatic: {
     addToList(
       list: BytesLike,
@@ -511,6 +536,10 @@ export interface IRegistrar extends BaseContract {
       value: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    zeroToken(overrides?: CallOverrides): Promise<string>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {
@@ -619,6 +648,10 @@ export interface IRegistrar extends BaseContract {
       value: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
+
+    zeroToken(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -705,5 +738,9 @@ export interface IRegistrar extends BaseContract {
       value: BytesLike,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
+
+    zeroToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "zeroToken()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }
