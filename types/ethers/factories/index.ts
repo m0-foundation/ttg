@@ -3,11 +3,14 @@
 /* eslint-disable */
 export * as dualGovernorSol from "./DualGovernor.sol";
 export * as dualGovernorDeployerSol from "./DualGovernorDeployer.sol";
+export * as dualGovernorHarnessSol from "./DualGovernorHarness.sol";
 export * as erc20PermitSol from "./ERC20Permit.sol";
 export * as erc5805Sol from "./ERC5805.sol";
 export * as erc712Sol from "./ERC712.sol";
 export * as epochBasedInflationaryVoteTokenSol from "./EpochBasedInflationaryVoteToken.sol";
+export * as epochBasedInflationaryVoteTokenHarnessSol from "./EpochBasedInflationaryVoteTokenHarness.sol";
 export * as epochBasedVoteTokenSol from "./EpochBasedVoteToken.sol";
+export * as epochBasedVoteTokenHarnessSol from "./EpochBasedVoteTokenHarness.sol";
 export * as iDualGovernorSol from "./IDualGovernor.sol";
 export * as iDualGovernorDeployerSol from "./IDualGovernorDeployer.sol";
 export * as ierc20Sol from "./IERC20.sol";
@@ -25,8 +28,10 @@ export * as iPowerTokenSol from "./IPowerToken.sol";
 export * as iPowerTokenDeployerSol from "./IPowerTokenDeployer.sol";
 export * as iRegistrarSol from "./IRegistrar.sol";
 export * as iZeroTokenSol from "./IZeroToken.sol";
+export * as mocksSol from "./Mocks.sol";
 export * as powerBootstrapTokenSol from "./PowerBootstrapToken.sol";
 export * as powerTokenSol from "./PowerToken.sol";
 export * as powerTokenDeployerSol from "./PowerTokenDeployer.sol";
 export * as registrarSol from "./Registrar.sol";
+export * as testUtilsSol from "./TestUtils.sol";
 export * as zeroTokenSol from "./ZeroToken.sol";
