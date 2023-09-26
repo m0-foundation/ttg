@@ -13,7 +13,7 @@ contract DualGovernorTests is Test {
         _deploy = new Deploy();
     }
 
-    function test_XXX_initialState() external {
+    function test_initialState() external {
         _deploy.run();
     }
 }

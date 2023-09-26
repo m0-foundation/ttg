@@ -45,6 +45,7 @@ contract Deploy is Script {
         // PowerBootstrapToken needs nothing.
 
         address expectedRegistrar_ = ContractHelper.getContractFrom(_deployer, _DEPLOYER_STARTING_NONCE + 4);
+
         address zeroToken_ = address(new ZeroToken(expectedRegistrar_, _initialZeroAccounts, _initialZeroBalances));
         address governorDeployer_ = address(new DualGovernorDeployer(expectedRegistrar_, zeroToken_));
         address powerTokenDeployer_ = address(new PowerTokenDeployer(expectedRegistrar_, _deployer)); // `_treasury`
