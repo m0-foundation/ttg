@@ -10,12 +10,11 @@ coverage :; forge coverage --report lcov && lcov --remove ./lcov.info -o ./lcov.
 
 # Deployment helpers
 
-# deploy spog and mint cash, token and value to deployer + 5 addresses from the anvil mnemonic
-deploy-local :; forge script script/LocalTestDeployScript.s.sol --rpc-url localhost --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v
+deploy-local :; forge script script/Deploy.s.sol --rpc-url localhost --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v
 
-deploy-sepolia :; forge script script/SPOGDeploy.s.sol --rpc-url sepolia --private-key ${ETH_PK} --broadcast -vvv
+deploy-sepolia :; forge script script/Deploy.s.sol --rpc-url sepolia --private-key ${ETH_PK} --broadcast -vvv
 
-deploy-qa-sepolia :; forge script script/LocalTestDeployScript.s.sol --rpc-url sepolia --broadcast -v
+deploy-qa-sepolia :; forge script script/Deploy.s.sol --rpc-url sepolia --broadcast -v
 
 # Run slither
 slither :; forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json .

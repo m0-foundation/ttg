@@ -406,11 +406,12 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     function votingDelay() public view returns (uint256 votingDelay_) {
-        // NOTE: This is only valid for non-emergency proposals.
+        // NOTE: This is only valid for Power and Double proposals.
         votingDelay_ = _isVotingEpoch(PureEpochs.currentEpoch()) ? 2 : 1;
     }
 
     function votingPeriod() external pure returns (uint256 votingPeriod_) {
+        // NOTE: This is only valid for Power and Double proposals.
         votingPeriod_ = 1;
     }
 
