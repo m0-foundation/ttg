@@ -12,7 +12,7 @@ interface IERC5805 is IERC712, IERC6372 {
 
     event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
 
-    function DELEGATION_TYPEHASH() external view returns (bytes32 delegationTypehash);
+    function DELEGATION_TYPEHASH() external view returns (bytes32 typehash);
 
     // This function returns the address to which the voting power of an account is currently delegated.
     // Note that if the delegate is address(0) then the voting power SHOULD NOT be checkpointed,

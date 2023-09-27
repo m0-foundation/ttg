@@ -19,6 +19,8 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     event EpochMarkedActive(uint256 indexed epoch);
 
+    function INITIAL_SUPPLY() external pure returns (uint256 initialSupply);
+
     function activeEpochs() external view returns (uint256 activeEpochs);
 
     function amountToAuction() external view returns (uint256 amountToAuction);

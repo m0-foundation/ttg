@@ -23,7 +23,7 @@ interface IGovernorBySig is IERC712, IGovernor {
         bytes32 s
     ) external returns (uint256 weight);
 
-    function BALLOT_TYPEHASH() external view returns (bytes32 ballotTypehash);
+    function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
 
     function name() external view returns (string memory name);
 }

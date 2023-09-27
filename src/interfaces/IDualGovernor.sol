@@ -65,6 +65,16 @@ interface IDualGovernor is IGovernorBySig {
 
     error ZeroRegistrarAddress();
 
+    function ONE() external pure returns (uint256 one);
+
+    function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
+
+    function BALLOTS_TYPEHASH() external pure returns (bytes32 typehash);
+
+    function BALLOT_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
+
+    function BALLOTS_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
+
     function cashToken() external view returns (address cashToken);
 
     function maxProposalFee() external view returns (uint256 maxProposalFee);

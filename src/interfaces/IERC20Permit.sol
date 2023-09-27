@@ -6,7 +6,7 @@ import { IERC20 } from "./IERC20.sol";
 import { IERC712 } from "./IERC712.sol";
 
 interface IERC20Permit is IERC20, IERC712 {
-    function PERMIT_TYPEHASH() external view returns (bytes32 permitTypehash);
+    function PERMIT_TYPEHASH() external view returns (bytes32 typehash);
 
     function permit(
         address account,
