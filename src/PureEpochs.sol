@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 /// @title PureEpochs
 /// @notice Defines epochs as 15 days worth of blocks (216,000) away from 'The Merge' block.
