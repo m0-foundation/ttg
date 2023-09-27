@@ -21,11 +21,17 @@ contract Deploy is Script {
     address internal _deployer;
     address internal _registrar;
 
-    address[] internal _initialZeroAccounts;
-    uint256[] internal _initialZeroBalances;
+    address[] internal _initialZeroAccounts = [
+        address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266),
+        address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)
+    ];
+    uint256[] internal _initialZeroBalances = [1_000_000_000_000, 500_000_000_000];
 
-    address[] internal _initialPowerAccounts;
-    uint256[] internal _initialPowerBalances;
+    address[] internal _initialPowerAccounts = [
+        address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266),
+        address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)
+    ];
+    uint256[] internal _initialPowerBalances = [1_000_000_000_000, 500_000_000_000];
 
     function setUp() public virtual {
         string memory mnemonic = vm.envString("MNEMONIC");

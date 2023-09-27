@@ -26,7 +26,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
 
         if (accountsLength_ != balancesLength_) revert LengthMismatch(accountsLength_, balancesLength_);
 
-        for (uint256 index_; index_ < accountsLength_; index_++) {
+        for (uint256 index_; index_ < accountsLength_; ++index_) {
             _mint(initialAccounts_[index_], initialBalances_[index_]);
         }
 
