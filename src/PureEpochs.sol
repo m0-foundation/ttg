@@ -3,7 +3,7 @@
 pragma solidity 0.8.20;
 
 /// @title PureEpochs
-/// @notice Defines epochs as 15 days worth of blocks (216,000) away from 'The Merge' block.
+/// @notice Defines epochs as 15 days worth of blocks (108,000) away from 'The Merge' block.
 library PureEpochs {
     // Ethereum finalized 'The Merge' at block 15_537_393 on September 15, 2022, at 05:42:42 GMT.
     uint256 internal constant _START_BLOCK = 15_537_393;

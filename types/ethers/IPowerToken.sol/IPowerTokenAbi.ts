@@ -31,6 +31,7 @@ export interface IPowerTokenAbiInterface extends utils.Interface {
     "CLOCK_MODE()": FunctionFragment;
     "DELEGATION_TYPEHASH()": FunctionFragment;
     "DOMAIN_SEPARATOR()": FunctionFragment;
+    "INITIAL_SUPPLY()": FunctionFragment;
     "ONE()": FunctionFragment;
     "PERMIT_TYPEHASH()": FunctionFragment;
     "activeEpochs()": FunctionFragment;
@@ -79,6 +80,8 @@ export interface IPowerTokenAbiInterface extends utils.Interface {
       | "DELEGATION_TYPEHASH()"
       | "DOMAIN_SEPARATOR"
       | "DOMAIN_SEPARATOR()"
+      | "INITIAL_SUPPLY"
+      | "INITIAL_SUPPLY()"
       | "ONE"
       | "ONE()"
       | "PERMIT_TYPEHASH"
@@ -179,6 +182,14 @@ export interface IPowerTokenAbiInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "DOMAIN_SEPARATOR()",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "INITIAL_SUPPLY",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "INITIAL_SUPPLY()",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "ONE", values?: undefined): string;
@@ -484,6 +495,14 @@ export interface IPowerTokenAbiInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "DOMAIN_SEPARATOR()",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "INITIAL_SUPPLY",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "INITIAL_SUPPLY()",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "ONE", data: BytesLike): Result;
@@ -855,11 +874,11 @@ export interface IPowerTokenAbi extends BaseContract {
 
     DELEGATION_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { delegationTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "DELEGATION_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { delegationTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     DOMAIN_SEPARATOR(
       overrides?: CallOverrides
@@ -869,6 +888,14 @@ export interface IPowerTokenAbi extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string] & { domainSeparator: string }>;
 
+    INITIAL_SUPPLY(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { initialSupply: BigNumber }>;
+
+    "INITIAL_SUPPLY()"(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { initialSupply: BigNumber }>;
+
     ONE(overrides?: CallOverrides): Promise<[BigNumber] & { one: BigNumber }>;
 
     "ONE()"(
@@ -877,11 +904,11 @@ export interface IPowerTokenAbi extends BaseContract {
 
     PERMIT_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { permitTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "PERMIT_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { permitTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     activeEpochs(
       overrides?: CallOverrides
@@ -1264,6 +1291,10 @@ export interface IPowerTokenAbi extends BaseContract {
 
   "DOMAIN_SEPARATOR()"(overrides?: CallOverrides): Promise<string>;
 
+  INITIAL_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "INITIAL_SUPPLY()"(overrides?: CallOverrides): Promise<BigNumber>;
+
   ONE(overrides?: CallOverrides): Promise<BigNumber>;
 
   "ONE()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1595,6 +1626,10 @@ export interface IPowerTokenAbi extends BaseContract {
     DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
     "DOMAIN_SEPARATOR()"(overrides?: CallOverrides): Promise<string>;
+
+    INITIAL_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "INITIAL_SUPPLY()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     ONE(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1985,6 +2020,10 @@ export interface IPowerTokenAbi extends BaseContract {
 
     "DOMAIN_SEPARATOR()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    INITIAL_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "INITIAL_SUPPLY()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     ONE(overrides?: CallOverrides): Promise<BigNumber>;
 
     "ONE()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -2324,6 +2363,12 @@ export interface IPowerTokenAbi extends BaseContract {
     DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "DOMAIN_SEPARATOR()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    INITIAL_SUPPLY(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "INITIAL_SUPPLY()"(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

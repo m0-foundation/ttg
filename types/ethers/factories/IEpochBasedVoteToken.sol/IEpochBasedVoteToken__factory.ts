@@ -212,7 +212,7 @@ const _abi = [
     outputs: [
       {
         internalType: "bytes32",
-        name: "delegationTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],
@@ -238,7 +238,7 @@ const _abi = [
     outputs: [
       {
         internalType: "bytes32",
-        name: "permitTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],

@@ -356,11 +356,11 @@ export interface IERC20Permit extends BaseContract {
 
     PERMIT_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { permitTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "PERMIT_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { permitTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     allowance(
       account: string,

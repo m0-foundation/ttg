@@ -37,7 +37,6 @@ contract DualGovernorHarness is DualGovernor {
         uint256 voteStart_,
         uint256 voteEnd_,
         bool executed_,
-        bool canceled_,
         ProposalType proposalType_
     ) external {
         _proposals[proposalId_] = Proposal({
@@ -45,7 +44,6 @@ contract DualGovernorHarness is DualGovernor {
             voteStart: uint16(voteStart_),
             voteEnd: uint16(voteEnd_),
             executed: executed_,
-            canceled: canceled_,
             proposalType: proposalType_
         });
     }

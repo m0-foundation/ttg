@@ -76,7 +76,7 @@ export interface DualGovernorHarnessAbiInterface extends utils.Interface {
     "reward()": FunctionFragment;
     "setNumberOfProposals(uint256,uint256)": FunctionFragment;
     "setPowerTokenQuorumRatio(uint16)": FunctionFragment;
-    "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)": FunctionFragment;
+    "setProposal(uint256,address,uint256,uint256,bool,uint8)": FunctionFragment;
     "setProposalFee(uint256)": FunctionFragment;
     "setProposalFeeRange(uint256,uint256,uint256)": FunctionFragment;
     "setZeroTokenQuorumRatio(uint16)": FunctionFragment;
@@ -185,7 +185,7 @@ export interface DualGovernorHarnessAbiInterface extends utils.Interface {
       | "setPowerTokenQuorumRatio"
       | "setPowerTokenQuorumRatio(uint16)"
       | "setProposal"
-      | "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)"
+      | "setProposal(uint256,address,uint256,uint256,bool,uint8)"
       | "setProposalFee"
       | "setProposalFee(uint256)"
       | "setProposalFeeRange"
@@ -579,18 +579,16 @@ export interface DualGovernorHarnessAbiInterface extends utils.Interface {
       BigNumberish,
       BigNumberish,
       boolean,
-      boolean,
       BigNumberish
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)",
+    functionFragment: "setProposal(uint256,address,uint256,uint256,bool,uint8)",
     values: [
       BigNumberish,
       string,
       BigNumberish,
       BigNumberish,
-      boolean,
       boolean,
       BigNumberish
     ]
@@ -974,7 +972,7 @@ export interface DualGovernorHarnessAbiInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)",
+    functionFragment: "setProposal(uint256,address,uint256,uint256,bool,uint8)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1046,7 +1044,6 @@ export interface DualGovernorHarnessAbiInterface extends utils.Interface {
 
   events: {
     "PowerTokenQuorumRatioSet(uint16)": EventFragment;
-    "ProposalCanceled(uint256)": EventFragment;
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)": EventFragment;
     "ProposalExecuted(uint256)": EventFragment;
     "ProposalFeeRangeSet(uint256,uint256)": EventFragment;
@@ -1060,8 +1057,6 @@ export interface DualGovernorHarnessAbiInterface extends utils.Interface {
   getEvent(
     nameOrSignatureOrTopic: "PowerTokenQuorumRatioSet(uint16)"
   ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled(uint256)"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ProposalCreated"): EventFragment;
   getEvent(
     nameOrSignatureOrTopic: "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"
@@ -1098,17 +1093,6 @@ export type PowerTokenQuorumRatioSetEvent = TypedEvent<
 
 export type PowerTokenQuorumRatioSetEventFilter =
   TypedEventFilter<PowerTokenQuorumRatioSetEvent>;
-
-export interface ProposalCanceledEventObject {
-  proposalId: BigNumber;
-}
-export type ProposalCanceledEvent = TypedEvent<
-  [BigNumber],
-  ProposalCanceledEventObject
->;
-
-export type ProposalCanceledEventFilter =
-  TypedEventFilter<ProposalCanceledEvent>;
 
 export interface ProposalCreatedEventObject {
   proposalId: BigNumber;
@@ -1733,18 +1717,16 @@ export interface DualGovernorHarnessAbi extends BaseContract {
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
-    "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)"(
+    "setProposal(uint256,address,uint256,uint256,bool,uint8)"(
       proposalId_: BigNumberish,
       proposer_: string,
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
@@ -2283,18 +2265,16 @@ export interface DualGovernorHarnessAbi extends BaseContract {
     voteStart_: BigNumberish,
     voteEnd_: BigNumberish,
     executed_: boolean,
-    canceled_: boolean,
     proposalType_: BigNumberish,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
-  "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)"(
+  "setProposal(uint256,address,uint256,uint256,bool,uint8)"(
     proposalId_: BigNumberish,
     proposer_: string,
     voteStart_: BigNumberish,
     voteEnd_: BigNumberish,
     executed_: boolean,
-    canceled_: boolean,
     proposalType_: BigNumberish,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
@@ -2808,18 +2788,16 @@ export interface DualGovernorHarnessAbi extends BaseContract {
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)"(
+    "setProposal(uint256,address,uint256,uint256,bool,uint8)"(
       proposalId_: BigNumberish,
       proposer_: string,
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -2904,9 +2882,6 @@ export interface DualGovernorHarnessAbi extends BaseContract {
     PowerTokenQuorumRatioSet(
       powerTokenQuorumRatio?: null
     ): PowerTokenQuorumRatioSetEventFilter;
-
-    "ProposalCanceled(uint256)"(proposalId?: null): ProposalCanceledEventFilter;
-    ProposalCanceled(proposalId?: null): ProposalCanceledEventFilter;
 
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"(
       proposalId?: null,
@@ -3424,18 +3399,16 @@ export interface DualGovernorHarnessAbi extends BaseContract {
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
-    "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)"(
+    "setProposal(uint256,address,uint256,uint256,bool,uint8)"(
       proposalId_: BigNumberish,
       proposer_: string,
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
@@ -3984,18 +3957,16 @@ export interface DualGovernorHarnessAbi extends BaseContract {
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
-    "setProposal(uint256,address,uint256,uint256,bool,bool,uint8)"(
+    "setProposal(uint256,address,uint256,uint256,bool,uint8)"(
       proposalId_: BigNumberish,
       proposer_: string,
       voteStart_: BigNumberish,
       voteEnd_: BigNumberish,
       executed_: boolean,
-      canceled_: boolean,
       proposalType_: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;

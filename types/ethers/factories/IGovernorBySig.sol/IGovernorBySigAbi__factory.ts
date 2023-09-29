@@ -77,19 +77,6 @@ const _abi = [
         name: "proposalId",
         type: "uint256",
       },
-    ],
-    name: "ProposalCanceled",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "proposalId",
-        type: "uint256",
-      },
       {
         indexed: false,
         internalType: "address",
@@ -217,11 +204,11 @@ const _abi = [
     outputs: [
       {
         internalType: "bytes32",
-        name: "ballotTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],
-    stateMutability: "view",
+    stateMutability: "pure",
     type: "function",
   },
   {

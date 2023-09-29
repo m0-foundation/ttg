@@ -14,6 +14,7 @@ import { PureEpochs } from "./PureEpochs.sol";
 import { ERC712 } from "./ERC712.sol";
 
 // TODO: expose `_proposals` and `_tallies`?
+// TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
 
 contract DualGovernor is IDualGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
@@ -22,7 +23,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
         uint16 voteStart;
         uint16 voteEnd;
         bool executed;
-        bool canceled;
         ProposalType proposalType;
     }
 
@@ -246,7 +246,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
             ? (currentEpoch_, currentEpoch_ + 1)
             : (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay() + 1);
 
-        if (proposalType_ == ProposalType.Power) {
+        if (proposalType_ == ProposalType.Power || proposalType_ == ProposalType.Double) {
             _numberOfProposals[voteStart_] += 1;
         }
 
@@ -255,7 +255,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
             voteStart: uint16(voteStart_),
             voteEnd: uint16(voteEnd_),
             executed: false,
-            canceled: false,
             proposalType: proposalType_
         });
 
@@ -379,8 +378,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if (voteStart_ == 0) revert ProposalDoesNotExist();
 
         if (proposal_.executed) return ProposalState.Executed;
-
-        if (proposal_.canceled) return ProposalState.Canceled;
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
@@ -549,8 +546,10 @@ contract DualGovernor is IDualGovernor, ERC712 {
         // NOTE: `weight_` is technically correct, but not discernable.
         emit VoteCast(voter_, proposalId_, support_, weight_, reason_);
 
-        // Only Power proposals are mandatory and result in inflation if they are all voted on.
-        if (proposal_.proposalType != ProposalType.Power) return weight_;
+        // Only Power or Double proposals are mandatory and result in inflation if they are all voted on.
+        if (proposal_.proposalType != ProposalType.Power && proposal_.proposalType != ProposalType.Double) {
+            return weight_;
+        }
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
@@ -560,6 +559,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         IPowerToken(_powerToken).markParticipation(voter_);
 
+        // TODO: Test the accuracy of this without an scaler.
         IZeroToken(_zeroToken).mint(voter_, (_reward * powerTokenWeight_) / _getPowerTokenTotalSupply(snapshot_));
     }
 

@@ -992,7 +992,6 @@ export interface DualGovernorInterface extends utils.Interface {
 
   events: {
     "PowerTokenQuorumRatioSet(uint16)": EventFragment;
-    "ProposalCanceled(uint256)": EventFragment;
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)": EventFragment;
     "ProposalExecuted(uint256)": EventFragment;
     "ProposalFeeRangeSet(uint256,uint256)": EventFragment;
@@ -1006,8 +1005,6 @@ export interface DualGovernorInterface extends utils.Interface {
   getEvent(
     nameOrSignatureOrTopic: "PowerTokenQuorumRatioSet(uint16)"
   ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled(uint256)"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ProposalCreated"): EventFragment;
   getEvent(
     nameOrSignatureOrTopic: "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"
@@ -1044,17 +1041,6 @@ export type PowerTokenQuorumRatioSetEvent = TypedEvent<
 
 export type PowerTokenQuorumRatioSetEventFilter =
   TypedEventFilter<PowerTokenQuorumRatioSetEvent>;
-
-export interface ProposalCanceledEventObject {
-  proposalId: BigNumber;
-}
-export type ProposalCanceledEvent = TypedEvent<
-  [BigNumber],
-  ProposalCanceledEventObject
->;
-
-export type ProposalCanceledEventFilter =
-  TypedEventFilter<ProposalCanceledEvent>;
 
 export interface ProposalCreatedEventObject {
   proposalId: BigNumber;
@@ -2748,9 +2734,6 @@ export interface DualGovernor extends BaseContract {
     PowerTokenQuorumRatioSet(
       powerTokenQuorumRatio?: null
     ): PowerTokenQuorumRatioSetEventFilter;
-
-    "ProposalCanceled(uint256)"(proposalId?: null): ProposalCanceledEventFilter;
-    ProposalCanceled(proposalId?: null): ProposalCanceledEventFilter;
 
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"(
       proposalId?: null,

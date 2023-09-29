@@ -627,11 +627,11 @@ export interface IEpochBasedInflationaryVoteToken extends BaseContract {
 
     DELEGATION_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { delegationTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "DELEGATION_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { delegationTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     DOMAIN_SEPARATOR(
       overrides?: CallOverrides
@@ -649,11 +649,11 @@ export interface IEpochBasedInflationaryVoteToken extends BaseContract {
 
     PERMIT_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { permitTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "PERMIT_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { permitTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     allowance(
       account: string,

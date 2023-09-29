@@ -5,6 +5,10 @@ pragma solidity 0.8.20;
 import { IGovernorBySig } from "./IGovernorBySig.sol";
 
 interface IDualGovernor is IGovernorBySig {
+    /******************************************************************************************************************\
+    |                                                      Enums                                                       |
+    \******************************************************************************************************************/
+
     enum ProposalType {
         Power,
         Double,
@@ -17,13 +21,21 @@ interface IDualGovernor is IGovernorBySig {
         Yes
     }
 
-    event ProposalFeeSet(uint256 proposalFee);
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    event PowerTokenQuorumRatioSet(uint16 powerTokenQuorumRatio);
 
     event ProposalFeeRangeSet(uint256 minProposalFee, uint256 maxProposalFee);
 
+    event ProposalFeeSet(uint256 proposalFee);
+
     event ZeroTokenQuorumRatioSet(uint16 zeroTokenQuorumRatio);
 
-    event PowerTokenQuorumRatioSet(uint16 powerTokenQuorumRatio);
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
 
     error AlreadyVoted();
 
@@ -65,15 +77,19 @@ interface IDualGovernor is IGovernorBySig {
 
     error ZeroRegistrarAddress();
 
-    function ONE() external pure returns (uint256 one);
+    /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
 
     function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
 
-    function BALLOTS_TYPEHASH() external pure returns (bytes32 typehash);
-
     function BALLOT_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
 
+    function BALLOTS_TYPEHASH() external pure returns (bytes32 typehash);
+
     function BALLOTS_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
+
+    function ONE() external pure returns (uint256 one);
 
     function cashToken() external view returns (address cashToken);
 

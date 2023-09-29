@@ -11,6 +11,10 @@ interface IERC20 {
 
     event Transfer(address indexed account, address indexed recipient, uint256 amount);
 
+    /******************************************************************************************************************\
+    |                                             Interactive Functions                                                |
+    \******************************************************************************************************************/
+
     function approve(address spender, uint256 amount) external returns (bool success);
 
     function decreaseAllowance(address spender, uint256 subtractedAmount) external returns (bool success);
@@ -20,6 +24,10 @@ interface IERC20 {
     function transfer(address recipient, uint256 amount) external returns (bool success);
 
     function transferFrom(address account, address recipient, uint256 amount) external returns (bool success);
+
+    /******************************************************************************************************************\
+    |                                              View/Pure Functions                                                 |
+    \******************************************************************************************************************/
 
     function allowance(address account, address spender) external view returns (uint256 allowance);
 

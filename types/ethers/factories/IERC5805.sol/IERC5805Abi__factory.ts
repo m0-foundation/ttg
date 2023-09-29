@@ -137,7 +137,7 @@ const _abi = [
     outputs: [
       {
         internalType: "bytes32",
-        name: "delegationTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],

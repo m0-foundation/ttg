@@ -432,15 +432,12 @@ export interface IGovernorBySigInterface extends utils.Interface {
   ): Result;
 
   events: {
-    "ProposalCanceled(uint256)": EventFragment;
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)": EventFragment;
     "ProposalExecuted(uint256)": EventFragment;
     "QuorumNumeratorUpdated(uint256,uint256)": EventFragment;
     "VoteCast(address,uint256,uint8,uint256,string)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled(uint256)"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ProposalCreated"): EventFragment;
   getEvent(
     nameOrSignatureOrTopic: "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"
@@ -456,17 +453,6 @@ export interface IGovernorBySigInterface extends utils.Interface {
     nameOrSignatureOrTopic: "VoteCast(address,uint256,uint8,uint256,string)"
   ): EventFragment;
 }
-
-export interface ProposalCanceledEventObject {
-  proposalId: BigNumber;
-}
-export type ProposalCanceledEvent = TypedEvent<
-  [BigNumber],
-  ProposalCanceledEventObject
->;
-
-export type ProposalCanceledEventFilter =
-  TypedEventFilter<ProposalCanceledEvent>;
 
 export interface ProposalCreatedEventObject {
   proposalId: BigNumber;
@@ -562,11 +548,11 @@ export interface IGovernorBySig extends BaseContract {
   functions: {
     BALLOT_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { ballotTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "BALLOT_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { ballotTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     CLOCK_MODE(
       overrides?: CallOverrides
@@ -1260,9 +1246,6 @@ export interface IGovernorBySig extends BaseContract {
   };
 
   filters: {
-    "ProposalCanceled(uint256)"(proposalId?: null): ProposalCanceledEventFilter;
-    ProposalCanceled(proposalId?: null): ProposalCanceledEventFilter;
-
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"(
       proposalId?: null,
       proposer?: null,

@@ -5,6 +5,18 @@ pragma solidity 0.8.20;
 import { IEpochBasedInflationaryVoteToken } from "./IEpochBasedInflationaryVoteToken.sol";
 
 interface IPowerToken is IEpochBasedInflationaryVoteToken {
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    event Buy(address indexed buyer, uint256 amount, uint256 cost);
+
+    event EpochMarkedActive(uint256 indexed epoch);
+
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
     error AlreadyClaimed();
 
     error EpochAlreadyActive();
@@ -15,11 +27,21 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     error TransferFromFailed();
 
-    event Buy(address indexed buyer, uint256 amount, uint256 cost);
+    /******************************************************************************************************************\
+    |                                              Interactive Functions                                               |
+    \******************************************************************************************************************/
 
-    event EpochMarkedActive(uint256 indexed epoch);
+    function buy(uint256 amount, address destination) external;
 
-    function INITIAL_SUPPLY() external pure returns (uint256 initialSupply);
+    // TODO: buyWithPermit
+
+    function markEpochActive() external;
+
+    function markParticipation(address delegatee) external;
+
+    /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
 
     function activeEpochs() external view returns (uint256 activeEpochs);
 
@@ -29,21 +51,15 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     function bootstrapToken() external view returns (address bootstrapToken);
 
-    function buy(uint256 amount, address destination) external;
-
-    // TODO: buyWithPermit
-
     function cashToken() external view returns (address cashToken);
 
     function getCost(uint256 amount) external view returns (uint256 price);
 
     function governor() external view returns (address governor);
 
+    function INITIAL_SUPPLY() external pure returns (uint256 initialSupply);
+
     function isActiveEpoch(uint256 epoch) external view returns (bool isActiveEpoch);
-
-    function markEpochActive() external;
-
-    function markParticipation(address delegatee) external;
 
     function treasury() external view returns (address treasury);
 }

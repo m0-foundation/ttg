@@ -213,19 +213,6 @@ const _abi = [
         name: "proposalId",
         type: "uint256",
       },
-    ],
-    name: "ProposalCanceled",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "proposalId",
-        type: "uint256",
-      },
       {
         indexed: false,
         internalType: "address",
@@ -394,15 +381,54 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "BALLOTS_TYPEHASH",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "typehash",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "BALLOTS_WITH_REASON_TYPEHASH",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "typehash",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "BALLOT_TYPEHASH",
     outputs: [
       {
         internalType: "bytes32",
-        name: "ballotTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],
-    stateMutability: "view",
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "BALLOT_WITH_REASON_TYPEHASH",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "typehash",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "pure",
     type: "function",
   },
   {
@@ -442,6 +468,19 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "ONE",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "one",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "pure",
     type: "function",
   },
   {

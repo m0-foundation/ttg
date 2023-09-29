@@ -278,11 +278,11 @@ export interface IERC5805Abi extends BaseContract {
 
     DELEGATION_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { delegationTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "DELEGATION_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { delegationTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     DOMAIN_SEPARATOR(
       overrides?: CallOverrides

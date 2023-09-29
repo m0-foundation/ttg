@@ -29,10 +29,14 @@ import type {
 
 export interface IDualGovernorAbiInterface extends utils.Interface {
   functions: {
+    "BALLOTS_TYPEHASH()": FunctionFragment;
+    "BALLOTS_WITH_REASON_TYPEHASH()": FunctionFragment;
     "BALLOT_TYPEHASH()": FunctionFragment;
+    "BALLOT_WITH_REASON_TYPEHASH()": FunctionFragment;
     "CLOCK_MODE()": FunctionFragment;
     "COUNTING_MODE()": FunctionFragment;
     "DOMAIN_SEPARATOR()": FunctionFragment;
+    "ONE()": FunctionFragment;
     "cashToken()": FunctionFragment;
     "castVote(uint256,uint8)": FunctionFragment;
     "castVoteBySig(uint256,uint8,uint8,bytes32,bytes32)": FunctionFragment;
@@ -68,14 +72,22 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
 
   getFunction(
     nameOrSignatureOrTopic:
+      | "BALLOTS_TYPEHASH"
+      | "BALLOTS_TYPEHASH()"
+      | "BALLOTS_WITH_REASON_TYPEHASH"
+      | "BALLOTS_WITH_REASON_TYPEHASH()"
       | "BALLOT_TYPEHASH"
       | "BALLOT_TYPEHASH()"
+      | "BALLOT_WITH_REASON_TYPEHASH"
+      | "BALLOT_WITH_REASON_TYPEHASH()"
       | "CLOCK_MODE"
       | "CLOCK_MODE()"
       | "COUNTING_MODE"
       | "COUNTING_MODE()"
       | "DOMAIN_SEPARATOR"
       | "DOMAIN_SEPARATOR()"
+      | "ONE"
+      | "ONE()"
       | "cashToken"
       | "cashToken()"
       | "castVote"
@@ -141,11 +153,35 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
   ): FunctionFragment;
 
   encodeFunctionData(
+    functionFragment: "BALLOTS_TYPEHASH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "BALLOTS_TYPEHASH()",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "BALLOTS_WITH_REASON_TYPEHASH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "BALLOTS_WITH_REASON_TYPEHASH()",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "BALLOT_TYPEHASH",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "BALLOT_TYPEHASH()",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "BALLOT_WITH_REASON_TYPEHASH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "BALLOT_WITH_REASON_TYPEHASH()",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -172,6 +208,8 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
     functionFragment: "DOMAIN_SEPARATOR()",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "ONE", values?: undefined): string;
+  encodeFunctionData(functionFragment: "ONE()", values?: undefined): string;
   encodeFunctionData(functionFragment: "cashToken", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "cashToken()",
@@ -403,11 +441,35 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "BALLOTS_TYPEHASH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "BALLOTS_TYPEHASH()",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "BALLOTS_WITH_REASON_TYPEHASH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "BALLOTS_WITH_REASON_TYPEHASH()",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "BALLOT_TYPEHASH",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "BALLOT_TYPEHASH()",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "BALLOT_WITH_REASON_TYPEHASH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "BALLOT_WITH_REASON_TYPEHASH()",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "CLOCK_MODE", data: BytesLike): Result;
@@ -431,6 +493,8 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
     functionFragment: "DOMAIN_SEPARATOR()",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "ONE", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "ONE()", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cashToken", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "cashToken()",
@@ -628,7 +692,6 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
 
   events: {
     "PowerTokenQuorumRatioSet(uint16)": EventFragment;
-    "ProposalCanceled(uint256)": EventFragment;
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)": EventFragment;
     "ProposalExecuted(uint256)": EventFragment;
     "ProposalFeeRangeSet(uint256,uint256)": EventFragment;
@@ -642,8 +705,6 @@ export interface IDualGovernorAbiInterface extends utils.Interface {
   getEvent(
     nameOrSignatureOrTopic: "PowerTokenQuorumRatioSet(uint16)"
   ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "ProposalCanceled(uint256)"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ProposalCreated"): EventFragment;
   getEvent(
     nameOrSignatureOrTopic: "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"
@@ -680,17 +741,6 @@ export type PowerTokenQuorumRatioSetEvent = TypedEvent<
 
 export type PowerTokenQuorumRatioSetEventFilter =
   TypedEventFilter<PowerTokenQuorumRatioSetEvent>;
-
-export interface ProposalCanceledEventObject {
-  proposalId: BigNumber;
-}
-export type ProposalCanceledEvent = TypedEvent<
-  [BigNumber],
-  ProposalCanceledEventObject
->;
-
-export type ProposalCanceledEventFilter =
-  TypedEventFilter<ProposalCanceledEvent>;
 
 export interface ProposalCreatedEventObject {
   proposalId: BigNumber;
@@ -817,13 +867,37 @@ export interface IDualGovernorAbi extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    BALLOTS_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<[string] & { typehash: string }>;
+
+    "BALLOTS_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<[string] & { typehash: string }>;
+
+    BALLOTS_WITH_REASON_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<[string] & { typehash: string }>;
+
+    "BALLOTS_WITH_REASON_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<[string] & { typehash: string }>;
+
     BALLOT_TYPEHASH(
       overrides?: CallOverrides
-    ): Promise<[string] & { ballotTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
 
     "BALLOT_TYPEHASH()"(
       overrides?: CallOverrides
-    ): Promise<[string] & { ballotTypehash: string }>;
+    ): Promise<[string] & { typehash: string }>;
+
+    BALLOT_WITH_REASON_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<[string] & { typehash: string }>;
+
+    "BALLOT_WITH_REASON_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<[string] & { typehash: string }>;
 
     CLOCK_MODE(
       overrides?: CallOverrides
@@ -848,6 +922,12 @@ export interface IDualGovernorAbi extends BaseContract {
     "DOMAIN_SEPARATOR()"(
       overrides?: CallOverrides
     ): Promise<[string] & { domainSeparator: string }>;
+
+    ONE(overrides?: CallOverrides): Promise<[BigNumber] & { one: BigNumber }>;
+
+    "ONE()"(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { one: BigNumber }>;
 
     cashToken(
       overrides?: CallOverrides
@@ -1172,9 +1252,21 @@ export interface IDualGovernorAbi extends BaseContract {
     ): Promise<[BigNumber] & { zeroTokenQuorumRatio: BigNumber }>;
   };
 
+  BALLOTS_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  "BALLOTS_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
+
+  BALLOTS_WITH_REASON_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  "BALLOTS_WITH_REASON_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
+
   BALLOT_TYPEHASH(overrides?: CallOverrides): Promise<string>;
 
   "BALLOT_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
+
+  BALLOT_WITH_REASON_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  "BALLOT_WITH_REASON_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
 
   CLOCK_MODE(overrides?: CallOverrides): Promise<string>;
 
@@ -1187,6 +1279,10 @@ export interface IDualGovernorAbi extends BaseContract {
   DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
   "DOMAIN_SEPARATOR()"(overrides?: CallOverrides): Promise<string>;
+
+  ONE(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "ONE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   cashToken(overrides?: CallOverrides): Promise<string>;
 
@@ -1457,9 +1553,23 @@ export interface IDualGovernorAbi extends BaseContract {
   "zeroTokenQuorumRatio()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   callStatic: {
+    BALLOTS_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    "BALLOTS_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
+
+    BALLOTS_WITH_REASON_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    "BALLOTS_WITH_REASON_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<string>;
+
     BALLOT_TYPEHASH(overrides?: CallOverrides): Promise<string>;
 
     "BALLOT_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
+
+    BALLOT_WITH_REASON_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    "BALLOT_WITH_REASON_TYPEHASH()"(overrides?: CallOverrides): Promise<string>;
 
     CLOCK_MODE(overrides?: CallOverrides): Promise<string>;
 
@@ -1472,6 +1582,10 @@ export interface IDualGovernorAbi extends BaseContract {
     DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
     "DOMAIN_SEPARATOR()"(overrides?: CallOverrides): Promise<string>;
+
+    ONE(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "ONE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     cashToken(overrides?: CallOverrides): Promise<string>;
 
@@ -1750,9 +1864,6 @@ export interface IDualGovernorAbi extends BaseContract {
       powerTokenQuorumRatio?: null
     ): PowerTokenQuorumRatioSetEventFilter;
 
-    "ProposalCanceled(uint256)"(proposalId?: null): ProposalCanceledEventFilter;
-    ProposalCanceled(proposalId?: null): ProposalCanceledEventFilter;
-
     "ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)"(
       proposalId?: null,
       proposer?: null,
@@ -1824,9 +1935,25 @@ export interface IDualGovernorAbi extends BaseContract {
   };
 
   estimateGas: {
+    BALLOTS_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "BALLOTS_TYPEHASH()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    BALLOTS_WITH_REASON_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "BALLOTS_WITH_REASON_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     BALLOT_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
 
     "BALLOT_TYPEHASH()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    BALLOT_WITH_REASON_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "BALLOT_WITH_REASON_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     CLOCK_MODE(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1839,6 +1966,10 @@ export interface IDualGovernorAbi extends BaseContract {
     DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
 
     "DOMAIN_SEPARATOR()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ONE(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "ONE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     cashToken(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -2113,9 +2244,31 @@ export interface IDualGovernorAbi extends BaseContract {
   };
 
   populateTransaction: {
+    BALLOTS_TYPEHASH(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "BALLOTS_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    BALLOTS_WITH_REASON_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "BALLOTS_WITH_REASON_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     BALLOT_TYPEHASH(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "BALLOT_TYPEHASH()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    BALLOT_WITH_REASON_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "BALLOT_WITH_REASON_TYPEHASH()"(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -2132,6 +2285,10 @@ export interface IDualGovernorAbi extends BaseContract {
     "DOMAIN_SEPARATOR()"(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    ONE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "ONE()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     cashToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

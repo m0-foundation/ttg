@@ -269,19 +269,6 @@ const _abi = [
         name: "proposalId",
         type: "uint256",
       },
-    ],
-    name: "ProposalCanceled",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "proposalId",
-        type: "uint256",
-      },
       {
         indexed: false,
         internalType: "address",
@@ -1402,11 +1389,6 @@ const _abi = [
       {
         internalType: "bool",
         name: "executed_",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "canceled_",
         type: "bool",
       },
       {

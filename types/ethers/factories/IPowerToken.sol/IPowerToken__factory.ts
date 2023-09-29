@@ -290,7 +290,7 @@ const _abi = [
     outputs: [
       {
         internalType: "bytes32",
-        name: "delegationTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],
@@ -312,6 +312,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "INITIAL_SUPPLY",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "initialSupply",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "ONE",
     outputs: [
       {
@@ -329,7 +342,7 @@ const _abi = [
     outputs: [
       {
         internalType: "bytes32",
-        name: "permitTypehash",
+        name: "typehash",
         type: "bytes32",
       },
     ],

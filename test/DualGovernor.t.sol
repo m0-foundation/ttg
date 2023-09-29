@@ -55,7 +55,6 @@ contract DualGovernorTests is Test {
             currentEpoch + 1,
             currentEpoch + 10,
             false,
-            false,
             IDualGovernor.ProposalType.Power
         );
 
@@ -75,7 +74,6 @@ contract DualGovernorTests is Test {
             address(0),
             currentEpoch,
             currentEpoch + 1,
-            false,
             false,
             IDualGovernor.ProposalType.Power
         );
@@ -141,7 +139,6 @@ contract DualGovernorTests is Test {
             1,
             1,
             false,
-            false,
             IDualGovernor.ProposalType.Power
         );
 
@@ -179,7 +176,6 @@ contract DualGovernorTests is Test {
             address(0),
             currentEpoch - 1,
             currentEpoch - 1,
-            false,
             false,
             IDualGovernor.ProposalType.Power
         );
