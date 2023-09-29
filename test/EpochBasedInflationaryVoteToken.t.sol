@@ -71,6 +71,16 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 500);
+
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+
+        assertEq(_vote.balanceOf(_alice), 500);
+        assertEq(_vote.getVotes(_alice), 500);
+
+        assertEq(_vote.balanceOf(_bob), 500);
+        assertEq(_vote.getVotes(_bob), 500);
     }
 
     function test_noInflationWithoutVotingPowerInPreviousEpoch_delegated() external {
@@ -117,6 +127,16 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 1_000);
+
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+
+        assertEq(_vote.balanceOf(_alice), 500);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 500);
+        assertEq(_vote.getVotes(_bob), 1_000);
     }
 
     function test_inflationFromVotingPowerInPreviousEpoch_selfDelegation() external {
@@ -144,6 +164,16 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         vm.prank(_alice);
         _vote.transfer(_bob, 500);
+
+        assertEq(_vote.balanceOf(_alice), 700);
+        assertEq(_vote.getVotes(_alice), 700);
+
+        assertEq(_vote.balanceOf(_bob), 500);
+        assertEq(_vote.getVotes(_bob), 500);
+
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 700);
         assertEq(_vote.getVotes(_alice), 700);
@@ -201,6 +231,67 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 500);
+
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+
+        assertEq(_vote.balanceOf(_alice), 700);
+        assertEq(_vote.getVotes(_alice), 700);
+
+        assertEq(_vote.balanceOf(_bob), 500);
+        assertEq(_vote.getVotes(_bob), 500);
+    }
+
+    function test_scenario1() external {
+        _goToNextTransferEpoch();
+
+        _vote.mint(_alice, 1_000);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        _goToNextVoteEpoch();
+
+        _vote.markParticipation(_bob); // 1000 * 1.2
+
+        _goToNextVoteEpoch();
+
+        _vote.markParticipation(_bob); // 1000 * 1.2 * 1.2
+
+        _goToNextTransferEpoch();
+        _goToNextTransferEpoch();
+
+        vm.prank(_alice);
+        _vote.delegate(_alice);
+
+        _goToNextVoteEpoch();
+
+        _vote.markParticipation(_alice); // 1000 * 1.2 * 1.2 * 1.2
+        _vote.markParticipation(_bob);
+
+        _goToNextVoteEpoch();
+
+        _vote.markParticipation(_bob);
+
+        _goToNextTransferEpoch();
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        _goToNextVoteEpoch();
+
+        _vote.markParticipation(_bob); // 1000 * 1.2 * 1.2 * 1.2 * 1.2
+
+        _goToNextVoteEpoch();
+
+        _vote.markParticipation(_bob); // 1000 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2
+
+        assertEq(_vote.balanceOf(_alice), 2_487);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 2_487);
     }
 
     function testFuzz_full(uint256 seed_) external {
