@@ -9,10 +9,12 @@
         "prettier": "prettier --write 'script/**/*.sol' 'src/**/*.sol' 'test/**/*.sol'",
         "solhint": "solhint -f stylish 'src/**/*.sol'",
         "solhint-fix": "solhint --fix 'src/**/*.sol'",
-        "typechain-ethers": "typechain --target ethers-v5 --out-dir types/ethers --always-generate-overloads 'out/*.sol/*.json'"
+        "typechain-ethers-v5": "typechain --target ethers-v5 --out-dir types/ethers-v5 --always-generate-overloads 'out/*.sol/*.json'",
+        "typechain-ethers-v6": "typechain --target ethers-v6 --out-dir types/ethers-v6 --always-generate-overloads 'out/*.sol/*.json'"
     },
     "devDependencies": {
         "@typechain/ethers-v5": "^11.1.1",
+        "@typechain/ethers-v6": "^0.5.0",
         "prettier": "^3.0.0",
         "prettier-plugin-solidity": "^1.1.3",
         "solhint": "^3.4.1",

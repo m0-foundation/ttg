@@ -29,4 +29,5 @@ cp ./out/PowerToken.sol/PowerToken.abi.json ./abi/PowerToken.json
 cp ./out/Registrar.sol/Registrar.abi.json ./abi/Registrar.json
 cp ./out/ZeroToken.sol/ZeroToken.abi.json ./abi/ZeroToken.json
 
-npm run typechain-ethers
+npm run typechain-ethers-v5
+npm run typechain-ethers-v6

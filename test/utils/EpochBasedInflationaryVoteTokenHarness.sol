@@ -18,4 +18,17 @@ contract EpochBasedInflationaryVoteTokenHarness is EpochBasedInflationaryVoteTok
     function mint(address account_, uint256 amount_) external {
         _mint(account_, amount_);
     }
+
+    function inflationIndexOf(address account_, uint256 index_) external view returns (uint256 inflationIndex_) {
+        AmountEpoch[] storage inflationIndices = _inflationIndices[account_];
+        inflationIndex_ = inflationIndices[index_].amount;
+    }
+
+    function delegateeInflationIndexOf(
+        address delegatee_,
+        uint256 index_
+    ) external view returns (uint256 inflationIndex_) {
+        AmountEpoch[] storage inflationIndices = _delegateeInflationIndices[delegatee_];
+        inflationIndex_ = inflationIndices[index_].amount;
+    }
 }

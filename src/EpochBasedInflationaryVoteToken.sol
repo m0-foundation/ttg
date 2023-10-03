@@ -12,17 +12,13 @@ import { PureEpochs } from "./PureEpochs.sol";
 // TODO: Use inflation epoch'd inflation indexing instead of participation epochs, to avoid for-loops.
 
 contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
-    struct VoidEpoch {
-        uint16 startingEpoch;
-    }
-
     uint256 public constant ONE = 10_000; // 100% in basis points.
 
     uint256 internal immutable _participationInflation; // In basis points.
 
-    mapping(address delegatee => VoidEpoch[] participationEpochs) internal _participations;
+    mapping(address account => AmountEpoch[] inflationIndexEpochs) internal _inflationIndices;
 
-    mapping(address account => VoidEpoch[] lastSyncEpochs) internal _lastSyncs;
+    mapping(address delegatee => AmountEpoch[] inflationIndexEpochs) internal _delegateeInflationIndices;
 
     modifier notDuringVoteEpoch() {
         _revertIfInVoteEpoch();
@@ -51,14 +47,14 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     function balanceOf(
         address account_
     ) public view virtual override(IERC20, EpochBasedVoteToken) returns (uint256 balance_) {
-        balance_ = _getLatestValue(_balances[account_]) + _getInflationOf(account_);
+        balance_ = _getInflatedBalanceOf(account_);
     }
 
     function balanceOfAt(
         address account_,
         uint256 epoch_
     ) public view virtual override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 balance_) {
-        balance_ = _getValueAt(_balances[account_], epoch_) + _getInflationOfAt(account_, epoch_);
+        balance_ = _getInflatedBalanceOfAt(account_, epoch_);
     }
 
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
@@ -75,13 +71,22 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVoteEpoch {
         _sync(delegator_);
+
         super._delegate(delegator_, newDelegatee_);
+
+        _setInflationIndex(
+            _inflationIndices[delegator_],
+            _getLatestValue(_delegateeInflationIndices[_getDefaultIfZero(newDelegatee_, delegator_)])
+        );
     }
 
     function _markParticipation(address delegatee_) internal onlyDuringVoteEpoch {
-        if (!_updateParticipation(delegatee_)) revert AlreadyParticipated();
+        uint256 inflationIndex_ = (_getOneIfZero(_getLatestValue(_delegateeInflationIndices[delegatee_])) *
+            (ONE + _participationInflation)) / ONE;
 
-        uint256 inflation_ = _getInflation(_getLatestValue(_votingPowers[delegatee_]));
+        if (_setInflationIndex(_delegateeInflationIndices[delegatee_], inflationIndex_)) revert AlreadyParticipated();
+
+        uint256 inflation_ = (_getLatestValue(_votingPowers[delegatee_]) * _participationInflation) / ONE;
 
         _update(_totalSupplies, _add, inflation_);
         _updateVotingPower(delegatee_, _add, inflation_);
@@ -93,8 +98,18 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     }
 
     function _sync(address account_) internal {
-        _updateBalance(account_, _add, _getInflationOf(account_));
-        _update(_lastSyncs[account_], PureEpochs.currentEpoch());
+        uint256 balance_ = _getLatestValue(_balances[account_]);
+        address delegatee_ = _getDefaultIfZero(_getLatestAccount(_delegatees[account_]), account_);
+        uint256 delegateeInflationIndex_ = _getLatestValue(_delegateeInflationIndices[delegatee_]);
+
+        uint256 inflation_ = _getInflatedBalance(
+            balance_,
+            _getLatestValue(_inflationIndices[account_]),
+            _getOneIfZero(delegateeInflationIndex_)
+        ) - balance_;
+
+        _updateBalance(account_, _add, inflation_);
+        _setInflationIndex(_inflationIndices[account_], delegateeInflationIndex_);
     }
 
     function _transfer(
@@ -107,93 +122,75 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         super._transfer(sender_, recipient_, amount_);
     }
 
-    function _update(VoidEpoch[] storage voidEpochs_, uint256 epoch_) internal returns (bool updated_) {
-        uint256 length_ = voidEpochs_.length;
-
-        updated_ = (length_ == 0 || epoch_ > _unsafeVoidEpochAccess(voidEpochs_, length_ - 1).startingEpoch);
-
-        // If this will be the first or a new VoidEpoch, just push it onto the array.
-        if (updated_) {
-            voidEpochs_.push(VoidEpoch(uint16(epoch_)));
-        }
-    }
-
-    function _updateParticipation(address delegatee_) internal returns (bool updated_) {
-        updated_ = _update(_participations[delegatee_], PureEpochs.currentEpoch());
-    }
-
     /******************************************************************************************************************\
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    function _getInflation(uint256 amount_) internal view returns (uint256 inflation_) {
-        inflation_ = (amount_ * _participationInflation) / ONE;
+    function _getInflatedBalance(
+        uint256 balance_,
+        uint256 accountInflationIndex_,
+        uint256 delegateeInflationIndex_
+    ) internal pure returns (uint256 inflatedBalance_) {
+        inflatedBalance_ = (balance_ * _getOneIfZero(delegateeInflationIndex_)) / _getOneIfZero(accountInflationIndex_);
     }
 
-    function _getInflationOf(address account_) internal view returns (uint256 inflation_) {
-        inflation_ = _getInflationOfAt(account_, PureEpochs.currentEpoch());
-    }
-
-    function _getInflationOfAt(address account_, uint256 lastEpoch_) internal view returns (uint256 inflation_) {
-        if (_lastSyncs[account_].length == 0) return 0;
-
-        // The balance and delegate the account has at the epoch is the same value is ever had since the last sync.
-        uint256 balance_ = _getValueAt(_balances[account_], lastEpoch_);
+    function _getInflatedBalanceOf(address account_) internal view returns (uint256 inflatedBalance_) {
+        uint256 balance_ = _getLatestValue(_balances[account_]);
 
         if (balance_ == 0) return 0;
 
-        address delegatee_ = _getDefaultIfZero(_getAccountAt(_delegatees[account_], lastEpoch_), account_);
-
-        for (uint256 epoch_ = _getLatestEpochAt(_lastSyncs[account_], lastEpoch_) + 1; epoch_ <= lastEpoch_; ++epoch_) {
-            if (!_isVotingEpoch(epoch_)) continue;
-
-            if (!_getParticipationAt(delegatee_, epoch_)) continue;
-
-            inflation_ += _getInflation(balance_ + inflation_);
-        }
+        inflatedBalance_ = _getInflatedBalance(
+            balance_,
+            _getLatestValue(_inflationIndices[account_]),
+            _getLatestValue(
+                _delegateeInflationIndices[_getDefaultIfZero(_getLatestAccount(_delegatees[account_]), account_)]
+            )
+        );
     }
 
-    function _getLatestEpoch(VoidEpoch[] storage voidEpochs_) internal view returns (uint256 latestEpoch_) {
-        uint256 length_ = voidEpochs_.length;
-
-        latestEpoch_ = length_ == 0 ? 0 : _unsafeVoidEpochAccess(voidEpochs_, length_ - 1).startingEpoch;
-    }
-
-    function _getLatestEpochAt(
-        VoidEpoch[] storage voidEpochs_,
+    function _getInflatedBalanceOfAt(
+        address account_,
         uint256 epoch_
-    ) internal view returns (uint256 latestEpoch_) {
-        uint256 index_ = voidEpochs_.length;
+    ) internal view returns (uint256 inflatedBalance_) {
+        uint256 balance_ = _getValueAt(_balances[account_], epoch_);
 
-        if (index_ == 0) return 0;
+        if (balance_ == 0) return 0;
 
-        // Keep going back as long as the epoch is greater or equal to the previous VoidEpoch's startingEpoch.
-        do {
-            VoidEpoch storage voidEpoch_ = _unsafeVoidEpochAccess(voidEpochs_, --index_);
+        inflatedBalance_ = _getInflatedBalance(
+            balance_,
+            _getValueAt(_inflationIndices[account_], epoch_),
+            _getValueAt(
+                _delegateeInflationIndices[_getDefaultIfZero(_getAccountAt(_delegatees[account_], epoch_), account_)],
+                epoch_
+            )
+        );
+    }
 
-            uint256 startingEpoch_ = voidEpoch_.startingEpoch;
-
-            if (startingEpoch_ <= epoch_) return startingEpoch_;
-        } while (index_ > 0);
+    function _getOneIfZero(uint256 input_) internal pure returns (uint256 output_) {
+        output_ = input_ == 0 ? ONE : input_;
     }
 
     function _getParticipationAt(address delegatee_, uint256 epoch_) internal view returns (bool participated_) {
-        VoidEpoch[] storage voidEpochs_ = _participations[delegatee_];
+        AmountEpoch[] storage amountEpochs_ = _delegateeInflationIndices[delegatee_];
 
-        uint256 index_ = voidEpochs_.length;
+        uint256 index_ = amountEpochs_.length;
 
         if (index_ == 0) return false;
 
-        // Keep going back as long as the epoch is greater or equal to the previous VoidEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous AmountEpoch's startingEpoch.
         do {
-            VoidEpoch storage voidEpoch_ = _unsafeVoidEpochAccess(voidEpochs_, --index_);
+            AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
 
-            uint256 startingEpoch_ = voidEpoch_.startingEpoch;
+            uint256 startingEpoch_ = amountEpoch_.startingEpoch;
 
             if (startingEpoch_ > epoch_) continue;
 
             return startingEpoch_ == epoch_;
         } while (index_ > 0);
+    }
+
+    function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
+        isVotingEpoch_ = epoch_ % 2 == 1;
     }
 
     function _revertIfInVoteEpoch() internal view {
@@ -204,17 +201,33 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         if (!_isVotingEpoch(PureEpochs.currentEpoch())) revert NotVoteEpoch();
     }
 
-    function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
-        isVotingEpoch_ = epoch_ % 2 == 1;
-    }
+    function _setInflationIndex(
+        AmountEpoch[] storage amountEpochs_,
+        uint256 amount_
+    ) internal returns (bool overwritten_) {
+        if (amount_ > type(uint240).max) revert AmountExceedsUint240();
 
-    function _unsafeVoidEpochAccess(
-        VoidEpoch[] storage voidEpochs_,
-        uint256 index_
-    ) internal pure returns (VoidEpoch storage voidEpoch_) {
-        assembly {
-            mstore(0, voidEpochs_.slot)
-            voidEpoch_.slot := add(keccak256(0, 0x20), index_)
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+
+        uint256 length_ = amountEpochs_.length;
+
+        // If this will be the first AmountEpoch, we can just push it onto the empty array.
+        if (length_ == 0) {
+            amountEpochs_.push(AmountEpoch(uint16(currentEpoch_), uint240(amount_)));
+
+            return false;
         }
+
+        AmountEpoch storage currentAmountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, length_ - 1);
+
+        if (currentEpoch_ == currentAmountEpoch_.startingEpoch) {
+            currentAmountEpoch_.amount = uint240(amount_);
+
+            return true;
+        }
+
+        amountEpochs_.push(AmountEpoch(uint16(currentEpoch_), uint240(amount_)));
+
+        return false;
     }
 }

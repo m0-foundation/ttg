@@ -287,7 +287,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _vote.markParticipation(_bob); // 1000 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2
 
-        assertEq(_vote.balanceOf(_alice), 2_487);
+        assertEq(_vote.balanceOf(_alice), 2_488);
         assertEq(_vote.getVotes(_alice), 0);
 
         assertEq(_vote.balanceOf(_bob), 0);
