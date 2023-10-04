@@ -32,4 +32,4 @@ sizes:
 	@./build.sh -p production -s
 
 clean:
-	forge clean && rm -rf ./abi && rm -rf ./types
+	forge clean && rm -rf ./abi && rm -rf ./bytecode && rm -rf ./types

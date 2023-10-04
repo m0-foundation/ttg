@@ -29,5 +29,16 @@ cp ./out/PowerToken.sol/PowerToken.abi.json ./abi/PowerToken.json
 cp ./out/Registrar.sol/Registrar.abi.json ./abi/Registrar.json
 cp ./out/ZeroToken.sol/ZeroToken.abi.json ./abi/ZeroToken.json
 
-npm run typechain-ethers-v5
-npm run typechain-ethers-v6
+mkdir -p bytecode
+
+DualGovernorBytecode=$(jq '.bytecode.object' ./out/DualGovernor.sol/DualGovernor.json)
+PowerBootstrapTokenBytecode=$(jq '.bytecode.object' ./out/PowerBootstrapToken.sol/PowerBootstrapToken.json)
+PowerTokenBytecode=$(jq '.bytecode.object' ./out/PowerToken.sol/PowerToken.json)
+RegistrarBytecode=$(jq '.bytecode.object' ./out/Registrar.sol/Registrar.json)
+ZeroTokenBytecode=$(jq '.bytecode.object' ./out/ZeroToken.sol/ZeroToken.json)
+
+echo "{ \"bytecode\": ${DualGovernorBytecode} }" > ./bytecode/DualGovernor.json
+echo "{ \"bytecode\": ${PowerBootstrapTokenBytecode} }" > ./bytecode/PowerBootstrapToken.json
+echo "{ \"bytecode\": ${PowerTokenBytecode} }" > ./bytecode/PowerToken.json
+echo "{ \"bytecode\": ${RegistrarBytecode} }" > ./bytecode/Registrar.json
+echo "{ \"bytecode\": ${ZeroTokenBytecode} }" > ./bytecode/ZeroToken.json
