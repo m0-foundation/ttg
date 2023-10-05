@@ -13,7 +13,7 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { PureEpochs } from "./PureEpochs.sol";
 import { ERC712 } from "./ERC712.sol";
 
-// TODO: expose `_proposals` and `_tallies`?
+// TODO: expose `_proposals`?
 // TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
 
 contract DualGovernor is IDualGovernor, ERC712 {
@@ -292,6 +292,42 @@ contract DualGovernor is IDualGovernor, ERC712 {
         clock_ = uint48(PureEpochs.currentEpoch());
     }
 
+    function getProposal(
+        uint256 proposalId_
+    )
+        external
+        view
+        returns (
+            address proposer_,
+            uint16 voteStart_,
+            uint16 voteEnd_,
+            bool executed_,
+            ProposalType proposalType_,
+            ProposalState state_,
+            uint256 noPowerTokenVotes_,
+            uint256 yesPowerTokenVotes_,
+            uint256 noZeroTokenVotes_,
+            uint256 yesZeroTokenVotes_
+        )
+    {
+        Proposal storage proposal_ = _proposals[proposalId_];
+
+        proposer_ = proposal_.proposer;
+        voteStart_ = proposal_.voteStart;
+        voteEnd_ = proposal_.voteEnd;
+        executed_ = proposal_.executed;
+        proposalType_ = proposal_.proposalType;
+
+        state_ = state(proposalId_);
+
+        Tallies storage tallies_ = _tallies[proposalId_];
+
+        noPowerTokenVotes_ = tallies_.noPowerTokenWeight;
+        yesPowerTokenVotes_ = tallies_.yesPowerTokenWeight;
+        noZeroTokenVotes_ = tallies_.noZeroTokenWeight;
+        yesZeroTokenVotes_ = tallies_.yesZeroTokenWeight;
+    }
+
     function getVotes(address account_, uint256 timepoint_) external view returns (uint256 weight_) {
         // TODO: Implement?
     }
@@ -464,12 +500,12 @@ contract DualGovernor is IDualGovernor, ERC712 {
         _setProposalFee(newMinProposalFee_, newMaxProposalFee_, newProposalFee_);
     }
 
-    function setZeroTokenQuorumRatio(uint16 newZeroTokenQuorumRatio_) external onlySelf {
-        emit ZeroTokenQuorumRatioSet(_zeroTokenQuorumRatio = newZeroTokenQuorumRatio_);
-    }
-
     function setPowerTokenQuorumRatio(uint16 newPowerTokenQuorumRatio_) external onlySelf {
         emit PowerTokenQuorumRatioSet(_powerTokenQuorumRatio = newPowerTokenQuorumRatio_);
+    }
+
+    function setZeroTokenQuorumRatio(uint16 newZeroTokenQuorumRatio_) external onlySelf {
+        emit ZeroTokenQuorumRatioSet(_zeroTokenQuorumRatio = newZeroTokenQuorumRatio_);
     }
 
     function updateConfig(bytes32 key_, bytes32 value_) external onlySelf {

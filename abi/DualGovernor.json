@@ -935,6 +935,70 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "proposalId_",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProposal",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "proposer_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "voteStart_",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "voteEnd_",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bool",
+        "name": "executed_",
+        "type": "bool"
+      },
+      {
+        "internalType": "enum IDualGovernor.ProposalType",
+        "name": "proposalType_",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum IGovernor.ProposalState",
+        "name": "state_",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "noPowerTokenVotes_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "yesPowerTokenVotes_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "noZeroTokenVotes_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "yesZeroTokenVotes_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "account_",
         "type": "address"

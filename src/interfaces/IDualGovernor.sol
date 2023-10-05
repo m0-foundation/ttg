@@ -93,6 +93,24 @@ interface IDualGovernor is IGovernorBySig {
 
     function cashToken() external view returns (address cashToken);
 
+    function getProposal(
+        uint256 proposalId
+    )
+        external
+        view
+        returns (
+            address proposer,
+            uint16 voteStart,
+            uint16 voteEnd,
+            bool executed,
+            ProposalType proposalType,
+            ProposalState state,
+            uint256 noPowerTokenVotes,
+            uint256 yesPowerTokenVotes,
+            uint256 noZeroTokenVotes,
+            uint256 yesZeroTokenVotes
+        );
+
     function maxProposalFee() external view returns (uint256 maxProposalFee);
 
     function minProposalFee() external view returns (uint256 minProposalFee);
