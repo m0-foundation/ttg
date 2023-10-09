@@ -244,7 +244,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         (uint256 voteStart_, uint256 voteEnd_) = (proposalType_ == ProposalType.Emergency ||
             proposalType_ == ProposalType.Zero)
             ? (currentEpoch_, currentEpoch_ + 1)
-            : (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay() + 1);
+            : (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay());
 
         if (proposalType_ == ProposalType.Power || proposalType_ == ProposalType.Double) {
             _numberOfProposals[voteStart_] += 1;

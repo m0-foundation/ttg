@@ -5,6 +5,7 @@ pragma solidity 0.8.20;
 import { Script, console } from "../lib/forge-std/src/Script.sol";
 
 import { IDualGovernor } from "../src/interfaces/IDualGovernor.sol";
+import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 
 import { ContractHelper } from "../src/ContractHelper.sol";
 import { DualGovernorDeployer } from "../src/DualGovernorDeployer.sol";
@@ -20,38 +21,7 @@ contract Deploy is Script {
 
     address internal _deployer;
 
-    address public registrar;
-
-    address[] public initialZeroAccounts = [
-        address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266),
-        address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)
-    ];
-
-    uint256[] public initialZeroBalances = [1_000_000_000_000, 500_000_000_000];
-
-    address[] public initialPowerAccounts = [
-        address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266),
-        address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8)
-    ];
-
-    uint256[] public initialPowerBalances = [1_000_000_000_000, 500_000_000_000];
-
-    uint256 public immutable initialZeroAccountCount = initialZeroAccounts.length;
-    uint256 public immutable initialPowerAccountCount = initialPowerAccounts.length;
-
-    uint256 public immutable initialPowerTotalSupply;
-
-    constructor() {
-        uint256 initialPowerTotalSupply_;
-
-        for (uint256 index_; index_ < initialPowerAccountCount; ++index_) {
-            initialPowerTotalSupply_ += initialPowerBalances[index_];
-        }
-
-        initialPowerTotalSupply = initialPowerTotalSupply_;
-    }
-
-    function setUp() public virtual {
+    function setUp() external {
         string memory mnemonic = vm.envString("MNEMONIC");
 
         (_deployer, ) = deriveRememberKey(mnemonic, 0);
@@ -59,7 +29,13 @@ contract Deploy is Script {
         console.log("deployer: %s", _deployer);
     }
 
-    function run() public {
+    function run(
+        address[] memory initialPowerAccounts_,
+        uint256[] memory initialPowerBalances_,
+        address[] memory initialZeroAccounts_,
+        uint256[] memory initialZeroBalances_,
+        address cashToken_
+    ) external returns (address registrar_) {
         vm.startBroadcast(_deployer);
 
         // ZeroToken needs registrar address.
@@ -70,19 +46,17 @@ contract Deploy is Script {
 
         address expectedRegistrar_ = ContractHelper.getContractFrom(_deployer, _DEPLOYER_STARTING_NONCE + 4);
 
-        address zeroToken_ = address(new ZeroToken(expectedRegistrar_, initialZeroAccounts, initialZeroBalances));
+        address zeroToken_ = address(new ZeroToken(expectedRegistrar_, initialZeroAccounts_, initialZeroBalances_));
         address governorDeployer_ = address(new DualGovernorDeployer(expectedRegistrar_, zeroToken_));
         address powerTokenDeployer_ = address(new PowerTokenDeployer(expectedRegistrar_, _deployer)); // `_treasury`
-        address bootstrapToken_ = address(new PowerBootstrapToken(initialPowerAccounts, initialPowerBalances));
+        address bootstrapToken_ = address(new PowerBootstrapToken(initialPowerAccounts_, initialPowerBalances_));
 
-        Registrar registrar_ = new Registrar(governorDeployer_, powerTokenDeployer_, bootstrapToken_, weth);
+        registrar_ = address(new Registrar(governorDeployer_, powerTokenDeployer_, bootstrapToken_, cashToken_));
 
-        registrar = address(registrar_);
-
-        address governor_ = registrar_.governor();
+        address governor_ = IRegistrar(registrar_).governor();
 
         console.log("Zero Token Address: ", zeroToken_);
-        console.log("Registrar address: ", registrar);
+        console.log("Registrar address: ", registrar_);
         console.log("DualGovernor Address: ", governor_);
         console.log("Power Token Address: ", IDualGovernor(governor_).powerToken());
 

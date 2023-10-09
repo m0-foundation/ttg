@@ -5,6 +5,7 @@ pragma solidity 0.8.20;
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { IERC20 } from "./interfaces/IERC20.sol";
+import { IERC5805 } from "./interfaces/IERC5805.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
@@ -51,6 +52,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         _bootstrapSupply = IEpochBasedVoteToken(_bootstrapToken = bootstrapToken_).totalSupplyAt(
             _bootstrapEpoch = (PureEpochs.currentEpoch() - 1)
         );
+
+        _update(_totalSupplies, _add, INITIAL_SUPPLY);
     }
 
     /******************************************************************************************************************\
@@ -153,22 +156,29 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
             (blocksPerPeriod_ * totalSupplyAt(currentEpoch_ - 1));
     }
 
+    function getVotes(
+        address account_
+    ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
+        votingPower_ = _votingPowers[account_].length == 0
+            ? _bootstrapBalanceOfAt(account_, _bootstrapEpoch)
+            : super.getVotes(account_);
+    }
+
+    function getPastVotes(
+        address account_,
+        uint256 epoch_
+    ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
+        votingPower_ = _votingPowers[account_].length == 0
+            ? _bootstrapBalanceOfAt(account_, epoch_)
+            : super.getPastVotes(account_, epoch_);
+    }
+
     function governor() external view returns (address governor_) {
         governor_ = _governor;
     }
 
     function isActiveEpoch(uint256 epoch_) external view returns (bool isActiveEpoch_) {
         isActiveEpoch_ = _isActiveEpoch[epoch_];
-    }
-
-    function totalSupply() public view override(IERC20, EpochBasedVoteToken) returns (uint256 totalSupply_) {
-        totalSupply_ = _totalSupplies.length == 0 ? INITIAL_SUPPLY : super.totalSupply();
-    }
-
-    function totalSupplyAt(
-        uint256 epoch_
-    ) public view override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 totalSupply_) {
-        totalSupply_ = _totalSupplies.length == 0 ? INITIAL_SUPPLY : super.totalSupplyAt(epoch_);
     }
 
     function treasury() external view returns (address treasury_) {

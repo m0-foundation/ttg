@@ -135,4 +135,30 @@ interface IDualGovernor is IGovernorBySig {
     function zeroToken() external view returns (address zeroToken);
 
     function zeroTokenQuorumRatio() external view returns (uint256 zeroTokenQuorumRatio);
+
+    /******************************************************************************************************************\
+    |                                                Proposal Functions                                                |
+    \******************************************************************************************************************/
+
+    function addToList(bytes32 list, address account) external;
+
+    function emergencyAddToList(bytes32 list, address account) external;
+
+    function emergencyRemoveFromList(bytes32 list, address account) external;
+
+    function emergencyUpdateConfig(bytes32 key, bytes32 value_) external;
+
+    function removeFromList(bytes32 list, address account) external;
+
+    function reset() external;
+
+    function setProposalFee(uint256 newProposalFee) external;
+
+    function setProposalFeeRange(uint256 newMinProposalFee, uint256 newMaxProposalFee, uint256 newProposalFee) external;
+
+    function setPowerTokenQuorumRatio(uint16 newPowerTokenQuorumRatio) external;
+
+    function setZeroTokenQuorumRatio(uint16 newZeroTokenQuorumRatio) external;
+
+    function updateConfig(bytes32 key, bytes32 value_) external;
 }
