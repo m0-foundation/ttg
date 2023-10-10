@@ -80,7 +80,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         );
     }
 
-    function _markParticipation(address delegatee_) internal onlyDuringVoteEpoch {
+    function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
         uint256 inflationIndex_ = (_getOneIfZero(_getLatestValue(_delegateeInflationIndices[delegatee_])) *
             (ONE + _participationInflation)) / ONE;
 

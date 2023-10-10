@@ -197,12 +197,24 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (bootstrapBalance_ == 0) return;
 
         _updateBalance(account_, _add, bootstrapBalance_);
+        _updateVotingPower(account_, _add, bootstrapBalance_);
     }
 
     function _bootstrapBalanceOfAt(address account_, uint256 epoch_) internal view returns (uint256 balance_) {
         balance_ =
             (IEpochBasedVoteToken(_bootstrapToken).balanceOfAt(account_, epoch_) * INITIAL_SUPPLY) /
             _bootstrapSupply;
+    }
+
+    function _delegate(address delegator_, address newDelegatee_) internal override {
+        _bootstrap(delegator_);
+        _bootstrap(newDelegatee_);
+        super._delegate(delegator_, newDelegatee_);
+    }
+
+    function _markParticipation(address delegatee_) internal override {
+        _bootstrap(delegatee_);
+        super._markParticipation(delegatee_);
     }
 
     function _mint(address recipient_, uint256 amount_) internal override {
