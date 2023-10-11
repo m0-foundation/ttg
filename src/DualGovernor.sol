@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.20;
 
+import { console2 } from "../lib/forge-std/src/console2.sol";
+
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { IDualGovernor } from "./interfaces/IDualGovernor.sol";
@@ -231,8 +233,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (calldatas_.length != 1) revert InvalidCalldatasLength();
 
-        ERC20Helper.transferFrom(_cashToken, msg.sender, address(this), _proposalFee); // TODO: Send elsewhere.
-
         proposalId_ = hashProposal(targets_, values_, calldatas_, keccak256(bytes(description_)));
 
         if (_proposals[proposalId_].proposer != address(0)) revert ProposalExists();
@@ -248,6 +248,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (proposalType_ == ProposalType.Power || proposalType_ == ProposalType.Double) {
             _numberOfProposals[voteStart_] += 1;
+            ERC20Helper.transferFrom(_cashToken, msg.sender, address(this), _proposalFee); // TODO: Send elsewhere.
         }
 
         _proposals[proposalId_] = Proposal({
@@ -559,9 +560,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         uint256 snapshot_ = proposal_.voteStart - 1;
         ProposalType proposalType_ = proposal_.proposalType;
 
-        uint256 powerTokenWeight_ = (proposalType_ == ProposalType.Power || proposalType_ == ProposalType.Double)
-            ? _getPowerTokenWeight(voter_, snapshot_)
-            : 0;
+        uint256 powerTokenWeight_ = (proposalType_ != ProposalType.Zero) ? _getPowerTokenWeight(voter_, snapshot_) : 0;
 
         uint256 zeroTokenWeight_ = (proposalType_ == ProposalType.Zero || proposalType_ == ProposalType.Double)
             ? _getZeroTokenWeight(voter_, snapshot_)
@@ -595,7 +594,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         IPowerToken(_powerToken).markParticipation(voter_);
 
-        // TODO: Test the accuracy of this without an scaler.
+        // TODO: Test the accuracy of this without a scaler.
         IZeroToken(_zeroToken).mint(voter_, (_reward * powerTokenWeight_) / _getPowerTokenTotalSupply(snapshot_));
     }
 
@@ -751,7 +750,9 @@ contract DualGovernor is IDualGovernor, ERC712 {
         ProposalType proposalType_ = proposal_.proposalType;
         Tallies storage tallies_ = _tallies[proposalId_];
 
-        if (proposalType_ == ProposalType.Power) return tallies_.yesPowerTokenWeight > tallies_.noPowerTokenWeight;
+        if (proposalType_ == ProposalType.Power || proposalType_ == ProposalType.Emergency) {
+            return tallies_.yesPowerTokenWeight > tallies_.noPowerTokenWeight;
+        }
 
         if (proposalType_ == ProposalType.Zero) return tallies_.yesZeroTokenWeight > tallies_.noZeroTokenWeight;
 

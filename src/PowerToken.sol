@@ -114,7 +114,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function balanceOf(
         address account_
     ) public view override(IERC20, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        balance_ = _balances[account_].length == 0
+        balance_ = (PureEpochs.currentEpoch() <= _bootstrapEpoch) || (_balances[account_].length == 0)
             ? _bootstrapBalanceOfAt(account_, _bootstrapEpoch)
             : super.balanceOf(account_);
     }
@@ -123,7 +123,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        balance_ = _balances[account_].length == 0
+        balance_ = (epoch_ <= _bootstrapEpoch) || (_balances[account_].length == 0)
             ? _bootstrapBalanceOfAt(account_, epoch_)
             : super.balanceOfAt(account_, epoch_);
     }
@@ -179,6 +179,16 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     function isActiveEpoch(uint256 epoch_) external view returns (bool isActiveEpoch_) {
         isActiveEpoch_ = _isActiveEpoch[epoch_];
+    }
+
+    function totalSupply() public view override(IERC20, EpochBasedVoteToken) returns (uint256 totalSupply_) {
+        totalSupply_ = PureEpochs.currentEpoch() <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupply();
+    }
+
+    function totalSupplyAt(
+        uint256 epoch_
+    ) public view override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 totalSupply_) {
+        totalSupply_ = epoch_ <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupplyAt(epoch_);
     }
 
     function treasury() external view returns (address treasury_) {

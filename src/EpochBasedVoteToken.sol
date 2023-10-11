@@ -66,11 +66,11 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         votingPower_ = _getValueAt(_votingPowers[account_], epoch_);
     }
 
-    function totalSupply() public view returns (uint256 totalSupply_) {
+    function totalSupply() public view virtual returns (uint256 totalSupply_) {
         totalSupply_ = _getLatestValue(_totalSupplies);
     }
 
-    function totalSupplyAt(uint256 epoch_) public view returns (uint256 totalSupply_) {
+    function totalSupplyAt(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
         totalSupply_ = _getValueAt(_totalSupplies, epoch_);
     }
 

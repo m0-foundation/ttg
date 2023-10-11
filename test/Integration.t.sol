@@ -14,7 +14,7 @@ import { Deploy } from "../script/Deploy.s.sol";
 import { MockERC20Permit } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
-contract DualGovernorTests is TestUtils {
+contract IntegrationTests is TestUtils {
     address internal _registrar;
 
     address[] internal _accounts = [makeAddr("account0"), makeAddr("account1"), makeAddr("account2")];
@@ -100,5 +100,47 @@ contract DualGovernorTests is TestUtils {
         governor_.execute(targets_, values_, calldatas_, keccak256(bytes(description_)));
 
         assertEq(governor_.proposalFee(), governor_.minProposalFee());
+    }
+
+    function test_emergencyUpdateConfig() external {
+        IRegistrar registrar_ = IRegistrar(_registrar);
+        IDualGovernor governor_ = IDualGovernor(registrar_.governor());
+        IPowerToken powerToken_ = IPowerToken(governor_.powerToken());
+
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(governor_);
+
+        uint256[] memory values_ = new uint256[](1);
+        values_[0] = 0;
+
+        bytes[] memory calldatas_ = new bytes[](1);
+        calldatas_[0] = abi.encodeWithSelector(
+            governor_.emergencyUpdateConfig.selector,
+            bytes32("TEST_KEY"),
+            bytes32("TEST_VALUE")
+        );
+
+        string memory description_ = "Emergency update TEST_KEY config to TEST_VALUE";
+
+        console2.log("");
+        console2.log("propose");
+
+        vm.prank(_accounts[0]);
+        uint256 proposalId_ = governor_.propose(targets_, values_, calldatas_, description_);
+
+        console2.log("");
+        console2.log("castVote");
+
+        vm.prank(_accounts[0]);
+        uint256 weight_ = governor_.castVote(proposalId_, 1);
+
+        assertEq(weight_, 600_000_000);
+
+        console2.log("");
+        console2.log("execute");
+
+        governor_.execute(targets_, values_, calldatas_, keccak256(bytes(description_)));
+
+        assertEq(registrar_.get("TEST_KEY"), "TEST_VALUE");
     }
 }
