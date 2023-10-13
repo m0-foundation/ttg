@@ -10,7 +10,6 @@ broadcast = "broadcast"
 gas_reports = ["*"]
 gas_reports_ignore = []
 solc_version = "0.8.20"
-evm_version = "shanghai"
 optimizer = false
 verbosity = 3
 ignored_error_codes = []
@@ -25,6 +24,7 @@ runs = 256
 depth = 15
 
 [profile.production]
+evm_version = "shanghai"
 optimizer = true
 optimizer_runs = 999999
 build_info = true
