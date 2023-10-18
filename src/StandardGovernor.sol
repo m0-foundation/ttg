@@ -85,12 +85,15 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
-        if (msg.value != 0) revert InvalidValue();
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+
+        if (currentEpoch_ == 0) revert InvalidEpoch();
 
         // Proposals have voteStart=N and voteEnd=N, and can be executed only during epochs N+1 and N+2.
-        uint256 firstPotentialVoteStart_ = PureEpochs.currentEpoch() - 1;
+        uint256 latestPossibleVoteStart_ = currentEpoch_ - 1;
+        uint256 earliestPossibleVoteStart_ = latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0;
 
-        proposalId_ = _tryExecute(callDatas_[0], firstPotentialVoteStart_, firstPotentialVoteStart_ - 1);
+        proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
     }
 
     function propose(

@@ -291,6 +291,13 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         );
     }
 
+    /**
+     * @dev This function tries to execute a proposal based on the calldata and a range of possible vote starts. This is
+     *      needed due to the fact that proposalId's are generated based on the calldata and vote start time, and so an
+     *      executed function will need this in order to attempt to find and execute a proposal given a known range of
+     *      possible vote start times which depends on the how the inheriting implementation handles determine the vote
+     *      start time and expiry of proposals based on the time of the proposal creation.
+     */
     function _tryExecute(
         bytes memory callData_,
         uint256 latestVoteStart_,
@@ -299,7 +306,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         if (msg.value != 0) revert InvalidValue();
 
         while (latestVoteStart_ >= earliestVoteStart_) {
-            proposalId_ = _execute(callData_, latestVoteStart_--);
+            proposalId_ = _execute(callData_, latestVoteStart_);
+
+            if (latestVoteStart_ == 0) break;
+
+            --latestVoteStart_;
 
             if (proposalId_ != 0) return proposalId_;
         }
