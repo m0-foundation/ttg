@@ -7,309 +7,307 @@ import { Test } from "../lib/forge-std/src/Test.sol";
 import { PureEpochs } from "../src/PureEpochs.sol";
 
 contract PureEpochsTests is Test {
-    uint256 internal constant _15_DAYS_OF_BLOCKS = 108_000;
-
     function test_currentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.currentEpoch(), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.currentEpoch(), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.currentEpoch(), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(0);
         assertEq(PureEpochs.currentEpoch(), 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(1);
         assertEq(PureEpochs.currentEpoch(), 1);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.currentEpoch(), 1);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.currentEpoch(), 2);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.currentEpoch(), 2);
     }
 
     function test_startBlockOfCurrentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._START_BLOCK);
+        vm.roll(0);
+        assertEq(PureEpochs.startBlockOfCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._START_BLOCK);
+        vm.roll(1);
+        assertEq(PureEpochs.startBlockOfCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._START_BLOCK);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.startBlockOfCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.startBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
     }
 
     function test_endBlockOfCurrentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(0);
+        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(1);
+        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS * 2);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD * 2);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS * 2);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.endBlockOfCurrentEpoch(), PureEpochs._EPOCH_PERIOD * 2);
     }
 
     function test_blocksElapsedInCurrentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
+        vm.roll(0);
         assertEq(PureEpochs.blocksElapsedInCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
+        vm.roll(1);
         assertEq(PureEpochs.blocksElapsedInCurrentEpoch(), 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.blocksElapsedInCurrentEpoch(), _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.blocksElapsedInCurrentEpoch(), PureEpochs._EPOCH_PERIOD - 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
         assertEq(PureEpochs.blocksElapsedInCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
         assertEq(PureEpochs.blocksElapsedInCurrentEpoch(), 1);
     }
 
     function test_timeElapsedInCurrentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
+        vm.roll(0);
         assertEq(PureEpochs.timeElapsedInCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
+        vm.roll(1);
         assertEq(PureEpochs.timeElapsedInCurrentEpoch(), 12);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
         assertEq(PureEpochs.timeElapsedInCurrentEpoch(), 15 days - 12);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
         assertEq(PureEpochs.timeElapsedInCurrentEpoch(), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
         assertEq(PureEpochs.timeElapsedInCurrentEpoch(), 12);
     }
 
     function test_blocksRemainingInCurrentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), _15_DAYS_OF_BLOCKS);
+        vm.roll(0);
+        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(1);
+        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), PureEpochs._EPOCH_PERIOD - 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
         assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.blocksRemainingInCurrentEpoch(), PureEpochs._EPOCH_PERIOD - 1);
     }
 
     function test_getTimeRemainingInCurrentEpoch() external {
-        vm.roll(PureEpochs._START_BLOCK);
+        vm.roll(0);
         assertEq(PureEpochs.timeRemainingInCurrentEpoch(), 15 days);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
+        vm.roll(1);
         assertEq(PureEpochs.timeRemainingInCurrentEpoch(), 15 days - 12);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
         assertEq(PureEpochs.timeRemainingInCurrentEpoch(), 12);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
         assertEq(PureEpochs.timeRemainingInCurrentEpoch(), 15 days);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
         assertEq(PureEpochs.timeRemainingInCurrentEpoch(), 15 days - 12);
     }
 
     function test_getBlocksUntilEpochStart() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(0), 0);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(1), _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(2), 2 * _15_DAYS_OF_BLOCKS);
-
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(1), _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(2), 2 * _15_DAYS_OF_BLOCKS - 1);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(1), 1);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(2), _15_DAYS_OF_BLOCKS + 1);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(0);
         assertEq(PureEpochs.getBlocksUntilEpochStart(1), 0);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(2), _15_DAYS_OF_BLOCKS);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(2), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(3), 2 * PureEpochs._EPOCH_PERIOD);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getBlocksUntilEpochStart(2), _15_DAYS_OF_BLOCKS - 1);
+        vm.roll(1);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(2), PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(3), 2 * PureEpochs._EPOCH_PERIOD - 1);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(2), 1);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(3), PureEpochs._EPOCH_PERIOD + 1);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(2), 0);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(3), PureEpochs._EPOCH_PERIOD);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksUntilEpochStart(3), PureEpochs._EPOCH_PERIOD - 1);
     }
 
     function test_getTimeUntilEpochStart() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getTimeUntilEpochStart(0), 0);
-        assertEq(PureEpochs.getTimeUntilEpochStart(1), 15 days);
-        assertEq(PureEpochs.getTimeUntilEpochStart(2), 30 days);
-
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.getTimeUntilEpochStart(1), 15 days - 12);
-        assertEq(PureEpochs.getTimeUntilEpochStart(2), 30 days - 12);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getTimeUntilEpochStart(1), 12);
-        assertEq(PureEpochs.getTimeUntilEpochStart(2), 15 days + 12);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
+        vm.roll(0);
         assertEq(PureEpochs.getTimeUntilEpochStart(1), 0);
         assertEq(PureEpochs.getTimeUntilEpochStart(2), 15 days);
+        assertEq(PureEpochs.getTimeUntilEpochStart(3), 30 days);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(1);
         assertEq(PureEpochs.getTimeUntilEpochStart(2), 15 days - 12);
+        assertEq(PureEpochs.getTimeUntilEpochStart(3), 30 days - 12);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getTimeUntilEpochStart(2), 12);
+        assertEq(PureEpochs.getTimeUntilEpochStart(3), 15 days + 12);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochStart(2), 0);
+        assertEq(PureEpochs.getTimeUntilEpochStart(3), 15 days);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getTimeUntilEpochStart(3), 15 days - 12);
     }
 
     function test_getBlocksUntilEpochEnds() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(0), _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), _15_DAYS_OF_BLOCKS * 2);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), _15_DAYS_OF_BLOCKS * 3);
+        vm.roll(0);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD * 2);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(3), PureEpochs._EPOCH_PERIOD * 3);
 
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(0), _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), _15_DAYS_OF_BLOCKS * 2 - 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), _15_DAYS_OF_BLOCKS * 3 - 1);
+        vm.roll(1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD * 2 - 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(3), PureEpochs._EPOCH_PERIOD * 3 - 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(0), 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), _15_DAYS_OF_BLOCKS * 2 + 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(3), PureEpochs._EPOCH_PERIOD * 2 + 1);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(0), 0);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), _15_DAYS_OF_BLOCKS * 2);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), 0);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(3), PureEpochs._EPOCH_PERIOD * 2);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(1), _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), _15_DAYS_OF_BLOCKS * 2 - 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksUntilEpochEnds(3), PureEpochs._EPOCH_PERIOD * 2 - 1);
     }
 
     function test_getTimeUntilEpochEnds() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(0), 15 days);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 30 days);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 45 days);
-
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(0), 15 days - 12);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 30 days - 12);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 45 days - 12);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(0), 12);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 15 days + 12);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 30 days + 12);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(0), 0);
+        vm.roll(0);
         assertEq(PureEpochs.getTimeUntilEpochEnds(1), 15 days);
         assertEq(PureEpochs.getTimeUntilEpochEnds(2), 30 days);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 45 days);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(1);
         assertEq(PureEpochs.getTimeUntilEpochEnds(1), 15 days - 12);
         assertEq(PureEpochs.getTimeUntilEpochEnds(2), 30 days - 12);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 45 days - 12);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 12);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 15 days + 12);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 30 days + 12);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 0);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 15 days);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 30 days);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 15 days - 12);
+        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 30 days - 12);
     }
 
     function test_getBlocksSinceEpochStart() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getBlocksSinceEpochStart(0), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.getBlocksSinceEpochStart(0), 1);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksSinceEpochStart(0), _15_DAYS_OF_BLOCKS - 1);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksSinceEpochStart(0), _15_DAYS_OF_BLOCKS);
+        vm.roll(0);
         assertEq(PureEpochs.getBlocksSinceEpochStart(1), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getBlocksSinceEpochStart(0), _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(1);
         assertEq(PureEpochs.getBlocksSinceEpochStart(1), 1);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksSinceEpochStart(1), PureEpochs._EPOCH_PERIOD - 1);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksSinceEpochStart(1), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksSinceEpochStart(2), 0);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksSinceEpochStart(1), PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksSinceEpochStart(2), 1);
     }
 
     function test_getTimeSinceEpochStart() external {
-        vm.roll(PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getTimeSinceEpochStart(0), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + 1);
-        assertEq(PureEpochs.getTimeSinceEpochStart(0), 12);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getTimeSinceEpochStart(0), 15 days - 12);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getTimeSinceEpochStart(0), 15 days);
+        vm.roll(0);
         assertEq(PureEpochs.getTimeSinceEpochStart(1), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getTimeSinceEpochStart(0), 15 days + 12);
+        vm.roll(1);
         assertEq(PureEpochs.getTimeSinceEpochStart(1), 12);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getTimeSinceEpochStart(1), 15 days - 12);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeSinceEpochStart(1), 15 days);
+        assertEq(PureEpochs.getTimeSinceEpochStart(2), 0);
+
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getTimeSinceEpochStart(1), 15 days + 12);
+        assertEq(PureEpochs.getTimeSinceEpochStart(2), 12);
     }
 
     function test_getBlocksSinceEpochEnd() external {
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksSinceEpochEnd(0), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getBlocksSinceEpochEnd(0), 1);
-
-        vm.roll(PureEpochs._START_BLOCK + 2 * _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getBlocksSinceEpochEnd(0), _15_DAYS_OF_BLOCKS - 1);
-
-        vm.roll(PureEpochs._START_BLOCK + 2 * _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlocksSinceEpochEnd(0), _15_DAYS_OF_BLOCKS);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
         assertEq(PureEpochs.getBlocksSinceEpochEnd(1), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + 2 * _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getBlocksSinceEpochEnd(0), _15_DAYS_OF_BLOCKS + 1);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
         assertEq(PureEpochs.getBlocksSinceEpochEnd(1), 1);
+
+        vm.roll(2 * PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getBlocksSinceEpochEnd(1), PureEpochs._EPOCH_PERIOD - 1);
+
+        vm.roll(2 * PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksSinceEpochEnd(1), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlocksSinceEpochEnd(2), 0);
+
+        vm.roll(2 * PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksSinceEpochEnd(1), PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getBlocksSinceEpochEnd(2), 1);
     }
 
     function test_getTimeSinceEpochEnd() external {
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getTimeSinceEpochEnd(0), 0);
-
-        vm.roll(PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getTimeSinceEpochEnd(0), 12);
-
-        vm.roll(PureEpochs._START_BLOCK + 2 * _15_DAYS_OF_BLOCKS - 1);
-        assertEq(PureEpochs.getTimeSinceEpochEnd(0), 15 days - 12);
-
-        vm.roll(PureEpochs._START_BLOCK + 2 * _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getTimeSinceEpochEnd(0), 15 days);
+        vm.roll(PureEpochs._EPOCH_PERIOD);
         assertEq(PureEpochs.getTimeSinceEpochEnd(1), 0);
 
-        vm.roll(PureEpochs._START_BLOCK + 2 * _15_DAYS_OF_BLOCKS + 1);
-        assertEq(PureEpochs.getTimeSinceEpochEnd(0), 15 days + 12);
+        vm.roll(PureEpochs._EPOCH_PERIOD + 1);
         assertEq(PureEpochs.getTimeSinceEpochEnd(1), 12);
+
+        vm.roll(2 * PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getTimeSinceEpochEnd(1), 15 days - 12);
+
+        vm.roll(2 * PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeSinceEpochEnd(1), 15 days);
+        assertEq(PureEpochs.getTimeSinceEpochEnd(2), 0);
+
+        vm.roll(2 * PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getTimeSinceEpochEnd(1), 15 days + 12);
+        assertEq(PureEpochs.getTimeSinceEpochEnd(2), 12);
     }
 
     function test_getBlockNumberOfEpochStart() external {
-        assertEq(PureEpochs.getBlockNumberOfEpochStart(0), PureEpochs._START_BLOCK);
-        assertEq(PureEpochs.getBlockNumberOfEpochStart(1), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlockNumberOfEpochStart(2), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS * 2);
+        assertEq(PureEpochs.getBlockNumberOfEpochStart(1), 0);
+        assertEq(PureEpochs.getBlockNumberOfEpochStart(2), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlockNumberOfEpochStart(3), PureEpochs._EPOCH_PERIOD * 2);
     }
 
     function test_getBlockNumberOfEpochEnd() external {
-        assertEq(PureEpochs.getBlockNumberOfEpochEnd(0), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS);
-        assertEq(PureEpochs.getBlockNumberOfEpochEnd(1), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS * 2);
-        assertEq(PureEpochs.getBlockNumberOfEpochEnd(2), PureEpochs._START_BLOCK + _15_DAYS_OF_BLOCKS * 3);
+        assertEq(PureEpochs.getBlockNumberOfEpochEnd(1), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getBlockNumberOfEpochEnd(2), PureEpochs._EPOCH_PERIOD * 2);
+        assertEq(PureEpochs.getBlockNumberOfEpochEnd(3), PureEpochs._EPOCH_PERIOD * 3);
     }
 
     function test_toSeconds() external {
