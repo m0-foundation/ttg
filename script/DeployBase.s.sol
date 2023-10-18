@@ -17,6 +17,8 @@ import { ZeroGovernor } from "../src/ZeroGovernor.sol";
 import { ZeroToken } from "../src/ZeroToken.sol";
 
 contract DeployBase is Script {
+    error DeployerNonceMismatch(uint256 expectedDeployerNonce, uint256 actualDeployerNonce);
+
     uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 5_000; // 50%
     uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 5_000; // 50%
 
@@ -33,6 +35,9 @@ contract DeployBase is Script {
         address[] memory allowedCashTokens_
     ) public returns (address registrar_) {
         console2.log("deployer:", deployer_);
+
+        if (_DEPLOYER_NONCE != vm.getNonce(deployer_))
+            revert DeployerNonceMismatch(_DEPLOYER_NONCE, vm.getNonce(deployer_));
 
         address emergencyGovernorDeployer_ = _deployEmergencyGovernorDeployer(
             deployer_,

@@ -1,347 +1,347 @@
 [
   {
+    "type": "constructor",
     "inputs": [
       {
-        "internalType": "address",
         "name": "zeroGovernor_",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
-    "name": "InvalidVaultAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidZeroGovernorAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidZeroTokenAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotStandardOrEmergencyGovernor",
-    "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "list",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "AddressAddedToList",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "list",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "AddressRemovedFromList",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "key",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "value",
-        "type": "bytes32"
-      }
-    ],
-    "name": "KeySet",
-    "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "list_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      }
-    ],
+    "type": "function",
     "name": "addToList",
+    "inputs": [
+      {
+        "name": "list_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "emergencyGovernor",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "emergencyGovernor_",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "emergencyGovernorDeployer",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "get",
     "inputs": [
       {
-        "internalType": "bytes32",
         "name": "key_",
-        "type": "bytes32"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "name": "get",
     "outputs": [
       {
-        "internalType": "bytes32",
         "name": "value_",
-        "type": "bytes32"
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "get",
     "inputs": [
       {
-        "internalType": "bytes32[]",
         "name": "keys_",
-        "type": "bytes32[]"
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
-    "name": "get",
     "outputs": [
       {
-        "internalType": "bytes32[]",
         "name": "values_",
-        "type": "bytes32[]"
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "listContains",
     "inputs": [
       {
-        "internalType": "bytes32",
         "name": "list_",
-        "type": "bytes32"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        "internalType": "address[]",
         "name": "accounts_",
-        "type": "address[]"
+        "type": "address[]",
+        "internalType": "address[]"
       }
     ],
-    "name": "listContains",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "contains_",
-        "type": "bool"
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "listContains",
     "inputs": [
       {
-        "internalType": "bytes32",
         "name": "list_",
-        "type": "bytes32"
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        "internalType": "address",
         "name": "account_",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "name": "listContains",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "contains_",
-        "type": "bool"
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "powerToken",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "powerToken_",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "powerTokenDeployer",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "list_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      }
-    ],
+    "type": "function",
     "name": "removeFromList",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "key_",
-        "type": "bytes32"
+        "name": "list_",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        "internalType": "bytes32",
-        "name": "value_",
-        "type": "bytes32"
+        "name": "account_",
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "name": "setKey",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
+    "type": "function",
+    "name": "setKey",
+    "inputs": [
+      {
+        "name": "key_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "value_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "standardGovernor",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "standardGovernor_",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "standardGovernorDeployer",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "vault",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "zeroGovernor",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "zeroToken",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "AddressAddedToList",
+    "inputs": [
+      {
+        "name": "list",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AddressRemovedFromList",
+    "inputs": [
+      {
+        "name": "list",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "KeySet",
+    "inputs": [
+      {
+        "name": "key",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "value",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidVaultAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidZeroGovernorAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidZeroTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotStandardOrEmergencyGovernor",
+    "inputs": []
   }
 ]

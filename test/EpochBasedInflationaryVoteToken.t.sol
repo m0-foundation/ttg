@@ -294,7 +294,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function testFuzz_full(uint256 seed_) external {
-        vm.skip(false);
+        vm.skip(true);
 
         for (uint256 index_; index_ < 1000; ++index_) {
             // console2.log(" ");

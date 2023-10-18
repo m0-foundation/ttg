@@ -2,11 +2,11 @@
 
 pragma solidity 0.8.23;
 
-/// @notice Defines epochs as 15 days worth of blocks (108,000) away from 'The Merge' block.
+/// @notice Defines epochs as 400 seconds worth of blocks away from 'The Merge' block.
 library PureEpochs {
-    uint256 internal constant _SECONDS_PER_BLOCK = 12;
+    uint256 internal constant _SECONDS_PER_BLOCK = 8;
 
-    uint256 internal constant _EPOCH_PERIOD = 15 days / _SECONDS_PER_BLOCK;
+    uint256 internal constant _EPOCH_PERIOD = 400 seconds / _SECONDS_PER_BLOCK;
 
     function currentEpoch() internal view returns (uint256 currentEpoch_) {
         return (block.number / _EPOCH_PERIOD) + 1; // Epoch at block 0 is 1.
