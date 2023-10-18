@@ -20,6 +20,7 @@ contract Registrar is IRegistrar {
 
     address public immutable governorDeployer;
     address public immutable powerTokenDeployer;
+    address public immutable vault;
     address public immutable zeroToken;
 
     address public governor;
@@ -50,6 +51,7 @@ contract Registrar is IRegistrar {
             _STARTING_POWER_TOKEN_QUORUM_RATIO
         );
 
+        vault = IDualGovernor(governor_).vault();
         zeroToken = IDualGovernor(governor_).zeroToken();
 
         IPowerTokenDeployer(powerTokenDeployer_).deploy(governor_, cashToken_, bootstrapToken_);

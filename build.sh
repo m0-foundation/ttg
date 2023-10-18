@@ -30,7 +30,7 @@ cp ./out/PowerToken.sol/PowerToken.abi.json ./abi/PowerToken.json
 cp ./out/PowerTokenDeployer.sol/PowerTokenDeployer.abi.json ./abi/PowerTokenDeployer.json
 cp ./out/Registrar.sol/Registrar.abi.json ./abi/Registrar.json
 cp ./out/ZeroToken.sol/ZeroToken.abi.json ./abi/ZeroToken.json
-cp ./out/Mocks.sol/MockERC20Permit.abi.json ./abi/MockERC20Permit.json
+cp ./out/ERC20PermitHarness.sol/ERC20PermitHarness.abi.json ./abi/ERC20PermitHarness.json
 
 mkdir -p bytecode
 
@@ -41,7 +41,7 @@ PowerTokenBytecode=$(jq '.bytecode.object' ./out/PowerToken.sol/PowerToken.json)
 PowerTokenDeployerBytecode=$(jq '.bytecode.object' ./out/PowerTokenDeployer.sol/PowerTokenDeployer.json)
 RegistrarBytecode=$(jq '.bytecode.object' ./out/Registrar.sol/Registrar.json)
 ZeroTokenBytecode=$(jq '.bytecode.object' ./out/ZeroToken.sol/ZeroToken.json)
-MockERC20PermitBytecode=$(jq '.bytecode.object' ./out/Mocks.sol/MockERC20Permit.json)
+ERC20PermitHarnessBytecode=$(jq '.bytecode.object' ./out/ERC20PermitHarness.sol/ERC20PermitHarness.json)
 
 echo "{ \"bytecode\": ${DualGovernorBytecode} }" > ./bytecode/DualGovernor.json
 echo "{ \"bytecode\": ${DualGovernorDeployerBytecode} }" > ./bytecode/DualGovernorDeployer.json
@@ -50,4 +50,4 @@ echo "{ \"bytecode\": ${PowerTokenBytecode} }" > ./bytecode/PowerToken.json
 echo "{ \"bytecode\": ${PowerTokenDeployerBytecode} }" > ./bytecode/PowerTokenDeployer.json
 echo "{ \"bytecode\": ${RegistrarBytecode} }" > ./bytecode/Registrar.json
 echo "{ \"bytecode\": ${ZeroTokenBytecode} }" > ./bytecode/ZeroToken.json
-echo "{ \"bytecode\": ${MockERC20PermitBytecode} }" > ./bytecode/MockERC20Permit.json
+echo "{ \"bytecode\": ${ERC20PermitHarnessBytecode} }" > ./bytecode/ERC20PermitHarness.json

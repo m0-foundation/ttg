@@ -23,7 +23,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     address internal immutable _bootstrapToken;
     address internal immutable _cashToken;
     address internal immutable _governor;
-    address internal immutable _treasury;
+    address internal immutable _vault;
 
     uint256 internal immutable _bootstrapEpoch;
     uint256 internal immutable _bootstrapSupply;
@@ -41,13 +41,12 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     constructor(
         address governor_,
         address cashToken_,
-        address treasury_,
+        address vault_,
         address bootstrapToken_
-    ) EpochBasedInflationaryVoteToken("Power Token", "POWER", ONE / 10) {
-        // TODO: Validation.
-        _cashToken = cashToken_;
-        _treasury = treasury_;
-        _governor = governor_;
+    ) EpochBasedInflationaryVoteToken("Power Token", "POWER", 0, ONE / 10) {
+        if ((_cashToken = cashToken_) == address(0)) revert ZeroCashTokenAddress();
+        if ((_vault = vault_) == address(0)) revert ZeroVaultAddress();
+        if ((_governor = governor_) == address(0)) revert ZeroGovernorAddress();
 
         _bootstrapSupply = IEpochBasedVoteToken(_bootstrapToken = bootstrapToken_).totalSupplyAt(
             _bootstrapEpoch = (PureEpochs.currentEpoch() - 1)
@@ -68,7 +67,11 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         emit Buy(msg.sender, amount_, cost_);
 
         // TODO: Perhaps `_cashToken` should come from the governor?
-        if (!ERC20Helper.transferFrom(_cashToken, msg.sender, _treasury, cost_)) revert TransferFromFailed();
+        // TODO: Perhaps `_vault` should come from the governor?
+        // NOTE: Not calling `distribute` on vault since:
+        //         - anyone can do it, anytime
+        //         - `PowerToken` should not need to know how the vault works
+        if (!ERC20Helper.transferFrom(_cashToken, msg.sender, _vault, cost_)) revert TransferFromFailed();
 
         _mint(destination_, amount_);
     }
@@ -191,8 +194,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         totalSupply_ = epoch_ <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupplyAt(epoch_);
     }
 
-    function treasury() external view returns (address treasury_) {
-        treasury_ = _treasury;
+    function vault() external view returns (address vault_) {
+        vault_ = _vault;
     }
 
     /******************************************************************************************************************\

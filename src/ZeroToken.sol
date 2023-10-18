@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.20;
 
+import { IERC20 } from "./interfaces/IERC20.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
@@ -34,8 +35,8 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         _registrar = registrar_;
     }
 
-    function mint(address recipient, uint256 amount) external onlGovernor {
-        _mint(recipient, amount);
+    function mint(address recipient_, uint256 amount_) external onlGovernor {
+        _mint(recipient_, amount_);
     }
 
     function registrar() external view returns (address registrar_) {

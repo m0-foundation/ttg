@@ -8,7 +8,7 @@
       },
       {
         "internalType": "address",
-        "name": "treasury_",
+        "name": "vault_",
         "type": "address"
       }
     ],
@@ -18,6 +18,16 @@
   {
     "inputs": [],
     "name": "CallerIsNotRegistrar",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroRegistrarAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroVaultAddress",
     "type": "error"
   },
   {
@@ -90,7 +100,7 @@
   },
   {
     "inputs": [],
-    "name": "treasury",
+    "name": "vault",
     "outputs": [
       {
         "internalType": "address",

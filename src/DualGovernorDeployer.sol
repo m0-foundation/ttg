@@ -7,8 +7,11 @@ import { IDualGovernorDeployer } from "./interfaces/IDualGovernorDeployer.sol";
 import { DualGovernor } from "./DualGovernor.sol";
 import { ContractHelper } from "./ContractHelper.sol";
 
+// TODO: `cashToken` can be a public immutable if it will never change.
+
 contract DualGovernorDeployer is IDualGovernorDeployer {
     address public immutable registrar;
+    address public immutable vault;
     address public immutable zeroToken;
 
     uint256 public nonce;
@@ -19,9 +22,10 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
         _;
     }
 
-    constructor(address registrar_, address zeroToken_) {
-        registrar = registrar_;
-        zeroToken = zeroToken_;
+    constructor(address registrar_, address vault_, address zeroToken_) {
+        if ((registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
+        if ((vault = vault_) == address(0)) revert ZeroVaultAddress();
+        if ((zeroToken = zeroToken_) == address(0)) revert ZeroZeroTokenAddress();
     }
 
     function deploy(
@@ -42,6 +46,7 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
                 registrar,
                 zeroToken,
                 powerToken_,
+                vault,
                 proposalFee_,
                 minProposalFee_,
                 maxProposalFee_,

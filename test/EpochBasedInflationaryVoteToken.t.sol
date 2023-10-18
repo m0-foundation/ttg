@@ -39,7 +39,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     Vote internal _vote;
 
     function setUp() external {
-        _vote = new Vote("Vote Epoch Token", "VOTE", _participationInflation);
+        _vote = new Vote("Vote Epoch Token", "VOTE", 0, _participationInflation);
     }
 
     function test_noInflationWithoutVotingPowerInPreviousEpoch_selfDelegation() external {

@@ -9,6 +9,10 @@ import { ERC5805 } from "./ERC5805.sol";
 import { ERC20Permit } from "./ERC20Permit.sol";
 import { ERC712 } from "./ERC712.sol";
 
+// TODO: Consider making more external function (like `balanceOf`, and `balanceOfAt`) public.
+// TODO: Consider `getPastVotes` for and array of epochs and between start and end epochs.
+// TODO: Consider `delegatesAt` for and array of epochs and between start and end epochs.
+
 contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     struct AmountEpoch {
         uint16 startingEpoch;
@@ -46,6 +50,21 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         balance_ = _getValueAt(_balances[account_], epoch_);
     }
 
+    function balancesOfAt(
+        address account_,
+        uint256[] calldata epochs_
+    ) external view virtual returns (uint256[] memory balances_) {
+        balances_ = _getValuesAt(_balances[account_], epochs_);
+    }
+
+    function balancesOfBetween(
+        address account_,
+        uint256 startEpoch_,
+        uint256 endEpoch_
+    ) external view virtual returns (uint256[] memory balances_) {
+        balances_ = _getValuesAt(_balances[account_], new uint256[](endEpoch_ - startEpoch_ + 1));
+    }
+
     function clock() external view returns (uint48 clock_) {
         clock_ = uint48(PureEpochs.currentEpoch());
     }
@@ -72,6 +91,17 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
 
     function totalSupplyAt(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
         totalSupply_ = _getValueAt(_totalSupplies, epoch_);
+    }
+
+    function totalSuppliesAt(uint256[] calldata epochs_) public view virtual returns (uint256[] memory totalSupplies_) {
+        totalSupplies_ = _getValuesAt(_totalSupplies, epochs_);
+    }
+
+    function totalSuppliesBetween(
+        uint256 startEpoch_,
+        uint256 endEpoch_
+    ) public view virtual returns (uint256[] memory totalSupplies_) {
+        totalSupplies_ = _getValuesAt(_totalSupplies, new uint256[](endEpoch_ - startEpoch_ + 1));
     }
 
     function CLOCK_MODE() external pure returns (string memory clockMode_) {
@@ -288,6 +318,40 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
             AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
 
             if (amountEpoch_.startingEpoch <= epoch_) return amountEpoch_.amount;
+        } while (index_ > 0);
+    }
+
+    function _getValuesAt(
+        AmountEpoch[] storage amountEpochs_,
+        uint256[] memory epochs_
+    ) internal view returns (uint256[] memory values_) {
+        values_ = new uint256[](epochs_.length);
+
+        uint256 index_ = amountEpochs_.length;
+        uint256 epochsIndex_ = epochs_.length;
+
+        if (index_ == 0 || epochsIndex_ == 0) return values_;
+
+        uint256 epoch_ = epochs_[--epochsIndex_];
+
+        // Keep going back as long as the epoch is greater or equal to the previous AmountEpoch's startingEpoch.
+        do {
+            AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
+
+            uint256 startingEpoch_ = amountEpoch_.startingEpoch;
+
+            // Keep checking if the AmountEpoch's startingEpoch is applicable to the current and decrementing epoch.
+            while (startingEpoch_ <= epoch_) {
+                values_[epochsIndex_] = amountEpoch_.amount;
+
+                if (epochsIndex_ == 0) return values_;
+
+                uint256 previousEpoch_ = epochs_[--epochsIndex_];
+
+                if (previousEpoch_ >= epoch_) revert InvalidEpochOrdering();
+
+                epoch_ = previousEpoch_;
+            }
         } while (index_ > 0);
     }
 

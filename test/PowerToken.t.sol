@@ -18,7 +18,7 @@ import { TestUtils } from "./utils/TestUtils.sol";
 contract PowerTokenTests is TestUtils {
     address internal _governor = makeAddr("governor");
     address internal _account = makeAddr("account");
-    address internal _treasury = makeAddr("treasury");
+    address internal _vault = makeAddr("vault");
 
     address[] internal _initialAccounts = [
         makeAddr("account1"),
@@ -50,14 +50,14 @@ contract PowerTokenTests is TestUtils {
             _bootstrapToken.setBalance(_initialAccounts[index_], _initialAmounts[index_]);
         }
 
-        _powerToken = new PowerToken(_governor, address(_cashToken), _treasury, address(_bootstrapToken));
+        _powerToken = new PowerToken(_governor, address(_cashToken), _vault, address(_bootstrapToken));
     }
 
     function test_initialState() external {
         assertEq(_powerToken.bootstrapToken(), address(_bootstrapToken));
         assertEq(_powerToken.cashToken(), address(_cashToken));
         assertEq(_powerToken.governor(), _governor);
-        assertEq(_powerToken.treasury(), _treasury);
+        assertEq(_powerToken.vault(), _vault);
         assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
 
         for (uint256 index_; index_ < _initialAccounts.length; ++index_) {
@@ -203,7 +203,7 @@ contract PowerTokenTests is TestUtils {
 
         vm.expectCall(
             address(_cashToken),
-            abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _treasury, 1 * (1 << 99))
+            abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
         vm.prank(_account);
         _powerToken.buy(oneBasisPointOfTotalSupply_, _account);

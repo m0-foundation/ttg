@@ -11,7 +11,7 @@ import { IGovernor } from "../src/interfaces/IGovernor.sol";
 
 import { DeployBase } from "../script/DeployBase.s.sol";
 
-import { MockERC20Permit } from "./utils/Mocks.sol";
+import { ERC20PermitHarness } from "./utils/ERC20PermitHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract IntegrationTests is TestUtils {
@@ -30,11 +30,11 @@ contract IntegrationTests is TestUtils {
     uint256[] internal _initialZeroBalances = [60_000_000, 30_000_000, 10_000_000];
 
     DeployBase internal _deploy;
-    MockERC20Permit internal _cashToken;
+    ERC20PermitHarness internal _cashToken;
 
     function setUp() external {
         _deploy = new DeployBase();
-        _cashToken = new MockERC20Permit("CASH", "Cash Token", 6);
+        _cashToken = new ERC20PermitHarness("CASH", "Cash Token", 6);
 
         _registrar = _deploy.deploy(
             _deployer,
@@ -90,7 +90,7 @@ contract IntegrationTests is TestUtils {
         uint256 proposalId_ = governor_.propose(targets_, values_, calldatas_, description_);
 
         assertEq(_cashToken.balanceOf(_accounts[0]), 0);
-        assertEq(_cashToken.balanceOf(address(governor_)), proposalFee_);
+        assertEq(_cashToken.balanceOf(governor_.vault()), proposalFee_);
 
         _goToNextVoteEpoch();
 

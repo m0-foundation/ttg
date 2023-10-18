@@ -9,7 +9,7 @@ import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflat
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 import { PureEpochs } from "./PureEpochs.sol";
 
-// TODO: Normalize all balances and voting powers to day-0 values instead of syncing.
+// TODO: Consider replacing all repetitive internal function calls with cleaner super calls.
 
 contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
     struct VoidEpoch {
@@ -39,8 +39,9 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     constructor(
         string memory name_,
         string memory symbol_,
+        uint8 decimals_,
         uint256 participationInflation_
-    ) EpochBasedVoteToken(name_, symbol_, 0) {
+    ) EpochBasedVoteToken(name_, symbol_, decimals_) {
         _participationInflation = participationInflation_;
     }
 

@@ -27,6 +27,12 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     error TransferFromFailed();
 
+    error ZeroCashTokenAddress();
+
+    error ZeroGovernorAddress();
+
+    error ZeroVaultAddress();
+
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
@@ -61,5 +67,5 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     function isActiveEpoch(uint256 epoch) external view returns (bool isActiveEpoch);
 
-    function treasury() external view returns (address treasury);
+    function vault() external view returns (address vault);
 }

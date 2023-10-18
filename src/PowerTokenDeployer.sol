@@ -8,7 +8,7 @@ import { ContractHelper } from "./ContractHelper.sol";
 
 contract PowerTokenDeployer is IPowerTokenDeployer {
     address public immutable registrar;
-    address public immutable treasury;
+    address public immutable vault;
 
     uint256 public nonce;
 
@@ -18,9 +18,9 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
         _;
     }
 
-    constructor(address registrar_, address treasury_) {
-        registrar = registrar_;
-        treasury = treasury_;
+    constructor(address registrar_, address vault_) {
+        if ((registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
+        if ((vault = vault_) == address(0)) revert ZeroVaultAddress();
     }
 
     function deploy(
@@ -30,7 +30,7 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
     ) external onlyRegistrar returns (address deployed_) {
         ++nonce;
 
-        deployed_ = address(new PowerToken(governor_, cashToken_, treasury, bootstrapToken_));
+        deployed_ = address(new PowerToken(governor_, cashToken_, vault, bootstrapToken_));
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {
