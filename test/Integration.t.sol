@@ -9,12 +9,14 @@ import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 import { IGovernor } from "../src/interfaces/IGovernor.sol";
 
-import { Deploy } from "../script/Deploy.s.sol";
+import { DeployBase } from "../script/DeployBase.s.sol";
 
 import { MockERC20Permit } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract IntegrationTests is TestUtils {
+    address internal _deployer = makeAddr("deployer");
+
     address internal _registrar;
 
     address[] internal _accounts = [makeAddr("account0"), makeAddr("account1"), makeAddr("account2")];
@@ -27,14 +29,16 @@ contract IntegrationTests is TestUtils {
 
     uint256[] internal _initialZeroBalances = [60_000_000, 30_000_000, 10_000_000];
 
-    Deploy internal _deploy;
+    DeployBase internal _deploy;
     MockERC20Permit internal _cashToken;
 
     function setUp() external {
-        _deploy = new Deploy();
+        _deploy = new DeployBase();
         _cashToken = new MockERC20Permit("CASH", "Cash Token", 6);
 
-        _registrar = _deploy.run(
+        _registrar = _deploy.deploy(
+            _deployer,
+            0,
             _initialPowerAccounts,
             _initialPowerBalances,
             _initialZeroAccounts,
