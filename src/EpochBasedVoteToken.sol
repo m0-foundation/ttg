@@ -14,23 +14,23 @@ import { ERC712 } from "./ERC712.sol";
 // TODO: Consider `delegatesAt` for and array of epochs and between start and end epochs.
 
 contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
-    struct AmountEpoch {
+    struct AmountWindow {
         uint16 startingEpoch;
         uint240 amount;
     }
 
-    struct AccountEpoch {
+    struct AccountWindow {
         uint16 startingEpoch;
         address account;
     }
 
-    AmountEpoch[] internal _totalSupplies;
+    AmountWindow[] internal _totalSupplies;
 
-    mapping(address account => AmountEpoch[] balanceEpochs) internal _balances;
+    mapping(address account => AmountWindow[] balanceWindows) internal _balances;
 
-    mapping(address account => AccountEpoch[] delegateeEpochs) internal _delegatees;
+    mapping(address account => AccountWindow[] delegateeWindows) internal _delegatees;
 
-    mapping(address delegatee => AmountEpoch[] votingPowerEpochs) internal _votingPowers;
+    mapping(address delegatee => AmountWindow[] votingPowerWindows) internal _votingPowers;
 
     constructor(
         string memory name_,
@@ -172,32 +172,32 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
-        AccountEpoch[] storage accountEpochs_ = _delegatees[delegator_];
+        AccountWindow[] storage accountWindows_ = _delegatees[delegator_];
 
-        uint256 length_ = accountEpochs_.length;
+        uint256 length_ = accountWindows_.length;
 
-        // If this will be the first AccountEpoch, we can just push it onto the empty array.
+        // If this will be the first AccountWindow, we can just push it onto the empty array.
         if (length_ == 0) {
             if (delegatee_ == delegator_) revert AlreadyDelegated();
 
-            accountEpochs_.push(AccountEpoch(uint16(currentEpoch_), delegateeToWrite_));
+            accountWindows_.push(AccountWindow(uint16(currentEpoch_), delegateeToWrite_));
 
             return delegator_;
         }
 
-        AccountEpoch storage currentAccountEpoch_ = _unsafeAccountEpochAccess(accountEpochs_, length_ - 1);
+        AccountWindow storage currentAccountWindow_ = _unsafeAccountWindowAccess(accountWindows_, length_ - 1);
 
         // `oldDelegatee_` will be `delegator_` if it was retrieved as `address(0)`.
-        oldDelegatee_ = _getDefaultIfZero(currentAccountEpoch_.account, delegator_);
+        oldDelegatee_ = _getDefaultIfZero(currentAccountWindow_.account, delegator_);
 
         if (oldDelegatee_ == delegatee_) revert AlreadyDelegated();
 
         emit DelegateChanged(delegator_, oldDelegatee_, delegatee_);
 
-        if (currentEpoch_ > currentAccountEpoch_.startingEpoch) {
-            accountEpochs_.push(AccountEpoch(uint16(currentEpoch_), delegateeToWrite_));
+        if (currentEpoch_ > currentAccountWindow_.startingEpoch) {
+            accountWindows_.push(AccountWindow(uint16(currentEpoch_), delegateeToWrite_));
         } else {
-            currentAccountEpoch_.account = delegateeToWrite_;
+            currentAccountWindow_.account = delegateeToWrite_;
         }
     }
 
@@ -218,33 +218,33 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     }
 
     function _update(
-        AmountEpoch[] storage amountEpochs_,
+        AmountWindow[] storage amountWindows_,
         function(uint256, uint256) returns (uint256) operation_,
         uint256 amount_
     ) internal returns (uint256 oldAmount_, uint256 newAmount_) {
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
-        uint256 length_ = amountEpochs_.length;
+        uint256 length_ = amountWindows_.length;
 
-        // If this will be the first AmountEpoch, we can just push it onto the empty array.
+        // If this will be the first AmountWindow, we can just push it onto the empty array.
         if (length_ == 0) {
             if (amount_ > type(uint240).max) revert AmountExceedsUint240();
 
-            amountEpochs_.push(AmountEpoch(uint16(currentEpoch_), uint240(amount_)));
+            amountWindows_.push(AmountWindow(uint16(currentEpoch_), uint240(amount_)));
 
             return (0, amount_);
         }
 
-        AmountEpoch storage currentAmountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, length_ - 1);
+        AmountWindow storage currentAmountWindow_ = _unsafeAmountWindowAccess(amountWindows_, length_ - 1);
 
-        newAmount_ = operation_(oldAmount_ = currentAmountEpoch_.amount, amount_);
+        newAmount_ = operation_(oldAmount_ = currentAmountWindow_.amount, amount_);
 
         if (newAmount_ > type(uint240).max) revert AmountExceedsUint240();
 
-        if (currentEpoch_ > currentAmountEpoch_.startingEpoch) {
-            amountEpochs_.push(AmountEpoch(uint16(currentEpoch_), uint240(newAmount_)));
+        if (currentEpoch_ > currentAmountWindow_.startingEpoch) {
+            amountWindows_.push(AmountWindow(uint16(currentEpoch_), uint240(newAmount_)));
         } else {
-            currentAmountEpoch_.amount = uint240(newAmount_);
+            currentAmountWindow_.amount = uint240(newAmount_);
         }
     }
 
@@ -270,25 +270,25 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    function _getLatestAccount(AccountEpoch[] storage accountEpochs_) internal view returns (address account_) {
-        uint256 length_ = accountEpochs_.length;
+    function _getLatestAccount(AccountWindow[] storage accountWindows_) internal view returns (address account_) {
+        uint256 length_ = accountWindows_.length;
 
-        account_ = length_ == 0 ? address(0) : _unsafeAccountEpochAccess(accountEpochs_, length_ - 1).account;
+        account_ = length_ == 0 ? address(0) : _unsafeAccountWindowAccess(accountWindows_, length_ - 1).account;
     }
 
     function _getAccountAt(
-        AccountEpoch[] storage accountEpochs_,
+        AccountWindow[] storage accountWindows_,
         uint256 epoch_
     ) internal view returns (address account_) {
-        uint256 index_ = accountEpochs_.length;
+        uint256 index_ = accountWindows_.length;
 
         if (index_ == 0) return address(0);
 
-        // Keep going back as long as the epoch is greater or equal to the previous AccountEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous AccountWindow's startingEpoch.
         do {
-            AccountEpoch storage accountEpoch_ = _unsafeAccountEpochAccess(accountEpochs_, --index_);
+            AccountWindow storage accountWindow_ = _unsafeAccountWindowAccess(accountWindows_, --index_);
 
-            if (accountEpoch_.startingEpoch <= epoch_) return accountEpoch_.account;
+            if (accountWindow_.startingEpoch <= epoch_) return accountWindow_.account;
         } while (index_ > 0);
     }
 
@@ -302,47 +302,48 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         delegatee_ = _getDefaultIfZero(_getAccountAt(_delegatees[account_], epoch_), account_);
     }
 
-    function _getLatestValue(AmountEpoch[] storage amountEpochs_) internal view returns (uint256 value_) {
-        uint256 length_ = amountEpochs_.length;
+    function _getLatestValue(AmountWindow[] storage amountWindows_) internal view returns (uint256 value_) {
+        uint256 length_ = amountWindows_.length;
 
-        value_ = length_ == 0 ? 0 : _unsafeAmountEpochAccess(amountEpochs_, length_ - 1).amount;
+        value_ = length_ == 0 ? 0 : _unsafeAmountWindowAccess(amountWindows_, length_ - 1).amount;
     }
 
-    function _getValueAt(AmountEpoch[] storage amountEpochs_, uint256 epoch_) internal view returns (uint256 value_) {
-        uint256 index_ = amountEpochs_.length;
+    function _getValueAt(AmountWindow[] storage amountWindows_, uint256 epoch_) internal view returns (uint256 value_) {
+        uint256 index_ = amountWindows_.length;
 
         if (index_ == 0) return 0;
 
-        // Keep going back as long as the epoch is greater or equal to the previous AmountEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
         do {
-            AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
+            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --index_);
 
-            if (amountEpoch_.startingEpoch <= epoch_) return amountEpoch_.amount;
+            if (amountWindow_.startingEpoch <= epoch_) return amountWindow_.amount;
         } while (index_ > 0);
     }
 
     function _getValuesAt(
-        AmountEpoch[] storage amountEpochs_,
+        AmountWindow[] storage amountWindows_,
         uint256[] memory epochs_
     ) internal view returns (uint256[] memory values_) {
-        values_ = new uint256[](epochs_.length);
-
-        uint256 index_ = amountEpochs_.length;
         uint256 epochsIndex_ = epochs_.length;
 
-        if (index_ == 0 || epochsIndex_ == 0) return values_;
+        values_ = new uint256[](epochsIndex_);
+
+        uint256 windowIndex_ = amountWindows_.length;
+
+        if (windowIndex_ == 0 || epochsIndex_ == 0) return values_;
 
         uint256 epoch_ = epochs_[--epochsIndex_];
 
-        // Keep going back as long as the epoch is greater or equal to the previous AmountEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
         do {
-            AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
+            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --windowIndex_);
 
-            uint256 startingEpoch_ = amountEpoch_.startingEpoch;
+            uint256 amountWindowStartingEpoch_ = amountWindow_.startingEpoch;
 
-            // Keep checking if the AmountEpoch's startingEpoch is applicable to the current and decrementing epoch.
-            while (startingEpoch_ <= epoch_) {
-                values_[epochsIndex_] = amountEpoch_.amount;
+            // Keep checking if the AmountWindow's startingEpoch is applicable to the current and decrementing epoch.
+            while (amountWindowStartingEpoch_ <= epoch_) {
+                values_[epochsIndex_] = amountWindow_.amount;
 
                 if (epochsIndex_ == 0) return values_;
 
@@ -352,11 +353,11 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
 
                 epoch_ = previousEpoch_;
             }
-        } while (index_ > 0);
+        } while (windowIndex_ > 0);
     }
 
     function _getValuesBetween(
-        AmountEpoch[] storage amountEpochs_,
+        AmountWindow[] storage amountWindows_,
         uint256 startEpoch_,
         uint256 endEpoch_
     ) internal view returns (uint256[] memory values_) {
@@ -364,28 +365,28 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
 
         values_ = new uint256[](epochsIndex_);
 
-        uint256 index_ = amountEpochs_.length;
+        uint256 windowIndex_ = amountWindows_.length;
 
-        if (index_ == 0 || epochsIndex_ == 0) return values_;
+        if (windowIndex_ == 0 || epochsIndex_ == 0) return values_;
 
         uint256 epoch_ = endEpoch_;
 
-        // Keep going back as long as the epoch is greater or equal to the previous AmountEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
         do {
-            AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
+            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --windowIndex_);
 
-            uint256 startingEpoch_ = amountEpoch_.startingEpoch;
+            uint256 amountWindowStartingEpoch_ = amountWindow_.startingEpoch;
 
-            // Keep checking if the AmountEpoch's startingEpoch is applicable to the current and decrementing epoch.
-            while (startingEpoch_ <= epoch_) {
-                values_[epochsIndex_] = amountEpoch_.amount;
+            // Keep checking if the AmountWindow's startingEpoch is applicable to the current and decrementing epoch.
+            while (amountWindowStartingEpoch_ <= epoch_) {
+                values_[epochsIndex_] = amountWindow_.amount;
 
                 if (epochsIndex_ == 0) return values_;
 
                 --epochsIndex_;
                 --epoch_;
             }
-        } while (index_ > 0);
+        } while (windowIndex_ > 0);
     }
 
     function _add(uint256 a_, uint256 b_) internal pure returns (uint256 c_) {
@@ -404,23 +405,23 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         c_ = a_ - b_;
     }
 
-    function _unsafeAmountEpochAccess(
-        AmountEpoch[] storage amountEpochs_,
+    function _unsafeAmountWindowAccess(
+        AmountWindow[] storage amountWindows_,
         uint256 index_
-    ) internal pure returns (AmountEpoch storage amountEpoch_) {
+    ) internal pure returns (AmountWindow storage amountWindow_) {
         assembly {
-            mstore(0, amountEpochs_.slot)
-            amountEpoch_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, amountWindows_.slot)
+            amountWindow_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 
-    function _unsafeAccountEpochAccess(
-        AccountEpoch[] storage accountEpochs_,
+    function _unsafeAccountWindowAccess(
+        AccountWindow[] storage accountWindows_,
         uint256 index_
-    ) internal pure returns (AccountEpoch storage accountEpoch_) {
+    ) internal pure returns (AccountWindow storage accountWindow_) {
         assembly {
-            mstore(0, accountEpochs_.slot)
-            accountEpoch_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, accountWindows_.slot)
+            accountWindow_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 }
