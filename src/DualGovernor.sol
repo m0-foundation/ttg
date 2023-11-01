@@ -15,6 +15,10 @@ import { ERC712 } from "./ERC712.sol";
 
 // TODO: expose `_proposals`?
 // TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
+// TODO: castVotes with an array of proposals.
+// TODO: two types of cash tokens.
+// TODO: Zero rewards ensure an amount in total ae minted, assuming all Power is used.
+//       Both total supplies needed to compute.
 
 contract DualGovernor is IDualGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.

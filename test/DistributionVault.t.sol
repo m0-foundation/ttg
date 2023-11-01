@@ -35,7 +35,7 @@ contract DistributionVaultTests is TestUtils {
         _vault = new DistributionVault(address(_baseToken));
     }
 
-    function test_fdt_distribution() external {
+    function test_distribution() external {
         // Sets account balances this epoch.
         _baseToken.setBalanceAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
         _baseToken.setBalanceAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);

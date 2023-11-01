@@ -62,7 +62,7 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view virtual returns (uint256[] memory balances_) {
-        balances_ = _getValuesAt(_balances[account_], new uint256[](endEpoch_ - startEpoch_ + 1));
+        balances_ = _getValuesBetween(_balances[account_], startEpoch_, endEpoch_);
     }
 
     function clock() external view returns (uint48 clock_) {
@@ -101,7 +101,7 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) public view virtual returns (uint256[] memory totalSupplies_) {
-        totalSupplies_ = _getValuesAt(_totalSupplies, new uint256[](endEpoch_ - startEpoch_ + 1));
+        totalSupplies_ = _getValuesBetween(_totalSupplies, startEpoch_, endEpoch_);
     }
 
     function CLOCK_MODE() external pure returns (string memory clockMode_) {
@@ -351,6 +351,39 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
                 if (previousEpoch_ >= epoch_) revert InvalidEpochOrdering();
 
                 epoch_ = previousEpoch_;
+            }
+        } while (index_ > 0);
+    }
+
+    function _getValuesBetween(
+        AmountEpoch[] storage amountEpochs_,
+        uint256 startEpoch_,
+        uint256 endEpoch_
+    ) internal view returns (uint256[] memory values_) {
+        uint256 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
+
+        values_ = new uint256[](epochsIndex_);
+
+        uint256 index_ = amountEpochs_.length;
+
+        if (index_ == 0 || epochsIndex_ == 0) return values_;
+
+        uint256 epoch_ = endEpoch_;
+
+        // Keep going back as long as the epoch is greater or equal to the previous AmountEpoch's startingEpoch.
+        do {
+            AmountEpoch storage amountEpoch_ = _unsafeAmountEpochAccess(amountEpochs_, --index_);
+
+            uint256 startingEpoch_ = amountEpoch_.startingEpoch;
+
+            // Keep checking if the AmountEpoch's startingEpoch is applicable to the current and decrementing epoch.
+            while (startingEpoch_ <= epoch_) {
+                values_[epochsIndex_] = amountEpoch_.amount;
+
+                if (epochsIndex_ == 0) return values_;
+
+                --epochsIndex_;
+                --epoch_;
             }
         } while (index_ > 0);
     }
