@@ -2,18 +2,40 @@
 
 pragma solidity 0.8.20;
 
-import { ERC20Permit } from "../../src/ERC20Permit.sol";
-import { ERC712 } from "../../src/ERC712.sol";
-
 contract MockEpochBasedVoteToken {
+    mapping(address account => mapping(uint256 epoch => uint256 balance)) internal _balances;
+
     mapping(uint256 epoch => uint256 totalSupply) internal _totalSupplyAt;
+
+    function setBalanceAt(address account_, uint256 epoch_, uint256 balance_) external {
+        _balances[account_][epoch_] = balance_;
+    }
 
     function setTotalSupplyAt(uint256 epoch_, uint256 totalSupplyAt_) external {
         _totalSupplyAt[epoch_] = totalSupplyAt_;
     }
 
+    function balancesOfAt(
+        address account_,
+        uint256[] calldata epochs_
+    ) external view returns (uint256[] memory balances_) {
+        balances_ = new uint256[](epochs_.length);
+
+        for (uint256 index_; index_ < epochs_.length; ++index_) {
+            balances_[index_] = _balances[account_][epochs_[index_]];
+        }
+    }
+
     function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
         totalSupply_ = _totalSupplyAt[epoch_];
+    }
+
+    function totalSuppliesAt(uint256[] calldata epochs_) external view returns (uint256[] memory totalSupplies_) {
+        totalSupplies_ = new uint256[](epochs_.length);
+
+        for (uint256 index_; index_ < epochs_.length; ++index_) {
+            totalSupplies_[index_] = _totalSupplyAt[epochs_[index_]];
+        }
     }
 }
 
@@ -66,6 +88,8 @@ contract MockDualGovernor {
     function proposalFee() external view returns (uint256 proposalFee_) {}
 
     function reward() external view returns (uint256 reward_) {}
+
+    function vault() external view returns (address vault_) {}
 
     function zeroTokenQuorumRatio() external view returns (uint256 zeroTokenQuorumRatio_) {}
 }
@@ -131,28 +155,18 @@ contract MockZeroToken {
     function mint(address account_, uint256 amount_) external {}
 }
 
-contract MockERC20Permit is ERC20Permit {
-    uint256 public totalSupply;
+contract MockERC20 {
+    mapping(address account => uint256 balance) internal _balances;
 
-    mapping(address account => uint256 balance) public balanceOf;
-
-    constructor(
-        string memory symbol_,
-        string memory name_,
-        uint8 decimals_
-    ) ERC20Permit(symbol_, decimals_) ERC712(name_) {}
-
-    function mint(address recipient_, uint256 amount_) external {
-        balanceOf[recipient_] += amount_;
-        totalSupply += amount_;
-
-        emit Transfer(address(0), recipient_, amount_);
+    function setBalance(address account_, uint256 balance_) external {
+        _balances[account_] = balance_;
     }
 
-    function _transfer(address sender_, address recipient_, uint256 amount_) internal override {
-        balanceOf[sender_] -= amount_;
-        balanceOf[recipient_] += amount_;
+    function balanceOf(address account_) external view returns (uint256 balance_) {
+        balance_ = _balances[account_];
+    }
 
-        emit Transfer(sender_, recipient_, amount_);
+    function transfer(address recipient_, uint256 amount_) external returns (bool success_) {
+        success_ = true;
     }
 }

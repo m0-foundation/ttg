@@ -11,15 +11,16 @@ import { MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 contract DeployerTests is Test {
     address internal _cashToken = makeAddr("cashToken");
     address internal _governor = makeAddr("governor");
-    address internal _registrar = makeAddr("registrar");
     address internal _powerToken = makeAddr("powerToken");
+    address internal _registrar = makeAddr("registrar");
+    address internal _vault = makeAddr("vault");
 
     DualGovernorDeployer internal _governorDeployer;
     MockEpochBasedVoteToken internal _zeroToken;
 
     function setUp() external {
         _zeroToken = new MockEpochBasedVoteToken();
-        _governorDeployer = new DualGovernorDeployer(_registrar, address(_zeroToken));
+        _governorDeployer = new DualGovernorDeployer(_registrar, _vault, address(_zeroToken));
     }
 
     function test_deployAddress() external {

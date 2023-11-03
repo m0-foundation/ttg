@@ -13,7 +13,7 @@
       },
       {
         "internalType": "address",
-        "name": "treasury_",
+        "name": "vault_",
         "type": "address"
       },
       {
@@ -53,6 +53,11 @@
   {
     "inputs": [],
     "name": "InsufficientAuctionSupply",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidEpochOrdering",
     "type": "error"
   },
   {
@@ -140,12 +145,27 @@
   },
   {
     "inputs": [],
+    "name": "ZeroCashTokenAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ZeroDecreaseAllowance",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "ZeroGovernorAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ZeroIncreaseAllowance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroVaultAddress",
     "type": "error"
   },
   {
@@ -476,6 +496,59 @@
         "internalType": "uint256",
         "name": "balance_",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "epochs_",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "balancesOfAt",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "balances_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "balancesOfBetween",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "balances_",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -946,6 +1019,49 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "epochs_",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "totalSuppliesAt",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "totalSupplies_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "totalSuppliesBetween",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "totalSupplies_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "totalSupply",
     "outputs": [
@@ -1032,11 +1148,11 @@
   },
   {
     "inputs": [],
-    "name": "treasury",
+    "name": "vault",
     "outputs": [
       {
         "internalType": "address",
-        "name": "treasury_",
+        "name": "vault_",
         "type": "address"
       }
     ],

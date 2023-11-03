@@ -2,11 +2,11 @@
 
 pragma solidity 0.8.20;
 
-import { Test } from "../lib/forge-std/src/Test.sol";
-
 import { ZeroToken } from "../src/ZeroToken.sol";
 
-contract ZeroTokenTests is Test {
+import { TestUtils } from "./utils/TestUtils.sol";
+
+contract ZeroTokenTests is TestUtils {
     address internal _registrar = makeAddr("registrar");
 
     ZeroToken internal _zeroToken;
@@ -26,6 +26,8 @@ contract ZeroTokenTests is Test {
         4_000_000 * 1e6,
         5_000_000 * 1e6
     ];
+
+    uint256[] internal _claimableEpochs;
 
     function setUp() external {
         _zeroToken = new ZeroToken(_registrar, _initialAccounts, _initialAmounts);

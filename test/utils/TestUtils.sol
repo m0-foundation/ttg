@@ -7,6 +7,12 @@ import { Test } from "../../lib/forge-std/src/Test.sol";
 import { PureEpochs } from "../../src/PureEpochs.sol";
 
 contract TestUtils is Test {
+    function _goToNextEpoch() internal {
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+
+        _jumpToEpoch(currentEpoch_ + 1);
+    }
+
     function _goToNextVoteEpoch() internal {
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 

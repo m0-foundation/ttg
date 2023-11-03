@@ -8,6 +8,11 @@
       },
       {
         "internalType": "address",
+        "name": "vault_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "zeroToken_",
         "type": "address"
       }
@@ -18,6 +23,21 @@
   {
     "inputs": [],
     "name": "CallerIsNotRegistrar",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroRegistrarAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroVaultAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroZeroTokenAddress",
     "type": "error"
   },
   {
@@ -103,6 +123,19 @@
   {
     "inputs": [],
     "name": "registrar",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vault",
     "outputs": [
       {
         "internalType": "address",

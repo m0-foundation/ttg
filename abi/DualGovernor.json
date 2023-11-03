@@ -22,6 +22,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "vault_",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "proposalFee_",
         "type": "uint256"
@@ -234,6 +239,11 @@
   {
     "inputs": [],
     "name": "ZeroRegistrarAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroVaultAddress",
     "type": "error"
   },
   {
@@ -1483,6 +1493,19 @@
     "name": "updateConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "vault_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

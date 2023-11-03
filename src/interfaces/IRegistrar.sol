@@ -51,5 +51,7 @@ interface IRegistrar {
 
     function powerTokenDeployer() external view returns (address powerTokenDeployer);
 
+    function vault() external view returns (address vault);
+
     function zeroToken() external view returns (address zeroToken);
 }

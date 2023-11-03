@@ -5,6 +5,12 @@ pragma solidity 0.8.20;
 interface IDualGovernorDeployer {
     error CallerIsNotRegistrar();
 
+    error ZeroRegistrarAddress();
+
+    error ZeroVaultAddress();
+
+    error ZeroZeroTokenAddress();
+
     function deploy(
         address cashToken,
         address powerToken,
@@ -19,6 +25,8 @@ interface IDualGovernorDeployer {
     function getNextDeploy() external view returns (address nextDeploy);
 
     function registrar() external view returns (address registrar);
+
+    function vault() external view returns (address vault);
 
     function zeroToken() external view returns (address zeroToken);
 }

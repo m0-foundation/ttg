@@ -77,6 +77,8 @@ interface IDualGovernor is IGovernorBySig {
 
     error ZeroRegistrarAddress();
 
+    error ZeroVaultAddress();
+
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
@@ -131,6 +133,8 @@ interface IDualGovernor is IGovernorBySig {
     function registrar() external view returns (address registrar);
 
     function reward() external view returns (uint256 reward);
+
+    function vault() external view returns (address vault);
 
     function zeroToken() external view returns (address zeroToken);
 

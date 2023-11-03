@@ -12,14 +12,14 @@ contract DeployerTests is Test {
     address internal _cashToken = makeAddr("cashToken");
     address internal _governor = makeAddr("governor");
     address internal _registrar = makeAddr("registrar");
-    address internal _treasury = makeAddr("treasury");
+    address internal _vault = makeAddr("vault");
 
     PowerTokenDeployer internal _powerTokenDeployer;
     MockEpochBasedVoteToken internal _zeroToken;
 
     function setUp() external {
         _zeroToken = new MockEpochBasedVoteToken();
-        _powerTokenDeployer = new PowerTokenDeployer(_registrar, _treasury);
+        _powerTokenDeployer = new PowerTokenDeployer(_registrar, _vault);
     }
 
     function test_deployAddress() external {

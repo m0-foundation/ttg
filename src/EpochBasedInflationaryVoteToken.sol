@@ -9,10 +9,10 @@ import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflat
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 import { PureEpochs } from "./PureEpochs.sol";
 
-// TODO: Normalize all balances and voting powers to day-0 values instead of syncing.
+// TODO: Consider replacing all repetitive internal function calls with cleaner super calls.
 
 contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
-    struct VoidEpoch {
+    struct VoidWindow {
         uint16 startingEpoch;
     }
 
@@ -20,9 +20,9 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
 
     uint256 internal immutable _participationInflation; // In basis points.
 
-    mapping(address delegatee => VoidEpoch[] participationEpochs) internal _participations;
+    mapping(address delegatee => VoidWindow[] participationWindows) internal _participations;
 
-    mapping(address account => VoidEpoch[] lastSyncEpochs) internal _lastSyncs;
+    mapping(address account => VoidWindow[] lastSyncWindows) internal _lastSyncs;
 
     modifier notDuringVoteEpoch() {
         _revertIfInVoteEpoch();
@@ -39,8 +39,9 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     constructor(
         string memory name_,
         string memory symbol_,
+        uint8 decimals_,
         uint256 participationInflation_
-    ) EpochBasedVoteToken(name_, symbol_, 0) {
+    ) EpochBasedVoteToken(name_, symbol_, decimals_) {
         _participationInflation = participationInflation_;
     }
 
@@ -107,14 +108,14 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         super._transfer(sender_, recipient_, amount_);
     }
 
-    function _update(VoidEpoch[] storage voidEpochs_, uint256 epoch_) internal returns (bool updated_) {
-        uint256 length_ = voidEpochs_.length;
+    function _update(VoidWindow[] storage voidWindows_, uint256 epoch_) internal returns (bool updated_) {
+        uint256 length_ = voidWindows_.length;
 
-        updated_ = (length_ == 0 || epoch_ > _unsafeVoidEpochAccess(voidEpochs_, length_ - 1).startingEpoch);
+        updated_ = (length_ == 0 || epoch_ > _unsafeVoidWindowAccess(voidWindows_, length_ - 1).startingEpoch);
 
-        // If this will be the first or a new VoidEpoch, just push it onto the array.
+        // If this will be the first or a new VoidWindow, just push it onto the array.
         if (updated_) {
-            voidEpochs_.push(VoidEpoch(uint16(epoch_)));
+            voidWindows_.push(VoidWindow(uint16(epoch_)));
         }
     }
 
@@ -153,46 +154,46 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         }
     }
 
-    function _getLatestEpoch(VoidEpoch[] storage voidEpochs_) internal view returns (uint256 latestEpoch_) {
-        uint256 length_ = voidEpochs_.length;
+    function _getLatestEpoch(VoidWindow[] storage voidWindows_) internal view returns (uint256 latestEpoch_) {
+        uint256 length_ = voidWindows_.length;
 
-        latestEpoch_ = length_ == 0 ? 0 : _unsafeVoidEpochAccess(voidEpochs_, length_ - 1).startingEpoch;
+        latestEpoch_ = length_ == 0 ? 0 : _unsafeVoidWindowAccess(voidWindows_, length_ - 1).startingEpoch;
     }
 
     function _getLatestEpochAt(
-        VoidEpoch[] storage voidEpochs_,
+        VoidWindow[] storage voidWindows_,
         uint256 epoch_
     ) internal view returns (uint256 latestEpoch_) {
-        uint256 index_ = voidEpochs_.length;
+        uint256 index_ = voidWindows_.length;
 
         if (index_ == 0) return 0;
 
-        // Keep going back as long as the epoch is greater or equal to the previous VoidEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous VoidWindow's startingEpoch.
         do {
-            VoidEpoch storage voidEpoch_ = _unsafeVoidEpochAccess(voidEpochs_, --index_);
+            VoidWindow storage voidWindow_ = _unsafeVoidWindowAccess(voidWindows_, --index_);
 
-            uint256 startingEpoch_ = voidEpoch_.startingEpoch;
+            uint256 voidWindowStartingEpoch_ = voidWindow_.startingEpoch;
 
-            if (startingEpoch_ <= epoch_) return startingEpoch_;
+            if (voidWindowStartingEpoch_ <= epoch_) return voidWindowStartingEpoch_;
         } while (index_ > 0);
     }
 
     function _getParticipationAt(address delegatee_, uint256 epoch_) internal view returns (bool participated_) {
-        VoidEpoch[] storage voidEpochs_ = _participations[delegatee_];
+        VoidWindow[] storage voidWindows_ = _participations[delegatee_];
 
-        uint256 index_ = voidEpochs_.length;
+        uint256 index_ = voidWindows_.length;
 
         if (index_ == 0) return false;
 
-        // Keep going back as long as the epoch is greater or equal to the previous VoidEpoch's startingEpoch.
+        // Keep going back as long as the epoch is greater or equal to the previous VoidWindow's startingEpoch.
         do {
-            VoidEpoch storage voidEpoch_ = _unsafeVoidEpochAccess(voidEpochs_, --index_);
+            VoidWindow storage voidWindow_ = _unsafeVoidWindowAccess(voidWindows_, --index_);
 
-            uint256 startingEpoch_ = voidEpoch_.startingEpoch;
+            uint256 voidWindowStartingEpoch_ = voidWindow_.startingEpoch;
 
-            if (startingEpoch_ > epoch_) continue;
+            if (voidWindowStartingEpoch_ > epoch_) continue;
 
-            return startingEpoch_ == epoch_;
+            return voidWindowStartingEpoch_ == epoch_;
         } while (index_ > 0);
     }
 
@@ -208,13 +209,13 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         if (!_isVotingEpoch(PureEpochs.currentEpoch())) revert NotVoteEpoch();
     }
 
-    function _unsafeVoidEpochAccess(
-        VoidEpoch[] storage voidEpochs_,
+    function _unsafeVoidWindowAccess(
+        VoidWindow[] storage voidWindows_,
         uint256 index_
-    ) internal pure returns (VoidEpoch storage voidEpoch_) {
+    ) internal pure returns (VoidWindow storage voidWindow_) {
         assembly {
-            mstore(0, voidEpochs_.slot)
-            voidEpoch_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, voidWindows_.slot)
+            voidWindow_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 }

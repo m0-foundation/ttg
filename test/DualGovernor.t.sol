@@ -20,6 +20,7 @@ contract DualGovernorTests is Test {
 
     address internal _alice = makeAddr("alice");
     address internal _cashToken = makeAddr("cashToken");
+    address internal _vault = makeAddr("vault");
     address internal _registrar = makeAddr("registrar");
 
     DualGovernorHarness internal _dualGovernor;
@@ -35,6 +36,7 @@ contract DualGovernorTests is Test {
             _registrar,
             address(_zeroToken),
             address(_powerToken),
+            _vault,
             5,
             1,
             10,

@@ -17,14 +17,12 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
         with:
           # Semantic version range syntax or exact version of a Python version
-          python-version: "3.x"
+          python-version: "3.11.6"
           # Optional - x64 or x86 architecture, defaults to x64
           architecture: "x64"
 

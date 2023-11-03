@@ -15,6 +15,10 @@ import { ERC712 } from "./ERC712.sol";
 
 // TODO: expose `_proposals`?
 // TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
+// TODO: castVotes with an array of proposals.
+// TODO: two types of cash tokens.
+// TODO: Zero rewards ensure an amount in total ae minted, assuming all Power is used.
+//       Both total supplies needed to compute.
 
 contract DualGovernor is IDualGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
@@ -50,9 +54,10 @@ contract DualGovernor is IDualGovernor, ERC712 {
         0x4a8d949a35428f9a377e2e2b89d8883cda4fbc8055ff94f098fc4955c82d42ff;
 
     address internal immutable _cashToken;
-    address internal immutable _registrar;
-    address internal immutable _zeroToken;
     address internal immutable _powerToken;
+    address internal immutable _registrar;
+    address internal immutable _vault;
+    address internal immutable _zeroToken;
 
     uint256 internal _proposalFee;
     uint256 internal _minProposalFee;
@@ -84,6 +89,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         address registrar_,
         address zeroToken_,
         address powerToken_,
+        address vault_,
         uint256 proposalFee_,
         uint256 minProposalFee_,
         uint256 maxProposalFee_,
@@ -95,6 +101,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if ((_registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
         if ((_zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
         if ((_powerToken = powerToken_) == address(0)) revert InvalidPowerTokenAddress();
+        if ((_vault = vault_) == address(0)) revert ZeroVaultAddress();
 
         // TODO: Maybe call internal functions to reused validation logic, if any.
         _proposalFee = proposalFee_;
@@ -246,7 +253,11 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (proposalType_ == ProposalType.Power || proposalType_ == ProposalType.Double) {
             _numberOfProposals[voteStart_] += 1;
-            ERC20Helper.transferFrom(_cashToken, msg.sender, address(this), _proposalFee); // TODO: Send elsewhere.
+
+            // NOTE: Not calling `distribute` on vault since:
+            //         - anyone can do it, anytime
+            //         - `DualGovernor` should not need to know how the vault works
+            ERC20Helper.transferFrom(_cashToken, msg.sender, _vault, _proposalFee);
         }
 
         _proposals[proposalId_] = Proposal({
@@ -435,6 +446,10 @@ contract DualGovernor is IDualGovernor, ERC712 {
         }
 
         return ProposalState.Defeated;
+    }
+
+    function vault() external view returns (address vault_) {
+        vault_ = _vault;
     }
 
     function votingDelay() public view returns (uint256 votingDelay_) {
