@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
@@ -99,7 +99,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     function activeEpochs() external view returns (uint256 activeEpochs_) {
-        activeEpochs_ = _activeEpochs;
+        return _activeEpochs;
     }
 
     function amountToAuction() public view returns (uint256 amountToAuction_) {
@@ -111,36 +111,38 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         uint256 totalSupply_ = totalSupply();
 
-        amountToAuction_ = targetSupply_ > totalSupply_ ? targetSupply_ - totalSupply_ : 0;
+        return targetSupply_ > totalSupply_ ? targetSupply_ - totalSupply_ : 0;
     }
 
     function balanceOf(
         address account_
     ) public view override(IERC20, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        balance_ = (PureEpochs.currentEpoch() <= _bootstrapEpoch) || (_balances[account_].length == 0)
-            ? _bootstrapBalanceOfAt(account_, _bootstrapEpoch)
-            : super.balanceOf(account_);
+        return
+            (PureEpochs.currentEpoch() <= _bootstrapEpoch) || (_balances[account_].length == 0)
+                ? _bootstrapBalanceOfAt(account_, _bootstrapEpoch)
+                : super.balanceOf(account_);
     }
 
     function balanceOfAt(
         address account_,
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        balance_ = (epoch_ <= _bootstrapEpoch) || (_balances[account_].length == 0)
-            ? _bootstrapBalanceOfAt(account_, epoch_)
-            : super.balanceOfAt(account_, epoch_);
+        return
+            (epoch_ <= _bootstrapEpoch) || (_balances[account_].length == 0)
+                ? _bootstrapBalanceOfAt(account_, epoch_)
+                : super.balanceOfAt(account_, epoch_);
     }
 
     function bootstrapEpoch() external view returns (uint256 bootstrapEpoch_) {
-        bootstrapEpoch_ = _bootstrapEpoch;
+        return _bootstrapEpoch;
     }
 
     function bootstrapToken() external view returns (address bootstrapToken_) {
-        bootstrapToken_ = _bootstrapToken;
+        return _bootstrapToken;
     }
 
     function cashToken() external view returns (address cashToken_) {
-        cashToken_ = _cashToken;
+        return _cashToken;
     }
 
     function getCost(uint256 amount_) public view returns (uint256 cost_) {
@@ -154,7 +156,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         uint256 leftPoint_ = 1 << (blocksRemaining_ / blocksPerPeriod_);
         uint256 remainder_ = blocksRemaining_ % blocksPerPeriod_;
 
-        cost_ =
+        return
             (ONE * amount_ * ((remainder_ * leftPoint_) + ((blocksPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
             (blocksPerPeriod_ * totalSupplyAt(currentEpoch_ - 1));
     }
@@ -162,40 +164,42 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function getVotes(
         address account_
     ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
-        votingPower_ = _votingPowers[account_].length == 0
-            ? _bootstrapBalanceOfAt(account_, _bootstrapEpoch)
-            : super.getVotes(account_);
+        return
+            _votingPowers[account_].length == 0
+                ? _bootstrapBalanceOfAt(account_, _bootstrapEpoch)
+                : super.getVotes(account_);
     }
 
     function getPastVotes(
         address account_,
         uint256 epoch_
     ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
-        votingPower_ = _votingPowers[account_].length == 0
-            ? _bootstrapBalanceOfAt(account_, epoch_)
-            : super.getPastVotes(account_, epoch_);
+        return
+            _votingPowers[account_].length == 0
+                ? _bootstrapBalanceOfAt(account_, epoch_)
+                : super.getPastVotes(account_, epoch_);
     }
 
     function governor() external view returns (address governor_) {
-        governor_ = _governor;
+        return _governor;
     }
 
     function isActiveEpoch(uint256 epoch_) external view returns (bool isActiveEpoch_) {
-        isActiveEpoch_ = _isActiveEpoch[epoch_];
+        return _isActiveEpoch[epoch_];
     }
 
     function totalSupply() public view override(IERC20, EpochBasedVoteToken) returns (uint256 totalSupply_) {
-        totalSupply_ = PureEpochs.currentEpoch() <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupply();
+        return PureEpochs.currentEpoch() <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupply();
     }
 
     function totalSupplyAt(
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 totalSupply_) {
-        totalSupply_ = epoch_ <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupplyAt(epoch_);
+        return epoch_ <= _bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupplyAt(epoch_);
     }
 
     function vault() external view returns (address vault_) {
-        vault_ = _vault;
+        return _vault;
     }
 
     /******************************************************************************************************************\
@@ -214,9 +218,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     function _bootstrapBalanceOfAt(address account_, uint256 epoch_) internal view returns (uint256 balance_) {
-        balance_ =
-            (IEpochBasedVoteToken(_bootstrapToken).balanceOfAt(account_, epoch_) * INITIAL_SUPPLY) /
-            _bootstrapSupply;
+        return
+            (IEpochBasedVoteToken(_bootstrapToken).balanceOfAt(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
     }
 
     function _delegate(address delegator_, address newDelegatee_) internal override {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IDualGovernor } from "./interfaces/IDualGovernor.sol";
 import { IDualGovernorDeployer } from "./interfaces/IDualGovernorDeployer.sol";
@@ -9,14 +9,12 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 
 contract Registrar is IRegistrar {
     uint256 internal constant _STARTING_PROPOSAL_FEE = 0.001e18;
-    uint256 internal constant _STARTING_MIN_PROPOSAL_FEE = 0.0001e18;
-    uint256 internal constant _STARTING_MAX_PROPOSAL_FEE = 0.01e18;
-    uint256 internal constant _STARTING_REWARD = 1_000;
+    uint256 internal constant _STARTING_MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
 
     uint256 internal constant _ONE = 10_000;
 
-    uint16 internal constant _STARTING_POWER_TOKEN_QUORUM_RATIO = uint16(_ONE / 2);
-    uint16 internal constant _STARTING_ZERO_TOKEN_QUORUM_RATIO = uint16(_ONE / 2);
+    uint16 internal constant _STARTING_POWER_TOKEN_THRESHOLD_RATIO = uint16(_ONE / 2);
+    uint16 internal constant _STARTING_ZERO_TOKEN_THRESHOLD_RATIO = uint16(_ONE / 2);
 
     address public immutable governorDeployer;
     address public immutable powerTokenDeployer;
@@ -44,11 +42,9 @@ contract Registrar is IRegistrar {
             cashToken_,
             powerToken_,
             _STARTING_PROPOSAL_FEE,
-            _STARTING_MIN_PROPOSAL_FEE,
-            _STARTING_MAX_PROPOSAL_FEE,
-            _STARTING_REWARD,
-            _STARTING_ZERO_TOKEN_QUORUM_RATIO,
-            _STARTING_POWER_TOKEN_QUORUM_RATIO
+            _STARTING_MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH,
+            _STARTING_POWER_TOKEN_THRESHOLD_RATIO,
+            _STARTING_ZERO_TOKEN_THRESHOLD_RATIO
         );
 
         vault = IDualGovernor(governor_).vault();
@@ -84,18 +80,16 @@ contract Registrar is IRegistrar {
             cashToken_,
             powerToken_,
             IDualGovernor(oldGovernor_).proposalFee(),
-            IDualGovernor(oldGovernor_).minProposalFee(),
-            IDualGovernor(oldGovernor_).maxProposalFee(),
-            IDualGovernor(oldGovernor_).reward(),
-            uint16(IDualGovernor(oldGovernor_).zeroTokenQuorumRatio()),
-            uint16(IDualGovernor(oldGovernor_).powerTokenQuorumRatio())
+            IDualGovernor(oldGovernor_).maxTotalZeroRewardPerActiveEpoch(),
+            uint16(IDualGovernor(oldGovernor_).powerTokenThresholdRatio()),
+            uint16(IDualGovernor(oldGovernor_).zeroTokenThresholdRatio())
         );
 
         IPowerTokenDeployer(powerTokenDeployer).deploy(newGovernor_, cashToken_, zeroToken);
     }
 
     function get(bytes32 key_) external view returns (bytes32 value_) {
-        value_ = _valueAt[key_];
+        return _valueAt[key_];
     }
 
     function get(bytes32[] calldata keys_) external view returns (bytes32[] memory values_) {
@@ -107,7 +101,7 @@ contract Registrar is IRegistrar {
     }
 
     function listContains(bytes32 list_, address account_) external view returns (bool contains_) {
-        contains_ = _valueAt[_getKeyInSet(list_, account_)] == bytes32(uint256(1));
+        return _valueAt[_getKeyInSet(list_, account_)] == bytes32(uint256(1));
     }
 
     function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool contains_) {
@@ -119,6 +113,6 @@ contract Registrar is IRegistrar {
     }
 
     function _getKeyInSet(bytes32 list_, address account_) private pure returns (bytes32 key_) {
-        key_ = keccak256(abi.encodePacked(list_, account_));
+        return keccak256(abi.encodePacked(list_, account_));
     }
 }

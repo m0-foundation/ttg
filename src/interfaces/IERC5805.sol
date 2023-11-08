@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC712 } from "./IERC712.sol";
 import { IERC6372 } from "./IERC6372.sol";

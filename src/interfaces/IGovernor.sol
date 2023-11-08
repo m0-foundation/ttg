@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC6372 } from "./IERC6372.sol";
 
@@ -31,11 +31,6 @@ interface IGovernor is IERC6372 {
     event ProposalExecuted(uint256 proposalId);
 
     event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason);
-
-    // Governors can change their own parameters, like proposal times and the amount of voting power required to
-    // create and pass proposals. To make sure that Tally indexes your Governor's parameter changes, implement
-    // these event signatures.
-    event QuorumNumeratorUpdated(uint256 oldQuorumNumerator, uint256 newQuorumNumerator);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

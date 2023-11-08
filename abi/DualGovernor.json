@@ -3,22 +3,22 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "cashToken_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "registrar_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "zeroToken_",
+        "name": "cashToken_",
         "type": "address"
       },
       {
         "internalType": "address",
         "name": "powerToken_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "zeroToken_",
         "type": "address"
       },
       {
@@ -33,27 +33,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "minProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "reward_",
+        "name": "maxTotalZeroRewardPerActiveEpoch_",
         "type": "uint256"
       },
       {
         "internalType": "uint16",
-        "name": "zeroTokenQuorumRatio_",
+        "name": "powerTokenThresholdRatio_",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "powerTokenQuorumRatio_",
+        "name": "zeroTokenThresholdRatio_",
         "type": "uint16"
       }
     ],
@@ -154,28 +144,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "minProposalFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxProposalFee",
-        "type": "uint256"
-      }
-    ],
-    "name": "ProposalFeeOutOfRange",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "enum IGovernor.ProposalState",
         "name": "state",
         "type": "uint8"
       }
     ],
-    "name": "ProposalIsNotInActiveState",
+    "name": "ProposalNotActive",
     "type": "error"
   },
   {
@@ -252,11 +226,11 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "powerTokenQuorumRatio",
+        "name": "thresholdRatio",
         "type": "uint16"
       }
     ],
-    "name": "PowerTokenQuorumRatioSet",
+    "name": "PowerTokenThresholdRatioSet",
     "type": "event"
   },
   {
@@ -339,49 +313,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "minProposalFee",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxProposalFee",
-        "type": "uint256"
-      }
-    ],
-    "name": "ProposalFeeRangeSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "proposalFee",
         "type": "uint256"
       }
     ],
     "name": "ProposalFeeSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "oldQuorumNumerator",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newQuorumNumerator",
-        "type": "uint256"
-      }
-    ],
-    "name": "QuorumNumeratorUpdated",
     "type": "event"
   },
   {
@@ -427,11 +363,11 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "zeroTokenQuorumRatio",
+        "name": "thresholdRatio",
         "type": "uint16"
       }
     ],
-    "name": "ZeroTokenQuorumRatioSet",
+    "name": "ZeroTokenThresholdRatioSet",
     "type": "event"
   },
   {
@@ -893,6 +829,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "newProposalFee_",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencySetProposalFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "key_",
         "type": "bytes32"
@@ -953,9 +902,9 @@
     "name": "getProposal",
     "outputs": [
       {
-        "internalType": "address",
-        "name": "proposer_",
-        "type": "address"
+        "internalType": "enum IDualGovernor.ProposalType",
+        "name": "proposalType_",
+        "type": "uint8"
       },
       {
         "internalType": "uint16",
@@ -973,34 +922,29 @@
         "type": "bool"
       },
       {
-        "internalType": "enum IDualGovernor.ProposalType",
-        "name": "proposalType_",
-        "type": "uint8"
-      },
-      {
         "internalType": "enum IGovernor.ProposalState",
         "name": "state_",
         "type": "uint8"
       },
       {
+        "internalType": "uint16",
+        "name": "thresholdRatio_",
+        "type": "uint16"
+      },
+      {
         "internalType": "uint256",
-        "name": "noPowerTokenVotes_",
+        "name": "noVotes_",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "yesPowerTokenVotes_",
+        "name": "yesVotes_",
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "noZeroTokenVotes_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "yesZeroTokenVotes_",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "proposer_",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1057,6 +1001,30 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "voter_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "hasVotedOnAllStandardProposals",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "hasVoted_",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
         "name": "targets_",
         "type": "address[]"
@@ -1097,24 +1065,11 @@
   },
   {
     "inputs": [],
-    "name": "maxProposalFee",
+    "name": "maxTotalZeroRewardPerActiveEpoch",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "maxProposalFee_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minProposalFee",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "minProposalFee_",
+        "name": "reward_",
         "type": "uint256"
       }
     ],
@@ -1161,11 +1116,11 @@
         "type": "uint256"
       }
     ],
-    "name": "numberOfProposals",
+    "name": "numberOfStandardProposalsAt",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "numberOfProposals_",
+        "name": "count_",
         "type": "uint256"
       }
     ],
@@ -1185,11 +1140,11 @@
         "type": "address"
       }
     ],
-    "name": "numberOfProposalsVotedOn",
+    "name": "numberOfStandardProposalsVotedOnAt",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "numberOfProposalsVotedOn_",
+        "name": "count_",
         "type": "uint256"
       }
     ],
@@ -1211,11 +1166,11 @@
   },
   {
     "inputs": [],
-    "name": "powerTokenQuorumRatio",
+    "name": "powerTokenThresholdRatio",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "powerTokenQuorumRatio_",
+        "name": "thresholdRatio_",
         "type": "uint256"
       }
     ],
@@ -1384,27 +1339,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "reward",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "reward_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint16",
-        "name": "newPowerTokenQuorumRatio_",
+        "name": "newThresholdRatio_",
         "type": "uint16"
       }
     ],
-    "name": "setPowerTokenQuorumRatio",
+    "name": "setPowerTokenThresholdRatio",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1425,35 +1367,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "newMinProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newMaxProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newProposalFee_",
-        "type": "uint256"
-      }
-    ],
-    "name": "setProposalFeeRange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint16",
-        "name": "newZeroTokenQuorumRatio_",
+        "name": "newThresholdRatio_",
         "type": "uint16"
       }
     ],
-    "name": "setZeroTokenQuorumRatio",
+    "name": "setZeroTokenThresholdRatio",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1549,11 +1468,11 @@
   },
   {
     "inputs": [],
-    "name": "zeroTokenQuorumRatio",
+    "name": "zeroTokenThresholdRatio",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "zeroTokenQuorumRatio_",
+        "name": "thresholdRatio_",
         "type": "uint256"
       }
     ],

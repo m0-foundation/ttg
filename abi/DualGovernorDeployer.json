@@ -59,27 +59,17 @@
       },
       {
         "internalType": "uint256",
-        "name": "minProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "reward_",
+        "name": "maxTotalZeroRewardPerActiveEpoch_",
         "type": "uint256"
       },
       {
         "internalType": "uint16",
-        "name": "powerTokenQuorumRatio_",
+        "name": "powerTokenThresholdRatio_",
         "type": "uint16"
       },
       {
         "internalType": "uint16",
-        "name": "zeroTokenQuorumRatio_",
+        "name": "zeroTokenThresholdRatio_",
         "type": "uint16"
       }
     ],

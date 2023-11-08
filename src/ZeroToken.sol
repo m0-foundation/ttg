@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
@@ -40,6 +40,6 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     }
 
     function registrar() external view returns (address registrar_) {
-        registrar_ = _registrar;
+        return _registrar;
     }
 }

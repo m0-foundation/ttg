@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 interface IPowerBootstrapToken {
     error LengthMismatch(uint256 accountsLength, uint256 balancesLength);

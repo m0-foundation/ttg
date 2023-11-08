@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { ERC20Permit } from "../../src/ERC20Permit.sol";
 import { ERC712 } from "../../src/ERC712.sol";
@@ -11,10 +11,10 @@ contract ERC20PermitHarness is ERC20Permit {
     mapping(address account => uint256 balance) public balanceOf;
 
     constructor(
-        string memory symbol_,
         string memory name_,
-        uint8 decimals_
-    ) ERC20Permit(symbol_, decimals_) ERC712(name_) {}
+        string memory symbol_,
+        uint256 decimals_
+    ) ERC20Permit(name_, symbol_, uint8(decimals_)) {}
 
     function mint(address recipient_, uint256 amount_) external {
         balanceOf[recipient_] += amount_;
