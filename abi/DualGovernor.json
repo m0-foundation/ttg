@@ -73,7 +73,7 @@
   },
   {
     "inputs": [],
-    "name": "InvalidCalldatasLength",
+    "name": "InvalidCallDatasLength",
     "type": "error"
   },
   {
@@ -138,6 +138,11 @@
   },
   {
     "inputs": [],
+    "name": "ProposalCannotBeExecuted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ProposalDoesNotExist",
     "type": "error"
   },
@@ -155,11 +160,6 @@
       }
     ],
     "name": "ProposalNotActive",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ProposalNotSuccessful",
     "type": "error"
   },
   {
@@ -879,22 +879,22 @@
     "inputs": [
       {
         "internalType": "address[]",
-        "name": "targets_",
+        "name": "",
         "type": "address[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "values_",
+        "name": "",
         "type": "uint256[]"
       },
       {
         "internalType": "bytes[]",
-        "name": "calldatas_",
+        "name": "callDatas_",
         "type": "bytes[]"
       },
       {
         "internalType": "bytes32",
-        "name": "descriptionHash_",
+        "name": "",
         "type": "bytes32"
       }
     ],
@@ -1043,23 +1043,42 @@
   {
     "inputs": [
       {
+        "internalType": "bytes",
+        "name": "callData_",
+        "type": "bytes"
+      }
+    ],
+    "name": "hashProposal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "proposalId_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
-        "name": "targets_",
+        "name": "",
         "type": "address[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "values_",
+        "name": "",
         "type": "uint256[]"
       },
       {
         "internalType": "bytes[]",
-        "name": "calldatas_",
+        "name": "callDatas_",
         "type": "bytes[]"
       },
       {
         "internalType": "bytes32",
-        "name": "descriptionHash_",
+        "name": "",
         "type": "bytes32"
       }
     ],
@@ -1071,7 +1090,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1298,7 +1317,7 @@
       },
       {
         "internalType": "bytes[]",
-        "name": "calldatas_",
+        "name": "callDatas_",
         "type": "bytes[]"
       },
       {

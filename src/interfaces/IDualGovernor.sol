@@ -42,7 +42,7 @@ interface IDualGovernor is IGovernorBySig {
 
     error ExecutionFailed(bytes data);
 
-    error InvalidCalldatasLength();
+    error InvalidCallDatasLength();
 
     error InvalidCashToken();
 
@@ -64,13 +64,13 @@ interface IDualGovernor is IGovernorBySig {
 
     error NotSelf();
 
+    error ProposalCannotBeExecuted();
+
     error ProposalDoesNotExist();
 
     error ProposalExists();
 
     error ProposalNotActive(ProposalState state);
-
-    error ProposalNotSuccessful();
 
     error ZeroCashTokenAddress();
 
@@ -110,6 +110,8 @@ interface IDualGovernor is IGovernorBySig {
             uint256 yesVotes,
             address proposer
         );
+
+    function hashProposal(bytes memory callData) external view returns (uint256 proposalId);
 
     function hasVotedOnAllStandardProposals(address voter, uint256 epoch) external view returns (bool hasVoted);
 

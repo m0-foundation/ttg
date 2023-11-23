@@ -21,14 +21,15 @@ import { ERC712 } from "./ERC712.sol";
 // TODO: Get rid of reasons amd descriptions? Possibly even the exposed functions themselves.
 // TODO: Investigate splitting Governor into 3 simpler Governors.
 // TODO: Emit an event in the Governor or Power Token when a voter has voted on all standard proposals in an epoch.
+// TODO: Consider non-standard simplified versions of governor functions.
 
 contract DualGovernor is IDualGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
-    // TODO: Can pop proposer out of this struct and into its own mapping as its mostly useless.
+    // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
     struct Proposal {
         ProposalType proposalType;
         uint16 voteStart;
-        uint16 voteEnd;
+        uint16 voteEnd; // TODO: This can be inferred from voteStart and proposalType.
         bool executed;
         address proposer;
         uint16 thresholdRatio;
@@ -200,24 +201,27 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     function execute(
-        address[] memory targets_,
-        uint256[] memory values_,
-        bytes[] memory calldatas_,
-        bytes32 descriptionHash_
+        address[] memory,
+        uint256[] memory,
+        bytes[] memory callDatas_,
+        bytes32
     ) external payable returns (uint256 proposalId_) {
-        proposalId_ = hashProposal(targets_, values_, calldatas_, descriptionHash_);
+        if (msg.value != 0) revert InvalidValue();
 
-        ProposalState status_ = state(proposalId_);
+        // Standard proposals have voteStart=N and voteEnd=N, and can be executed only during epochs N+1 and N+2.
+        // Non-Standard proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.
+        bool isStandard_ = _getProposalType(bytes4(callDatas_[0])) == ProposalType.Standard;
+        uint256 firstPotentialVoteStart_ = PureEpochs.currentEpoch() - (isStandard_ ? 1 : 0);
 
-        if (status_ != ProposalState.Succeeded) revert ProposalNotSuccessful();
+        proposalId_ = _execute(callDatas_[0], firstPotentialVoteStart_); // Try first possible proposalId.
 
-        _proposals[proposalId_].executed = true;
+        if (proposalId_ != 0) return proposalId_;
 
-        emit ProposalExecuted(proposalId_);
+        proposalId_ = _execute(callDatas_[0], firstPotentialVoteStart_ - 1); // Try second possible proposalId.
 
-        (bool success_, bytes memory data_) = targets_[0].call(calldatas_[0]);
+        if (proposalId_ != 0) return proposalId_;
 
-        if (!success_) revert ExecutionFailed(data_);
+        revert ProposalCannotBeExecuted();
     }
 
     // TODO: If PowerToken has "future active checkpoints", then this would not be needed.
@@ -230,7 +234,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     function propose(
         address[] memory targets_,
         uint256[] memory values_,
-        bytes[] memory calldatas_,
+        bytes[] memory callDatas_,
         string memory description_
     ) external returns (uint256 proposalId_) {
         if (targets_.length != 1) revert InvalidTargetsLength();
@@ -239,19 +243,19 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if (values_.length != 1) revert InvalidValuesLength();
         if (values_[0] != 0) revert InvalidValue();
 
-        if (calldatas_.length != 1) revert InvalidCalldatasLength();
+        if (callDatas_.length != 1) revert InvalidCallDatasLength();
 
-        proposalId_ = hashProposal(targets_, values_, calldatas_, keccak256(bytes(description_)));
-
-        if (_proposals[proposalId_].voteStart != 0) revert ProposalExists();
-
-        bytes4 func_ = bytes4(calldatas_[0]);
+        bytes4 func_ = bytes4(callDatas_[0]);
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
         ProposalType proposalType_ = _getProposalType(func_);
 
         (uint256 voteStart_, uint256 voteEnd_) = (proposalType_ == ProposalType.Standard)
             ? (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay())
             : (currentEpoch_, currentEpoch_ + 1);
+
+        proposalId_ = _hashProposal(callDatas_[0], voteStart_);
+
+        if (_proposals[proposalId_].voteStart != 0) revert ProposalExists();
 
         if (proposalType_ == ProposalType.Standard) {
             _standardProposals[voteStart_] += 1;
@@ -279,7 +283,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
             targets_,
             values_,
             new string[](targets_.length), // TODO: `string[] signatures` is silly.
-            calldatas_,
+            callDatas_,
             voteStart_,
             voteEnd_,
             description_
@@ -342,13 +346,16 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     function hashProposal(
-        address[] memory targets_,
-        uint256[] memory values_,
-        bytes[] memory calldatas_,
-        bytes32 descriptionHash_
-    ) public pure returns (uint256 proposalId_) {
-        // TODO: replace `descriptionHash_` with the epoch to prevent duplication.
-        return uint256(keccak256(abi.encode(targets_, values_, calldatas_, descriptionHash_)));
+        address[] memory,
+        uint256[] memory,
+        bytes[] memory callDatas_,
+        bytes32
+    ) external view returns (uint256 proposalId_) {
+        return _hashProposal(callDatas_[0]);
+    }
+
+    function hashProposal(bytes memory callData_) external view returns (uint256 proposalId_) {
+        return _hashProposal(callData_);
     }
 
     function hasVotedOnAllStandardProposals(address voter_, uint256 epoch_) external view returns (bool hasVoted_) {
@@ -582,6 +589,24 @@ contract DualGovernor is IDualGovernor, ERC712 {
         );
     }
 
+    function _execute(bytes memory callData_, uint256 voteStart_) internal returns (uint256 proposalId_) {
+        proposalId_ = _hashProposal(callData_, voteStart_);
+
+        Proposal storage proposal_ = _proposals[proposalId_];
+
+        if (proposal_.voteStart != voteStart_) return 0;
+
+        if (state(proposalId_) != ProposalState.Succeeded) return 0;
+
+        proposal_.executed = true;
+
+        emit ProposalExecuted(proposalId_);
+
+        (bool success_, bytes memory data_) = address(this).call(callData_);
+
+        if (!success_) revert ExecutionFailed(data_);
+    }
+
     function _removeFromList(bytes32 list_, address account_) internal {
         IRegistrar(_registrar).removeFromList(list_, account_);
     }
@@ -688,6 +713,17 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
     function _getZeroTokenWeight(address account_, uint256 timepoint_) internal view returns (uint256 weight_) {
         weight_ = IEpochBasedVoteToken(_zeroToken).getPastVotes(account_, timepoint_);
+    }
+
+    function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {
+        uint256 voteStart_ = PureEpochs.currentEpoch() +
+            (_getProposalType(bytes4(callData_)) == ProposalType.Standard ? votingDelay() : 0);
+
+        return _hashProposal(callData_, voteStart_);
+    }
+
+    function _hashProposal(bytes memory callData_, uint256 voteStart_) internal pure returns (uint256 proposalId_) {
+        return uint256(keccak256(abi.encode(callData_, voteStart_)));
     }
 
     function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {

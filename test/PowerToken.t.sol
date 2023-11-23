@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.21;
 
-import { Test } from "../lib/forge-std/src/Test.sol";
-
 import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "../src/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
