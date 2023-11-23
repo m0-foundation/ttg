@@ -31,13 +31,9 @@ contract RegistrarTests is Test {
         _governorDeployer.setNextDeploy(address(_governor));
 
         _governor.setZeroToken(_zeroToken);
+        _governorDeployer.setCashToken(_cashToken);
 
-        _registrar = new Registrar(
-            address(_governorDeployer),
-            address(_powerTokenDeployer),
-            address(_bootstrapToken),
-            _cashToken
-        );
+        _registrar = new Registrar(address(_governorDeployer), address(_powerTokenDeployer), address(_bootstrapToken));
     }
 
     function test_initialState() external {

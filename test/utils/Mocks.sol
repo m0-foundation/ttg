@@ -27,7 +27,7 @@ contract MockEpochBasedVoteToken {
     }
 
     function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
-        totalSupply_ = _totalSupplyAt[epoch_];
+        return _totalSupplyAt[epoch_];
     }
 
     function totalSuppliesAt(uint256[] calldata epochs_) external view returns (uint256[] memory totalSupplies_) {
@@ -50,14 +50,18 @@ contract MockPowerTokenDeployer {
 }
 
 contract MockDualGovernorDeployer {
+    address internal _cashToken;
     address internal _nextDeploy;
+
+    function setCashToken(address cashToken_) external {
+        _cashToken = cashToken_;
+    }
 
     function setNextDeploy(address nextDeploy_) external {
         _nextDeploy = nextDeploy_;
     }
 
     function deploy(
-        address cashToken_,
         address powerToken_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_,
@@ -65,6 +69,10 @@ contract MockDualGovernorDeployer {
         uint16 zeroTokenThresholdRatio_
     ) external view returns (address deployed_) {
         deployed_ = _nextDeploy;
+    }
+
+    function allowedCashTokensAt(uint256 index_) external view returns (address token_) {
+        return _cashToken;
     }
 }
 
@@ -102,11 +110,11 @@ contract MockBootstrapToken {
     }
 
     function balanceOfAt(address account_, uint256 epoch_) external view returns (uint256 balance_) {
-        balance_ = _balances[account_];
+        return _balances[account_];
     }
 
     function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
-        totalSupply_ = _totalSupply;
+        return _totalSupply;
     }
 }
 
@@ -118,7 +126,7 @@ contract MockCashToken {
     }
 
     function transferFrom(address sender_, address recipient_, uint256 amount_) external returns (bool success_) {
-        success_ = _transferFromSuccess;
+        return _transferFromSuccess;
     }
 }
 
@@ -135,13 +143,15 @@ contract MockPowerToken {
     }
 
     function getPastVotes(address account_, uint256 timepoint_) external view returns (uint256 votePower_) {
-        votePower_ = _votePower;
+        return _votePower;
     }
 
     function markParticipation(address delegatee_) external {}
 
+    function setNextCashToken(address newCashToken_) external {}
+
     function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
-        totalSupply_ = _totalSupplyAt;
+        return _totalSupplyAt;
     }
 }
 
@@ -157,10 +167,10 @@ contract MockERC20 {
     }
 
     function balanceOf(address account_) external view returns (uint256 balance_) {
-        balance_ = _balances[account_];
+        return _balances[account_];
     }
 
     function transfer(address recipient_, uint256 amount_) external returns (bool success_) {
-        success_ = true;
+        return true;
     }
 }

@@ -16,15 +16,23 @@ import { MockPowerToken, MockZeroToken } from "./utils/Mocks.sol";
 // TODO: test_DelegateValueRewardsAfterVotingOnAllProposals
 
 contract DualGovernorTests is Test {
+    event CashTokenSet(address indexed cashToken_);
+    event ProposalFeeSet(uint256 proposalFee_);
+
     uint256 internal constant _ONE = 10_000;
 
     address internal _alice = makeAddr("alice");
-    address internal _cashToken = makeAddr("cashToken");
+    address internal _cashToken1 = makeAddr("cashToken1");
+    address internal _cashToken2 = makeAddr("cashToken2");
     address internal _vault = makeAddr("vault");
     address internal _registrar = makeAddr("registrar");
 
-    uint256 internal _powerThresholdRatio = _ONE / 40;
-    uint256 internal _zeroThresholdRatio = _ONE / 60;
+    address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
+
+    uint256 internal _powerTokenThresholdRatio = _ONE / 40;
+    uint256 internal _zeroTokenThresholdRatio = _ONE / 60;
+    uint256 internal _maxTotalZeroRewardPerActiveEpoch = 1_000;
+    uint256 internal _proposalFee = 5;
 
     DualGovernorHarness internal _dualGovernor;
     MockPowerToken internal _powerToken;
@@ -36,15 +44,30 @@ contract DualGovernorTests is Test {
 
         _dualGovernor = new DualGovernorHarness(
             _registrar,
-            _cashToken,
             address(_powerToken),
             address(_zeroToken),
             _vault,
-            5,
-            1_000,
-            uint16(_powerThresholdRatio),
-            uint16(_zeroThresholdRatio)
+            _allowedCashTokens,
+            _proposalFee,
+            _maxTotalZeroRewardPerActiveEpoch,
+            uint16(_powerTokenThresholdRatio),
+            uint16(_zeroTokenThresholdRatio)
         );
+    }
+
+    function test_initialState() external {
+        assertEq(_dualGovernor.powerToken(), address(_powerToken));
+        assertEq(_dualGovernor.registrar(), _registrar);
+        assertEq(_dualGovernor.vault(), _vault);
+        assertEq(_dualGovernor.zeroToken(), address(_zeroToken));
+        assertEq(_dualGovernor.maxTotalZeroRewardPerActiveEpoch(), _maxTotalZeroRewardPerActiveEpoch);
+        assertEq(_dualGovernor.cashToken(), _allowedCashTokens[0]);
+        assertEq(_dualGovernor.proposalFee(), _proposalFee);
+        assertEq(_dualGovernor.powerTokenThresholdRatio(), _powerTokenThresholdRatio);
+        assertEq(_dualGovernor.zeroTokenThresholdRatio(), _zeroTokenThresholdRatio);
+
+        assertTrue(_dualGovernor.isAllowedCashToken(_cashToken1));
+        assertTrue(_dualGovernor.isAllowedCashToken(_cashToken2));
     }
 
     function test_castVote_notActive() external {
@@ -77,7 +100,7 @@ contract DualGovernorTests is Test {
             IDualGovernor.ProposalType.Standard,
             currentEpoch,
             currentEpoch + 1,
-            _powerThresholdRatio
+            _powerTokenThresholdRatio
         );
 
         _powerToken.setVotePower(1);
@@ -177,10 +200,37 @@ contract DualGovernorTests is Test {
             IDualGovernor.ProposalType.Standard,
             currentEpoch - 1,
             currentEpoch - 1,
-            _powerThresholdRatio
+            _powerTokenThresholdRatio
         );
 
         vm.expectRevert(IDualGovernor.ProposalNotSuccessful.selector);
         _dualGovernor.execute(targets_, values_, calldatas_, descriptionHash_);
+    }
+
+    function test_setCashToken_notSelf() external {
+        vm.expectRevert(IDualGovernor.NotSelf.selector);
+
+        _dualGovernor.setCashToken(makeAddr("someCashToken"), _proposalFee);
+    }
+
+    function test_setCashToken_invalidCashToken() external {
+        vm.expectRevert(IDualGovernor.InvalidCashToken.selector);
+
+        vm.prank(address(_dualGovernor));
+        _dualGovernor.setCashToken(makeAddr("someCashToken"), _proposalFee);
+    }
+
+    function test_setCashToken() external {
+        vm.expectEmit();
+        emit CashTokenSet(_cashToken2);
+
+        vm.expectEmit();
+        emit ProposalFeeSet(_proposalFee * 2);
+
+        vm.prank(address(_dualGovernor));
+        _dualGovernor.setCashToken(_cashToken2, _proposalFee * 2);
+
+        assertEq(_dualGovernor.cashToken(), _cashToken2);
+        assertEq(_dualGovernor.proposalFee(), _proposalFee * 2);
     }
 }

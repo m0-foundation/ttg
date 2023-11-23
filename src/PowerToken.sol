@@ -21,12 +21,16 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     uint256 public constant INITIAL_SUPPLY = 1_000_000_000;
 
     address internal immutable _bootstrapToken;
-    address internal immutable _cashToken;
     address internal immutable _governor;
     address internal immutable _vault;
 
     uint256 internal immutable _bootstrapEpoch;
     uint256 internal immutable _bootstrapSupply;
+
+    uint256 internal _nextCashTokenStartingEpoch;
+
+    address internal _cashToken;
+    address internal _nextCashToken;
 
     uint256 internal _activeEpochs;
 
@@ -44,7 +48,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address vault_,
         address bootstrapToken_
     ) EpochBasedInflationaryVoteToken("Power Token", "POWER", 0, ONE / 10) {
-        if ((_cashToken = cashToken_) == address(0)) revert ZeroCashTokenAddress();
+        if ((_nextCashToken = cashToken_) == address(0)) revert ZeroCashTokenAddress();
         if ((_vault = vault_) == address(0)) revert ZeroVaultAddress();
         if ((_governor = governor_) == address(0)) revert ZeroGovernorAddress();
 
@@ -66,12 +70,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         emit Buy(msg.sender, amount_, cost_);
 
-        // TODO: Perhaps `_cashToken` should come from the governor?
-        // TODO: Perhaps `_vault` should come from the governor?
         // NOTE: Not calling `distribute` on vault since:
         //         - anyone can do it, anytime
         //         - `PowerToken` should not need to know how the vault works
-        if (!ERC20Helper.transferFrom(_cashToken, msg.sender, _vault, cost_)) revert TransferFromFailed();
+        if (!ERC20Helper.transferFrom(cashToken(), msg.sender, _vault, cost_)) revert TransferFromFailed();
 
         _mint(destination_, amount_);
     }
@@ -92,6 +94,19 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     function markParticipation(address delegatee_) external onlGovernor {
         _markParticipation(delegatee_);
+    }
+
+    function setNextCashToken(address nextCashToken_) external onlGovernor {
+        if (nextCashToken_ == address(0)) revert ZeroCashTokenAddress();
+
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+
+        if (currentEpoch_ >= _nextCashTokenStartingEpoch) {
+            _cashToken = _nextCashToken;
+            _nextCashTokenStartingEpoch = currentEpoch_ + 1;
+        }
+
+        _nextCashToken = nextCashToken_;
     }
 
     /******************************************************************************************************************\
@@ -141,8 +156,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return _bootstrapToken;
     }
 
-    function cashToken() external view returns (address cashToken_) {
-        return _cashToken;
+    function cashToken() public view returns (address cashToken_) {
+        return PureEpochs.currentEpoch() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
     }
 
     function getCost(uint256 amount_) public view returns (uint256 cost_) {

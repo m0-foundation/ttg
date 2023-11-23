@@ -14,6 +14,8 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
     address public immutable vault;
     address public immutable zeroToken;
 
+    address[] internal _allowedCashTokens;
+
     uint256 public nonce;
 
     modifier onlyRegistrar() {
@@ -22,14 +24,21 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
         _;
     }
 
-    constructor(address registrar_, address vault_, address zeroToken_) {
+    constructor(address registrar_, address vault_, address zeroToken_, address[] memory allowedCashTokens_) {
         if ((registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
         if ((vault = vault_) == address(0)) revert ZeroVaultAddress();
         if ((zeroToken = zeroToken_) == address(0)) revert ZeroZeroTokenAddress();
+
+        for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {
+            address allowedCashToken_ = allowedCashTokens_[index_];
+
+            if (allowedCashToken_ == address(0)) revert ZeroCashTokenAddress();
+
+            _allowedCashTokens.push(allowedCashToken_);
+        }
     }
 
     function deploy(
-        address cashToken_,
         address powerToken_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_,
@@ -42,16 +51,24 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
             address(
                 new DualGovernor(
                     registrar,
-                    cashToken_,
                     powerToken_,
                     zeroToken,
                     vault,
+                    _allowedCashTokens,
                     proposalFee_,
                     maxTotalZeroRewardPerActiveEpoch_,
                     powerTokenThresholdRatio_,
                     zeroTokenThresholdRatio_
                 )
             );
+    }
+
+    function allowedCashTokens() external view returns (address[] memory tokens_) {
+        return _allowedCashTokens;
+    }
+
+    function allowedCashTokensAt(uint256 index_) external view returns (address token_) {
+        return _allowedCashTokens[index_];
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {

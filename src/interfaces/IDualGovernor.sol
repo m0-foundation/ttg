@@ -24,6 +24,8 @@ interface IDualGovernor is IGovernorBySig {
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
+    event CashTokenSet(address indexed cashToken);
+
     event PowerTokenThresholdRatioSet(uint16 thresholdRatio);
 
     event ProposalFeeSet(uint256 proposalFee);
@@ -42,9 +44,9 @@ interface IDualGovernor is IGovernorBySig {
 
     error InvalidCalldatasLength();
 
-    error InvalidPowerTokenAddress();
+    error InvalidCashToken();
 
-    error InvalidProposalFeeRange();
+    error InvalidPowerTokenAddress();
 
     error InvalidProposalType();
 
@@ -57,6 +59,8 @@ interface IDualGovernor is IGovernorBySig {
     error InvalidValuesLength();
 
     error InvalidZeroTokenAddress();
+
+    error NoAllowedCashTokens();
 
     error NotSelf();
 
@@ -109,6 +113,8 @@ interface IDualGovernor is IGovernorBySig {
 
     function hasVotedOnAllStandardProposals(address voter, uint256 epoch) external view returns (bool hasVoted);
 
+    function isAllowedCashToken(address token) external view returns (bool isAllowed);
+
     function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
 
     function numberOfStandardProposalsAt(uint256 epoch) external view returns (uint256 count);
@@ -146,6 +152,8 @@ interface IDualGovernor is IGovernorBySig {
     function removeFromList(bytes32 list, address account) external;
 
     function reset() external;
+
+    function setCashToken(address newCashToken_, uint256 newProposalFee_) external;
 
     function setProposalFee(uint256 newProposalFee) external;
 
