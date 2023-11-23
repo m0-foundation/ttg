@@ -157,7 +157,7 @@ contract IntegrationTests is TestUtils {
         values_[0] = 0;
 
         bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(governor_.reset.selector);
+        callDatas_[0] = abi.encodeWithSelector(governor_.resetToZeroHolders.selector);
 
         string memory description_ = "Reset";
 

@@ -161,7 +161,7 @@ contract DualGovernorTests is TestUtils {
         values_[0] = 0;
 
         bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.reset.selector);
+        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.resetToZeroHolders.selector);
 
         _dualGovernor.setProposal(_dualGovernor.hashProposal(callDatas_[0]), IDualGovernor.ProposalType.Zero, 1, 1, 0);
 
@@ -177,7 +177,7 @@ contract DualGovernorTests is TestUtils {
         values_[0] = 0;
 
         bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.reset.selector);
+        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.resetToZeroHolders.selector);
 
         _goToNextTransferEpoch();
 

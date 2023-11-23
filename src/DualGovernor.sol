@@ -15,10 +15,7 @@ import { ERC712 } from "./ERC712.sol";
 
 // TODO: Expose `_proposals`?
 // TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
-// TODO: Swap address in list.
-// TODO: Cash toggle will be an emergency proposal.
-// TODO: Better hash function for uniqueness per epoch.
-// TODO: Get rid of reasons amd descriptions? Possibly even the exposed functions themselves.
+// TODO: Get rid of reasons and descriptions? Possibly even the exposed functions themselves.
 // TODO: Investigate splitting Governor into 3 simpler Governors.
 // TODO: Emit an event in the Governor or Power Token when a voter has voted on all standard proposals in an epoch.
 // TODO: Consider non-standard simplified versions of governor functions.
@@ -513,12 +510,22 @@ contract DualGovernor is IDualGovernor, ERC712 {
         _removeFromList(list_, account_);
     }
 
-    function reset() external onlySelf {
-        IRegistrar(_registrar).reset();
+    function resetToPowerHolders() external onlySelf {
+        IRegistrar(_registrar).reset(_powerToken);
+    }
+
+    function resetToZeroHolders() external onlySelf {
+        IRegistrar(_registrar).reset(_zeroToken);
     }
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlySelf {
-        _setCashToken(newCashToken_, newProposalFee_);
+        if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
+
+        emit CashTokenSet(_cashToken = newCashToken_);
+
+        IPowerToken(_powerToken).setNextCashToken(newCashToken_);
+
+        _setProposalFee(newProposalFee_);
     }
 
     function setProposalFee(uint256 newProposalFee_) external onlySelf {
@@ -628,16 +635,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
         IRegistrar(_registrar).removeFromList(list_, account_);
     }
 
-    function _setCashToken(address newCashToken_, uint256 newProposalFee_) internal {
-        if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
-
-        emit CashTokenSet(_cashToken = newCashToken_);
-
-        IPowerToken(_powerToken).setNextCashToken(newCashToken_);
-
-        _setProposalFee(newProposalFee_);
-    }
-
     function _setProposalFee(uint256 newProposalFee_) internal {
         emit ProposalFeeSet(_proposalFee = newProposalFee_);
     }
@@ -706,7 +703,8 @@ contract DualGovernor is IDualGovernor, ERC712 {
             func_ == this.setPowerTokenThresholdRatio.selector ||
             func_ == this.setZeroTokenThresholdRatio.selector ||
             func_ == this.setCashToken.selector ||
-            func_ == this.reset.selector
+            func_ == this.resetToPowerHolders.selector ||
+            func_ == this.resetToZeroHolders.selector
         ) return ProposalType.Zero;
 
         revert InvalidProposalType();
