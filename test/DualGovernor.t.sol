@@ -6,7 +6,7 @@ import { IDualGovernor } from "../src/interfaces/IDualGovernor.sol";
 import { IGovernor } from "../src/interfaces/IGovernor.sol";
 
 import { DualGovernorHarness } from "./utils/DualGovernorHarness.sol";
-import { MockPowerToken, MockZeroToken } from "./utils/Mocks.sol";
+import { MockPowerToken, MockRegistrar, MockZeroToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_ProposalShouldChangeStatesCorrectly
@@ -22,10 +22,10 @@ contract DualGovernorTests is TestUtils {
     uint256 internal constant _ONE = 10_000;
 
     address internal _alice = makeAddr("alice");
+    address internal _bob = makeAddr("bob");
     address internal _cashToken1 = makeAddr("cashToken1");
     address internal _cashToken2 = makeAddr("cashToken2");
     address internal _vault = makeAddr("vault");
-    address internal _registrar = makeAddr("registrar");
 
     address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
 
@@ -37,13 +37,15 @@ contract DualGovernorTests is TestUtils {
     DualGovernorHarness internal _dualGovernor;
     MockPowerToken internal _powerToken;
     MockZeroToken internal _zeroToken;
+    MockRegistrar internal _registrar;
 
     function setUp() external {
         _powerToken = new MockPowerToken();
         _zeroToken = new MockZeroToken();
+        _registrar = new MockRegistrar();
 
         _dualGovernor = new DualGovernorHarness(
-            _registrar,
+            address(_registrar),
             address(_powerToken),
             address(_zeroToken),
             _vault,
@@ -57,7 +59,7 @@ contract DualGovernorTests is TestUtils {
 
     function test_initialState() external {
         assertEq(_dualGovernor.powerToken(), address(_powerToken));
-        assertEq(_dualGovernor.registrar(), _registrar);
+        assertEq(_dualGovernor.registrar(), address(_registrar));
         assertEq(_dualGovernor.vault(), _vault);
         assertEq(_dualGovernor.zeroToken(), address(_zeroToken));
         assertEq(_dualGovernor.maxTotalZeroRewardPerActiveEpoch(), _maxTotalZeroRewardPerActiveEpoch);
@@ -246,5 +248,27 @@ contract DualGovernorTests is TestUtils {
 
         assertEq(_dualGovernor.cashToken(), _cashToken2);
         assertEq(_dualGovernor.proposalFee(), _proposalFee * 2);
+    }
+
+    function test_addAndRemoveFromList_notSelf() external {
+        vm.expectRevert(IDualGovernor.NotSelf.selector);
+
+        _dualGovernor.addAndRemoveFromList("SOME_LIST", _alice, _bob);
+    }
+
+    function test_addAndRemoveFromList() external {
+        vm.prank(address(_dualGovernor));
+        _dualGovernor.addAndRemoveFromList("SOME_LIST", _alice, _bob);
+    }
+
+    function test_emergencyAddAndRemoveFromList_notSelf() external {
+        vm.expectRevert(IDualGovernor.NotSelf.selector);
+
+        _dualGovernor.emergencyAddAndRemoveFromList("SOME_LIST", _alice, _bob);
+    }
+
+    function test_emergencyAddAndRemoveFromList() external {
+        vm.prank(address(_dualGovernor));
+        _dualGovernor.emergencyAddAndRemoveFromList("SOME_LIST", _alice, _bob);
     }
 }

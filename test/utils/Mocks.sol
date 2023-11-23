@@ -174,3 +174,9 @@ contract MockERC20 {
         return true;
     }
 }
+
+contract MockRegistrar {
+    function addToList(bytes32 list_, address account_) external {}
+
+    function removeFromList(bytes32 list_, address account_) external {}
+}

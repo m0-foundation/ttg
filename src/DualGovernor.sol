@@ -135,7 +135,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     function castVoteWithReason(
         uint256 proposalId_,
         uint8 support_,
-        string calldata reason_
+        string calldata
     ) external returns (uint256 weight_) {
         return _castVote(msg.sender, proposalId_, support_);
     }
@@ -143,7 +143,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     function castVotesWithReason(
         uint256[] calldata proposalIds_,
         uint8[] calldata supports_,
-        string[] calldata reasons_
+        string[] calldata
     ) external returns (uint256 weight_) {
         return _castVotes(msg.sender, proposalIds_, supports_);
     }
@@ -481,8 +481,20 @@ contract DualGovernor is IDualGovernor, ERC712 {
         _addToList(list_, account_);
     }
 
+    function addAndRemoveFromList(bytes32 list_, address accountToAdd_, address accountToRemove_) external onlySelf {
+        _addAndRemoveFromList(list_, accountToAdd_, accountToRemove_);
+    }
+
     function emergencyAddToList(bytes32 list_, address account_) external onlySelf {
         _addToList(list_, account_);
+    }
+
+    function emergencyAddAndRemoveFromList(
+        bytes32 list_,
+        address accountToAdd_,
+        address accountToRemove_
+    ) external onlySelf {
+        _addAndRemoveFromList(list_, accountToAdd_, accountToRemove_);
     }
 
     function emergencyRemoveFromList(bytes32 list_, address account_) external onlySelf {
@@ -531,6 +543,11 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
     function _addToList(bytes32 list_, address account_) internal {
         IRegistrar(_registrar).addToList(list_, account_);
+    }
+
+    function _addAndRemoveFromList(bytes32 list_, address accountToAdd_, address accountToRemove_) internal {
+        _addToList(list_, accountToAdd_);
+        _removeFromList(list_, accountToRemove_);
     }
 
     function _castVotes(
@@ -671,6 +688,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
     function _getProposalType(bytes4 func_) internal pure returns (ProposalType proposalType_) {
         if (
             func_ == this.addToList.selector ||
+            func_ == this.addAndRemoveFromList.selector ||
             func_ == this.removeFromList.selector ||
             func_ == this.setProposalFee.selector ||
             func_ == this.updateConfig.selector
@@ -678,6 +696,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (
             func_ == this.emergencyAddToList.selector ||
+            func_ == this.emergencyAddAndRemoveFromList.selector ||
             func_ == this.emergencyRemoveFromList.selector ||
             func_ == this.emergencySetProposalFee.selector ||
             func_ == this.emergencyUpdateConfig.selector
