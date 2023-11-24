@@ -13,13 +13,33 @@ interface IRegistrar {
 
     event ConfigUpdated(bytes32 indexed key, bytes32 indexed value);
 
-    event ResetExecuted();
+    event ResetExecuted(address indexed bootstrapToken);
+
+    event EphemeralContractsDeployed(
+        address indexed standardGovernor,
+        address indexed emergencyGovernor,
+        address indexed powerToken
+    );
 
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
-    error CallerIsNotGovernor();
+    error CallerIsNotStandardOrEmergencyGovernor();
+
+    error CallerIsNotZeroGovernor();
+
+    error InvalidEmergencyGovernorDeployerAddress();
+
+    error InvalidPowerTokenDeployerAddress();
+
+    error InvalidStandardGovernorDeployerAddress();
+
+    error InvalidZeroGovernorAddress();
+
+    error UnexpectedPowerTokenDeployed(address expected, address deployed);
+
+    error UnexpectedStandardGovernorDeployed(address expected, address deployed);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
@@ -37,21 +57,29 @@ interface IRegistrar {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
+    function emergencyGovernor() external view returns (address emergencyGovernor);
+
+    function emergencyGovernorDeployer() external view returns (address emergencyGovernorDeployer);
+
     function get(bytes32 key) external view returns (bytes32 value);
 
     function get(bytes32[] calldata keys) external view returns (bytes32[] memory values);
-
-    function governor() external view returns (address governor);
-
-    function governorDeployer() external view returns (address governorDeployer);
 
     function listContains(bytes32 list, address account) external view returns (bool contains);
 
     function listContains(bytes32 list, address[] calldata accounts) external view returns (bool contains);
 
+    function powerToken() external view returns (address powerToken);
+
     function powerTokenDeployer() external view returns (address powerTokenDeployer);
 
+    function standardGovernor() external view returns (address standardGovernor);
+
+    function standardGovernorDeployer() external view returns (address standardGovernorDeployer);
+
     function vault() external view returns (address vault);
+
+    function zeroGovernor() external view returns (address zeroGovernor);
 
     function zeroToken() external view returns (address zeroToken);
 }

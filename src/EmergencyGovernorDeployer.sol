@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
+
 pragma solidity 0.8.21;
 
-import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
+import { IEmergencyGovernorDeployer } from "./interfaces/IEmergencyGovernorDeployer.sol";
 
-import { PowerToken } from "./PowerToken.sol";
 import { ContractHelper } from "./ContractHelper.sol";
+import { EmergencyGovernor } from "./EmergencyGovernor.sol";
 
-contract PowerTokenDeployer is IPowerTokenDeployer {
+contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     address public immutable registrar;
-    address public immutable vault;
+    address public immutable zeroGovernor;
 
     uint256 public nonce;
 
@@ -18,19 +19,19 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
         _;
     }
 
-    constructor(address registrar_, address vault_) {
+    constructor(address registrar_, address zeroGovernor_) {
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
-        if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
+        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
     }
 
     function deploy(
-        address governor_,
-        address cashToken_,
-        address bootstrapToken_
+        address voteToken_,
+        address standardGovernor_,
+        uint16 thresholdRatio_
     ) external onlyRegistrar returns (address deployed_) {
         ++nonce;
 
-        return address(new PowerToken(governor_, cashToken_, vault, bootstrapToken_));
+        return address(new EmergencyGovernor(registrar, voteToken_, standardGovernor_, zeroGovernor, thresholdRatio_));
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {

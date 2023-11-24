@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
-import { IDualGovernor } from "./interfaces/IDualGovernor.sol";
+import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
@@ -13,23 +13,22 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { PureEpochs } from "./PureEpochs.sol";
 import { ERC712 } from "./ERC712.sol";
 
+// TODO: Determine standard way to inform externals about which token can vote.
+
 // TODO: Expose `_proposals`?
 // TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
 // TODO: Get rid of reasons and descriptions? Possibly even the exposed functions themselves.
-// TODO: Investigate splitting Governor into 3 simpler Governors.
 // TODO: Emit an event in the Governor or Power Token when a voter has voted on all standard proposals in an epoch.
 // TODO: Consider non-standard simplified versions of governor functions.
 
-contract DualGovernor is IDualGovernor, ERC712 {
+contract StandardGovernor is IStandardGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
     // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
     struct Proposal {
-        ProposalType proposalType;
         uint16 voteStart;
-        uint16 voteEnd; // TODO: This can be inferred from voteStart and proposalType.
+        uint16 voteEnd; // TODO: This can be inferred from voteStart.
         bool executed;
         address proposer;
-        uint16 thresholdRatio;
         uint256 noWeight;
         uint256 yesWeight;
     }
@@ -55,9 +54,11 @@ contract DualGovernor is IDualGovernor, ERC712 {
     bytes32 public constant BALLOTS_WITH_REASON_TYPEHASH =
         0x4a8d949a35428f9a377e2e2b89d8883cda4fbc8055ff94f098fc4955c82d42ff;
 
-    address internal immutable _powerToken;
+    address internal immutable _emergencyGovernor;
     address internal immutable _registrar;
     address internal immutable _vault;
+    address internal immutable _voteToken;
+    address internal immutable _zeroGovernor;
     address internal immutable _zeroToken;
 
     uint256 internal immutable _maxTotalZeroRewardPerActiveEpoch;
@@ -66,62 +67,53 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
     uint256 internal _proposalFee;
 
-    uint16 internal _powerTokenThresholdRatio;
-    uint16 internal _zeroTokenThresholdRatio;
-
-    mapping(address token => bool allowed) internal _allowedCashTokens;
-
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
 
     mapping(uint256 proposalId => ProposalFeeInfo proposalFee) internal _proposalFees;
 
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) internal _hasVoted;
 
-    mapping(uint256 epoch => uint256 count) internal _standardProposals;
+    mapping(uint256 epoch => uint256 count) internal _numberOfProposals;
 
-    mapping(uint256 epoch => mapping(address voter => uint256 count)) internal _standardProposalsVotedOn;
+    mapping(uint256 epoch => mapping(address voter => uint256 count)) internal _numberOfProposalsVotedOn;
 
     modifier onlySelf() {
-        if (msg.sender != address(this)) revert NotSelf();
+        _revertIfNotSelf();
+        _;
+    }
 
+    modifier onlyZeroGovernor() {
+        _revertIfNotZeroGovernor();
+        _;
+    }
+
+    modifier onlySelfOrEmergencyGovernor() {
+        _revertIfNotSelfOrEmergencyGovernor();
         _;
     }
 
     constructor(
         address registrar_,
-        address powerToken_,
+        address voteToken_,
+        address emergencyGovernor_,
+        address zeroGovernor_,
         address zeroToken_,
+        address cashToken_,
         address vault_,
-        address[] memory allowedCashTokens_,
         uint256 proposalFee_,
-        uint256 maxTotalZeroRewardPerActiveEpoch_,
-        uint16 powerTokenThresholdRatio_,
-        uint16 zeroTokenThresholdRatio_
-    ) ERC712("DualGovernor") {
-        if ((_registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
-        if ((_powerToken = powerToken_) == address(0)) revert InvalidPowerTokenAddress();
+        uint256 maxTotalZeroRewardPerActiveEpoch_
+    ) ERC712("StandardGovernor") {
+        if ((_registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+        if ((_voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
+        if ((_emergencyGovernor = emergencyGovernor_) == address(0)) revert InvalidEmergencyGovernorAddress();
+        if ((_zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((_zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
-        if ((_vault = vault_) == address(0)) revert ZeroVaultAddress();
+        if ((_vault = vault_) == address(0)) revert InvalidVaultAddress();
 
-        _proposalFee = proposalFee_;
+        _setCashToken(cashToken_);
+        _setProposalFee(proposalFee_);
+
         _maxTotalZeroRewardPerActiveEpoch = maxTotalZeroRewardPerActiveEpoch_;
-
-        _powerTokenThresholdRatio = powerTokenThresholdRatio_;
-        _zeroTokenThresholdRatio = zeroTokenThresholdRatio_;
-
-        if (allowedCashTokens_.length == 0) revert NoAllowedCashTokens();
-
-        for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {
-            address allowedCashToken_ = allowedCashTokens_[index_];
-
-            if (allowedCashToken_ == address(0)) revert ZeroCashTokenAddress();
-
-            _allowedCashTokens[allowedCashToken_] = true;
-
-            if (index_ == 0) {
-                _cashToken = allowedCashToken_;
-            }
-        }
     }
 
     /******************************************************************************************************************\
@@ -212,10 +204,8 @@ contract DualGovernor is IDualGovernor, ERC712 {
     ) external payable returns (uint256 proposalId_) {
         if (msg.value != 0) revert InvalidValue();
 
-        // Standard proposals have voteStart=N and voteEnd=N, and can be executed only during epochs N+1 and N+2.
-        // Non-Standard proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.
-        bool isStandard_ = _getProposalType(bytes4(callDatas_[0])) == ProposalType.Standard;
-        uint256 firstPotentialVoteStart_ = PureEpochs.currentEpoch() - (isStandard_ ? 1 : 0);
+        // Proposals have voteStart=N and voteEnd=N, and can be executed only during epochs N+1 and N+2.
+        uint256 firstPotentialVoteStart_ = PureEpochs.currentEpoch() - 1;
 
         proposalId_ = _execute(callDatas_[0], firstPotentialVoteStart_); // Try first possible proposalId.
 
@@ -230,9 +220,9 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
     // TODO: If PowerToken has "future active checkpoints", then this would not be needed.
     function markEpochActive() external {
-        if (_standardProposals[PureEpochs.currentEpoch()] == 0) revert EpochHasNoProposals();
+        if (_numberOfProposals[PureEpochs.currentEpoch()] == 0) revert EpochHasNoProposals();
 
-        IPowerToken(_powerToken).markEpochActive();
+        IPowerToken(_voteToken).markEpochActive();
     }
 
     function propose(
@@ -249,36 +239,29 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (callDatas_.length != 1) revert InvalidCallDatasLength();
 
-        bytes4 func_ = bytes4(callDatas_[0]);
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-        ProposalType proposalType_ = _getProposalType(func_);
+        _revertIfInvalidCalldata(callDatas_[0]);
 
-        (uint256 voteStart_, uint256 voteEnd_) = (proposalType_ == ProposalType.Standard)
-            ? (currentEpoch_ + votingDelay(), currentEpoch_ + votingDelay())
-            : (currentEpoch_, currentEpoch_ + 1);
+        uint256 voteStart_ = PureEpochs.currentEpoch();
+        uint256 voteEnd_ = voteStart_;
 
         proposalId_ = _hashProposal(callDatas_[0], voteStart_);
 
         if (_proposals[proposalId_].voteStart != 0) revert ProposalExists();
 
-        if (proposalType_ == ProposalType.Standard) {
-            _standardProposals[voteStart_] += 1;
+        _numberOfProposals[voteStart_] += 1;
 
-            address cashToken_ = _cashToken;
-            uint256 proposalFee_ = _proposalFee;
+        address cashToken_ = _cashToken;
+        uint256 proposalFee_ = _proposalFee;
 
-            _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
+        _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
 
-            ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_);
-        }
+        ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_);
 
         _proposals[proposalId_] = Proposal({
-            proposalType: proposalType_,
             voteStart: uint16(voteStart_),
             voteEnd: uint16(voteEnd_),
             executed: false,
             proposer: msg.sender,
-            thresholdRatio: proposalType_ == ProposalType.Zero ? _zeroTokenThresholdRatio : _powerTokenThresholdRatio,
             noWeight: 0,
             yesWeight: 0
         });
@@ -303,9 +286,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if (state_ != ProposalState.Expired && state_ != ProposalState.Defeated) revert FeeNotDestinedForVault(state_);
 
         uint256 proposalFee_ = _proposalFees[proposalId_].fee;
-
-        if (proposalFee_ == 0) revert NoProposalFee();
-
         address cashToken_ = _proposalFees[proposalId_].cashToken;
 
         delete _proposalFees[proposalId_];
@@ -316,6 +296,11 @@ contract DualGovernor is IDualGovernor, ERC712 {
         //         - anyone can do it, anytime
         //         - `DualGovernor` should not need to know how the vault works
         ERC20Helper.transfer(cashToken_, _vault, proposalFee_);
+    }
+
+    function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
+        _setCashToken(newCashToken_);
+        _setProposalFee(newProposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -345,12 +330,10 @@ contract DualGovernor is IDualGovernor, ERC712 {
         external
         view
         returns (
-            ProposalType proposalType_,
             uint16 voteStart_,
             uint16 voteEnd_,
             bool executed_,
             ProposalState state_,
-            uint16 thresholdRatio_,
             uint256 noVotes_,
             uint256 yesVotes_,
             address proposer_
@@ -358,19 +341,17 @@ contract DualGovernor is IDualGovernor, ERC712 {
     {
         Proposal storage proposal_ = _proposals[proposalId_];
 
-        proposalType_ = proposal_.proposalType;
         voteStart_ = proposal_.voteStart;
         voteEnd_ = proposal_.voteEnd;
         executed_ = proposal_.executed;
         state_ = state(proposalId_);
-        thresholdRatio_ = proposal_.thresholdRatio;
-        proposer_ = proposal_.proposer;
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
+        proposer_ = proposal_.proposer;
     }
 
-    function getVotes(address account_, uint256 timepoint_) external view returns (uint256 weight_) {
-        // TODO: Implement?
+    function getVotes(address account_, uint256 timepoint_) public view returns (uint256 weight_) {
+        return IEpochBasedVoteToken(_voteToken).getPastVotes(account_, timepoint_);
     }
 
     function hashProposal(
@@ -386,36 +367,28 @@ contract DualGovernor is IDualGovernor, ERC712 {
         return _hashProposal(callData_);
     }
 
-    function hasVotedOnAllStandardProposals(address voter_, uint256 epoch_) external view returns (bool hasVoted_) {
-        return _standardProposalsVotedOn[epoch_][voter_] == _standardProposals[epoch_];
-    }
-
     function hasVoted(uint256 proposalId_, address account_) external view returns (bool hasVoted_) {
         return _hasVoted[proposalId_][account_];
     }
 
-    function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
-        return _allowedCashTokens[token_];
+    function hasVotedOnAllProposals(address voter_, uint256 epoch_) external view returns (bool hasVoted_) {
+        return _numberOfProposalsVotedOn[epoch_][voter_] == _numberOfProposals[epoch_];
+    }
+
+    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward_) {
+        return _maxTotalZeroRewardPerActiveEpoch;
     }
 
     function name() external view returns (string memory name_) {
         return _name;
     }
 
-    function numberOfStandardProposalsAt(uint256 epoch_) external view returns (uint256 count_) {
-        return _standardProposals[epoch_];
+    function numberOfProposalsAt(uint256 epoch_) external view returns (uint256 count_) {
+        return _numberOfProposals[epoch_];
     }
 
-    function numberOfStandardProposalsVotedOnAt(uint256 epoch_, address voter_) external view returns (uint256 count_) {
-        return _standardProposalsVotedOn[epoch_][voter_];
-    }
-
-    function powerToken() external view returns (address powerToken_) {
-        return _powerToken;
-    }
-
-    function powerTokenThresholdRatio() external view returns (uint256 thresholdRatio_) {
-        return _powerTokenThresholdRatio;
+    function numberOfProposalsVotedOnAt(uint256 epoch_, address voter_) external view returns (uint256 count_) {
+        return _numberOfProposalsVotedOn[epoch_][voter_];
     }
 
     function proposalDeadline(uint256 proposalId_) external view returns (uint256 deadline_) {
@@ -434,17 +407,12 @@ contract DualGovernor is IDualGovernor, ERC712 {
         return _proposals[proposalId_].voteStart - 1;
     }
 
-    function quorum(uint256 timepoint_) external pure returns (uint256 quorum_) {
-        // NOTE: This may be wrong/lacking, in more ways than one.
-        // TODO: Implement.
+    function quorum(uint256) external pure returns (uint256 quorum_) {
+        return 0;
     }
 
     function registrar() external view returns (address registrar_) {
         return _registrar;
-    }
-
-    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward_) {
-        return _maxTotalZeroRewardPerActiveEpoch;
     }
 
     function state(uint256 proposalId_) public view returns (ProposalState state_) {
@@ -452,53 +420,39 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         if (proposal_.executed) return ProposalState.Executed;
 
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
         uint256 voteStart_ = proposal_.voteStart;
+        uint256 voteEnd_ = proposal_.voteEnd;
 
         if (voteStart_ == 0) revert ProposalDoesNotExist();
 
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
         if (currentEpoch_ < voteStart_) return ProposalState.Pending;
 
-        bool isStandard_ = proposal_.proposalType == ProposalType.Standard;
-        uint256 voteEnd_ = proposal_.voteEnd;
+        if (currentEpoch_ <= voteEnd_) return ProposalState.Active;
 
-        if (isStandard_ && currentEpoch_ <= voteEnd_) return ProposalState.Active;
+        if (proposal_.yesWeight <= proposal_.noWeight) return ProposalState.Defeated;
 
-        if (!_proposalCanSucceed(proposal_)) return ProposalState.Defeated;
-
-        if (currentEpoch_ > voteEnd_ && !_proposalIsSucceeding(proposal_)) return ProposalState.Defeated;
-
-        if (currentEpoch_ > voteEnd_ + (isStandard_ ? 2 : 0)) return ProposalState.Expired;
-
-        if (!_proposalCanBeDefeated(proposal_)) return ProposalState.Succeeded;
-
-        // NOTE: This last line could be the following and still work (however, the one used is more obvious):
-        //       `return isStandard_ ? ProposalState.Succeeded : ProposalState.Active;`
-        //       `return _proposalIsSucceeding(proposal_) ? ProposalState.Succeeded : ProposalState.Active;`
-        return currentEpoch_ > voteEnd_ ? ProposalState.Succeeded : ProposalState.Active;
+        return (currentEpoch_ > voteEnd_ + 2) ? ProposalState.Succeeded : ProposalState.Expired;
     }
 
     function vault() external view returns (address vault_) {
         return _vault;
     }
 
+    function voteToken() external view returns (address voteToken_) {
+        return _voteToken;
+    }
+
     function votingDelay() public view returns (uint256 votingDelay_) {
-        // NOTE: This is only valid for Power proposals.
         return _isVotingEpoch(PureEpochs.currentEpoch()) ? 2 : 1;
     }
 
     function votingPeriod() external pure returns (uint256 votingPeriod_) {
-        // NOTE: This is only valid for Power proposals.
         return 1;
     }
 
     function zeroToken() external view returns (address zeroToken_) {
         return _zeroToken;
-    }
-
-    function zeroTokenThresholdRatio() external view returns (uint256 thresholdRatio_) {
-        return _zeroTokenThresholdRatio;
     }
 
     /******************************************************************************************************************\
@@ -510,69 +464,20 @@ contract DualGovernor is IDualGovernor, ERC712 {
     }
 
     function addAndRemoveFromList(bytes32 list_, address accountToAdd_, address accountToRemove_) external onlySelf {
-        _addAndRemoveFromList(list_, accountToAdd_, accountToRemove_);
-    }
-
-    function emergencyAddToList(bytes32 list_, address account_) external onlySelf {
-        _addToList(list_, account_);
-    }
-
-    function emergencyAddAndRemoveFromList(
-        bytes32 list_,
-        address accountToAdd_,
-        address accountToRemove_
-    ) external onlySelf {
-        _addAndRemoveFromList(list_, accountToAdd_, accountToRemove_);
-    }
-
-    function emergencyRemoveFromList(bytes32 list_, address account_) external onlySelf {
-        _removeFromList(list_, account_);
-    }
-
-    function emergencySetProposalFee(uint256 newProposalFee_) external onlySelf {
-        _setProposalFee(newProposalFee_);
-    }
-
-    function emergencyUpdateConfig(bytes32 key_, bytes32 value_) external onlySelf {
-        _updateConfig(key_, value_);
+        _addToList(list_, accountToAdd_);
+        _removeFromList(list_, accountToRemove_);
     }
 
     function removeFromList(bytes32 list_, address account_) external onlySelf {
         _removeFromList(list_, account_);
     }
 
-    function resetToPowerHolders() external onlySelf {
-        IRegistrar(_registrar).reset(_powerToken);
-    }
-
-    function resetToZeroHolders() external onlySelf {
-        IRegistrar(_registrar).reset(_zeroToken);
-    }
-
-    function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlySelf {
-        if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
-
-        emit CashTokenSet(_cashToken = newCashToken_);
-
-        IPowerToken(_powerToken).setNextCashToken(newCashToken_);
-
+    function setProposalFee(uint256 newProposalFee_) external onlySelfOrEmergencyGovernor {
         _setProposalFee(newProposalFee_);
-    }
-
-    function setProposalFee(uint256 newProposalFee_) external onlySelf {
-        _setProposalFee(newProposalFee_);
-    }
-
-    function setPowerTokenThresholdRatio(uint16 newThresholdRatio_) external onlySelf {
-        emit PowerTokenThresholdRatioSet(_powerTokenThresholdRatio = newThresholdRatio_);
-    }
-
-    function setZeroTokenThresholdRatio(uint16 newThresholdRatio_) external onlySelf {
-        emit ZeroTokenThresholdRatioSet(_zeroTokenThresholdRatio = newThresholdRatio_);
     }
 
     function updateConfig(bytes32 key_, bytes32 value_) external onlySelf {
-        _updateConfig(key_, value_);
+        IRegistrar(_registrar).updateConfig(key_, value_);
     }
 
     /******************************************************************************************************************\
@@ -581,11 +486,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
     function _addToList(bytes32 list_, address account_) internal {
         IRegistrar(_registrar).addToList(list_, account_);
-    }
-
-    function _addAndRemoveFromList(bytes32 list_, address accountToAdd_, address accountToRemove_) internal {
-        _addToList(list_, accountToAdd_);
-        _removeFromList(list_, accountToRemove_);
     }
 
     function _castVotes(
@@ -613,11 +513,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         uint256 snapshot_ = proposal_.voteStart - 1;
 
-        ProposalType proposalType_ = proposal_.proposalType;
-
-        weight_ = proposalType_ == ProposalType.Zero
-            ? _getZeroTokenWeight(voter_, snapshot_)
-            : _getPowerTokenWeight(voter_, snapshot_);
+        weight_ = getVotes(voter_, snapshot_);
 
         if (VoteType(support_) == VoteType.No) {
             proposal_.noWeight += weight_;
@@ -627,21 +523,15 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         emit VoteCast(voter_, proposalId_, support_, weight_, "");
 
-        // Only Power proposals are mandatory and result in inflation if they are all voted on.
-        if (proposalType_ != ProposalType.Standard) return weight_;
-
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
-        uint256 numberOfProposalsVotedOn_ = ++_standardProposalsVotedOn[currentEpoch_][voter_];
+        uint256 numberOfProposalsVotedOn_ = ++_numberOfProposalsVotedOn[currentEpoch_][voter_];
 
-        if (numberOfProposalsVotedOn_ != _standardProposals[currentEpoch_]) return weight_;
+        if (numberOfProposalsVotedOn_ != _numberOfProposals[currentEpoch_]) return weight_;
 
-        IPowerToken(_powerToken).markParticipation(voter_);
+        IPowerToken(_voteToken).markParticipation(voter_);
 
-        IZeroToken(_zeroToken).mint(
-            voter_,
-            (_maxTotalZeroRewardPerActiveEpoch * weight_) / _getPowerTokenTotalSupply(snapshot_)
-        );
+        IZeroToken(_zeroToken).mint(voter_, (_maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(snapshot_));
     }
 
     function _execute(bytes memory callData_, uint256 voteStart_) internal returns (uint256 proposalId_) {
@@ -662,9 +552,6 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if (!success_) revert ExecutionFailed(data_);
 
         uint256 proposalFee_ = _proposalFees[proposalId_].fee;
-
-        if (proposalFee_ == 0) return proposalId_;
-
         address cashToken_ = _proposalFees[proposalId_].cashToken;
 
         delete _proposalFees[proposalId_];
@@ -676,12 +563,14 @@ contract DualGovernor is IDualGovernor, ERC712 {
         IRegistrar(_registrar).removeFromList(list_, account_);
     }
 
-    function _setProposalFee(uint256 newProposalFee_) internal {
-        emit ProposalFeeSet(_proposalFee = newProposalFee_);
+    function _setCashToken(address newCashToken_) internal {
+        if (newCashToken_ == address(0)) revert InvalidCashTokenAddress();
+
+        emit CashTokenSet(_cashToken = newCashToken_);
     }
 
-    function _updateConfig(bytes32 key_, bytes32 value_) internal {
-        IRegistrar(_registrar).updateConfig(key_, value_);
+    function _setProposalFee(uint256 newProposalFee_) internal {
+        emit ProposalFeeSet(_proposalFee = newProposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -715,102 +604,48 @@ contract DualGovernor is IDualGovernor, ERC712 {
         digest_ = _getDigest(keccak256(abi.encode(BALLOTS_WITH_REASON_TYPEHASH, proposalIds_, supports_, reasons_)));
     }
 
-    function _getPowerTokenTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
-        totalSupply_ = IEpochBasedVoteToken(_powerToken).totalSupplyAt(timepoint_);
-    }
-
-    function _getPowerTokenWeight(address account_, uint256 timepoint_) internal view returns (uint256 weight_) {
-        weight_ = IEpochBasedVoteToken(_powerToken).getPastVotes(account_, timepoint_);
-    }
-
-    function _getProposalType(bytes4 func_) internal pure returns (ProposalType proposalType_) {
-        if (
-            func_ == this.addToList.selector ||
-            func_ == this.addAndRemoveFromList.selector ||
-            func_ == this.removeFromList.selector ||
-            func_ == this.setProposalFee.selector ||
-            func_ == this.updateConfig.selector
-        ) return ProposalType.Standard;
-
-        if (
-            func_ == this.emergencyAddToList.selector ||
-            func_ == this.emergencyAddAndRemoveFromList.selector ||
-            func_ == this.emergencyRemoveFromList.selector ||
-            func_ == this.emergencySetProposalFee.selector ||
-            func_ == this.emergencyUpdateConfig.selector
-        ) return ProposalType.Emergency;
-
-        if (
-            func_ == this.setPowerTokenThresholdRatio.selector ||
-            func_ == this.setZeroTokenThresholdRatio.selector ||
-            func_ == this.setCashToken.selector ||
-            func_ == this.resetToPowerHolders.selector ||
-            func_ == this.resetToZeroHolders.selector
-        ) return ProposalType.Zero;
-
-        revert InvalidProposalType();
-    }
-
     function _getSigner(bytes32 digest_, uint8 v_, bytes32 r_, bytes32 s_) internal view returns (address signer_) {
         signer_ = _getSigner(digest_, type(uint256).max, v_, r_, s_); // NOTE: No expiration.
     }
 
-    function _getTotalSupply(
-        ProposalType proposalType_,
-        uint256 timepoint_
-    ) internal view returns (uint256 totalSupply_) {
-        return
-            proposalType_ == ProposalType.Zero
-                ? _getZeroTokenTotalSupply(timepoint_)
-                : _getPowerTokenTotalSupply(timepoint_);
-    }
-
-    function _getZeroTokenTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
-        totalSupply_ = IEpochBasedVoteToken(_zeroToken).totalSupplyAt(timepoint_);
-    }
-
-    function _getZeroTokenWeight(address account_, uint256 timepoint_) internal view returns (uint256 weight_) {
-        weight_ = IEpochBasedVoteToken(_zeroToken).getPastVotes(account_, timepoint_);
+    function _getTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
+        return IEpochBasedVoteToken(_voteToken).totalSupplyAt(timepoint_);
     }
 
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {
-        uint256 voteStart_ = PureEpochs.currentEpoch() +
-            (_getProposalType(bytes4(callData_)) == ProposalType.Standard ? votingDelay() : 0);
-
-        return _hashProposal(callData_, voteStart_);
+        return _hashProposal(callData_, PureEpochs.currentEpoch() + votingDelay());
     }
 
     function _hashProposal(bytes memory callData_, uint256 voteStart_) internal pure returns (uint256 proposalId_) {
         return uint256(keccak256(abi.encode(callData_, voteStart_)));
     }
 
+    // TODO: Consider inlining this in the only place it's used.
     function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
         isVotingEpoch_ = epoch_ % 2 == 1;
     }
 
-    function _proposalCanBeDefeated(Proposal storage proposal_) internal view returns (bool voteCanFail_) {
-        uint256 totalSupply_ = _getTotalSupply(proposal_.proposalType, proposal_.voteStart - 1);
+    function _revertIfInvalidCalldata(bytes memory callData_) internal pure {
+        bytes4 func_ = bytes4(callData_);
 
-        return
-            proposal_.proposalType == ProposalType.Standard
-                ? totalSupply_ > 2 * proposal_.yesWeight
-                : proposal_.yesWeight * ONE < proposal_.thresholdRatio * totalSupply_;
+        if (
+            func_ != this.addToList.selector &&
+            func_ != this.addAndRemoveFromList.selector &&
+            func_ != this.removeFromList.selector &&
+            func_ != this.setProposalFee.selector &&
+            func_ != this.updateConfig.selector
+        ) revert InvalidCallData();
     }
 
-    function _proposalCanSucceed(Proposal storage proposal_) internal view returns (bool voteCanSucceed_) {
-        uint256 totalSupply_ = _getTotalSupply(proposal_.proposalType, proposal_.voteStart - 1);
-
-        return
-            proposal_.proposalType == ProposalType.Standard
-                ? totalSupply_ > 2 * proposal_.noWeight
-                : (totalSupply_ - proposal_.noWeight) * ONE >= proposal_.thresholdRatio * totalSupply_;
+    function _revertIfNotSelf() internal view {
+        if (msg.sender != address(this)) revert NotSelf();
     }
 
-    function _proposalIsSucceeding(Proposal storage proposal_) internal view returns (bool voteSucceeded_) {
-        if (proposal_.proposalType == ProposalType.Standard) return proposal_.yesWeight > proposal_.noWeight;
+    function _revertIfNotSelfOrEmergencyGovernor() internal view {
+        if (msg.sender != address(this) && msg.sender != _emergencyGovernor) revert NotSelfOrEmergencyGovernor();
+    }
 
-        uint256 totalSupply_ = _getTotalSupply(proposal_.proposalType, proposal_.voteStart - 1);
-
-        return (proposal_.yesWeight * ONE) / totalSupply_ >= proposal_.thresholdRatio;
+    function _revertIfNotZeroGovernor() internal view {
+        if (msg.sender != _zeroGovernor) revert NotZeroGovernor();
     }
 }

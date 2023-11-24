@@ -4,16 +4,10 @@ pragma solidity 0.8.21;
 
 import { IGovernorBySig } from "./IGovernorBySig.sol";
 
-interface IDualGovernor is IGovernorBySig {
+interface IZeroGovernor is IGovernorBySig {
     /******************************************************************************************************************\
     |                                                      Enums                                                       |
     \******************************************************************************************************************/
-
-    enum ProposalType {
-        Standard,
-        Emergency,
-        Zero
-    }
 
     enum VoteType {
         No,
@@ -24,15 +18,7 @@ interface IDualGovernor is IGovernorBySig {
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
-    event CashTokenSet(address indexed cashToken);
-
-    event PowerTokenThresholdRatioSet(uint16 thresholdRatio);
-
-    event ProposalFeeSet(uint256 proposalFee);
-
-    event ZeroTokenThresholdRatioSet(uint16 thresholdRatio);
-
-    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);
+    event ThresholdRatioSet(uint16 thresholdRatio);
 
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
@@ -40,33 +26,31 @@ interface IDualGovernor is IGovernorBySig {
 
     error AlreadyVoted();
 
-    error EpochHasNoProposals();
-
     error ExecutionFailed(bytes data);
 
-    error FeeNotDestinedForVault(ProposalState state);
+    error InvalidCallData();
 
     error InvalidCallDatasLength();
 
     error InvalidCashToken();
 
-    error InvalidPowerTokenAddress();
+    error InvalidCashTokenAddress();
 
-    error InvalidProposalType();
+    error InvalidRegistrarAddress();
 
     error InvalidTarget();
 
     error InvalidTargetsLength();
 
+    error InvalidThresholdRatio();
+
     error InvalidValue();
 
     error InvalidValuesLength();
 
-    error InvalidZeroTokenAddress();
+    error InvalidVoteTokenAddress();
 
     error NoAllowedCashTokens();
-
-    error NoProposalFee();
 
     error NotSelf();
 
@@ -77,18 +61,6 @@ interface IDualGovernor is IGovernorBySig {
     error ProposalExists();
 
     error ProposalNotActive(ProposalState state);
-
-    error ZeroCashTokenAddress();
-
-    error ZeroRegistrarAddress();
-
-    error ZeroVaultAddress();
-
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
-
-    function sendProposalFeeToVault(uint256 proposalId) external;
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
@@ -104,7 +76,7 @@ interface IDualGovernor is IGovernorBySig {
 
     function ONE() external pure returns (uint256 one);
 
-    function cashToken() external view returns (address cashToken);
+    function emergencyGovernor() external view returns (address emergencyGovernor);
 
     function getProposal(
         uint256 proposalId
@@ -112,7 +84,6 @@ interface IDualGovernor is IGovernorBySig {
         external
         view
         returns (
-            ProposalType proposalType,
             uint16 voteStart,
             uint16 voteEnd,
             bool executed,
@@ -125,61 +96,31 @@ interface IDualGovernor is IGovernorBySig {
 
     function hashProposal(bytes memory callData) external view returns (uint256 proposalId);
 
-    function hasVotedOnAllStandardProposals(address voter, uint256 epoch) external view returns (bool hasVoted);
-
     function isAllowedCashToken(address token) external view returns (bool isAllowed);
-
-    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
-
-    function numberOfStandardProposalsAt(uint256 epoch) external view returns (uint256 count);
-
-    function numberOfStandardProposalsVotedOnAt(uint256 epoch, address voter) external view returns (uint256 count);
-
-    function powerToken() external view returns (address powerToken);
-
-    function powerTokenThresholdRatio() external view returns (uint256 thresholdRatio);
 
     function proposalFee() external view returns (uint256 proposalFee);
 
     function registrar() external view returns (address registrar);
 
-    function vault() external view returns (address vault);
+    function standardGovernor() external view returns (address standardGovernor);
 
-    function zeroToken() external view returns (address zeroToken);
+    function startingCashToken() external view returns (address startingCashToken);
 
-    function zeroTokenThresholdRatio() external view returns (uint256 thresholdRatio);
+    function thresholdRatio() external view returns (uint16 thresholdRatio);
+
+    function voteToken() external view returns (address voteToken);
 
     /******************************************************************************************************************\
     |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
-    function addToList(bytes32 list, address account) external;
-
-    function addAndRemoveFromList(bytes32 list, address accountToAdd, address accountToRemove) external;
-
-    function emergencyAddToList(bytes32 list, address account) external;
-
-    function emergencyAddAndRemoveFromList(bytes32 list, address accountToAdd, address accountToRemove) external;
-
-    function emergencyRemoveFromList(bytes32 list, address account) external;
-
-    function emergencySetProposalFee(uint256 newProposalFee) external;
-
-    function emergencyUpdateConfig(bytes32 key, bytes32 value_) external;
-
-    function removeFromList(bytes32 list, address account) external;
-
     function resetToPowerHolders() external;
 
     function resetToZeroHolders() external;
 
-    function setCashToken(address newCashToken_, uint256 newProposalFee_) external;
+    function setCashToken(address newCashToken, uint256 newProposalFee) external;
 
-    function setProposalFee(uint256 newProposalFee) external;
+    function setEmergencyProposalThresholdRatio(uint16 newThresholdRatio) external;
 
-    function setPowerTokenThresholdRatio(uint16 newThresholdRatio) external;
-
-    function setZeroTokenThresholdRatio(uint16 newThresholdRatio) external;
-
-    function updateConfig(bytes32 key, bytes32 value_) external;
+    function setZeroProposalThresholdRatio(uint16 newThresholdRatio) external;
 }

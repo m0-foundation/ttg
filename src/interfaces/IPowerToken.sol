@@ -27,11 +27,11 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     error TransferFromFailed();
 
-    error ZeroCashTokenAddress();
+    error InvalidCashTokenAddress();
 
     error ZeroGovernorAddress();
 
-    error ZeroVaultAddress();
+    error InvalidVaultAddress();
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

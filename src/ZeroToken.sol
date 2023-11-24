@@ -12,8 +12,8 @@ import { PureEpochs } from "./PureEpochs.sol";
 contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     address internal immutable _registrar;
 
-    modifier onlGovernor() {
-        if (msg.sender != IRegistrar(_registrar).governor()) revert NotGovernor();
+    modifier onlyStandardGovernor() {
+        if (msg.sender != IRegistrar(_registrar).standardGovernor()) revert NotGovernor();
 
         _;
     }
@@ -35,7 +35,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         _registrar = registrar_;
     }
 
-    function mint(address recipient_, uint256 amount_) external onlGovernor {
+    function mint(address recipient_, uint256 amount_) external onlyStandardGovernor {
         _mint(recipient_, amount_);
     }
 

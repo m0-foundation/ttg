@@ -48,8 +48,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address vault_,
         address bootstrapToken_
     ) EpochBasedInflationaryVoteToken("Power Token", "POWER", 0, ONE / 10) {
-        if ((_nextCashToken = cashToken_) == address(0)) revert ZeroCashTokenAddress();
-        if ((_vault = vault_) == address(0)) revert ZeroVaultAddress();
+        if ((_nextCashToken = cashToken_) == address(0)) revert InvalidCashTokenAddress();
+        if ((_vault = vault_) == address(0)) revert InvalidVaultAddress();
         if ((_governor = governor_) == address(0)) revert ZeroGovernorAddress();
 
         _bootstrapSupply = IEpochBasedVoteToken(_bootstrapToken = bootstrapToken_).totalSupplyAt(
@@ -97,7 +97,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     function setNextCashToken(address nextCashToken_) external onlGovernor {
-        if (nextCashToken_ == address(0)) revert ZeroCashTokenAddress();
+        if (nextCashToken_ == address(0)) revert InvalidCashTokenAddress();
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
