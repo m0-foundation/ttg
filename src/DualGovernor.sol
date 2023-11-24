@@ -34,6 +34,11 @@ contract DualGovernor is IDualGovernor, ERC712 {
         uint256 yesWeight;
     }
 
+    struct ProposalFeeInfo {
+        address cashToken;
+        uint256 fee;
+    }
+
     uint256 public constant ONE = 10_000;
 
     // keccak256("Ballot(uint256 proposalId,uint8 support)")
@@ -67,6 +72,8 @@ contract DualGovernor is IDualGovernor, ERC712 {
     mapping(address token => bool allowed) internal _allowedCashTokens;
 
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
+
+    mapping(uint256 proposalId => ProposalFeeInfo proposalFee) internal _proposalFees;
 
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) internal _hasVoted;
 
@@ -257,10 +264,12 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if (proposalType_ == ProposalType.Standard) {
             _standardProposals[voteStart_] += 1;
 
-            // NOTE: Not calling `distribute` on vault since:
-            //         - anyone can do it, anytime
-            //         - `DualGovernor` should not need to know how the vault works
-            ERC20Helper.transferFrom(_cashToken, msg.sender, _vault, _proposalFee);
+            address cashToken_ = _cashToken;
+            uint256 proposalFee_ = _proposalFee;
+
+            _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
+
+            ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_);
         }
 
         _proposals[proposalId_] = Proposal({
@@ -285,6 +294,28 @@ contract DualGovernor is IDualGovernor, ERC712 {
             voteEnd_,
             description_
         );
+    }
+
+    function sendProposalFeeToVault(uint256 proposalId_) external {
+        ProposalState state_ = state(proposalId_);
+
+        // Must be expired or defeated to have the fee sent to the vault
+        if (state_ != ProposalState.Expired && state_ != ProposalState.Defeated) revert FeeNotDestinedForVault(state_);
+
+        uint256 proposalFee_ = _proposalFees[proposalId_].fee;
+
+        if (proposalFee_ == 0) revert NoProposalFee();
+
+        address cashToken_ = _proposalFees[proposalId_].cashToken;
+
+        delete _proposalFees[proposalId_];
+
+        emit ProposalFeeSentToVault(proposalId_, cashToken_, proposalFee_);
+
+        // NOTE: Not calling `distribute` on vault since:
+        //         - anyone can do it, anytime
+        //         - `DualGovernor` should not need to know how the vault works
+        ERC20Helper.transfer(cashToken_, _vault, proposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -629,6 +660,16 @@ contract DualGovernor is IDualGovernor, ERC712 {
         (bool success_, bytes memory data_) = address(this).call(callData_);
 
         if (!success_) revert ExecutionFailed(data_);
+
+        uint256 proposalFee_ = _proposalFees[proposalId_].fee;
+
+        if (proposalFee_ == 0) return proposalId_;
+
+        address cashToken_ = _proposalFees[proposalId_].cashToken;
+
+        delete _proposalFees[proposalId_];
+
+        ERC20Helper.transfer(cashToken_, proposal_.proposer, proposalFee_);
     }
 
     function _removeFromList(bytes32 list_, address account_) internal {

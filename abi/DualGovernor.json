@@ -72,6 +72,17 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "enum IGovernor.ProposalState",
+        "name": "state",
+        "type": "uint8"
+      }
+    ],
+    "name": "FeeNotDestinedForVault",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "InvalidCallDatasLength",
     "type": "error"
@@ -129,6 +140,11 @@
   {
     "inputs": [],
     "name": "NoAllowedCashTokens",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoProposalFee",
     "type": "error"
   },
   {
@@ -323,6 +339,31 @@
       }
     ],
     "name": "ProposalExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "proposalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "cashToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "proposalFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProposalFeeSentToVault",
     "type": "event"
   },
   {
@@ -1443,6 +1484,19 @@
   {
     "inputs": [],
     "name": "resetToZeroHolders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "proposalId_",
+        "type": "uint256"
+      }
+    ],
+    "name": "sendProposalFeeToVault",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

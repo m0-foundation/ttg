@@ -32,6 +32,8 @@ interface IDualGovernor is IGovernorBySig {
 
     event ZeroTokenThresholdRatioSet(uint16 thresholdRatio);
 
+    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);
+
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
@@ -41,6 +43,8 @@ interface IDualGovernor is IGovernorBySig {
     error EpochHasNoProposals();
 
     error ExecutionFailed(bytes data);
+
+    error FeeNotDestinedForVault(ProposalState state);
 
     error InvalidCallDatasLength();
 
@@ -62,6 +66,8 @@ interface IDualGovernor is IGovernorBySig {
 
     error NoAllowedCashTokens();
 
+    error NoProposalFee();
+
     error NotSelf();
 
     error ProposalCannotBeExecuted();
@@ -77,6 +83,12 @@ interface IDualGovernor is IGovernorBySig {
     error ZeroRegistrarAddress();
 
     error ZeroVaultAddress();
+
+    /******************************************************************************************************************\
+    |                                              Interactive Functions                                               |
+    \******************************************************************************************************************/
+
+    function sendProposalFeeToVault(uint256 proposalId) external;
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
