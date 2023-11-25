@@ -47,14 +47,14 @@ interface IGovernor is IERC6372 {
     function execute(
         address[] memory targets,
         uint256[] memory values,
-        bytes[] memory calldatas,
+        bytes[] memory callDatas,
         bytes32 descriptionHash
     ) external payable returns (uint256 proposalId);
 
     function propose(
         address[] memory targets,
         uint256[] memory values,
-        bytes[] memory calldatas,
+        bytes[] memory callDatas,
         string memory description
     ) external returns (uint256 proposalId);
 
@@ -71,7 +71,7 @@ interface IGovernor is IERC6372 {
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) external pure returns (uint256 proposalId);
+    ) external view returns (uint256 proposalId);
 
     // NOTE: Does not seem to be needed by Tally, but is implemented in OpenZeppelin's Governor contract.
     function hasVoted(uint256 proposalId, address account) external view returns (bool hasVoted);

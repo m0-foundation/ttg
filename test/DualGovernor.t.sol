@@ -2,20 +2,20 @@
 
 pragma solidity 0.8.21;
 
-import { Test } from "../lib/forge-std/src/Test.sol";
-
 import { IDualGovernor } from "../src/interfaces/IDualGovernor.sol";
 import { IGovernor } from "../src/interfaces/IGovernor.sol";
 
 import { DualGovernorHarness } from "./utils/DualGovernorHarness.sol";
 import { MockPowerToken, MockZeroToken } from "./utils/Mocks.sol";
+import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_ProposalShouldChangeStatesCorrectly
 // TODO: test_CanVoteOnMultipleProposals
 // TODO: test_UserVoteInflationAfterVotingOnAllProposals
 // TODO: test_DelegateValueRewardsAfterVotingOnAllProposals
+// TODO: test_state matrix.
 
-contract DualGovernorTests is Test {
+contract DualGovernorTests is TestUtils {
     event CashTokenSet(address indexed cashToken_);
     event ProposalFeeSet(uint256 proposalFee_);
 
@@ -140,15 +140,31 @@ contract DualGovernorTests is Test {
         _dualGovernor.propose(targets_, values_, new bytes[](0), "");
     }
 
-    function test_propose_invalidCalldatasLength() external {
+    function test_propose_invalidCallDatasLength() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_dualGovernor);
 
         uint256[] memory values_ = new uint256[](1);
         values_[0] = 0;
 
-        vm.expectRevert(IDualGovernor.InvalidCalldatasLength.selector);
+        vm.expectRevert(IDualGovernor.InvalidCallDatasLength.selector);
         _dualGovernor.propose(targets_, values_, new bytes[](2), "");
+    }
+
+    function test_propose_proposalExists_withHarness() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_dualGovernor);
+
+        uint256[] memory values_ = new uint256[](1);
+        values_[0] = 0;
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.reset.selector);
+
+        _dualGovernor.setProposal(_dualGovernor.hashProposal(callDatas_[0]), IDualGovernor.ProposalType.Zero, 1, 1, 0);
+
+        vm.expectRevert(IDualGovernor.ProposalExists.selector);
+        _dualGovernor.propose(targets_, values_, callDatas_, "");
     }
 
     function test_propose_proposalExists() external {
@@ -158,16 +174,22 @@ contract DualGovernorTests is Test {
         uint256[] memory values_ = new uint256[](1);
         values_[0] = 0;
 
-        _dualGovernor.setProposal(
-            _dualGovernor.hashProposal(targets_, values_, new bytes[](1), keccak256(bytes(""))),
-            IDualGovernor.ProposalType.Standard,
-            1,
-            1,
-            0
-        );
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.reset.selector);
+
+        _goToNextTransferEpoch();
+
+        _dualGovernor.propose(targets_, values_, callDatas_, "");
 
         vm.expectRevert(IDualGovernor.ProposalExists.selector);
-        _dualGovernor.propose(targets_, values_, new bytes[](1), "");
+        _dualGovernor.propose(targets_, values_, callDatas_, "");
+
+        _goToNextEpoch();
+
+        _dualGovernor.propose(targets_, values_, callDatas_, "");
+
+        vm.expectRevert(IDualGovernor.ProposalExists.selector);
+        _dualGovernor.propose(targets_, values_, callDatas_, "");
     }
 
     function test_propose_invalidProposalType() external {
@@ -181,30 +203,22 @@ contract DualGovernorTests is Test {
         _dualGovernor.propose(targets_, values_, new bytes[](1), "");
     }
 
-    // TODO: Thee are multiple reasons why a proposal is not successful or not yet successful.
-    function test_execute_proposalNotSuccessful() external {
+    function test_execute_proposalCannotBeExecuted() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_dualGovernor);
 
         uint256[] memory values_ = new uint256[](1);
 
-        bytes[] memory calldatas_ = new bytes[](1);
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_dualGovernor.setProposalFee.selector, 1);
 
-        bytes32 descriptionHash_ = keccak256(bytes(""));
+        uint256 proposalId_ = _dualGovernor.hashProposal(callDatas_[0]);
+        uint256 currentEpoch_ = _dualGovernor.clock();
 
-        uint256 proposalId_ = _dualGovernor.hashProposal(targets_, values_, calldatas_, descriptionHash_);
-        uint256 currentEpoch = _dualGovernor.clock();
+        _dualGovernor.setProposal(proposalId_, IDualGovernor.ProposalType.Standard, 1, 1, _powerTokenThresholdRatio);
 
-        _dualGovernor.setProposal(
-            proposalId_,
-            IDualGovernor.ProposalType.Standard,
-            currentEpoch - 1,
-            currentEpoch - 1,
-            _powerTokenThresholdRatio
-        );
-
-        vm.expectRevert(IDualGovernor.ProposalNotSuccessful.selector);
-        _dualGovernor.execute(targets_, values_, calldatas_, descriptionHash_);
+        vm.expectRevert(IDualGovernor.ProposalCannotBeExecuted.selector);
+        _dualGovernor.execute(targets_, values_, callDatas_, keccak256(bytes("")));
     }
 
     function test_setCashToken_notSelf() external {
