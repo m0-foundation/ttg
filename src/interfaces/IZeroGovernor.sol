@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { IThresholdGovernor } from "./IThresholdGovernor.sol";
+import { IThresholdGovernor } from "../abstract/interfaces/IThresholdGovernor.sol";
 
 interface IZeroGovernor is IThresholdGovernor {
     /******************************************************************************************************************\

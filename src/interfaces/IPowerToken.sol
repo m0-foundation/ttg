@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { IEpochBasedInflationaryVoteToken } from "./IEpochBasedInflationaryVoteToken.sol";
+import { IEpochBasedInflationaryVoteToken } from "../abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /******************************************************************************************************************\

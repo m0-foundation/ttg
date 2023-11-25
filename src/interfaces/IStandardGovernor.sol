@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { IBatchGovernor } from "./IBatchGovernor.sol";
+import { IBatchGovernor } from "../abstract/interfaces/IBatchGovernor.sol";
 
 interface IStandardGovernor is IBatchGovernor {
     /******************************************************************************************************************\

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { PureEpochs } from "./libs/PureEpochs.sol";
+import { PureEpochs } from "../libs/PureEpochs.sol";
 
 import { IBatchGovernor } from "./interfaces/IBatchGovernor.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";

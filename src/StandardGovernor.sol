@@ -6,13 +6,14 @@ import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
-import { IGovernor } from "./interfaces/IGovernor.sol";
+import { IGovernor } from "./abstract/interfaces/IGovernor.sol";
+
+import { BatchGovernor } from "./abstract/BatchGovernor.sol";
+
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
-
-import { BatchGovernor } from "./BatchGovernor.sol";
 
 // TODO: Determine standard way to inform externals about which token can vote.
 

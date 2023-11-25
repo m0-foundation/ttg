@@ -6,13 +6,14 @@ import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
-import { IERC20 } from "./interfaces/IERC20.sol";
-import { IERC5805 } from "./interfaces/IERC5805.sol";
-import { IPowerToken } from "./interfaces/IPowerToken.sol";
-import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
+import { IERC20 } from "./abstract/interfaces/IERC20.sol";
+import { IERC5805 } from "./abstract/interfaces/IERC5805.sol";
+import { IEpochBasedVoteToken } from "./abstract/interfaces/IEpochBasedVoteToken.sol";
 
-import { EpochBasedInflationaryVoteToken } from "./EpochBasedInflationaryVoteToken.sol";
-import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
+import { EpochBasedInflationaryVoteToken } from "./abstract/EpochBasedInflationaryVoteToken.sol";
+import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
+
+import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
 // TODO: Track global inflation rather than active epochs.
 

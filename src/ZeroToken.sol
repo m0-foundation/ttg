@@ -2,10 +2,10 @@
 
 pragma solidity 0.8.21;
 
+import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
+
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
-
-import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
 contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     address internal immutable _registrar;

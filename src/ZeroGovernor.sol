@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.21;
 
+import { ThresholdGovernor } from "./abstract/ThresholdGovernor.sol";
+
 import { IEmergencyGovernor } from "./interfaces/IEmergencyGovernor.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
-
-import { ThresholdGovernor } from "./ThresholdGovernor.sol";
 
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     address internal immutable _startingCashToken;

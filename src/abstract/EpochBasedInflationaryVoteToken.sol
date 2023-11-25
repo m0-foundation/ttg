@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { PureEpochs } from "./libs/PureEpochs.sol";
+import { PureEpochs } from "../libs/PureEpochs.sol";
 
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
@@ -12,7 +12,7 @@ import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
 // TODO: Consider replacing all repetitive internal function calls with cleaner super calls.
 
-contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
+abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
     struct VoidWindow {
         uint16 startingEpoch;
     }

@@ -6,9 +6,10 @@ import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
+import { IEpochBasedVoteToken } from "./abstract/interfaces/IEpochBasedVoteToken.sol";
+import { IERC20 } from "./abstract/interfaces/IERC20.sol";
+
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
-import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
-import { IERC20 } from "./interfaces/IERC20.sol";
 
 contract DistributionVault is IDistributionVault {
     address public immutable baseToken;

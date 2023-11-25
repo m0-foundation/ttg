@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { IEpochBasedVoteToken } from "./IEpochBasedVoteToken.sol";
+import { IEpochBasedVoteToken } from "../abstract/interfaces/IEpochBasedVoteToken.sol";
 
 interface IZeroToken is IEpochBasedVoteToken {
     error LengthMismatch(uint256 length1, uint256 length2);
