@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 contract MockEpochBasedVoteToken {
     mapping(address account => mapping(uint256 epoch => uint256 balance)) internal _balances;
@@ -60,11 +60,9 @@ contract MockDualGovernorDeployer {
         address cashToken_,
         address powerToken_,
         uint256 proposalFee_,
-        uint256 minProposalFee_,
-        uint256 maxProposalFee_,
-        uint256 reward_,
-        uint16 zeroTokenQuorumRatio_,
-        uint16 powerTokenQuorumRatio_
+        uint256 maxTotalZeroRewardPerActiveEpoch_,
+        uint16 powerTokenThresholdRatio_,
+        uint16 zeroTokenThresholdRatio_
     ) external view returns (address deployed_) {
         deployed_ = _nextDeploy;
     }
@@ -79,19 +77,15 @@ contract MockDualGovernor {
 
     function cashToken() external view returns (address cashToken_) {}
 
-    function maxProposalFee() external view returns (uint256 maxProposalFee_) {}
-
-    function minProposalFee() external view returns (uint256 minProposalFee_) {}
-
-    function powerTokenQuorumRatio() external view returns (uint256 powerTokenQuorumRatio_) {}
+    function powerTokenThresholdRatio() external view returns (uint256 thresholdRatio_) {}
 
     function proposalFee() external view returns (uint256 proposalFee_) {}
 
-    function reward() external view returns (uint256 reward_) {}
+    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward_) {}
 
     function vault() external view returns (address vault_) {}
 
-    function zeroTokenQuorumRatio() external view returns (uint256 zeroTokenQuorumRatio_) {}
+    function zeroTokenThresholdRatio() external view returns (uint256 thresholdRatio_) {}
 }
 
 contract MockBootstrapToken {

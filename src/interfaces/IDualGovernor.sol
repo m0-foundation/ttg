@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IGovernorBySig } from "./IGovernorBySig.sol";
 
@@ -10,10 +10,9 @@ interface IDualGovernor is IGovernorBySig {
     \******************************************************************************************************************/
 
     enum ProposalType {
-        Power,
-        Double,
-        Zero,
-        Emergency
+        Standard,
+        Emergency,
+        Zero
     }
 
     enum VoteType {
@@ -25,13 +24,11 @@ interface IDualGovernor is IGovernorBySig {
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
-    event PowerTokenQuorumRatioSet(uint16 powerTokenQuorumRatio);
-
-    event ProposalFeeRangeSet(uint256 minProposalFee, uint256 maxProposalFee);
+    event PowerTokenThresholdRatioSet(uint16 thresholdRatio);
 
     event ProposalFeeSet(uint256 proposalFee);
 
-    event ZeroTokenQuorumRatioSet(uint16 zeroTokenQuorumRatio);
+    event ZeroTokenThresholdRatioSet(uint16 thresholdRatio);
 
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
@@ -67,9 +64,7 @@ interface IDualGovernor is IGovernorBySig {
 
     error ProposalExists();
 
-    error ProposalFeeOutOfRange(uint256 minProposalFee, uint256 maxProposalFee);
-
-    error ProposalIsNotInActiveState(ProposalState state);
+    error ProposalNotActive(ProposalState state);
 
     error ProposalNotSuccessful();
 
@@ -101,44 +96,38 @@ interface IDualGovernor is IGovernorBySig {
         external
         view
         returns (
-            address proposer,
+            ProposalType proposalType,
             uint16 voteStart,
             uint16 voteEnd,
             bool executed,
-            ProposalType proposalType,
             ProposalState state,
-            uint256 noPowerTokenVotes,
-            uint256 yesPowerTokenVotes,
-            uint256 noZeroTokenVotes,
-            uint256 yesZeroTokenVotes
+            uint16 thresholdRatio,
+            uint256 noVotes,
+            uint256 yesVotes,
+            address proposer
         );
 
-    function maxProposalFee() external view returns (uint256 maxProposalFee);
+    function hasVotedOnAllStandardProposals(address voter, uint256 epoch) external view returns (bool hasVoted);
 
-    function minProposalFee() external view returns (uint256 minProposalFee);
+    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
 
-    function numberOfProposals(uint256 epoch) external view returns (uint256 numberOfProposals);
+    function numberOfStandardProposalsAt(uint256 epoch) external view returns (uint256 count);
 
-    function numberOfProposalsVotedOn(
-        uint256 epoch,
-        address voter
-    ) external view returns (uint256 numberOfProposalsVotedOn);
+    function numberOfStandardProposalsVotedOnAt(uint256 epoch, address voter) external view returns (uint256 count);
 
     function powerToken() external view returns (address powerToken);
 
-    function powerTokenQuorumRatio() external view returns (uint256 powerTokenQuorumRatio);
+    function powerTokenThresholdRatio() external view returns (uint256 thresholdRatio);
 
     function proposalFee() external view returns (uint256 proposalFee);
 
     function registrar() external view returns (address registrar);
 
-    function reward() external view returns (uint256 reward);
-
     function vault() external view returns (address vault);
 
     function zeroToken() external view returns (address zeroToken);
 
-    function zeroTokenQuorumRatio() external view returns (uint256 zeroTokenQuorumRatio);
+    function zeroTokenThresholdRatio() external view returns (uint256 thresholdRatio);
 
     /******************************************************************************************************************\
     |                                                Proposal Functions                                                |
@@ -150,6 +139,8 @@ interface IDualGovernor is IGovernorBySig {
 
     function emergencyRemoveFromList(bytes32 list, address account) external;
 
+    function emergencySetProposalFee(uint256 newProposalFee) external;
+
     function emergencyUpdateConfig(bytes32 key, bytes32 value_) external;
 
     function removeFromList(bytes32 list, address account) external;
@@ -158,11 +149,9 @@ interface IDualGovernor is IGovernorBySig {
 
     function setProposalFee(uint256 newProposalFee) external;
 
-    function setProposalFeeRange(uint256 newMinProposalFee, uint256 newMaxProposalFee, uint256 newProposalFee) external;
+    function setPowerTokenThresholdRatio(uint16 newThresholdRatio) external;
 
-    function setPowerTokenQuorumRatio(uint16 newPowerTokenQuorumRatio) external;
-
-    function setZeroTokenQuorumRatio(uint16 newZeroTokenQuorumRatio) external;
+    function setZeroTokenThresholdRatio(uint16 newThresholdRatio) external;
 
     function updateConfig(bytes32 key, bytes32 value_) external;
 }

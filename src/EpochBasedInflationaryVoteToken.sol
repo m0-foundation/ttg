@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
@@ -52,22 +52,22 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     function balanceOf(
         address account_
     ) public view virtual override(IERC20, EpochBasedVoteToken) returns (uint256 balance_) {
-        balance_ = _getLatestValue(_balances[account_]) + _getInflationOf(account_);
+        return _getLatestValue(_balances[account_]) + _getInflationOf(account_);
     }
 
     function balanceOfAt(
         address account_,
         uint256 epoch_
     ) public view virtual override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 balance_) {
-        balance_ = _getValueAt(_balances[account_], epoch_) + _getInflationOfAt(account_, epoch_);
+        return _getValueAt(_balances[account_], epoch_) + _getInflationOfAt(account_, epoch_);
     }
 
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
-        participated_ = _getParticipationAt(delegatee_, epoch_);
+        return _getParticipationAt(delegatee_, epoch_);
     }
 
     function participationInflation() external view returns (uint256 participationInflation_) {
-        participationInflation_ = _participationInflation;
+        return _participationInflation;
     }
 
     /******************************************************************************************************************\
@@ -120,7 +120,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     }
 
     function _updateParticipation(address delegatee_) internal returns (bool updated_) {
-        updated_ = _update(_participations[delegatee_], PureEpochs.currentEpoch());
+        return _update(_participations[delegatee_], PureEpochs.currentEpoch());
     }
 
     /******************************************************************************************************************\
@@ -128,11 +128,11 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     \******************************************************************************************************************/
 
     function _getInflation(uint256 amount_) internal view returns (uint256 inflation_) {
-        inflation_ = (amount_ * _participationInflation) / ONE;
+        return (amount_ * _participationInflation) / ONE;
     }
 
     function _getInflationOf(address account_) internal view returns (uint256 inflation_) {
-        inflation_ = _getInflationOfAt(account_, PureEpochs.currentEpoch());
+        return _getInflationOfAt(account_, PureEpochs.currentEpoch());
     }
 
     function _getInflationOfAt(address account_, uint256 lastEpoch_) internal view returns (uint256 inflation_) {
@@ -157,7 +157,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     function _getLatestEpoch(VoidWindow[] storage voidWindows_) internal view returns (uint256 latestEpoch_) {
         uint256 length_ = voidWindows_.length;
 
-        latestEpoch_ = length_ == 0 ? 0 : _unsafeVoidWindowAccess(voidWindows_, length_ - 1).startingEpoch;
+        return length_ == 0 ? 0 : _unsafeVoidWindowAccess(voidWindows_, length_ - 1).startingEpoch;
     }
 
     function _getLatestEpochAt(
@@ -198,7 +198,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     }
 
     function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
-        isVotingEpoch_ = epoch_ % 2 == 1;
+        return epoch_ % 2 == 1;
     }
 
     function _revertIfInVoteEpoch() internal view {

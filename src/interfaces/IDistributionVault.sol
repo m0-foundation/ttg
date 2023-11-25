@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 interface IDistributionVault {
     event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 interface IDualGovernorDeployer {
     error CallerIsNotRegistrar();
@@ -15,11 +15,9 @@ interface IDualGovernorDeployer {
         address cashToken,
         address powerToken,
         uint256 proposalFee,
-        uint256 minProposalFee,
-        uint256 maxProposalFee,
-        uint256 reward,
-        uint16 zeroTokenQuorumRatio,
-        uint16 powerTokenQuorumRatio
+        uint256 maxTotalZeroRewardPerActiveEpoch,
+        uint16 powerTokenThresholdRatio,
+        uint16 zeroTokenThresholdRatio
     ) external returns (address deployed);
 
     function getNextDeploy() external view returns (address nextDeploy);

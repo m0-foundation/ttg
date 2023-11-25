@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
 
@@ -30,10 +30,10 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
     ) external onlyRegistrar returns (address deployed_) {
         ++nonce;
 
-        deployed_ = address(new PowerToken(governor_, cashToken_, vault, bootstrapToken_));
+        return address(new PowerToken(governor_, cashToken_, vault, bootstrapToken_));
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {
-        nextDeploy_ = ContractHelper.getContractFrom(address(this), nonce + 1);
+        return ContractHelper.getContractFrom(address(this), nonce + 1);
     }
 }

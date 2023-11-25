@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { EpochBasedInflationaryVoteToken } from "../../src/EpochBasedInflationaryVoteToken.sol";
 
@@ -8,9 +8,9 @@ contract EpochBasedInflationaryVoteTokenHarness is EpochBasedInflationaryVoteTok
     constructor(
         string memory name_,
         string memory symbol_,
-        uint8 decimals_,
+        uint256 decimals_,
         uint256 participationInflation_
-    ) EpochBasedInflationaryVoteToken(name_, symbol_, decimals_, participationInflation_) {}
+    ) EpochBasedInflationaryVoteToken(name_, symbol_, uint8(decimals_), participationInflation_) {}
 
     function markParticipation(address delegatee_) external {
         _markParticipation(delegatee_);

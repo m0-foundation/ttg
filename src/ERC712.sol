@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC712 } from "./interfaces/IERC712.sol";
 
@@ -24,7 +24,7 @@ abstract contract ERC712 is IERC712 {
                 keccak256(bytes(_name = name_)),
                 _EIP712_VERSION_HASH,
                 block.chainid,
-                address(this) // TODO: Confirm that this exists in the constructor.
+                address(this)
             )
         );
     }
@@ -34,11 +34,11 @@ abstract contract ERC712 is IERC712 {
     \******************************************************************************************************************/
 
     function nonces(address account_) external view returns (uint256 nonce_) {
-        nonce_ = _nonces[account_];
+        return _nonces[account_];
     }
 
     function DOMAIN_SEPARATOR() public view returns (bytes32 domainSeparator_) {
-        domainSeparator_ = _domainSeparator;
+        return _domainSeparator;
     }
 
     /******************************************************************************************************************\
@@ -46,7 +46,7 @@ abstract contract ERC712 is IERC712 {
     \******************************************************************************************************************/
 
     function _getDigest(bytes32 internalDigest_) internal view returns (bytes32 digest_) {
-        digest_ = keccak256(abi.encodePacked("\x19\x01", _domainSeparator, internalDigest_));
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparator, internalDigest_));
     }
 
     function _getSigner(

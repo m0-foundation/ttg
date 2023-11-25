@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
@@ -92,13 +92,14 @@ contract DistributionVault is IDistributionVault {
     }
 
     function claimableOfAt(address token_, address account_, uint256 epoch_) public view returns (uint256 claimable_) {
-        claimable_ = _getClaimable(
-            token_,
-            account_,
-            epoch_,
-            IEpochBasedVoteToken(baseToken).balanceOfAt(account_, epoch_),
-            IEpochBasedVoteToken(baseToken).totalSupplyAt(epoch_)
-        );
+        return
+            _getClaimable(
+                token_,
+                account_,
+                epoch_,
+                IEpochBasedVoteToken(baseToken).balanceOfAt(account_, epoch_),
+                IEpochBasedVoteToken(baseToken).totalSupplyAt(epoch_)
+            );
     }
 
     function claimableOfAt(
@@ -151,7 +152,7 @@ contract DistributionVault is IDistributionVault {
 
         if (_claims[token_][epoch_][account_]) return 0;
 
-        claimable_ = _getClaimable(_distributions[token_][epoch_], balance_, totalSupply_);
+        return _getClaimable(_distributions[token_][epoch_], balance_, totalSupply_);
     }
 
     function _getClaimable(
@@ -159,6 +160,6 @@ contract DistributionVault is IDistributionVault {
         uint256 balance_,
         uint256 totalSupply_
     ) internal pure returns (uint256 claimable_) {
-        claimable_ = (totalDistribution_ * balance_) / totalSupply_;
+        return (totalDistribution_ * balance_) / totalSupply_;
     }
 }

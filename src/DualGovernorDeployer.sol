@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IDualGovernorDeployer } from "./interfaces/IDualGovernorDeployer.sol";
 
@@ -32,32 +32,29 @@ contract DualGovernorDeployer is IDualGovernorDeployer {
         address cashToken_,
         address powerToken_,
         uint256 proposalFee_,
-        uint256 minProposalFee_,
-        uint256 maxProposalFee_,
-        uint256 reward_,
-        uint16 powerTokenQuorumRatio_,
-        uint16 zeroTokenQuorumRatio_
+        uint256 maxTotalZeroRewardPerActiveEpoch_,
+        uint16 powerTokenThresholdRatio_,
+        uint16 zeroTokenThresholdRatio_
     ) external onlyRegistrar returns (address deployed_) {
         ++nonce;
 
-        deployed_ = address(
-            new DualGovernor(
-                cashToken_,
-                registrar,
-                zeroToken,
-                powerToken_,
-                vault,
-                proposalFee_,
-                minProposalFee_,
-                maxProposalFee_,
-                reward_,
-                powerTokenQuorumRatio_,
-                zeroTokenQuorumRatio_
-            )
-        );
+        return
+            address(
+                new DualGovernor(
+                    registrar,
+                    cashToken_,
+                    powerToken_,
+                    zeroToken,
+                    vault,
+                    proposalFee_,
+                    maxTotalZeroRewardPerActiveEpoch_,
+                    powerTokenThresholdRatio_,
+                    zeroTokenThresholdRatio_
+                )
+            );
     }
 
     function getNextDeploy() external view returns (address nextDeploy_) {
-        nextDeploy_ = ContractHelper.getContractFrom(address(this), nonce + 1);
+        return ContractHelper.getContractFrom(address(this), nonce + 1);
     }
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IPowerBootstrapToken } from "./interfaces/IPowerBootstrapToken.sol";
 
@@ -27,10 +27,10 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
     }
 
     function balanceOfAt(address account_, uint256 epoch_) external view returns (uint256 balance_) {
-        balance_ = _balances[account_];
+        return _balances[account_];
     }
 
     function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
-        totalSupply_ = _totalSupply;
+        return _totalSupply;
     }
 }

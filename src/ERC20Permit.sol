@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC20Permit } from "./interfaces/IERC20Permit.sol";
 
@@ -19,7 +19,7 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
 
     mapping(address account => mapping(address spender => uint256 allowance)) internal _allowance;
 
-    constructor(string memory symbol_, uint8 decimals_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC712(name_) {
         _symbol = symbol_;
         _decimals = decimals_;
     }
@@ -30,19 +30,19 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
 
     function approve(address spender_, uint256 amount_) external returns (bool success_) {
         _approve(msg.sender, spender_, amount_);
-        success_ = true;
+        return true;
     }
 
     function decreaseAllowance(address spender_, uint256 subtractedAmount_) external returns (bool success_) {
         _decreaseAllowance(msg.sender, spender_, subtractedAmount_);
-        success_ = true;
+        return true;
     }
 
     function increaseAllowance(address spender_, uint256 addedAmount_) external returns (bool success_) {
         if (addedAmount_ == 0) revert ZeroIncreaseAllowance();
 
         _approve(msg.sender, spender_, _allowance[msg.sender][spender_] + addedAmount_);
-        success_ = true;
+        return true;
     }
 
     function permit(
@@ -71,13 +71,13 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
 
     function transfer(address recipient_, uint256 amount_) external returns (bool success_) {
         _transfer(msg.sender, recipient_, amount_);
-        success_ = true;
+        return true;
     }
 
     function transferFrom(address sender_, address recipient_, uint256 amount_) external returns (bool success_) {
         _decreaseAllowance(sender_, msg.sender, amount_);
         _transfer(sender_, recipient_, amount_);
-        success_ = true;
+        return true;
     }
 
     /******************************************************************************************************************\
@@ -85,19 +85,19 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
     \******************************************************************************************************************/
 
     function allowance(address account_, address spender_) external view returns (uint256 allowance_) {
-        allowance_ = _allowance[account_][spender_];
+        return _allowance[account_][spender_];
     }
 
     function decimals() external view returns (uint8 decimals_) {
-        decimals_ = _decimals;
+        return _decimals;
     }
 
     function name() external view returns (string memory name_) {
-        name_ = _name;
+        return _name;
     }
 
     function symbol() external view returns (string memory symbol_) {
-        symbol_ = _symbol;
+        return _symbol;
     }
 
     /******************************************************************************************************************\
@@ -131,6 +131,6 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
         uint256 nonce_,
         uint256 deadline_
     ) internal view returns (bytes32 digest_) {
-        digest_ = _getDigest(keccak256(abi.encode(PERMIT_TYPEHASH, owner_, spender_, amount_, nonce_, deadline_)));
+        return _getDigest(keccak256(abi.encode(PERMIT_TYPEHASH, owner_, spender_, amount_, nonce_, deadline_)));
     }
 }

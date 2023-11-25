@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { Test } from "../lib/forge-std/src/Test.sol";
 
@@ -23,6 +23,9 @@ contract DualGovernorTests is Test {
     address internal _vault = makeAddr("vault");
     address internal _registrar = makeAddr("registrar");
 
+    uint256 internal _powerThresholdRatio = _ONE / 40;
+    uint256 internal _zeroThresholdRatio = _ONE / 60;
+
     DualGovernorHarness internal _dualGovernor;
     MockPowerToken internal _powerToken;
     MockZeroToken internal _zeroToken;
@@ -32,17 +35,15 @@ contract DualGovernorTests is Test {
         _zeroToken = new MockZeroToken();
 
         _dualGovernor = new DualGovernorHarness(
-            _cashToken,
             _registrar,
-            address(_zeroToken),
+            _cashToken,
             address(_powerToken),
+            address(_zeroToken),
             _vault,
             5,
-            1,
-            10,
             1_000,
-            uint16(_ONE / 60),
-            uint16(_ONE / 40)
+            uint16(_powerThresholdRatio),
+            uint16(_zeroThresholdRatio)
         );
     }
 
@@ -53,31 +54,30 @@ contract DualGovernorTests is Test {
 
         _dualGovernor.setProposal(
             proposalId_,
-            address(0),
+            IDualGovernor.ProposalType.Standard,
             currentEpoch + 1,
             currentEpoch + 10,
-            false,
-            IDualGovernor.ProposalType.Power
+            0
         );
 
         vm.expectRevert(
-            abi.encodeWithSelector(IDualGovernor.ProposalIsNotInActiveState.selector, IGovernor.ProposalState.Pending)
+            abi.encodeWithSelector(IDualGovernor.ProposalNotActive.selector, IGovernor.ProposalState.Pending)
         );
+
         _dualGovernor.castVote(proposalId_, uint8(IDualGovernor.VoteType.Yes));
     }
 
-    function test_castVote_votedOnAllPowerProposals() external {
+    function test_castVote_votedOnAllStandardProposals() external {
         uint256 proposalId_ = 1;
 
         uint256 currentEpoch = _dualGovernor.clock();
 
         _dualGovernor.setProposal(
             proposalId_,
-            address(0),
+            IDualGovernor.ProposalType.Standard,
             currentEpoch,
             currentEpoch + 1,
-            false,
-            IDualGovernor.ProposalType.Power
+            _powerThresholdRatio
         );
 
         _powerToken.setVotePower(1);
@@ -137,11 +137,10 @@ contract DualGovernorTests is Test {
 
         _dualGovernor.setProposal(
             _dualGovernor.hashProposal(targets_, values_, new bytes[](1), keccak256(bytes(""))),
-            address(1),
+            IDualGovernor.ProposalType.Standard,
             1,
             1,
-            false,
-            IDualGovernor.ProposalType.Power
+            0
         );
 
         vm.expectRevert(IDualGovernor.ProposalExists.selector);
@@ -175,11 +174,10 @@ contract DualGovernorTests is Test {
 
         _dualGovernor.setProposal(
             proposalId_,
-            address(0),
+            IDualGovernor.ProposalType.Standard,
             currentEpoch - 1,
             currentEpoch - 1,
-            false,
-            IDualGovernor.ProposalType.Power
+            _powerThresholdRatio
         );
 
         vm.expectRevert(IDualGovernor.ProposalNotSuccessful.selector);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { console2 } from "../lib/forge-std/src/console2.sol";
 
@@ -34,7 +34,7 @@ contract IntegrationTests is TestUtils {
 
     function setUp() external {
         _deploy = new DeployBase();
-        _cashToken = new ERC20PermitHarness("CASH", "Cash Token", 6);
+        _cashToken = new ERC20PermitHarness("Cash Token", "CASH", 6);
 
         _registrar = _deploy.deploy(
             _deployer,
@@ -74,8 +74,10 @@ contract IntegrationTests is TestUtils {
         uint256[] memory values_ = new uint256[](1);
         values_[0] = 0;
 
+        uint256 newProposalFee_ = governor_.proposalFee() * 2;
+
         bytes[] memory calldatas_ = new bytes[](1);
-        calldatas_[0] = abi.encodeWithSelector(governor_.setProposalFee.selector, governor_.minProposalFee());
+        calldatas_[0] = abi.encodeWithSelector(governor_.setProposalFee.selector, newProposalFee_);
 
         string memory description_ = "Set proposal fee to 100";
 
@@ -103,13 +105,12 @@ contract IntegrationTests is TestUtils {
 
         governor_.execute(targets_, values_, calldatas_, keccak256(bytes(description_)));
 
-        assertEq(governor_.proposalFee(), governor_.minProposalFee());
+        assertEq(governor_.proposalFee(), newProposalFee_);
     }
 
     function test_emergencyUpdateConfig() external {
         IRegistrar registrar_ = IRegistrar(_registrar);
         IDualGovernor governor_ = IDualGovernor(registrar_.governor());
-        IPowerToken powerToken_ = IPowerToken(governor_.powerToken());
 
         address[] memory targets_ = new address[](1);
         targets_[0] = address(governor_);

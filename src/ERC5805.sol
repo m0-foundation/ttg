@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.21;
 
 import { IERC5805 } from "./interfaces/IERC5805.sol";
 import { IERC6372 } from "./interfaces/IERC6372.sol";
@@ -60,6 +60,6 @@ abstract contract ERC5805 is IERC5805, ERC712 {
         uint256 nonce_,
         uint256 expiry_
     ) internal view returns (bytes32 digest_) {
-        digest_ = _getDigest(keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee_, nonce_, expiry_)));
+        return _getDigest(keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee_, nonce_, expiry_)));
     }
 }
