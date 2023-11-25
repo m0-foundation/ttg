@@ -501,6 +501,29 @@
       },
       {
         "internalType": "address",
+        "name": "accountToAdd_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "accountToRemove_",
+        "type": "address"
+      }
+    ],
+    "name": "addAndRemoveFromList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "list_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
         "name": "account_",
         "type": "address"
       }
@@ -600,7 +623,7 @@
       },
       {
         "internalType": "string",
-        "name": "reason_",
+        "name": "",
         "type": "string"
       }
     ],
@@ -736,7 +759,7 @@
       },
       {
         "internalType": "string[]",
-        "name": "reasons_",
+        "name": "",
         "type": "string[]"
       }
     ],
@@ -806,6 +829,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "list_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "accountToAdd_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "accountToRemove_",
+        "type": "address"
+      }
+    ],
+    "name": "emergencyAddAndRemoveFromList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

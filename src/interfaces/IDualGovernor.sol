@@ -143,7 +143,11 @@ interface IDualGovernor is IGovernorBySig {
 
     function addToList(bytes32 list, address account) external;
 
+    function addAndRemoveFromList(bytes32 list, address accountToAdd, address accountToRemove) external;
+
     function emergencyAddToList(bytes32 list, address account) external;
+
+    function emergencyAddAndRemoveFromList(bytes32 list, address accountToAdd, address accountToRemove) external;
 
     function emergencyRemoveFromList(bytes32 list, address account) external;
 
