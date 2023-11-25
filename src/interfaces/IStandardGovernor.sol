@@ -2,18 +2,9 @@
 
 pragma solidity 0.8.21;
 
-import { IGovernorBySig } from "./IGovernorBySig.sol";
+import { IBatchGovernor } from "./IBatchGovernor.sol";
 
-interface IStandardGovernor is IGovernorBySig {
-    /******************************************************************************************************************\
-    |                                                      Enums                                                       |
-    \******************************************************************************************************************/
-
-    enum VoteType {
-        No,
-        Yes
-    }
-
+interface IStandardGovernor is IBatchGovernor {
     /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
@@ -28,53 +19,23 @@ interface IStandardGovernor is IGovernorBySig {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
-    error AlreadyVoted();
-
     error EpochHasNoProposals();
 
-    error ExecutionFailed(bytes data);
-
     error FeeNotDestinedForVault(ProposalState state);
-
-    error InvalidCallData();
-
-    error InvalidCallDatasLength();
 
     error InvalidCashTokenAddress();
 
     error InvalidEmergencyGovernorAddress();
 
-    error InvalidRegistrarAddress();
-
-    error InvalidTarget();
-
-    error InvalidTargetsLength();
-
-    error InvalidValue();
-
-    error InvalidValuesLength();
-
     error InvalidVaultAddress();
-
-    error InvalidVoteTokenAddress();
 
     error InvalidZeroGovernorAddress();
 
     error InvalidZeroTokenAddress();
 
-    error NotSelf();
-
     error NotSelfOrEmergencyGovernor();
 
     error NotZeroGovernor();
-
-    error ProposalCannotBeExecuted();
-
-    error ProposalDoesNotExist();
-
-    error ProposalExists();
-
-    error ProposalNotActive(ProposalState state);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
@@ -87,16 +48,6 @@ interface IStandardGovernor is IGovernorBySig {
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
-
-    function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
-
-    function BALLOT_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
-
-    function BALLOTS_TYPEHASH() external pure returns (bytes32 typehash);
-
-    function BALLOTS_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
-
-    function ONE() external pure returns (uint256 one);
 
     function cashToken() external view returns (address cashToken);
 
@@ -115,8 +66,6 @@ interface IStandardGovernor is IGovernorBySig {
             address proposer
         );
 
-    function hashProposal(bytes memory callData) external view returns (uint256 proposalId);
-
     function hasVotedOnAllProposals(address voter, uint256 epoch) external view returns (bool hasVoted);
 
     function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
@@ -125,13 +74,7 @@ interface IStandardGovernor is IGovernorBySig {
 
     function numberOfProposalsVotedOnAt(uint256 epoch, address voter) external view returns (uint256 count);
 
-    function proposalFee() external view returns (uint256 proposalFee);
-
-    function registrar() external view returns (address registrar);
-
     function vault() external view returns (address vault);
-
-    function voteToken() external view returns (address voteToken);
 
     function zeroToken() external view returns (address zeroToken);
 
