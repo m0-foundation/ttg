@@ -7,7 +7,6 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
-import { ERC712 } from "./ERC712.sol";
 import { ThresholdGovernor } from "./ThresholdGovernor.sol";
 
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
@@ -20,7 +19,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         address voteToken_,
         address[] memory allowedCashTokens_,
         uint16 thresholdRatio_
-    ) ThresholdGovernor(registrar_, voteToken_, thresholdRatio_) ERC712("ZeroGovernor") {
+    ) ThresholdGovernor("ZeroGovernor", registrar_, voteToken_, thresholdRatio_) {
         if (allowedCashTokens_.length == 0) revert NoAllowedCashTokens();
 
         for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {

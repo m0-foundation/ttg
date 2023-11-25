@@ -3,11 +3,9 @@
 pragma solidity 0.8.21;
 
 import { IEmergencyGovernor } from "./interfaces/IEmergencyGovernor.sol";
-import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 
-import { ERC712 } from "./ERC712.sol";
 import { ThresholdGovernor } from "./ThresholdGovernor.sol";
 
 contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
@@ -25,7 +23,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         address standardGovernor_,
         address zeroGovernor_,
         uint16 thresholdRatio_
-    ) ThresholdGovernor(registrar_, voteToken_, thresholdRatio_) ERC712("EmergencyGovernor") {
+    ) ThresholdGovernor("EmergencyGovernor", registrar_, voteToken_, thresholdRatio_) {
         if ((_standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
         if ((_zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
     }

@@ -4,6 +4,8 @@ pragma solidity 0.8.21;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IERC5805 } from "./interfaces/IERC5805.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
@@ -11,7 +13,6 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { EpochBasedInflationaryVoteToken } from "./EpochBasedInflationaryVoteToken.sol";
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
-import { PureEpochs } from "./PureEpochs.sol";
 
 // TODO: Track global inflation rather than active epochs.
 

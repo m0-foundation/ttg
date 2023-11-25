@@ -4,6 +4,8 @@ pragma solidity 0.8.21;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IGovernor } from "./interfaces/IGovernor.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
@@ -11,8 +13,6 @@ import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 import { BatchGovernor } from "./BatchGovernor.sol";
-import { ERC712 } from "./ERC712.sol";
-import { PureEpochs } from "./PureEpochs.sol";
 
 // TODO: Determine standard way to inform externals about which token can vote.
 
@@ -65,7 +65,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         address vault_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
-    ) BatchGovernor(registrar_, voteToken_) ERC712("StandardGovernor") {
+    ) BatchGovernor("StandardGovernor", registrar_, voteToken_) {
         if ((_emergencyGovernor = emergencyGovernor_) == address(0)) revert InvalidEmergencyGovernorAddress();
         if ((_zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((_zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();

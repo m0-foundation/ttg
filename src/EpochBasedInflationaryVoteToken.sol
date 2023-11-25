@@ -2,12 +2,13 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
-import { PureEpochs } from "./PureEpochs.sol";
 
 // TODO: Consider replacing all repetitive internal function calls with cleaner super calls.
 

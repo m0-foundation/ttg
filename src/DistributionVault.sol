@@ -4,11 +4,11 @@ pragma solidity 0.8.21;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
-
-import { PureEpochs } from "./PureEpochs.sol";
 
 contract DistributionVault is IDistributionVault {
     address public immutable baseToken;

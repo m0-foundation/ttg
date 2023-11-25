@@ -2,9 +2,10 @@
 
 pragma solidity 0.8.21;
 
+import { ContractHelper } from "./libs/ContractHelper.sol";
+
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 
-import { ContractHelper } from "./ContractHelper.sol";
 import { StandardGovernor } from "./StandardGovernor.sol";
 
 contract StandardGovernorDeployer is IStandardGovernorDeployer {

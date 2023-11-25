@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
+import { ContractHelper } from "./libs/ContractHelper.sol";
+
 import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
 
 import { PowerToken } from "./PowerToken.sol";
-import { ContractHelper } from "./ContractHelper.sol";
 
 contract PowerTokenDeployer is IPowerTokenDeployer {
     address public immutable registrar;

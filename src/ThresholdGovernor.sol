@@ -2,20 +2,22 @@
 
 pragma solidity 0.8.21;
 
-import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IGovernor } from "./interfaces/IGovernor.sol";
-import { IRegistrar } from "./interfaces/IRegistrar.sol";
-import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
 import { BatchGovernor } from "./BatchGovernor.sol";
-import { ERC712 } from "./ERC712.sol";
-import { PureEpochs } from "./PureEpochs.sol";
 
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     uint16 internal _thresholdRatio;
 
-    constructor(address registrar_, address voteToken_, uint16 thresholdRatio_) BatchGovernor(registrar_, voteToken_) {
+    constructor(
+        string memory name_,
+        address registrar_,
+        address voteToken_,
+        uint16 thresholdRatio_
+    ) BatchGovernor(name_, registrar_, voteToken_) {
         _setThresholdRatio(thresholdRatio_);
     }
 

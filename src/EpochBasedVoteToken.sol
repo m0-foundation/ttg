@@ -2,9 +2,10 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
-import { PureEpochs } from "./PureEpochs.sol";
 import { ERC5805 } from "./ERC5805.sol";
 import { ERC20Permit } from "./ERC20Permit.sol";
 

@@ -2,13 +2,12 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 import { IBatchGovernor } from "./interfaces/IBatchGovernor.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
-import { IRegistrar } from "./interfaces/IRegistrar.sol";
-import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 
 import { ERC712 } from "./ERC712.sol";
-import { PureEpochs } from "./PureEpochs.sol";
 
 // TODO: Determine standard way to inform externals about which token can vote.
 
@@ -54,7 +53,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         _;
     }
 
-    constructor(address registrar_, address voteToken_) {
+    constructor(string memory name_, address registrar_, address voteToken_) ERC712(name_) {
         if ((_registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((_voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }

@@ -2,9 +2,10 @@
 
 pragma solidity 0.8.21;
 
+import { ContractHelper } from "./libs/ContractHelper.sol";
+
 import { IEmergencyGovernorDeployer } from "./interfaces/IEmergencyGovernorDeployer.sol";
 
-import { ContractHelper } from "./ContractHelper.sol";
 import { EmergencyGovernor } from "./EmergencyGovernor.sol";
 
 contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
