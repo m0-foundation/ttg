@@ -155,7 +155,7 @@ contract RegistrarTests is Test {
 
     function test_reset_notGovernor() external {
         vm.expectRevert(IRegistrar.CallerIsNotGovernor.selector);
-        _registrar.reset();
+        _registrar.reset(address(0));
     }
 
     function test_reset() external {
@@ -164,7 +164,7 @@ contract RegistrarTests is Test {
         _governorDeployer.setNextDeploy(newGovernor_);
 
         vm.prank(address(_governor));
-        _registrar.reset();
+        _registrar.reset(_zeroToken);
 
         assertEq(_registrar.governor(), newGovernor_);
     }

@@ -72,7 +72,7 @@ contract Registrar is IRegistrar {
         emit ConfigUpdated(key_, _valueAt[key_] = value_);
     }
 
-    function reset() external onlyGovernor {
+    function reset(address bootstrapToken_) external onlyGovernor {
         address powerToken_ = powerToken = IPowerTokenDeployer(powerTokenDeployer).getNextDeploy();
 
         address oldGovernor_ = governor;
@@ -88,7 +88,7 @@ contract Registrar is IRegistrar {
         IPowerTokenDeployer(powerTokenDeployer).deploy(
             newGovernor_,
             IDualGovernorDeployer(governorDeployer).allowedCashTokensAt(0),
-            zeroToken
+            bootstrapToken_
         );
     }
 

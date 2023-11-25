@@ -263,7 +263,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "bootstrapToken_",
+        "type": "address"
+      }
+    ],
     "name": "reset",
     "outputs": [],
     "stateMutability": "nonpayable",

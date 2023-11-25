@@ -157,7 +157,9 @@ interface IDualGovernor is IGovernorBySig {
 
     function removeFromList(bytes32 list, address account) external;
 
-    function reset() external;
+    function resetToPowerHolders() external;
+
+    function resetToZeroHolders() external;
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external;
 
