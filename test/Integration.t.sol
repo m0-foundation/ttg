@@ -19,6 +19,11 @@ contract IntegrationTests is TestUtils {
 
     address internal _registrar;
 
+    address internal _cashToken1 = address(new ERC20PermitHarness("Cash Token 1", "CASH1", 6));
+    address internal _cashToken2 = address(new ERC20PermitHarness("Cash Token 1", "CASH2", 6));
+
+    address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
+
     address[] internal _accounts = [makeAddr("account0"), makeAddr("account1"), makeAddr("account2")];
 
     address[] internal _initialPowerAccounts = [_accounts[0], _accounts[1], _accounts[2]];
@@ -30,11 +35,9 @@ contract IntegrationTests is TestUtils {
     uint256[] internal _initialZeroBalances = [60_000_000, 30_000_000, 10_000_000];
 
     DeployBase internal _deploy;
-    ERC20PermitHarness internal _cashToken;
 
     function setUp() external {
         _deploy = new DeployBase();
-        _cashToken = new ERC20PermitHarness("Cash Token", "CASH", 6);
 
         _registrar = _deploy.deploy(
             _deployer,
@@ -43,7 +46,7 @@ contract IntegrationTests is TestUtils {
             _initialPowerBalances,
             _initialZeroAccounts,
             _initialZeroBalances,
-            address(_cashToken)
+            _allowedCashTokens
         );
     }
 
@@ -66,7 +69,6 @@ contract IntegrationTests is TestUtils {
 
     function test_setProposalFee() external {
         IDualGovernor governor_ = IDualGovernor(IRegistrar(_registrar).governor());
-        IPowerToken powerToken_ = IPowerToken(governor_.powerToken());
 
         address[] memory targets_ = new address[](1);
         targets_[0] = address(governor_);
@@ -82,17 +84,18 @@ contract IntegrationTests is TestUtils {
         string memory description_ = "Set proposal fee to 100";
 
         uint256 proposalFee_ = governor_.proposalFee();
+        ERC20PermitHarness cashToken_ = ERC20PermitHarness(governor_.cashToken());
 
-        _cashToken.mint(_accounts[0], proposalFee_);
+        cashToken_.mint(_accounts[0], proposalFee_);
 
         vm.prank(_accounts[0]);
-        _cashToken.approve(address(governor_), proposalFee_);
+        cashToken_.approve(address(governor_), proposalFee_);
 
         vm.prank(_accounts[0]);
         uint256 proposalId_ = governor_.propose(targets_, values_, calldatas_, description_);
 
-        assertEq(_cashToken.balanceOf(_accounts[0]), 0);
-        assertEq(_cashToken.balanceOf(governor_.vault()), proposalFee_);
+        assertEq(cashToken_.balanceOf(_accounts[0]), 0);
+        assertEq(cashToken_.balanceOf(governor_.vault()), proposalFee_);
 
         _goToNextVoteEpoch();
 

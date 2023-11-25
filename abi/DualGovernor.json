@@ -8,11 +8,6 @@
       },
       {
         "internalType": "address",
-        "name": "cashToken_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "powerToken_",
         "type": "address"
       },
@@ -25,6 +20,11 @@
         "internalType": "address",
         "name": "vault_",
         "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "allowedCashTokens_",
+        "type": "address[]"
       },
       {
         "internalType": "uint256",
@@ -78,12 +78,12 @@
   },
   {
     "inputs": [],
-    "name": "InvalidPowerTokenAddress",
+    "name": "InvalidCashToken",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "InvalidProposalFeeRange",
+    "name": "InvalidPowerTokenAddress",
     "type": "error"
   },
   {
@@ -124,6 +124,11 @@
   {
     "inputs": [],
     "name": "MalleableSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoAllowedCashTokens",
     "type": "error"
   },
   {
@@ -219,6 +224,19 @@
     "inputs": [],
     "name": "ZeroVaultAddress",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "cashToken",
+        "type": "address"
+      }
+    ],
+    "name": "CashTokenSet",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -1057,6 +1075,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token_",
+        "type": "address"
+      }
+    ],
+    "name": "isAllowedCashToken",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isAllowed_",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "markEpochActive",
     "outputs": [],
@@ -1334,6 +1371,24 @@
   {
     "inputs": [],
     "name": "reset",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newCashToken_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newProposalFee_",
+        "type": "uint256"
+      }
+    ],
+    "name": "setCashToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

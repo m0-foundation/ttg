@@ -7,13 +7,13 @@ import { Test } from "../lib/forge-std/src/Test.sol";
 import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "../src/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
-import { PowerToken } from "../src/PowerToken.sol";
 import { PureEpochs } from "../src/PureEpochs.sol";
 
 import { MockBootstrapToken, MockCashToken } from "./utils/Mocks.sol";
+import { PowerTokenHarness } from "./utils/PowerTokenHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
-// TODO: Use a harness instead of calling functions unrelated to the tests.
+// TODO: Create amd use a harness functions instead of calling functions unrelated to each test.
 
 contract PowerTokenTests is TestUtils {
     address internal _governor = makeAddr("governor");
@@ -36,7 +36,7 @@ contract PowerTokenTests is TestUtils {
         5_000_000 * 1e6
     ];
 
-    PowerToken internal _powerToken;
+    PowerTokenHarness internal _powerToken;
     MockBootstrapToken internal _bootstrapToken;
     MockCashToken internal _cashToken;
 
@@ -50,7 +50,7 @@ contract PowerTokenTests is TestUtils {
             _bootstrapToken.setBalance(_initialAccounts[index_], _initialAmounts[index_]);
         }
 
-        _powerToken = new PowerToken(_governor, address(_cashToken), _vault, address(_bootstrapToken));
+        _powerToken = new PowerTokenHarness(_governor, address(_cashToken), _vault, address(_bootstrapToken));
     }
 
     function test_initialState() external {
@@ -59,6 +59,10 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.governor(), _governor);
         assertEq(_powerToken.vault(), _vault);
         assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
+
+        assertEq(_powerToken.nextCashTokenStartingEpoch(), 0);
+        assertEq(_powerToken.internalCashToken(), address(0));
+        assertEq(_powerToken.internalNextCashToken(), address(_cashToken));
 
         for (uint256 index_; index_ < _initialAccounts.length; ++index_) {
             assertEq(
@@ -209,5 +213,50 @@ contract PowerTokenTests is TestUtils {
         _powerToken.buy(oneBasisPointOfTotalSupply_, _account);
 
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
+    }
+
+    function test_setNextCashToken_notGovernor() external {
+        vm.expectRevert(IPowerToken.NotGovernor.selector);
+        _powerToken.setNextCashToken(address(0));
+    }
+
+    function test_setNextCashToken_afterNextCashTokenStartingEpoch() external {
+        address newCashToken_ = makeAddr("newCashToken");
+
+        vm.prank(_governor);
+        _powerToken.setNextCashToken(newCashToken_);
+
+        assertEq(_powerToken.nextCashTokenStartingEpoch(), PureEpochs.currentEpoch() + 1);
+        assertEq(_powerToken.internalCashToken(), address(_cashToken));
+        assertEq(_powerToken.internalNextCashToken(), newCashToken_);
+
+        assertEq(_powerToken.cashToken(), address(_cashToken));
+
+        _goToNextEpoch();
+
+        assertEq(_powerToken.cashToken(), address(newCashToken_));
+    }
+
+    function test_setNextCashToken_beforeNextCashTokenStartingEpoch() external {
+        address newCashToken_ = makeAddr("newCashToken");
+
+        uint256 nextCashTokenStartingEpoch_ = PureEpochs.currentEpoch() + 1;
+
+        _powerToken.setNextCashTokenStartingEpoch(nextCashTokenStartingEpoch_);
+        _powerToken.setInternalCashToken(address(_cashToken));
+        _powerToken.setInternalNextCashToken(makeAddr("someCashToken"));
+
+        vm.prank(_governor);
+        _powerToken.setNextCashToken(newCashToken_);
+
+        assertEq(_powerToken.nextCashTokenStartingEpoch(), nextCashTokenStartingEpoch_); // Unchanged.
+        assertEq(_powerToken.internalCashToken(), address(_cashToken)); // Unchanged.
+        assertEq(_powerToken.internalNextCashToken(), newCashToken_);
+
+        assertEq(_powerToken.cashToken(), address(_cashToken));
+
+        _goToNextEpoch();
+
+        assertEq(_powerToken.cashToken(), address(newCashToken_));
     }
 }

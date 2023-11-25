@@ -15,11 +15,6 @@
         "internalType": "address",
         "name": "bootstrapToken_",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "cashToken_",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",

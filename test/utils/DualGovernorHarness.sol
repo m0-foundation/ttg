@@ -7,10 +7,10 @@ import { DualGovernor } from "../../src/DualGovernor.sol";
 contract DualGovernorHarness is DualGovernor {
     constructor(
         address registrar_,
-        address cashToken_,
         address powerToken_,
         address zeroToken_,
         address vault_,
+        address[] memory allowedCashTokens_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_,
         uint256 powerTokenThresholdRatio_,
@@ -18,10 +18,10 @@ contract DualGovernorHarness is DualGovernor {
     )
         DualGovernor(
             registrar_,
-            cashToken_,
             powerToken_,
             zeroToken_,
             vault_,
+            allowedCashTokens_,
             proposalFee_,
             maxTotalZeroRewardPerActiveEpoch_,
             uint16(powerTokenThresholdRatio_),

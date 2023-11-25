@@ -52,17 +52,21 @@ contract DualGovernor is IDualGovernor, ERC712 {
     bytes32 public constant BALLOTS_WITH_REASON_TYPEHASH =
         0x4a8d949a35428f9a377e2e2b89d8883cda4fbc8055ff94f098fc4955c82d42ff;
 
-    address internal immutable _cashToken;
     address internal immutable _powerToken;
     address internal immutable _registrar;
     address internal immutable _vault;
     address internal immutable _zeroToken;
+
     uint256 internal immutable _maxTotalZeroRewardPerActiveEpoch;
+
+    address internal _cashToken;
 
     uint256 internal _proposalFee;
 
     uint16 internal _powerTokenThresholdRatio;
     uint16 internal _zeroTokenThresholdRatio;
+
+    mapping(address token => bool allowed) internal _allowedCashTokens;
 
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
 
@@ -80,17 +84,16 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
     constructor(
         address registrar_,
-        address cashToken_,
         address powerToken_,
         address zeroToken_,
         address vault_,
+        address[] memory allowedCashTokens_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_,
         uint16 powerTokenThresholdRatio_,
         uint16 zeroTokenThresholdRatio_
     ) ERC712("DualGovernor") {
         if ((_registrar = registrar_) == address(0)) revert ZeroRegistrarAddress();
-        if ((_cashToken = cashToken_) == address(0)) revert ZeroCashTokenAddress();
         if ((_powerToken = powerToken_) == address(0)) revert InvalidPowerTokenAddress();
         if ((_zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
         if ((_vault = vault_) == address(0)) revert ZeroVaultAddress();
@@ -100,6 +103,20 @@ contract DualGovernor is IDualGovernor, ERC712 {
 
         _powerTokenThresholdRatio = powerTokenThresholdRatio_;
         _zeroTokenThresholdRatio = zeroTokenThresholdRatio_;
+
+        if (allowedCashTokens_.length == 0) revert NoAllowedCashTokens();
+
+        for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {
+            address allowedCashToken_ = allowedCashTokens_[index_];
+
+            if (allowedCashToken_ == address(0)) revert ZeroCashTokenAddress();
+
+            _allowedCashTokens[allowedCashToken_] = true;
+
+            if (index_ == 0) {
+                _cashToken = allowedCashToken_;
+            }
+        }
     }
 
     /******************************************************************************************************************\
@@ -342,6 +359,10 @@ contract DualGovernor is IDualGovernor, ERC712 {
         return _hasVoted[proposalId_][account_];
     }
 
+    function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
+        return _allowedCashTokens[token_];
+    }
+
     function name() external view returns (string memory name_) {
         return _name;
     }
@@ -477,6 +498,10 @@ contract DualGovernor is IDualGovernor, ERC712 {
         IRegistrar(_registrar).reset();
     }
 
+    function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlySelf {
+        _setCashToken(newCashToken_, newProposalFee_);
+    }
+
     function setProposalFee(uint256 newProposalFee_) external onlySelf {
         _setProposalFee(newProposalFee_);
     }
@@ -561,6 +586,16 @@ contract DualGovernor is IDualGovernor, ERC712 {
         IRegistrar(_registrar).removeFromList(list_, account_);
     }
 
+    function _setCashToken(address newCashToken_, uint256 newProposalFee_) internal {
+        if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
+
+        emit CashTokenSet(_cashToken = newCashToken_);
+
+        IPowerToken(_powerToken).setNextCashToken(newCashToken_);
+
+        _setProposalFee(newProposalFee_);
+    }
+
     function _setProposalFee(uint256 newProposalFee_) internal {
         emit ProposalFeeSet(_proposalFee = newProposalFee_);
     }
@@ -626,6 +661,7 @@ contract DualGovernor is IDualGovernor, ERC712 {
         if (
             func_ == this.setPowerTokenThresholdRatio.selector ||
             func_ == this.setZeroTokenThresholdRatio.selector ||
+            func_ == this.setCashToken.selector ||
             func_ == this.reset.selector
         ) return ProposalType.Zero;
 

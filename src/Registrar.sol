@@ -32,14 +32,13 @@ contract Registrar is IRegistrar {
         _;
     }
 
-    constructor(address governorDeployer_, address powerTokenDeployer_, address bootstrapToken_, address cashToken_) {
+    constructor(address governorDeployer_, address powerTokenDeployer_, address bootstrapToken_) {
         governorDeployer = governorDeployer_;
         powerTokenDeployer = powerTokenDeployer_;
 
         address powerToken_ = powerToken = IPowerTokenDeployer(powerTokenDeployer_).getNextDeploy();
 
         address governor_ = governor = IDualGovernorDeployer(governorDeployer_).deploy(
-            cashToken_,
             powerToken_,
             _STARTING_PROPOSAL_FEE,
             _STARTING_MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH,
@@ -50,7 +49,11 @@ contract Registrar is IRegistrar {
         vault = IDualGovernor(governor_).vault();
         zeroToken = IDualGovernor(governor_).zeroToken();
 
-        IPowerTokenDeployer(powerTokenDeployer_).deploy(governor_, cashToken_, bootstrapToken_);
+        IPowerTokenDeployer(powerTokenDeployer_).deploy(
+            governor_,
+            IDualGovernorDeployer(governorDeployer_).allowedCashTokensAt(0),
+            bootstrapToken_
+        );
     }
 
     function addToList(bytes32 list_, address account_) external onlyGovernor {
@@ -72,12 +75,9 @@ contract Registrar is IRegistrar {
     function reset() external onlyGovernor {
         address powerToken_ = powerToken = IPowerTokenDeployer(powerTokenDeployer).getNextDeploy();
 
-        address cashToken_ = IDualGovernor(governor).cashToken();
-
         address oldGovernor_ = governor;
 
         address newGovernor_ = governor = IDualGovernorDeployer(governorDeployer).deploy(
-            cashToken_,
             powerToken_,
             IDualGovernor(oldGovernor_).proposalFee(),
             IDualGovernor(oldGovernor_).maxTotalZeroRewardPerActiveEpoch(),
@@ -85,7 +85,11 @@ contract Registrar is IRegistrar {
             uint16(IDualGovernor(oldGovernor_).zeroTokenThresholdRatio())
         );
 
-        IPowerTokenDeployer(powerTokenDeployer).deploy(newGovernor_, cashToken_, zeroToken);
+        IPowerTokenDeployer(powerTokenDeployer).deploy(
+            newGovernor_,
+            IDualGovernorDeployer(governorDeployer).allowedCashTokensAt(0),
+            zeroToken
+        );
     }
 
     function get(bytes32 key_) external view returns (bytes32 value_) {
