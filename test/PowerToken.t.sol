@@ -2,10 +2,11 @@
 
 pragma solidity 0.8.21;
 
-import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
-import { IEpochBasedInflationaryVoteToken } from "../src/interfaces/IEpochBasedInflationaryVoteToken.sol";
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
-import { PureEpochs } from "../src/PureEpochs.sol";
+import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
+
+import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 
 import { MockBootstrapToken, MockCashToken } from "./utils/Mocks.sol";
 import { PowerTokenHarness } from "./utils/PowerTokenHarness.sol";
@@ -178,7 +179,7 @@ contract PowerTokenTests is TestUtils {
 
         _cashToken.setTransferFromSuccess(true);
 
-        vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector);
+        vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector); // TODO: check if can use IPowerToken here
         vm.prank(_account);
         _powerToken.buy(1, _account);
     }

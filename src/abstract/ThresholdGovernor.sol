@@ -34,7 +34,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         if (msg.value != 0) revert InvalidValue();
 
         // Proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.
-        uint256 firstPotentialVoteStart_ = PureEpochs.currentEpoch() - 1;
+        uint256 firstPotentialVoteStart_ = PureEpochs.currentEpoch();
 
         proposalId_ = _tryExecute(callDatas_[0], firstPotentialVoteStart_, firstPotentialVoteStart_ - 1);
     }
@@ -80,6 +80,10 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         proposer_ = proposal_.proposer;
     }
 
+    function proposalFee() external pure returns (uint256 proposalFee_) {
+        return 0;
+    }
+
     function quorum(uint256 timepoint_) external view returns (uint256 quorum_) {
         // NOTE: This will only be correct for the first epoch of a proposals lifetime.
         return (_thresholdRatio * _getTotalSupply(timepoint_ - 1)) / ONE;
@@ -118,11 +122,11 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         return _thresholdRatio;
     }
 
-    function votingDelay() external pure returns (uint256 votingDelay_) {
+    function votingDelay() public pure override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
         return 0;
     }
 
-    function votingPeriod() external pure returns (uint256 votingPeriod_) {
+    function votingPeriod() public pure override returns (uint256 votingPeriod_) {
         return 2;
     }
 

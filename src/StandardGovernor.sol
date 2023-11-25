@@ -155,6 +155,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         return _cashToken;
     }
 
+    function emergencyGovernor() external view returns (address emergencyGovernor_) {
+        return _emergencyGovernor;
+    }
+
     function getProposal(
         uint256 proposalId_
     )
@@ -197,6 +201,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         return _numberOfProposalsVotedOn[epoch_][voter_];
     }
 
+    function proposalFee() external view returns (uint256 proposalFee_) {
+        return _proposalFee;
+    }
+
     function quorum(uint256) external pure returns (uint256 quorum_) {
         return 0;
     }
@@ -218,19 +226,23 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         if (proposal_.yesWeight <= proposal_.noWeight) return ProposalState.Defeated;
 
-        return (currentEpoch_ > voteEnd_ + 2) ? ProposalState.Succeeded : ProposalState.Expired;
+        return (currentEpoch_ <= voteEnd_ + 2) ? ProposalState.Succeeded : ProposalState.Expired;
     }
 
     function vault() external view returns (address vault_) {
         return _vault;
     }
 
-    function votingDelay() public view returns (uint256 votingDelay_) {
+    function votingDelay() public view override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
         return _isVotingEpoch(PureEpochs.currentEpoch()) ? 2 : 1;
     }
 
-    function votingPeriod() external pure returns (uint256 votingPeriod_) {
+    function votingPeriod() public pure returns (uint256 votingPeriod_) {
         return 1;
+    }
+
+    function zeroGovernor() external view returns (address zeroGovernor_) {
+        return _zeroGovernor;
     }
 
     function zeroToken() external view returns (address zeroToken_) {

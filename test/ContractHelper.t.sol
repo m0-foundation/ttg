@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 
 import { Test } from "../lib/forge-std/src/Test.sol";
 
-import { ContractHelper } from "../src/ContractHelper.sol";
+import { ContractHelper } from "../src/libs/ContractHelper.sol";
 
 contract Void {}
 

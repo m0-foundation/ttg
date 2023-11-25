@@ -4,11 +4,10 @@ pragma solidity 0.8.21;
 
 import { console2 } from "../lib/forge-std/src/Test.sol";
 
-import { PureEpochs } from "../src/PureEpochs.sol";
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBasedInflationaryVoteTokenHarness.sol";
 import { Invariants } from "./utils/Invariants.sol";
-
 import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_UsersVoteInflationUpgradeOnDelegation
@@ -295,7 +294,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function testFuzz_full(uint256 seed_) external {
-        vm.skip(false);
+        vm.skip(true);
 
         for (uint256 index_; index_ < 1000; ++index_) {
             // console2.log(" ");

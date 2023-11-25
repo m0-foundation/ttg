@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 
 import { Test } from "../lib/forge-std/src/Test.sol";
 
-import { PureEpochs } from "../src/PureEpochs.sol";
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
 contract PureEpochsTests is Test {
     uint256 internal constant _EPOCH_PERIOD_IN_SECONDS = PureEpochs._EPOCH_PERIOD * PureEpochs._SECONDS_PER_BLOCK;

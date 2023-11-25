@@ -13,9 +13,6 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 contract Registrar is IRegistrar {
     uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
     uint256 internal constant _ONE = 10_000;
-    uint256 internal constant _STARTING_PROPOSAL_FEE = 0.001e18;
-
-    uint16 internal constant _STARTING_EMERGENCY_THRESHOLD_RATIO = uint16(_ONE / 2);
 
     address public immutable emergencyGovernorDeployer;
     address public immutable powerTokenDeployer;
@@ -46,7 +43,9 @@ contract Registrar is IRegistrar {
         address standardGovernorDeployer_,
         address emergencyGovernorDeployer_,
         address powerTokenDeployer_,
-        address bootstrapToken_
+        address bootstrapToken_,
+        uint256 standardProposalFee_,
+        uint16 emergencyProposalThresholdRatio_
     ) {
         if ((standardGovernorDeployer = standardGovernorDeployer_) == address(0)) {
             revert InvalidStandardGovernorDeployerAddress();
@@ -61,7 +60,7 @@ contract Registrar is IRegistrar {
         }
 
         address zeroGovernor_ = zeroGovernor = IStandardGovernorDeployer(standardGovernorDeployer_).zeroGovernor();
-        zeroToken = IStandardGovernorDeployer(standardGovernorDeployer_).zeroGovernor();
+        zeroToken = IStandardGovernorDeployer(standardGovernorDeployer_).zeroToken();
         vault = IStandardGovernorDeployer(standardGovernorDeployer_).vault();
 
         // Deploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
@@ -75,8 +74,8 @@ contract Registrar is IRegistrar {
             emergencyGovernorDeployer_,
             IZeroGovernor(zeroGovernor_).startingCashToken(),
             bootstrapToken_,
-            _STARTING_EMERGENCY_THRESHOLD_RATIO,
-            _STARTING_PROPOSAL_FEE
+            emergencyProposalThresholdRatio_,
+            standardProposalFee_
         );
     }
 
@@ -147,7 +146,7 @@ contract Registrar is IRegistrar {
         address emergencyGovernorDeployer_,
         address cashToken_,
         address bootstrapToken_,
-        uint16 emergencyThresholdRatio_,
+        uint16 emergencyProposalThresholdRatio_,
         uint256 proposalFee_
     ) internal returns (address standardGovernor_, address emergencyGovernor_, address powerToken_) {
         address expectedPowerToken_ = IPowerTokenDeployer(powerTokenDeployer_).getNextDeploy();
@@ -156,7 +155,7 @@ contract Registrar is IRegistrar {
         emergencyGovernor_ = IEmergencyGovernorDeployer(emergencyGovernorDeployer_).deploy(
             expectedPowerToken_,
             expectedStandardGovernor_,
-            emergencyThresholdRatio_
+            emergencyProposalThresholdRatio_
         );
 
         standardGovernor_ = IStandardGovernorDeployer(standardGovernorDeployer_).deploy(

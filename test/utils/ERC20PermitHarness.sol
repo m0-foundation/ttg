@@ -2,8 +2,8 @@
 
 pragma solidity 0.8.21;
 
-import { ERC20Permit } from "../../src/ERC20Permit.sol";
-import { ERC712 } from "../../src/ERC712.sol";
+import { ERC20Permit } from "../../src/abstract/ERC20Permit.sol";
+import { ERC712 } from "../../src/abstract/ERC712.sol";
 
 contract ERC20PermitHarness is ERC20Permit {
     uint256 public totalSupply;

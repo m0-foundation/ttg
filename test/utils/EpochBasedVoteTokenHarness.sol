@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { EpochBasedVoteToken } from "../../src/EpochBasedVoteToken.sol";
+import { EpochBasedVoteToken } from "../../src/abstract/EpochBasedVoteToken.sol";
 
 contract EpochBasedVoteTokenHarness is EpochBasedVoteToken {
     constructor(

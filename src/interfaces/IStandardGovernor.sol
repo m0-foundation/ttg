@@ -51,6 +51,8 @@ interface IStandardGovernor is IBatchGovernor {
 
     function cashToken() external view returns (address cashToken);
 
+    function emergencyGovernor() external view returns (address emergencyGovernor);
+
     function getProposal(
         uint256 proposalId
     )
@@ -75,6 +77,8 @@ interface IStandardGovernor is IBatchGovernor {
     function numberOfProposalsVotedOnAt(uint256 epoch, address voter) external view returns (uint256 count);
 
     function vault() external view returns (address vault);
+
+    function zeroGovernor() external view returns (address zeroGovernor);
 
     function zeroToken() external view returns (address zeroToken);
 

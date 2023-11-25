@@ -183,10 +183,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return _proposals[proposalId_].voteEnd;
     }
 
-    function proposalFee() external pure returns (uint256 proposalFee_) {
-        return 0;
-    }
-
     function proposalProposer(uint256 proposalId_) external view returns (address proposer_) {
         return _proposals[proposalId_].proposer;
     }
@@ -200,6 +196,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function state(uint256 proposalId_) public view virtual returns (ProposalState state_);
+
+    function votingDelay() public view virtual returns (uint256 votingDelay_);
 
     function voteToken() external view returns (address voteToken_) {
         return _voteToken;
@@ -285,7 +283,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
         _revertIfInvalidCalldata(callDatas_[0]);
 
-        voteStart_ = PureEpochs.currentEpoch();
+        voteStart_ = PureEpochs.currentEpoch() + votingDelay();
 
         proposalId_ = _hashProposal(callDatas_[0], voteStart_);
 
@@ -362,7 +360,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {
-        return _hashProposal(callData_, PureEpochs.currentEpoch());
+        return _hashProposal(callData_, PureEpochs.currentEpoch() + votingDelay());
     }
 
     function _hashProposal(bytes memory callData_, uint256 voteStart_) internal pure returns (uint256 proposalId_) {

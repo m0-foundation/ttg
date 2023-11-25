@@ -2,8 +2,9 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
+
 import { DistributionVault } from "../src/DistributionVault.sol";
-import { PureEpochs } from "../src/PureEpochs.sol";
 
 import { MockERC20, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
