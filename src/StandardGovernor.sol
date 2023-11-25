@@ -17,9 +17,7 @@ import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 // TODO: Determine standard way to inform externals about which token can vote.
 
-// TODO: Expose `_proposals`?
 // TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
-// TODO: Get rid of reasons and descriptions? Possibly even the exposed functions themselves.
 // TODO: Emit an event in the Governor or Power Token when a voter has voted on all standard proposals in an epoch.
 // TODO: Consider non-standard simplified versions of governor functions.
 

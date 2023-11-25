@@ -31,8 +31,17 @@ interface IZeroGovernor is IThresholdGovernor {
     |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
+    /**
+     * @notice Reset the StandardGovernor, EmergencyGovernor, and PowerToken to the PowerToken holders. This would be
+     *         used by ZeroToken holders in the event that inflation is soon to result in PowerToken overflowing.
+     */
     function resetToPowerHolders() external;
 
+    /**
+     * @notice Reset the StandardGovernor, EmergencyGovernor, and PowerToken to the ZeroToken holders. This would be
+     *         used by ZeroToken holders if they no longer have faith in the current set of PowerToken holders and/or
+     *         state of either StandardGovernor or EmergencyGovernor.
+     */
     function resetToZeroHolders() external;
 
     function setCashToken(address newCashToken, uint256 newProposalFee) external;

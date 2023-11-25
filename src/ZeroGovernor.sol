@@ -22,16 +22,14 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     ) ThresholdGovernor("ZeroGovernor", registrar_, voteToken_, thresholdRatio_) {
         if (allowedCashTokens_.length == 0) revert NoAllowedCashTokens();
 
+        _startingCashToken = allowedCashTokens_[0];
+
         for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {
             address allowedCashToken_ = allowedCashTokens_[index_];
 
             if (allowedCashToken_ == address(0)) revert InvalidCashTokenAddress();
 
             _allowedCashTokens[allowedCashToken_] = true;
-
-            if (index_ == 0) {
-                _startingCashToken = allowedCashToken_;
-            }
         }
     }
 
