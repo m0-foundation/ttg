@@ -62,6 +62,10 @@ contract DualGovernorHarness is DualGovernor {
         });
     }
 
+    function setProposalFeeInfo(uint256 proposalId_, address cashToken_, uint256 fee_) external {
+        _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: fee_ });
+    }
+
     function setStandardProposals(uint256 epoch_, uint256 count_) external {
         _standardProposals[epoch_] = count_;
     }

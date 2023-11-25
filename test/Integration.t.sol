@@ -95,7 +95,7 @@ contract IntegrationTests is TestUtils {
         uint256 proposalId_ = governor_.propose(targets_, values_, callDatas_, description_);
 
         assertEq(cashToken_.balanceOf(_accounts[0]), 0);
-        assertEq(cashToken_.balanceOf(governor_.vault()), proposalFee_);
+        assertEq(cashToken_.balanceOf(address(governor_)), proposalFee_);
 
         _goToNextVoteEpoch();
 
@@ -108,7 +108,10 @@ contract IntegrationTests is TestUtils {
 
         governor_.execute(targets_, values_, callDatas_, bytes32(0));
 
-        // assertEq(governor_.proposalFee(), newProposalFee_);
+        assertEq(governor_.proposalFee(), newProposalFee_);
+
+        assertEq(cashToken_.balanceOf(_accounts[0]), proposalFee_);
+        assertEq(cashToken_.balanceOf(address(governor_)), 0);
     }
 
     function test_emergencyUpdateConfig() external {
@@ -146,7 +149,6 @@ contract IntegrationTests is TestUtils {
     function test_reset() external {
         IRegistrar registrar_ = IRegistrar(_registrar);
         IDualGovernor governor_ = IDualGovernor(registrar_.governor());
-        IPowerToken powerToken_ = IPowerToken(governor_.powerToken());
 
         _jumpToEpoch(governor_.clock() + 1);
 

@@ -17,6 +17,7 @@ import { TestUtils } from "./utils/TestUtils.sol";
 
 contract DualGovernorTests is TestUtils {
     event CashTokenSet(address indexed cashToken_);
+    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);
     event ProposalFeeSet(uint256 proposalFee_);
 
     uint256 internal constant _ONE = 10_000;
@@ -215,7 +216,6 @@ contract DualGovernorTests is TestUtils {
         callDatas_[0] = abi.encodeWithSelector(_dualGovernor.setProposalFee.selector, 1);
 
         uint256 proposalId_ = _dualGovernor.hashProposal(callDatas_[0]);
-        uint256 currentEpoch_ = _dualGovernor.clock();
 
         _dualGovernor.setProposal(proposalId_, IDualGovernor.ProposalType.Standard, 1, 1, _powerTokenThresholdRatio);
 
@@ -270,5 +270,28 @@ contract DualGovernorTests is TestUtils {
     function test_emergencyAddAndRemoveFromList() external {
         vm.prank(address(_dualGovernor));
         _dualGovernor.emergencyAddAndRemoveFromList("SOME_LIST", _alice, _bob);
+    }
+
+    function test_sendProposalFeeToVault_feeNotDestinedForVault() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch_ = _dualGovernor.clock();
+
+        _dualGovernor.setProposalFeeInfo(proposalId_, _cashToken1, 1000);
+        _dualGovernor.setProposal(proposalId_, IDualGovernor.ProposalType.Standard, currentEpoch_, currentEpoch_, 1);
+
+        vm.expectRevert(abi.encodeWithSelector(IDualGovernor.FeeNotDestinedForVault.selector, 1));
+        _dualGovernor.sendProposalFeeToVault(proposalId_);
+    }
+
+    function test_sendProposalFeeToVault() external {
+        uint256 proposalId_ = 1;
+
+        _dualGovernor.setProposalFeeInfo(proposalId_, _cashToken1, 1000);
+        _dualGovernor.setProposal(proposalId_, IDualGovernor.ProposalType.Standard, 1, 1, 1);
+
+        vm.expectEmit();
+        emit ProposalFeeSentToVault(proposalId_, _cashToken1, 1000);
+
+        _dualGovernor.sendProposalFeeToVault(proposalId_);
     }
 }
