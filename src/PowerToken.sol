@@ -15,8 +15,6 @@ import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
 
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
-// TODO: Track global inflation rather than active epochs.
-
 contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     uint256 internal constant _AUCTION_PERIODS = 100;
 
@@ -35,9 +33,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     address internal _cashToken;
     address internal _nextCashToken;
 
-    uint256 public activeEpochs;
+    uint256 internal _nextTargetSupplyStartingEpoch;
 
-    mapping(uint256 epoch => bool isActiveEpoch) internal _isActiveEpoch;
+    uint256 internal _targetSupply;
+    uint256 internal _nextTargetSupply = INITIAL_SUPPLY;
 
     modifier onlyStandardGovernor() {
         if (msg.sender != standardGovernor) revert NotStandardGovernor();
@@ -83,16 +82,20 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     // TODO: buyWithPermit via ERC712 inheritance.
 
-    function markEpochActive() external onlyStandardGovernor {
-        uint256 epoch_ = PureEpochs.currentEpoch();
+    function markNextVotingEpochAsActive() external onlyStandardGovernor {
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
-        if (_isActiveEpoch[epoch_]) revert EpochAlreadyActive();
+        // The next voting epoch is the targetEpoch.
+        uint256 targetEpoch_ = currentEpoch_ + (_isVotingEpoch(currentEpoch_) ? 2 : 1);
 
-        emit EpochMarkedActive(epoch_);
+        if (currentEpoch_ >= _nextTargetSupplyStartingEpoch) {
+            _targetSupply = _nextTargetSupply;
+            _nextTargetSupplyStartingEpoch = targetEpoch_;
+        }
 
-        _isActiveEpoch[epoch_] = true;
+        uint256 nextTargetSupply_ = _nextTargetSupply = _targetSupply + (_targetSupply * participationInflation) / ONE;
 
-        ++activeEpochs;
+        emit TargetSupplyInflated(targetEpoch_, nextTargetSupply_);
     }
 
     function markParticipation(address delegatee_) external onlyStandardGovernor {
@@ -117,12 +120,9 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     function amountToAuction() public view returns (uint256 amountToAuction_) {
-        uint256 activeEpochs_ = activeEpochs - (_isActiveEpoch[PureEpochs.currentEpoch()] ? 1 : 0);
+        if (_isVotingEpoch(PureEpochs.currentEpoch())) return 0;
 
-        // TODO: Consider tracking the scaled exponent in storage rather than the active epochs.
-        uint256 targetSupply_ = (INITIAL_SUPPLY * _scaledExponent(ONE + participationInflation, activeEpochs_, ONE)) /
-            ONE;
-
+        uint256 targetSupply_ = targetSupply();
         uint256 totalSupply_ = totalSupply();
 
         return targetSupply_ > totalSupply_ ? targetSupply_ - totalSupply_ : 0;
@@ -186,8 +186,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
                 : super.getPastVotes(account_, epoch_);
     }
 
-    function isActiveEpoch(uint256 epoch_) external view returns (bool isActiveEpoch_) {
-        return _isActiveEpoch[epoch_];
+    function targetSupply() public view returns (uint256 targetSupply_) {
+        return PureEpochs.currentEpoch() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
     function totalSupply() public view override(IERC20, EpochBasedVoteToken) returns (uint256 totalSupply_) {
@@ -233,22 +233,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function _mint(address recipient_, uint256 amount_) internal override {
         _bootstrap(recipient_);
         super._mint(recipient_, amount_);
-    }
-
-    function _scaledExponent(uint256 base_, uint256 exponent_, uint256 one_) internal pure returns (uint256 result_) {
-        // If exponent_ is odd, set result_ to base_, else set to one_.
-        result_ = exponent_ & 1 != 0 ? base_ : one_;
-
-        // Divide exponent_ by 2 (overwriting itself) and proceed if not zero.
-        while ((exponent_ >>= 1) != 0) {
-            base_ = (base_ * base_) / one_;
-
-            // If exponent_ is even, go back to top.
-            if (exponent_ & 1 == 0) continue;
-
-            // If exponent_ is odd, multiply result_ is multiplied by base_.
-            result_ = (result_ * base_) / one_;
-        }
     }
 
     function _transfer(address sender_, address recipient_, uint256 amount_) internal override {

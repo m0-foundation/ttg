@@ -96,13 +96,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         proposalId_ = _tryExecute(callDatas_[0], firstPotentialVoteStart_, firstPotentialVoteStart_ - 1);
     }
 
-    // TODO: If PowerToken has "future active checkpoints", then this would not be needed.
-    function markEpochActive() external {
-        if (_numberOfProposals[PureEpochs.currentEpoch()] == 0) revert EpochHasNoProposals();
-
-        IPowerToken(voteToken).markEpochActive();
-    }
-
     function propose(
         address[] memory targets_,
         uint256[] memory values_,
@@ -113,7 +106,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         (proposalId_, voteStart_) = _propose(targets_, values_, callDatas_, description_);
 
-        _numberOfProposals[voteStart_] += 1;
+        // If this is the first proposal for the `voteStart_` epoch, inflate its target total supply of `PowerToken`.
+        if (++_numberOfProposals[voteStart_] == 1) {
+            IPowerToken(voteToken).markNextVotingEpochAsActive();
+        }
 
         address cashToken_ = cashToken;
         uint256 proposalFee_ = proposalFee;

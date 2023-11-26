@@ -11,15 +11,13 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     event Buy(address indexed buyer, uint256 amount, uint256 cost);
 
-    event EpochMarkedActive(uint256 indexed epoch);
+    event TargetSupplyInflated(uint256 indexed targetEpoch, uint256 indexed targetSupply);
 
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
     error AlreadyClaimed();
-
-    error EpochAlreadyActive();
 
     error InsufficientAuctionSupply();
 
@@ -41,7 +39,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     // TODO: buyWithPermit
 
-    function markEpochActive() external;
+    function markNextVotingEpochAsActive() external;
 
     function markParticipation(address delegatee) external;
 
@@ -52,8 +50,6 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     function INITIAL_SUPPLY() external pure returns (uint256 initialSupply);
-
-    function activeEpochs() external view returns (uint256 activeEpochs);
 
     function amountToAuction() external view returns (uint256 amountToAuction);
 
@@ -67,7 +63,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     function standardGovernor() external view returns (address governor);
 
-    function isActiveEpoch(uint256 epoch) external view returns (bool isActiveEpoch);
+    function targetSupply() external view returns (uint256 targetSupply);
 
     function vault() external view returns (address vault);
 }

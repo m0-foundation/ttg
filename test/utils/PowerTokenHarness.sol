@@ -24,6 +24,18 @@ contract PowerTokenHarness is PowerToken {
         _nextCashToken = nextCashToken_;
     }
 
+    function setNextTargetSupplyStartingEpoch(uint256 nextTargetSupplyStartingEpoch_) external {
+        _nextTargetSupplyStartingEpoch = nextTargetSupplyStartingEpoch_;
+    }
+
+    function setInternalTargetSupply(uint256 targetSupply_) external {
+        _targetSupply = targetSupply_;
+    }
+
+    function setInternalNextTargetSupply(uint256 nextTargetSupply_) external {
+        _nextTargetSupply = nextTargetSupply_;
+    }
+
     function nextCashTokenStartingEpoch() external view returns (uint256 epoch_) {
         return _nextCashTokenStartingEpoch;
     }
