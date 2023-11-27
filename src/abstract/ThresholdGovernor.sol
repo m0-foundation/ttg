@@ -127,7 +127,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     }
 
     function votingPeriod() public pure override returns (uint256 votingPeriod_) {
-        return 2;
+        return 1;
     }
 
     /******************************************************************************************************************\

@@ -236,7 +236,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     function votingPeriod() public pure returns (uint256 votingPeriod_) {
-        return 1;
+        return 0;
     }
 
     function zeroGovernor() external view returns (address zeroGovernor_) {
