@@ -4,8 +4,10 @@ pragma solidity 0.8.23;
 
 import { IPowerBootstrapToken } from "./interfaces/IPowerBootstrapToken.sol";
 
-// NOTE: This is an example of a token that can be used to bootstrap the PowerToken for the first time.
+// NOTE: This is an production-ready example of a token that can be used to bootstrap the PowerToken for the first time.
 
+/// @title A token implementing the minimal interface to e used to bootstrap a Power Token contract.
+/// @dev   The timepoints queried is ignored as this token is not time-dependent.
 contract PowerBootstrapToken is IPowerBootstrapToken {
     uint256 internal immutable _totalSupply;
 

@@ -108,6 +108,10 @@ contract MockERC20 {
     function transfer(address, uint256) external pure returns (bool success_) {
         return true;
     }
+
+    function transferFrom(address, address, uint256) external pure returns (bool success_) {
+        return true;
+    }
 }
 
 contract MockPowerToken {

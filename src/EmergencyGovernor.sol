@@ -8,6 +8,7 @@ import { IEmergencyGovernor } from "./interfaces/IEmergencyGovernor.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 
+/// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     address public immutable registrar;
     address public immutable standardGovernor;
@@ -79,6 +80,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
+    /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
 

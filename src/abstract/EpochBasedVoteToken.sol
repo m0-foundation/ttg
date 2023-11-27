@@ -12,24 +12,25 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
 
+/// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
-    struct AmountWindow {
-        uint16 startingEpoch;
-        uint240 amount;
-    }
-
-    struct AccountWindow {
+    struct AccountSnap {
         uint16 startingEpoch;
         address account;
     }
 
-    AmountWindow[] internal _totalSupplies;
+    struct AmountSnap {
+        uint16 startingEpoch;
+        uint240 amount;
+    }
 
-    mapping(address account => AmountWindow[] balanceWindows) internal _balances;
+    AmountSnap[] internal _totalSupplies;
 
-    mapping(address account => AccountWindow[] delegateeWindows) internal _delegatees;
+    mapping(address account => AmountSnap[] balanceSnaps) internal _balances;
 
-    mapping(address delegatee => AmountWindow[] votingPowerWindows) internal _votingPowers;
+    mapping(address account => AccountSnap[] delegateeSnaps) internal _delegatees;
+
+    mapping(address delegatee => AmountSnap[] votingPowerSnaps) internal _votingPowers;
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20Permit(name_, symbol_, decimals_) {}
 
@@ -44,8 +45,10 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         uint256 expiry_,
         bytes memory signature_
     ) external {
+        _revertIfExpired(expiry_);
         _revertIfInvalidSignature(account_, _getDelegationDigest(delegatee_, nonce_, expiry_), signature_);
-        _delegateBySig(account_, delegatee_, nonce_, expiry_);
+        _checkAndIncrementNonce(account_, nonce_);
+        _delegate(account_, delegatee_);
     }
 
     /******************************************************************************************************************\
@@ -61,21 +64,22 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     }
 
     function pastBalanceOf(address account_, uint256 epoch_) public view virtual returns (uint256 balance_) {
-        _revertIfNotPastEpoch(epoch_);
+        _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
         return _getValueAt(_balances[account_], epoch_);
     }
 
+    // TODO: Consider making `clock` public and using it everywhere instead of `PureEpochs.currentEpoch()` (gas?).
     function clock() external view returns (uint48 clock_) {
         return uint48(PureEpochs.currentEpoch());
     }
 
-    function delegates(address account_) external view returns (address delegatee_) {
-        return _getDelegatee(account_);
+    function delegates(address account_) public view returns (address delegatee_) {
+        return _getDelegateeAt(account_, PureEpochs.currentEpoch());
     }
 
     function pastDelegates(address account_, uint256 epoch_) external view returns (address delegatee_) {
-        _revertIfNotPastEpoch(epoch_);
+        _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
         return _getDelegateeAt(account_, epoch_);
     }
@@ -85,7 +89,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     }
 
     function getPastVotes(address account_, uint256 epoch_) public view virtual returns (uint256 votingPower_) {
-        _revertIfNotPastEpoch(epoch_);
+        _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
         return _getValueAt(_votingPowers[account_], epoch_);
     }
@@ -95,7 +99,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     }
 
     function pastTotalSupply(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
-        _revertIfNotPastEpoch(epoch_);
+        _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
         return _getValueAt(_totalSupplies, epoch_);
     }
@@ -104,32 +108,28 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
-    function _addBalance(
-        address account_,
-        uint256 amount_
-    ) internal virtual returns (uint256 oldAmount_, uint256 newAmount_) {
-        return _updateBalance(account_, _add, amount_);
+    function _addBalance(address account_, uint256 amount_) internal returns (uint256 oldAmount_, uint256 newAmount_) {
+        return _updateBalance(account_, _add, amount_); // Update balance using the `_add` operation.
     }
 
-    function _addTotalSupply(uint256 amount_) internal virtual {
-        _update(_totalSupplies, _add, amount_);
+    function _addTotalSupply(uint256 amount_) internal {
+        _update(_totalSupplies, _add, amount_); // Update total supply using the `_add` operation.
     }
 
-    function _addVotingPower(
-        address account_,
-        uint256 amount_
-    ) internal virtual returns (uint256 oldVotingPower_, uint256 newVotingPower_) {
-        return _updateVotingPower(account_, _add, amount_);
+    function _addVotingPower(address account_, uint256 amount_) internal returns (uint256 old_, uint256 new_) {
+        return _updateVotingPower(account_, _add, amount_); // Update voting power using the `_add` operation.
     }
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual override {
         address oldDelegatee_ = _setDelegatee(delegator_, newDelegatee_);
-        uint256 votingPower_ = _getLatestValue(_balances[delegator_]);
+        uint256 votingPower_ = balanceOf(delegator_);
 
         if (votingPower_ == 0) return;
 
-        // NOTE: An overridden `_removeVotingPower` may not decrease the voting power as expected.
+        // NOTE: An overridden `_removeVotingPower` may not decrease the voting power as expected, so best to get the
+        //       old voting and new voting power to determine the actual voting power to assign to the new delegatee.
         (uint256 oldVotingPower_, uint256 newVotingPower_) = _removeVotingPower(oldDelegatee_, votingPower_);
+
         _addVotingPower(newDelegatee_, oldVotingPower_ - newVotingPower_);
     }
 
@@ -138,106 +138,92 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
         _addBalance(recipient_, amount_);
         _addTotalSupply(amount_);
-        _addVotingPower(_getDelegatee(recipient_), amount_);
+        _addVotingPower(delegates(recipient_), amount_);
     }
 
-    function _removeBalance(
-        address account_,
-        uint256 amount_
-    ) internal virtual returns (uint256 oldAmount_, uint256 newAmount_) {
-        return _updateBalance(account_, _sub, amount_);
+    function _removeBalance(address account_, uint256 amount_) internal returns (uint256 old_, uint256 new_) {
+        return _updateBalance(account_, _sub, amount_); // Update balance using the `_sub` operation.
     }
 
-    function _removeVotingPower(
-        address account_,
-        uint256 amount_
-    ) internal virtual returns (uint256 oldVotingPower_, uint256 newVotingPower_) {
-        return _updateVotingPower(account_, _sub, amount_);
+    function _removeVotingPower(address account_, uint256 amount_) internal returns (uint256 old_, uint256 new_) {
+        return _updateVotingPower(account_, _sub, amount_); // Update voting power using the `_sub` operation.
     }
 
     function _setDelegatee(address delegator_, address delegatee_) internal returns (address oldDelegatee_) {
-        // `delegatee_` will be `delegator_` if it was passed in as `address(0)`.
+        // `delegatee_` will be `delegator_` (the default) if `delegatee_` was passed in as `address(0)`.
         delegatee_ = _getDefaultIfZero(delegatee_, delegator_);
 
-        // The delegatee that will be written to storage will be `address(0)` if `delegatee_` is `delegator_`.
+        // The delegatee to write to storage will be `address(0)` if `delegatee_` is `delegator_` (the default).
         address delegateeToWrite_ = _getZeroIfDefault(delegatee_, delegator_);
+        uint16 currentEpoch_ = uint16(PureEpochs.currentEpoch());
+        AccountSnap[] storage delegateeSnaps_ = _delegatees[delegator_];
+        uint256 length_ = delegateeSnaps_.length;
 
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
-        AccountWindow[] storage accountWindows_ = _delegatees[delegator_];
-
-        uint256 length_ = accountWindows_.length;
-
-        // If this will be the first AccountWindow, we can just push it onto the empty array.
+        // If this will be the first AccountSnap, we can just push it onto the empty array.
         if (length_ == 0) {
-            if (delegatee_ == delegator_) revert AlreadyDelegated();
+            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegateeToWrite_));
 
-            accountWindows_.push(AccountWindow(uint16(currentEpoch_), delegateeToWrite_));
-
-            return delegator_;
+            return delegator_; // In this case, delegatee has always been the `delegator_` itself.
         }
 
-        AccountWindow storage currentAccountWindow_ = _unsafeAccountWindowAccess(accountWindows_, length_ - 1);
+        AccountSnap storage latestDelegateeSnap_ = _unsafeAccess(delegateeSnaps_, length_ - 1);
 
-        // `oldDelegatee_` will be `delegator_` if it was retrieved as `address(0)`.
-        oldDelegatee_ = _getDefaultIfZero(currentAccountWindow_.account, delegator_);
-
-        if (oldDelegatee_ == delegatee_) revert AlreadyDelegated();
+        // `oldDelegatee_` will be `delegator_` (the default) if it was retrieved as `address(0)`.
+        oldDelegatee_ = _getDefaultIfZero(latestDelegateeSnap_.account, delegator_);
 
         emit DelegateChanged(delegator_, oldDelegatee_, delegatee_);
 
-        if (currentEpoch_ > currentAccountWindow_.startingEpoch) {
-            accountWindows_.push(AccountWindow(uint16(currentEpoch_), delegateeToWrite_));
+        // If the current epoch is greater than the last AccountSnap's startingEpoch, we can push a new
+        // AccountSnap onto the array, else we can just update the last AccountSnap's account.
+        if (currentEpoch_ > latestDelegateeSnap_.startingEpoch) {
+            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegateeToWrite_));
         } else {
-            currentAccountWindow_.account = delegateeToWrite_;
+            latestDelegateeSnap_.account = delegateeToWrite_;
         }
     }
 
     function _transfer(address sender_, address recipient_, uint256 amount_) internal virtual override {
-        if (sender_ == recipient_) revert TransferToSelf();
-
         emit Transfer(sender_, recipient_, amount_);
 
-        // NOTE: An overridden `_removeBalance` and/or `_removeVotingPower` may not decrease values as expected.
+        // NOTE: An overridden `_removeBalance` and/or `_removeVotingPower` may not decrease values as expected, so best
+        //       to get the old new values to determine the actual increases to apply afterwards.
         (uint256 oldAmount_, uint256 newAmount_) = _removeBalance(sender_, amount_);
+
         (uint256 oldVotingPower_, uint256 newVotingPower_) = _removeVotingPower(
-            _getDelegatee(sender_),
+            delegates(sender_),
             oldAmount_ - newAmount_
         );
 
         _addBalance(recipient_, oldAmount_ - newAmount_);
-        _addVotingPower(_getDelegatee(recipient_), oldVotingPower_ - newVotingPower_);
+        _addVotingPower(delegates(recipient_), oldVotingPower_ - newVotingPower_);
     }
 
     function _update(
-        AmountWindow[] storage amountWindows_,
+        AmountSnap[] storage snaps_,
         function(uint256, uint256) returns (uint256) operation_,
         uint256 amount_
     ) internal returns (uint256 oldAmount_, uint256 newAmount_) {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint16 currentEpoch_ = uint16(PureEpochs.currentEpoch());
+        uint256 length_ = snaps_.length;
 
-        uint256 length_ = amountWindows_.length;
-
-        // If this will be the first AmountWindow, we can just push it onto the empty array.
+        // If this will be the first AmountSnap, we can just push it onto the empty array.
         if (length_ == 0) {
-            if (amount_ > type(uint240).max) revert AmountExceedsUint240();
-
             // NOTE: `operation_(0, amount_)` is necessary for almost all operations other than setting or adding.
-            amountWindows_.push(AmountWindow(uint16(currentEpoch_), uint240(operation_(0, amount_))));
+            snaps_.push(AmountSnap(currentEpoch_, _safeCastUint240(operation_(0, amount_))));
 
-            return (0, amount_);
+            return (0, amount_); // In this case, the old amount was 0.
         }
 
-        AmountWindow storage currentAmountWindow_ = _unsafeAmountWindowAccess(amountWindows_, length_ - 1);
+        AmountSnap storage lastAmountSnap_ = _unsafeAccess(snaps_, length_ - 1);
 
-        newAmount_ = operation_(oldAmount_ = currentAmountWindow_.amount, amount_);
+        newAmount_ = operation_(oldAmount_ = lastAmountSnap_.amount, amount_);
 
-        if (newAmount_ > type(uint240).max) revert AmountExceedsUint240();
-
-        if (currentEpoch_ > currentAmountWindow_.startingEpoch) {
-            amountWindows_.push(AmountWindow(uint16(currentEpoch_), uint240(newAmount_)));
+        // If the current epoch is greater than the last AmountSnap's startingEpoch, we can push a new
+        // AmountSnap onto the array, else we can just update the last AmountSnap's amount.
+        if (currentEpoch_ > lastAmountSnap_.startingEpoch) {
+            snaps_.push(AmountSnap(currentEpoch_, _safeCastUint240(newAmount_)));
         } else {
-            currentAmountWindow_.amount = uint240(newAmount_);
+            lastAmountSnap_.amount = _safeCastUint240(newAmount_);
         }
     }
 
@@ -246,17 +232,17 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         function(uint256, uint256) returns (uint256) operation_,
         uint256 amount_
     ) internal returns (uint256 oldAmount_, uint256 newAmount_) {
-        return _update(_balances[account_], operation_, amount_);
+        return _update(_balances[account_], operation_, amount_); // Update balance using the `_add` operation.
     }
 
     function _updateVotingPower(
         address delegatee_,
         function(uint256, uint256) returns (uint256) operation_,
         uint256 amount_
-    ) internal virtual returns (uint256 oldVotingPower_, uint256 newVotingPower_) {
-        (oldVotingPower_, newVotingPower_) = _update(_votingPowers[delegatee_], operation_, amount_);
+    ) internal returns (uint256 oldAmount_, uint256 newAmount_) {
+        (oldAmount_, newAmount_) = _update(_votingPowers[delegatee_], operation_, amount_);
 
-        emit DelegateVotesChanged(delegatee_, oldVotingPower_, newVotingPower_);
+        emit DelegateVotesChanged(delegatee_, oldAmount_, newAmount_);
     }
 
     /******************************************************************************************************************\
@@ -271,37 +257,36 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return input_ == address(0) ? default_ : input_;
     }
 
-    function _getDelegatee(address account_) internal view returns (address delegatee_) {
-        return _getDelegateeAt(account_, PureEpochs.currentEpoch());
-    }
-
+    /// @dev The delegatee is the account itself (the default) if the retrieved delegatee is address(0).
     function _getDelegateeAt(address account_, uint256 epoch_) internal view returns (address delegatee_) {
-        AccountWindow[] storage accountWindows_ = _delegatees[account_];
+        AccountSnap[] storage delegateeSnaps_ = _delegatees[account_];
 
-        uint256 index_ = accountWindows_.length;
+        uint256 index_ = delegateeSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
-        // Keep going back as long as the epoch is greater or equal to the previous AccountWindow's startingEpoch.
+        // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
+        // has the account applicable to `epoch_`. If we exhaust the array, then the delegatee is address(0).
         while (index_ > 0) {
-            AccountWindow storage accountWindow_ = _unsafeAccountWindowAccess(accountWindows_, --index_);
+            AccountSnap storage accountSnap_ = _unsafeAccess(delegateeSnaps_, --index_);
 
-            if (accountWindow_.startingEpoch <= epoch_) return _getDefaultIfZero(accountWindow_.account, account_);
+            if (accountSnap_.startingEpoch <= epoch_) return _getDefaultIfZero(accountSnap_.account, account_);
         }
 
         return account_;
     }
 
-    function _getLatestValue(AmountWindow[] storage amountWindows_) internal view returns (uint256 value_) {
-        return _getValueAt(amountWindows_, PureEpochs.currentEpoch());
+    function _getLatestValue(AmountSnap[] storage snaps_) internal view returns (uint256 value_) {
+        return _getValueAt(snaps_, PureEpochs.currentEpoch());
     }
 
-    function _getValueAt(AmountWindow[] storage amountWindows_, uint256 epoch_) internal view returns (uint256 value_) {
-        uint256 index_ = amountWindows_.length;
+    function _getValueAt(AmountSnap[] storage snaps_, uint256 epoch_) internal view returns (uint256 value_) {
+        uint256 index_ = snaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
-        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
+        // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
+        // has the amount applicable to `epoch_`. If we exhaust the array, then the amount is 0.
         while (index_ > 0) {
-            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --index_);
+            AmountSnap storage amountSnap_ = _unsafeAccess(snaps_, --index_);
 
-            if (amountWindow_.startingEpoch <= epoch_) return amountWindow_.amount;
+            if (amountSnap_.startingEpoch <= epoch_) return amountSnap_.amount;
         }
     }
 
@@ -309,33 +294,41 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return input_ == default_ ? address(0) : input_;
     }
 
-    function _revertIfNotPastEpoch(uint256 epoch_) internal view {
+    function _revertIfNotPastTimepoint(uint256 epoch_) internal view {
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
-        if (epoch_ >= currentEpoch_) revert NotPastEpoch(epoch_, currentEpoch_);
+        if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_);
+    }
+
+    function _safeCastUint240(uint256 input_) internal pure returns (uint240 output_) {
+        if (input_ > type(uint240).max) revert AmountExceedsUint240();
+
+        return uint240(input_);
     }
 
     function _sub(uint256 a_, uint256 b_) internal pure returns (uint256 difference_) {
         return a_ - b_;
     }
 
-    function _unsafeAmountWindowAccess(
-        AmountWindow[] storage amountWindows_,
+    /// @dev Returns the AmountSnap in an array at a given index without doing bounds checking.
+    function _unsafeAccess(
+        AmountSnap[] storage snaps_,
         uint256 index_
-    ) internal pure returns (AmountWindow storage amountWindow_) {
+    ) internal pure returns (AmountSnap storage snap_) {
         assembly {
-            mstore(0, amountWindows_.slot)
-            amountWindow_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, snaps_.slot)
+            snap_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 
-    function _unsafeAccountWindowAccess(
-        AccountWindow[] storage accountWindows_,
+    /// @dev Returns the AccountSnap in an array at a given index without doing bounds checking.
+    function _unsafeAccess(
+        AccountSnap[] storage snaps_,
         uint256 index_
-    ) internal pure returns (AccountWindow storage accountWindow_) {
+    ) internal pure returns (AccountSnap storage snap_) {
         assembly {
-            mstore(0, accountWindows_.slot)
-            accountWindow_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, snaps_.slot)
+            snap_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 }

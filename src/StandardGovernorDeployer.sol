@@ -20,7 +20,6 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
 
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
-
         _;
     }
 
