@@ -9,8 +9,6 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC712 } from "./ERC712.sol";
 
-// TODO: Determine standard way to inform externals about which token can vote.
-
 abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
     // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
@@ -144,8 +142,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function COUNTING_MODE() external pure returns (string memory countingMode_) {
-        // NOTE: This may be wrong/lacking, in more ways than one.
-        // TODO: Implement.
+        return "support=alpha&quorum=bravo";
     }
 
     function clock() external view returns (uint48 clock_) {
@@ -183,6 +180,10 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
     function proposalSnapshot(uint256 proposalId_) external view returns (uint256 snapshot_) {
         return _proposals[proposalId_].voteStart - 1;
+    }
+
+    function proposalThreshold() external pure returns (uint256 threshold_) {
+        return 0;
     }
 
     function state(uint256 proposalId_) public view virtual returns (ProposalState state_);

@@ -82,14 +82,11 @@ interface IGovernor is IERC6372 {
 
     function proposalSnapshot(uint256 proposalId) external view returns (uint256 snapshot);
 
-    function quorum(uint256 timepoint) external view returns (uint256 quorum);
+    function proposalThreshold() external view returns (uint256 threshold);
 
-    // NOTE: Optionally, Tally also supports the quorumNumerator() and quorumDenominator() functions.
-    //       Governors with quorums that are a function of token supply should implement these functions.
-    //       If the Governor is missing either quorumNumerator() or quorumDenominator(),
-    //       Tally falls back to the quorum() function and assumes that the quorum is fixed.
-    // function quorumNumerator() external returns (uint256 quorumNumerator_);
-    // function quorumDenominator() external returns (uint256 quorumDenominator_);
+    function quorum() external view returns (uint256 quorum);
+
+    function quorum(uint256 timepoint) external view returns (uint256 quorum);
 
     function state(uint256 proposalId) external view returns (ProposalState state);
 

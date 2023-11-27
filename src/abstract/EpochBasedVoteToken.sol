@@ -9,7 +9,7 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { ERC5805 } from "./ERC5805.sol";
 import { ERC20Permit } from "./ERC20Permit.sol";
 
-// TODO: Consider making more external function (like `balanceOf`, and `balanceOfAt`) public.
+// TODO: Consider making more external function (like `balanceOf`, and `balanceOfAt`) public to be used internally.
 // TODO: Consider `getPastVotes` for and array of epochs and between start and end epochs.
 // TODO: Consider `delegatesAt` for and array of epochs and between start and end epochs.
 
