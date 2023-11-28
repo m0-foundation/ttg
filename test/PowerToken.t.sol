@@ -144,26 +144,29 @@ contract PowerTokenTests is TestUtils {
     }
 
     function test_amountToAuction() external {
-        assertEq(_powerToken.amountToAuction(), 0);
-
-        vm.prank(_governor);
-        _powerToken.markEpochActive();
-
-        assertEq(_powerToken.amountToAuction(), 0);
-
-        _goToNextTransferEpoch();
-        uint256 inflation_ = _powerToken.INITIAL_SUPPLY() / 10;
-        assertEq(_powerToken.amountToAuction(), inflation_);
-
-        _goToNextVoteEpoch();
-
-        vm.prank(_governor);
-        _powerToken.markEpochActive();
+        uint256 inflation_;
 
         assertEq(_powerToken.amountToAuction(), inflation_);
 
-        _goToNextTransferEpoch();
-        assertEq(_powerToken.amountToAuction(), inflation_ + (_powerToken.INITIAL_SUPPLY() + inflation_) / 10);
+        for (uint256 index_; index_ < 10; ++index_) {
+            _goToNextTransferEpoch();
+
+            // During transfer epochs, the next voting epoch is the current epoch + 1.
+            vm.prank(_governor);
+            _powerToken.markNextVotingEpochAsActive();
+
+            assertEq(_powerToken.amountToAuction(), inflation_);
+
+            _goToNextVoteEpoch();
+
+            inflation_ = inflation_ + (_powerToken.INITIAL_SUPPLY() + inflation_) / 10;
+
+            // During voting epochs, the next voting epoch is the current epoch + 2.
+            vm.prank(_governor);
+            _powerToken.markNextVotingEpochAsActive();
+
+            assertEq(_powerToken.amountToAuction(), 0);
+        }
     }
 
     function test_buy_insufficientAuctionSupply() external {
@@ -172,35 +175,30 @@ contract PowerTokenTests is TestUtils {
     }
 
     function test_buy_notInVotePeriod() external {
-        vm.prank(_governor);
-        _powerToken.markEpochActive();
+        _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + 1);
 
         _goToNextVoteEpoch();
 
-        _cashToken.setTransferFromSuccess(true);
-
-        vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector); // TODO: check if can use IPowerToken here
+        vm.expectRevert(IPowerToken.InsufficientAuctionSupply.selector);
         vm.prank(_account);
         _powerToken.buy(1, _account);
     }
 
     function test_buy_transferFromFailed() external {
-        vm.prank(_governor);
-        _powerToken.markEpochActive();
+        _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + 1);
 
         _goToNextTransferEpoch();
+
+        _cashToken.setTransferFromFail(true);
 
         vm.expectRevert(IPowerToken.TransferFromFailed.selector);
         _powerToken.buy(1, _account);
     }
 
     function test_buy() external {
-        vm.prank(_governor);
-        _powerToken.markEpochActive();
+        _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + _powerToken.totalSupply() / 10);
 
         _goToNextTransferEpoch();
-
-        _cashToken.setTransferFromSuccess(true);
 
         uint256 oneBasisPointOfTotalSupply_ = _powerToken.totalSupplyAt(PureEpochs.currentEpoch() - 1) / 10_000;
 

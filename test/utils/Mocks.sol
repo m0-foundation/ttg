@@ -25,14 +25,14 @@ contract MockBootstrapToken {
 }
 
 contract MockCashToken {
-    bool internal _transferFromSuccess;
+    bool internal _transferFromFail;
 
-    function setTransferFromSuccess(bool transferFromSuccess_) external {
-        _transferFromSuccess = transferFromSuccess_;
+    function setTransferFromFail(bool transferFromFail_) external {
+        _transferFromFail = transferFromFail_;
     }
 
-    function transferFrom(address, address, uint256) external view returns (bool success_) {
-        return _transferFromSuccess;
+    function transferFrom(address, address, uint256) external returns (bool success_) {
+        return !_transferFromFail;
     }
 }
 

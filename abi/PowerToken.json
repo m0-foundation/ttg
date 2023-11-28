@@ -47,11 +47,6 @@
   },
   {
     "inputs": [],
-    "name": "EpochAlreadyActive",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InsufficientAuctionSupply",
     "type": "error"
   },
@@ -274,11 +269,17 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "epoch",
+        "name": "targetEpoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "targetSupply",
         "type": "uint256"
       }
     ],
-    "name": "EpochMarkedActive",
+    "name": "TargetSupplyInflated",
     "type": "event"
   },
   {
@@ -379,19 +380,6 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "activeEpochs",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -866,27 +854,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "isActiveEpoch",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "isActiveEpoch_",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
-    "name": "markEpochActive",
+    "name": "markNextVotingEpochAsActive",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1026,6 +995,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "targetSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "targetSupply_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
