@@ -15,11 +15,11 @@ contract MockBootstrapToken {
         _totalSupply = totalSupply_;
     }
 
-    function balanceOfAt(address account_, uint256 epoch_) external view returns (uint256 balance_) {
+    function balanceOfAt(address account_, uint256) external view returns (uint256 balance_) {
         return _balances[account_];
     }
 
-    function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
+    function totalSupplyAt(uint256) external view returns (uint256 totalSupply_) {
         return _totalSupply;
     }
 }
@@ -31,54 +31,42 @@ contract MockCashToken {
         _transferFromSuccess = transferFromSuccess_;
     }
 
-    function transferFrom(address sender_, address recipient_, uint256 amount_) external returns (bool success_) {
+    function transferFrom(address, address, uint256) external view returns (bool success_) {
         return _transferFromSuccess;
     }
 }
 
 contract MockEmergencyGovernor {
-    uint16 internal _thresholdRatio;
+    uint16 public thresholdRatio;
 
     function setThresholdRatio(uint16 thresholdRatio_) external {
-        _thresholdRatio = thresholdRatio_;
-    }
-
-    function thresholdRatio() external view returns (uint16 thresholdRatio_) {
-        return _thresholdRatio;
+        thresholdRatio = thresholdRatio_;
     }
 }
 
 contract MockEmergencyGovernorDeployer {
-    address internal _nextDeploy;
+    address public nextDeploy;
 
     function setNextDeploy(address nextDeploy_) external {
-        _nextDeploy = nextDeploy_;
+        nextDeploy = nextDeploy_;
     }
 
-    function deploy(
-        address voteToken_,
-        address standardGovernor_,
-        uint16 thresholdRatio_
-    ) external returns (address deployed_) {
-        return _nextDeploy;
-    }
-
-    function getNextDeploy() external view returns (address nextDeploy_) {
-        return _nextDeploy;
+    function deploy(address, address, uint16) external view returns (address deployed_) {
+        return nextDeploy;
     }
 }
 
 contract MockEpochBasedVoteToken {
-    mapping(address account => mapping(uint256 epoch => uint256 balance)) internal _balances;
+    mapping(address account => mapping(uint256 epoch => uint256 balance)) public balanceOfAt;
 
-    mapping(uint256 epoch => uint256 totalSupply) internal _totalSupplyAt;
+    mapping(uint256 epoch => uint256 totalSupply) public totalSupplyAt;
 
-    function setBalanceAt(address account_, uint256 epoch_, uint256 balance_) external {
-        _balances[account_][epoch_] = balance_;
+    function setBalanceOfAt(address account_, uint256 epoch_, uint256 balance_) external {
+        balanceOfAt[account_][epoch_] = balance_;
     }
 
     function setTotalSupplyAt(uint256 epoch_, uint256 totalSupplyAt_) external {
-        _totalSupplyAt[epoch_] = totalSupplyAt_;
+        totalSupplyAt[epoch_] = totalSupplyAt_;
     }
 
     function balancesOfAt(
@@ -88,35 +76,27 @@ contract MockEpochBasedVoteToken {
         balances_ = new uint256[](epochs_.length);
 
         for (uint256 index_; index_ < epochs_.length; ++index_) {
-            balances_[index_] = _balances[account_][epochs_[index_]];
+            balances_[index_] = balanceOfAt[account_][epochs_[index_]];
         }
-    }
-
-    function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
-        return _totalSupplyAt[epoch_];
     }
 
     function totalSuppliesAt(uint256[] calldata epochs_) external view returns (uint256[] memory totalSupplies_) {
         totalSupplies_ = new uint256[](epochs_.length);
 
         for (uint256 index_; index_ < epochs_.length; ++index_) {
-            totalSupplies_[index_] = _totalSupplyAt[epochs_[index_]];
+            totalSupplies_[index_] = totalSupplyAt[epochs_[index_]];
         }
     }
 }
 
 contract MockERC20 {
-    mapping(address account => uint256 balance) internal _balances;
+    mapping(address account => uint256 balance) public balanceOf;
 
     function setBalance(address account_, uint256 balance_) external {
-        _balances[account_] = balance_;
+        balanceOf[account_] = balance_;
     }
 
-    function balanceOf(address account_) external view returns (uint256 balance_) {
-        return _balances[account_];
-    }
-
-    function transfer(address recipient_, uint256 amount_) external returns (bool success_) {
+    function transfer(address, uint256) external pure returns (bool success_) {
         return true;
     }
 }
@@ -133,36 +113,30 @@ contract MockPowerToken {
         _totalSupplyAt = totalSupplyAt_;
     }
 
-    function getPastVotes(address account_, uint256 timepoint_) external view returns (uint256 votePower_) {
+    function getPastVotes(address, uint256) external view returns (uint256 votePower_) {
         return _votePower;
     }
+
+    function markNextVotingEpochAsActive() external {}
 
     function markParticipation(address delegatee_) external {}
 
     function setNextCashToken(address newCashToken_) external {}
 
-    function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
+    function totalSupplyAt(uint256) external view returns (uint256 totalSupply_) {
         return _totalSupplyAt;
     }
 }
 
 contract MockPowerTokenDeployer {
-    address internal _nextDeploy;
+    address public nextDeploy;
 
     function setNextDeploy(address nextDeploy_) external {
-        _nextDeploy = nextDeploy_;
+        nextDeploy = nextDeploy_;
     }
 
-    function deploy(
-        address governor_,
-        address cashToken_,
-        address bootstrapToken_
-    ) external view returns (address deployed_) {
-        return _nextDeploy;
-    }
-
-    function getNextDeploy() external view returns (address nextDeploy_) {
-        return _nextDeploy;
+    function deploy(address, address, address) external view returns (address deployed_) {
+        return nextDeploy;
     }
 }
 
@@ -173,73 +147,43 @@ contract MockRegistrar {
 }
 
 contract MockStandardGovernor {
-    address internal _cashToken;
+    address public cashToken;
 
-    uint256 internal _proposalFee;
+    uint256 public proposalFee;
 
     function setCashToken(address cashToken_) external {
-        _cashToken = cashToken_;
+        cashToken = cashToken_;
     }
 
     function setProposalFee(uint256 proposalFee_) external {
-        _proposalFee = proposalFee_;
-    }
-
-    function cashToken() external view returns (address cashToken_) {
-        return _cashToken;
-    }
-
-    function proposalFee() external view returns (uint256 proposalFee_) {
-        return _proposalFee;
+        proposalFee = proposalFee_;
     }
 }
 
 contract MockStandardGovernorDeployer {
-    address internal _nextDeploy;
-    address internal _vault;
-    address internal _zeroGovernor;
-    address internal _zeroToken;
+    address public nextDeploy;
+    address public vault;
+    address public zeroGovernor;
+    address public zeroToken;
 
     function setNextDeploy(address nextDeploy_) external {
-        _nextDeploy = nextDeploy_;
+        nextDeploy = nextDeploy_;
     }
 
     function setVault(address vault_) external {
-        _vault = vault_;
+        vault = vault_;
     }
 
     function setZeroGovernor(address zeroGovernor_) external {
-        _zeroGovernor = zeroGovernor_;
+        zeroGovernor = zeroGovernor_;
     }
 
     function setZeroToken(address zeroToken_) external {
-        _zeroToken = zeroToken_;
+        zeroToken = zeroToken_;
     }
 
-    function deploy(
-        address voteToken_,
-        address emergencyGovernor_,
-        address cashToken_,
-        uint256 proposalFee_,
-        uint256 maxTotalZeroRewardPerActiveEpoch_
-    ) external returns (address deployed_) {
-        return _nextDeploy;
-    }
-
-    function getNextDeploy() external view returns (address nextDeploy_) {
-        return _nextDeploy;
-    }
-
-    function vault() external view returns (address vault_) {
-        return _vault;
-    }
-
-    function zeroGovernor() external view returns (address zeroGovernor_) {
-        return _zeroGovernor;
-    }
-
-    function zeroToken() external view returns (address zeroToken_) {
-        return _zeroToken;
+    function deploy(address, address, address, uint256, uint256) external view returns (address deployed_) {
+        return nextDeploy;
     }
 }
 
@@ -248,13 +192,9 @@ contract MockZeroToken {
 }
 
 contract MockZeroGovernor {
-    address internal _startingCashToken;
+    address public startingCashToken;
 
     function setStartingCashToken(address startingCashToken_) external {
-        _startingCashToken = startingCashToken_;
-    }
-
-    function startingCashToken() external view returns (address startingCashToken_) {
-        return _startingCashToken;
+        startingCashToken = startingCashToken_;
     }
 }

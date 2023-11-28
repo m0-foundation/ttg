@@ -30,7 +30,7 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
     }
 
     function deploy(
-        address voteToken_,
+        address powerToken_,
         address emergencyGovernor_,
         address cashToken_,
         uint256 proposalFee_,
@@ -42,7 +42,7 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
             address(
                 new StandardGovernor(
                     registrar,
-                    voteToken_,
+                    powerToken_,
                     emergencyGovernor_,
                     zeroGovernor,
                     zeroToken,
@@ -54,7 +54,7 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
             );
     }
 
-    function getNextDeploy() external view returns (address nextDeploy_) {
+    function nextDeploy() external view returns (address nextDeploy_) {
         return ContractHelper.getContractFrom(address(this), nonce + 1);
     }
 }

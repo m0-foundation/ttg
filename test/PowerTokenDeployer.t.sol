@@ -23,7 +23,7 @@ contract DeployerTests is Test {
     }
 
     function test_deployAddress() external {
-        address nextDeploy_ = _powerTokenDeployer.getNextDeploy();
+        address nextDeploy_ = _powerTokenDeployer.nextDeploy();
 
         vm.prank(_registrar);
         address deployed_ = _powerTokenDeployer.deploy(_governor, _cashToken, address(_zeroToken));

@@ -13,6 +13,8 @@ interface IZeroGovernor is IThresholdGovernor {
 
     error InvalidCashTokenAddress();
 
+    error InvalidRegistrarAddress();
+
     error NoAllowedCashTokens();
 
     /******************************************************************************************************************\
@@ -22,6 +24,8 @@ interface IZeroGovernor is IThresholdGovernor {
     function emergencyGovernor() external view returns (address emergencyGovernor);
 
     function isAllowedCashToken(address token) external view returns (bool isAllowed);
+
+    function registrar() external view returns (address registrar);
 
     function standardGovernor() external view returns (address standardGovernor);
 

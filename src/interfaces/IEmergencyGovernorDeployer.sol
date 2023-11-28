@@ -10,12 +10,12 @@ interface IEmergencyGovernorDeployer {
     error InvalidZeroGovernorAddress();
 
     function deploy(
-        address voteToken,
+        address powerToken,
         address standardGovernor,
         uint16 thresholdRatio
     ) external returns (address deployed);
 
-    function getNextDeploy() external view returns (address nextDeploy);
+    function nextDeploy() external view returns (address nextDeploy);
 
     function registrar() external view returns (address registrar);
 

@@ -10,14 +10,9 @@ import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 import { BatchGovernor } from "./BatchGovernor.sol";
 
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
-    uint16 internal _thresholdRatio;
+    uint16 public thresholdRatio;
 
-    constructor(
-        string memory name_,
-        address registrar_,
-        address voteToken_,
-        uint16 thresholdRatio_
-    ) BatchGovernor(name_, registrar_, voteToken_) {
+    constructor(string memory name_, address voteToken_, uint16 thresholdRatio_) BatchGovernor(name_, voteToken_) {
         _setThresholdRatio(thresholdRatio_);
     }
 
@@ -86,7 +81,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
     function quorum(uint256 timepoint_) external view returns (uint256 quorum_) {
         // NOTE: This will only be correct for the first epoch of a proposals lifetime.
-        return (_thresholdRatio * _getTotalSupply(timepoint_ - 1)) / ONE;
+        return (thresholdRatio * _getTotalSupply(timepoint_ - 1)) / ONE;
     }
 
     function state(uint256 proposalId_) public view override(BatchGovernor, IGovernor) returns (ProposalState state_) {
@@ -118,10 +113,6 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         return ProposalState.Defeated;
     }
 
-    function thresholdRatio() external view returns (uint16 thresholdRatio_) {
-        return _thresholdRatio;
-    }
-
     function votingDelay() public pure override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
         return 0;
     }
@@ -142,7 +133,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
             voteEnd: uint16(voteEnd_),
             executed: false,
             proposer: msg.sender,
-            thresholdRatio: _thresholdRatio,
+            thresholdRatio: thresholdRatio,
             quorumRatio: 0,
             noWeight: 0,
             yesWeight: 0
@@ -152,6 +143,6 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     function _setThresholdRatio(uint16 newThresholdRatio_) internal {
         if (newThresholdRatio_ > ONE) revert InvalidThresholdRatio();
 
-        emit ThresholdRatioSet(_thresholdRatio = newThresholdRatio_);
+        emit ThresholdRatioSet(thresholdRatio = newThresholdRatio_);
     }
 }

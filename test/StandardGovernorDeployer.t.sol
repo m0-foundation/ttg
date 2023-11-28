@@ -27,7 +27,7 @@ contract StandardGovernorDeployerTests is Test {
     }
 
     function test_deployAddress() external {
-        address nextDeploy_ = _deployer.getNextDeploy();
+        address nextDeploy_ = _deployer.nextDeploy();
 
         vm.prank(_registrar);
         address deployed_ = _deployer.deploy(

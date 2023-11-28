@@ -55,7 +55,7 @@ contract PowerTokenTests is TestUtils {
     function test_initialState() external {
         assertEq(_powerToken.bootstrapToken(), address(_bootstrapToken));
         assertEq(_powerToken.cashToken(), address(_cashToken));
-        assertEq(_powerToken.governor(), _governor);
+        assertEq(_powerToken.standardGovernor(), _governor);
         assertEq(_powerToken.vault(), _vault);
         assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
 
@@ -214,8 +214,8 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }
 
-    function test_setNextCashToken_notGovernor() external {
-        vm.expectRevert(IPowerToken.NotGovernor.selector);
+    function test_setNextCashToken_NotStandardGovernor() external {
+        vm.expectRevert(IPowerToken.NotStandardGovernor.selector);
         _powerToken.setNextCashToken(address(0));
     }
 

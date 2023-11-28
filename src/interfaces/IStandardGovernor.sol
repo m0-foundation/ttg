@@ -27,6 +27,8 @@ interface IStandardGovernor is IBatchGovernor {
 
     error InvalidEmergencyGovernorAddress();
 
+    error InvalidRegistrarAddress();
+
     error InvalidVaultAddress();
 
     error InvalidZeroGovernorAddress();
@@ -75,6 +77,8 @@ interface IStandardGovernor is IBatchGovernor {
     function numberOfProposalsAt(uint256 epoch) external view returns (uint256 count);
 
     function numberOfProposalsVotedOnAt(uint256 epoch, address voter) external view returns (uint256 count);
+
+    function registrar() external view returns (address registrar);
 
     function vault() external view returns (address vault);
 

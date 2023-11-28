@@ -73,7 +73,7 @@ contract IntegrationTests is TestUtils {
         _registrar = IRegistrar(registrar_);
     }
 
-    function test_initialState_xxx() external {
+    function test_initialState() external {
         IPowerToken powerToken_ = IPowerToken(_registrar.powerToken());
 
         uint256 initialPowerTotalSupply_;
@@ -234,13 +234,12 @@ contract IntegrationTests is TestUtils {
 
         assertEq(weight_, 60_000_000);
 
-        address nextPowerToken_ = IPowerTokenDeployer(registrar_.powerTokenDeployer()).getNextDeploy();
+        address nextPowerToken_ = IPowerTokenDeployer(registrar_.powerTokenDeployer()).nextDeploy();
 
-        address nextStandardGovernor_ = IStandardGovernorDeployer(registrar_.standardGovernorDeployer())
-            .getNextDeploy();
+        address nextStandardGovernor_ = IStandardGovernorDeployer(registrar_.standardGovernorDeployer()).nextDeploy();
 
         address nextEmergencyGovernor_ = IEmergencyGovernorDeployer(registrar_.emergencyGovernorDeployer())
-            .getNextDeploy();
+            .nextDeploy();
 
         zeroGovernor_.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
 
@@ -282,13 +281,12 @@ contract IntegrationTests is TestUtils {
 
         assertEq(weight_, 60_000_000);
 
-        address nextPowerToken_ = IPowerTokenDeployer(registrar_.powerTokenDeployer()).getNextDeploy();
+        address nextPowerToken_ = IPowerTokenDeployer(registrar_.powerTokenDeployer()).nextDeploy();
 
-        address nextStandardGovernor_ = IStandardGovernorDeployer(registrar_.standardGovernorDeployer())
-            .getNextDeploy();
+        address nextStandardGovernor_ = IStandardGovernorDeployer(registrar_.standardGovernorDeployer()).nextDeploy();
 
         address nextEmergencyGovernor_ = IEmergencyGovernorDeployer(registrar_.emergencyGovernorDeployer())
-            .getNextDeploy();
+            .nextDeploy();
 
         zeroGovernor_.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
 

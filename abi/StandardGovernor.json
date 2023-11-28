@@ -559,7 +559,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "cashToken_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -857,7 +857,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "emergencyGovernor_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -975,12 +975,12 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "proposalId_",
+        "name": "proposalId",
         "type": "uint256"
       },
       {
         "internalType": "address",
-        "name": "account_",
+        "name": "voter",
         "type": "address"
       }
     ],
@@ -988,7 +988,7 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "hasVoted_",
+        "name": "hasVoted",
         "type": "bool"
       }
     ],
@@ -1085,7 +1085,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "reward_",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -1192,7 +1192,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "proposalFee_",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -1296,7 +1296,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1408,7 +1408,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "vault_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1421,7 +1421,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "voteToken_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1460,7 +1460,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "zeroGovernor_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1473,7 +1473,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "zeroToken_",
+        "name": "",
         "type": "address"
       }
     ],

@@ -12,7 +12,6 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 contract Registrar is IRegistrar {
     uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
-    uint256 internal constant _ONE = 10_000;
 
     address public immutable emergencyGovernorDeployer;
     address public immutable powerTokenDeployer;
@@ -149,8 +148,8 @@ contract Registrar is IRegistrar {
         uint16 emergencyProposalThresholdRatio_,
         uint256 proposalFee_
     ) internal returns (address standardGovernor_, address emergencyGovernor_, address powerToken_) {
-        address expectedPowerToken_ = IPowerTokenDeployer(powerTokenDeployer_).getNextDeploy();
-        address expectedStandardGovernor_ = IStandardGovernorDeployer(standardGovernorDeployer_).getNextDeploy();
+        address expectedPowerToken_ = IPowerTokenDeployer(powerTokenDeployer_).nextDeploy();
+        address expectedStandardGovernor_ = IStandardGovernorDeployer(standardGovernorDeployer_).nextDeploy();
 
         emergencyGovernor_ = IEmergencyGovernorDeployer(emergencyGovernorDeployer_).deploy(
             expectedPowerToken_,

@@ -41,21 +41,19 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     bytes32 public constant BALLOTS_WITH_REASON_TYPEHASH =
         0x4a8d949a35428f9a377e2e2b89d8883cda4fbc8055ff94f098fc4955c82d42ff;
 
-    address internal immutable _registrar;
-    address internal immutable _voteToken;
+    address public immutable voteToken;
 
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
 
-    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) internal _hasVoted;
+    mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public hasVoted;
 
     modifier onlySelf() {
         _revertIfNotSelf();
         _;
     }
 
-    constructor(string memory name_, address registrar_, address voteToken_) ERC712(name_) {
-        if ((_registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
-        if ((_voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
+    constructor(string memory name_, address voteToken_) ERC712(name_) {
+        if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }
 
     /******************************************************************************************************************\
@@ -155,7 +153,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function getVotes(address account_, uint256 timepoint_) public view returns (uint256 weight_) {
-        return IEpochBasedVoteToken(_voteToken).getPastVotes(account_, timepoint_);
+        return IEpochBasedVoteToken(voteToken).getPastVotes(account_, timepoint_);
     }
 
     function hashProposal(
@@ -169,10 +167,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
     function hashProposal(bytes memory callData_) external view returns (uint256 proposalId_) {
         return _hashProposal(callData_);
-    }
-
-    function hasVoted(uint256 proposalId_, address account_) external view returns (bool hasVoted_) {
-        return _hasVoted[proposalId_][account_];
     }
 
     function name() external view returns (string memory name_) {
@@ -191,17 +185,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return _proposals[proposalId_].voteStart - 1;
     }
 
-    function registrar() external view returns (address registrar_) {
-        return _registrar;
-    }
-
     function state(uint256 proposalId_) public view virtual returns (ProposalState state_);
 
     function votingDelay() public view virtual returns (uint256 votingDelay_);
-
-    function voteToken() external view returns (address voteToken_) {
-        return _voteToken;
-    }
 
     /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
@@ -230,9 +216,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
         if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
 
-        if (_hasVoted[proposalId_][voter_]) revert AlreadyVoted();
+        if (hasVoted[proposalId_][voter_]) revert AlreadyVoted();
 
-        _hasVoted[proposalId_][voter_] = true;
+        hasVoted[proposalId_][voter_] = true;
 
         snapshot_ = proposal_.voteStart - 1;
 
@@ -356,7 +342,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function _getTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
-        return IEpochBasedVoteToken(_voteToken).totalSupplyAt(timepoint_);
+        return IEpochBasedVoteToken(voteToken).totalSupplyAt(timepoint_);
     }
 
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {

@@ -9,8 +9,9 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 
 contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
-    address internal immutable _standardGovernor;
-    address internal immutable _zeroGovernor;
+    address public immutable registrar;
+    address public immutable standardGovernor;
+    address public immutable zeroGovernor;
 
     modifier onlyZeroGovernor() {
         _revertIfNotZeroGovernor();
@@ -23,9 +24,10 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         address standardGovernor_,
         address zeroGovernor_,
         uint16 thresholdRatio_
-    ) ThresholdGovernor("EmergencyGovernor", registrar_, voteToken_, thresholdRatio_) {
-        if ((_standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
-        if ((_zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
+    ) ThresholdGovernor("EmergencyGovernor", voteToken_, thresholdRatio_) {
+        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+        if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
+        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
     }
 
     /******************************************************************************************************************\
@@ -34,18 +36,6 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
 
     function setThresholdRatio(uint16 newThresholdRatio_) external onlyZeroGovernor {
         _setThresholdRatio(newThresholdRatio_);
-    }
-
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
-
-    function standardGovernor() external view returns (address standardGovernor_) {
-        return _standardGovernor;
-    }
-
-    function zeroGovernor() external view returns (address zeroGovernor_) {
-        return _zeroGovernor;
     }
 
     /******************************************************************************************************************\
@@ -66,11 +56,11 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     }
 
     function setStandardProposalFee(uint256 newProposalFee_) external onlySelf {
-        IStandardGovernor(_standardGovernor).setProposalFee(newProposalFee_);
+        IStandardGovernor(standardGovernor).setProposalFee(newProposalFee_);
     }
 
     function updateConfig(bytes32 key_, bytes32 value_) external onlySelf {
-        IRegistrar(_registrar).updateConfig(key_, value_);
+        IRegistrar(registrar).updateConfig(key_, value_);
     }
 
     /******************************************************************************************************************\
@@ -78,11 +68,11 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     function _addToList(bytes32 list_, address account_) internal {
-        IRegistrar(_registrar).addToList(list_, account_);
+        IRegistrar(registrar).addToList(list_, account_);
     }
 
     function _removeFromList(bytes32 list_, address account_) internal {
-        IRegistrar(_registrar).removeFromList(list_, account_);
+        IRegistrar(registrar).removeFromList(list_, account_);
     }
 
     /******************************************************************************************************************\
@@ -102,6 +92,6 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     }
 
     function _revertIfNotZeroGovernor() internal view {
-        if (msg.sender != _zeroGovernor) revert NotZeroGovernor();
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
     }
 }

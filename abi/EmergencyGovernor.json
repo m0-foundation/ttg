@@ -865,12 +865,12 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "proposalId_",
+        "name": "proposalId",
         "type": "uint256"
       },
       {
         "internalType": "address",
-        "name": "account_",
+        "name": "voter",
         "type": "address"
       }
     ],
@@ -878,7 +878,7 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "hasVoted_",
+        "name": "hasVoted",
         "type": "bool"
       }
     ],
@@ -1099,7 +1099,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1156,7 +1156,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "standardGovernor_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1188,7 +1188,7 @@
     "outputs": [
       {
         "internalType": "uint16",
-        "name": "thresholdRatio_",
+        "name": "",
         "type": "uint16"
       }
     ],
@@ -1219,7 +1219,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "voteToken_",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1258,7 +1258,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "zeroGovernor_",
+        "name": "",
         "type": "address"
       }
     ],

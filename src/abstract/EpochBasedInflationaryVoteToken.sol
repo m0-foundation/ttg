@@ -19,7 +19,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
     uint256 public constant ONE = 10_000; // 100% in basis points.
 
-    uint256 internal immutable _participationInflation; // In basis points.
+    uint256 public immutable participationInflation; // In basis points.
 
     mapping(address delegatee => VoidWindow[] participationWindows) internal _participations;
 
@@ -43,7 +43,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         uint8 decimals_,
         uint256 participationInflation_
     ) EpochBasedVoteToken(name_, symbol_, decimals_) {
-        _participationInflation = participationInflation_;
+        participationInflation = participationInflation_;
     }
 
     /******************************************************************************************************************\
@@ -65,10 +65,6 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
         return _getParticipationAt(delegatee_, epoch_);
-    }
-
-    function participationInflation() external view returns (uint256 participationInflation_) {
-        return _participationInflation;
     }
 
     /******************************************************************************************************************\
@@ -129,7 +125,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     \******************************************************************************************************************/
 
     function _getInflation(uint256 amount_) internal view returns (uint256 inflation_) {
-        return (amount_ * _participationInflation) / ONE;
+        return (amount_ * participationInflation) / ONE;
     }
 
     function _getInflationOf(address account_) internal view returns (uint256 inflation_) {

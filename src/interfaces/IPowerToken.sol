@@ -23,15 +23,15 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     error InsufficientAuctionSupply();
 
-    error NotGovernor();
+    error InvalidCashTokenAddress();
+
+    error InvalidVaultAddress();
+
+    error NotStandardGovernor();
 
     error TransferFromFailed();
 
-    error InvalidCashTokenAddress();
-
     error ZeroGovernorAddress();
-
-    error InvalidVaultAddress();
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
@@ -51,6 +51,8 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
+    function INITIAL_SUPPLY() external pure returns (uint256 initialSupply);
+
     function activeEpochs() external view returns (uint256 activeEpochs);
 
     function amountToAuction() external view returns (uint256 amountToAuction);
@@ -63,9 +65,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     function getCost(uint256 amount) external view returns (uint256 price);
 
-    function governor() external view returns (address governor);
-
-    function INITIAL_SUPPLY() external pure returns (uint256 initialSupply);
+    function standardGovernor() external view returns (address governor);
 
     function isActiveEpoch(uint256 epoch) external view returns (bool isActiveEpoch);
 

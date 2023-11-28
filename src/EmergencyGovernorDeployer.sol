@@ -26,16 +26,16 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     }
 
     function deploy(
-        address voteToken_,
+        address powerToken_,
         address standardGovernor_,
         uint16 thresholdRatio_
     ) external onlyRegistrar returns (address deployed_) {
         ++nonce;
 
-        return address(new EmergencyGovernor(registrar, voteToken_, standardGovernor_, zeroGovernor, thresholdRatio_));
+        return address(new EmergencyGovernor(registrar, powerToken_, standardGovernor_, zeroGovernor, thresholdRatio_));
     }
 
-    function getNextDeploy() external view returns (address nextDeploy_) {
+    function nextDeploy() external view returns (address nextDeploy_) {
         return ContractHelper.getContractFrom(address(this), nonce + 1);
     }
 }

@@ -26,8 +26,6 @@ interface IBatchGovernor is IGovernorBySig {
 
     error InvalidCallDatasLength();
 
-    error InvalidRegistrarAddress();
-
     error InvalidTarget();
 
     error InvalidTargetsLength();
@@ -65,8 +63,6 @@ interface IBatchGovernor is IGovernorBySig {
     function hashProposal(bytes memory callData) external view returns (uint256 proposalId);
 
     function proposalFee() external view returns (uint256 proposalFee);
-
-    function registrar() external view returns (address registrar);
 
     function voteToken() external view returns (address voteToken);
 }

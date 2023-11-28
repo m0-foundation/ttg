@@ -9,6 +9,8 @@ interface IEmergencyGovernor is IThresholdGovernor {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
+    error InvalidRegistrarAddress();
+
     error InvalidStandardGovernorAddress();
 
     error InvalidZeroGovernorAddress();
@@ -24,6 +26,8 @@ interface IEmergencyGovernor is IThresholdGovernor {
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
+
+    function registrar() external view returns (address registrar);
 
     function standardGovernor() external view returns (address standardGovernor);
 

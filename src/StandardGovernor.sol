@@ -27,16 +27,17 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint256 fee;
     }
 
-    address internal immutable _emergencyGovernor;
-    address internal immutable _vault;
-    address internal immutable _zeroGovernor;
-    address internal immutable _zeroToken;
+    address public immutable emergencyGovernor;
+    address public immutable registrar;
+    address public immutable vault;
+    address public immutable zeroGovernor;
+    address public immutable zeroToken;
 
-    uint256 internal immutable _maxTotalZeroRewardPerActiveEpoch;
+    uint256 public immutable maxTotalZeroRewardPerActiveEpoch;
 
-    address internal _cashToken;
+    address public cashToken;
 
-    uint256 internal _proposalFee;
+    uint256 public proposalFee;
 
     mapping(uint256 proposalId => ProposalFeeInfo proposalFee) internal _proposalFees;
 
@@ -64,16 +65,17 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         address vault_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
-    ) BatchGovernor("StandardGovernor", registrar_, voteToken_) {
-        if ((_emergencyGovernor = emergencyGovernor_) == address(0)) revert InvalidEmergencyGovernorAddress();
-        if ((_zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
-        if ((_zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
-        if ((_vault = vault_) == address(0)) revert InvalidVaultAddress();
+    ) BatchGovernor("StandardGovernor", voteToken_) {
+        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+        if ((emergencyGovernor = emergencyGovernor_) == address(0)) revert InvalidEmergencyGovernorAddress();
+        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
+        if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
+        if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
 
         _setCashToken(cashToken_);
         _setProposalFee(proposalFee_);
 
-        _maxTotalZeroRewardPerActiveEpoch = maxTotalZeroRewardPerActiveEpoch_;
+        maxTotalZeroRewardPerActiveEpoch = maxTotalZeroRewardPerActiveEpoch_;
     }
 
     /******************************************************************************************************************\
@@ -98,7 +100,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     function markEpochActive() external {
         if (_numberOfProposals[PureEpochs.currentEpoch()] == 0) revert EpochHasNoProposals();
 
-        IPowerToken(_voteToken).markEpochActive();
+        IPowerToken(voteToken).markEpochActive();
     }
 
     function propose(
@@ -113,8 +115,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         _numberOfProposals[voteStart_] += 1;
 
-        address cashToken_ = _cashToken;
-        uint256 proposalFee_ = _proposalFee;
+        address cashToken_ = cashToken;
+        uint256 proposalFee_ = proposalFee;
 
         _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
 
@@ -137,7 +139,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         // NOTE: Not calling `distribute` on vault since:
         //         - anyone can do it, anytime
         //         - `DualGovernor` should not need to know how the vault works
-        ERC20Helper.transfer(cashToken_, _vault, proposalFee_);
+        ERC20Helper.transfer(cashToken_, vault, proposalFee_);
     }
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
@@ -148,14 +150,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     /******************************************************************************************************************\
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
-
-    function cashToken() external view returns (address cashToken_) {
-        return _cashToken;
-    }
-
-    function emergencyGovernor() external view returns (address emergencyGovernor_) {
-        return _emergencyGovernor;
-    }
 
     function getProposal(
         uint256 proposalId_
@@ -187,20 +181,12 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         return _numberOfProposalsVotedOn[epoch_][voter_] == _numberOfProposals[epoch_];
     }
 
-    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward_) {
-        return _maxTotalZeroRewardPerActiveEpoch;
-    }
-
     function numberOfProposalsAt(uint256 epoch_) external view returns (uint256 count_) {
         return _numberOfProposals[epoch_];
     }
 
     function numberOfProposalsVotedOnAt(uint256 epoch_, address voter_) external view returns (uint256 count_) {
         return _numberOfProposalsVotedOn[epoch_][voter_];
-    }
-
-    function proposalFee() external view returns (uint256 proposalFee_) {
-        return _proposalFee;
     }
 
     function quorum(uint256) external pure returns (uint256 quorum_) {
@@ -227,24 +213,12 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         return (currentEpoch_ <= voteEnd_ + 2) ? ProposalState.Succeeded : ProposalState.Expired;
     }
 
-    function vault() external view returns (address vault_) {
-        return _vault;
-    }
-
     function votingDelay() public view override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
         return _isVotingEpoch(PureEpochs.currentEpoch()) ? 2 : 1;
     }
 
     function votingPeriod() public pure returns (uint256 votingPeriod_) {
         return 0;
-    }
-
-    function zeroGovernor() external view returns (address zeroGovernor_) {
-        return _zeroGovernor;
-    }
-
-    function zeroToken() external view returns (address zeroToken_) {
-        return _zeroToken;
     }
 
     /******************************************************************************************************************\
@@ -269,7 +243,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     function updateConfig(bytes32 key_, bytes32 value_) external onlySelf {
-        IRegistrar(_registrar).updateConfig(key_, value_);
+        IRegistrar(registrar).updateConfig(key_, value_);
     }
 
     /******************************************************************************************************************\
@@ -277,7 +251,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     \******************************************************************************************************************/
 
     function _addToList(bytes32 list_, address account_) internal {
-        IRegistrar(_registrar).addToList(list_, account_);
+        IRegistrar(registrar).addToList(list_, account_);
     }
 
     function _castVote(
@@ -293,9 +267,9 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         if (numberOfProposalsVotedOn_ != _numberOfProposals[currentEpoch_]) return (weight_, snapshot_);
 
-        IPowerToken(_voteToken).markParticipation(voter_);
+        IPowerToken(voteToken).markParticipation(voter_);
 
-        IZeroToken(_zeroToken).mint(voter_, (_maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(snapshot_));
+        IZeroToken(zeroToken).mint(voter_, (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(snapshot_));
     }
 
     function _createProposal(uint256 proposalId_, uint256 voteStart_) internal override returns (uint256 voteEnd_) {
@@ -325,17 +299,17 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     function _removeFromList(bytes32 list_, address account_) internal {
-        IRegistrar(_registrar).removeFromList(list_, account_);
+        IRegistrar(registrar).removeFromList(list_, account_);
     }
 
     function _setCashToken(address newCashToken_) internal {
         if (newCashToken_ == address(0)) revert InvalidCashTokenAddress();
 
-        emit CashTokenSet(_cashToken = newCashToken_);
+        emit CashTokenSet(cashToken = newCashToken_);
     }
 
     function _setProposalFee(uint256 newProposalFee_) internal {
-        emit ProposalFeeSet(_proposalFee = newProposalFee_);
+        emit ProposalFeeSet(proposalFee = newProposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -360,10 +334,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     function _revertIfNotSelfOrEmergencyGovernor() internal view {
-        if (msg.sender != address(this) && msg.sender != _emergencyGovernor) revert NotSelfOrEmergencyGovernor();
+        if (msg.sender != address(this) && msg.sender != emergencyGovernor) revert NotSelfOrEmergencyGovernor();
     }
 
     function _revertIfNotZeroGovernor() internal view {
-        if (msg.sender != _zeroGovernor) revert NotZeroGovernor();
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
     }
 }

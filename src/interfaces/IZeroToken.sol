@@ -7,7 +7,7 @@ import { IEpochBasedVoteToken } from "../abstract/interfaces/IEpochBasedVoteToke
 interface IZeroToken is IEpochBasedVoteToken {
     error LengthMismatch(uint256 length1, uint256 length2);
 
-    error NotGovernor();
+    error NotStandardGovernor();
 
     function mint(address recipient, uint256 amount) external;
 

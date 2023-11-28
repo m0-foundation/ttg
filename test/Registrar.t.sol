@@ -58,7 +58,7 @@ contract RegistrarTests is Test {
         );
     }
 
-    function test_initialState() external {
+    function test_initialState_xxx() external {
         assertEq(_registrar.standardGovernorDeployer(), address(_standardGovernorDeployer));
         assertEq(_registrar.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_registrar.powerTokenDeployer(), address(_powerTokenDeployer));

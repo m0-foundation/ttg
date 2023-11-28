@@ -10,7 +10,8 @@ import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
-    address internal immutable _startingCashToken;
+    address public immutable registrar;
+    address public immutable startingCashToken;
 
     mapping(address token => bool allowed) internal _allowedCashTokens;
 
@@ -19,10 +20,12 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         address voteToken_,
         address[] memory allowedCashTokens_,
         uint16 thresholdRatio_
-    ) ThresholdGovernor("ZeroGovernor", registrar_, voteToken_, thresholdRatio_) {
+    ) ThresholdGovernor("ZeroGovernor", voteToken_, thresholdRatio_) {
+        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+
         if (allowedCashTokens_.length == 0) revert NoAllowedCashTokens();
 
-        _startingCashToken = allowedCashTokens_[0];
+        startingCashToken = allowedCashTokens_[0];
 
         for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {
             address allowedCashToken_ = allowedCashTokens_[index_];
@@ -38,7 +41,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     function emergencyGovernor() public view returns (address emergencyGovernor_) {
-        return IRegistrar(_registrar).emergencyGovernor();
+        return IRegistrar(registrar).emergencyGovernor();
     }
 
     function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
@@ -46,11 +49,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     }
 
     function standardGovernor() public view returns (address standardGovernor_) {
-        return IRegistrar(_registrar).standardGovernor();
-    }
-
-    function startingCashToken() external view returns (address startingCashToken_) {
-        return _startingCashToken;
+        return IRegistrar(registrar).standardGovernor();
     }
 
     /******************************************************************************************************************\
@@ -58,11 +57,11 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     function resetToPowerHolders() external onlySelf {
-        IRegistrar(_registrar).reset(IRegistrar(_registrar).powerToken());
+        IRegistrar(registrar).reset(IRegistrar(registrar).powerToken());
     }
 
     function resetToZeroHolders() external onlySelf {
-        IRegistrar(_registrar).reset(_voteToken);
+        IRegistrar(registrar).reset(voteToken);
     }
 
     // TODO: Issue here where Zero holders can set the proposal fee by abusing this proposal.

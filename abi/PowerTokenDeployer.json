@@ -34,7 +34,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "governor_",
+        "name": "standardGovernor_",
         "type": "address"
       },
       {
@@ -61,7 +61,7 @@
   },
   {
     "inputs": [],
-    "name": "getNextDeploy",
+    "name": "nextDeploy",
     "outputs": [
       {
         "internalType": "address",

@@ -237,7 +237,7 @@
     "outputs": [
       {
         "internalType": "uint8",
-        "name": "decimals_",
+        "name": "",
         "type": "uint8"
       }
     ],
@@ -391,7 +391,7 @@
     "outputs": [
       {
         "internalType": "string",
-        "name": "symbol_",
+        "name": "",
         "type": "string"
       }
     ],

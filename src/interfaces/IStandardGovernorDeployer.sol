@@ -14,14 +14,14 @@ interface IStandardGovernorDeployer {
     error InvalidZeroTokenAddress();
 
     function deploy(
-        address voteToken,
+        address powerToken,
         address emergencyGovernor,
         address cashToken,
         uint256 proposalFee,
         uint256 maxTotalZeroRewardPerActiveEpoch
     ) external returns (address deployed);
 
-    function getNextDeploy() external view returns (address nextDeploy);
+    function nextDeploy() external view returns (address nextDeploy);
 
     function registrar() external view returns (address registrar);
 

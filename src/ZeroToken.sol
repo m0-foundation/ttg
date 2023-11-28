@@ -8,10 +8,10 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 contract ZeroToken is IZeroToken, EpochBasedVoteToken {
-    address internal immutable _registrar;
+    address public immutable registrar;
 
     modifier onlyStandardGovernor() {
-        if (msg.sender != IRegistrar(_registrar).standardGovernor()) revert NotGovernor();
+        if (msg.sender != IRegistrar(registrar).standardGovernor()) revert NotStandardGovernor();
 
         _;
     }
@@ -30,14 +30,10 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
             _mint(initialAccounts_[index_], initialBalances_[index_]);
         }
 
-        _registrar = registrar_;
+        registrar = registrar_;
     }
 
     function mint(address recipient_, uint256 amount_) external onlyStandardGovernor {
         _mint(recipient_, amount_);
-    }
-
-    function registrar() external view returns (address registrar_) {
-        return _registrar;
     }
 }
