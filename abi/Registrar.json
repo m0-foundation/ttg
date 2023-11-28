@@ -84,7 +84,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "ConfigUpdated",
+    "name": "KeySet",
     "type": "event"
   },
   {
@@ -262,6 +262,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "value_",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setKey",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "standardGovernor",
     "outputs": [
@@ -285,24 +303,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "key_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "value_",
-        "type": "bytes32"
-      }
-    ],
-    "name": "updateConfig",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

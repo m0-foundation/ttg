@@ -60,8 +60,8 @@ contract Registrar is IRegistrar {
         emit AddressRemovedFromList(list_, account_);
     }
 
-    function updateConfig(bytes32 key_, bytes32 value_) external onlyStandardOrEmergencyGovernor {
-        emit ConfigUpdated(key_, _valueAt[key_] = value_);
+    function setKey(bytes32 key_, bytes32 value_) external onlyStandardOrEmergencyGovernor {
+        emit KeySet(key_, _valueAt[key_] = value_);
     }
 
     /******************************************************************************************************************\

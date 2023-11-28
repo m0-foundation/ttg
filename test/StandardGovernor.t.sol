@@ -253,17 +253,17 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.proposalFee(), _proposalFee * 2);
     }
 
-    // TODO: This can be duplicated into a `EmergencyGovernor.t.sol -> test_addAndRemoveFromList_notSelf`.
-    function test_addAndRemoveFromList_notSelf() external {
+    // TODO: This can be duplicated into a `EmergencyGovernor.t.sol -> test_removeFromAndAddToList_notSelf`.
+    function test_removeFromAndAddToList_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
 
-        _standardGovernor.addAndRemoveFromList("SOME_LIST", _alice, _bob);
+        _standardGovernor.removeFromAndAddToList("SOME_LIST", _alice, _bob);
     }
 
-    // TODO: This can be duplicated into a `EmergencyGovernor.t.sol -> test_addAndRemoveFromList`.
-    function test_addAndRemoveFromList() external {
+    // TODO: This can be duplicated into a `EmergencyGovernor.t.sol -> test_removeFromAndAddToList`.
+    function test_removeFromAndAddToList() external {
         vm.prank(address(_standardGovernor));
-        _standardGovernor.addAndRemoveFromList("SOME_LIST", _alice, _bob);
+        _standardGovernor.removeFromAndAddToList("SOME_LIST", _alice, _bob);
     }
 
     function test_sendProposalFeeToVault_feeNotDestinedForVault() external {

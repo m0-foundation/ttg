@@ -39,11 +39,11 @@ interface IEmergencyGovernor is IThresholdGovernor {
 
     function addToList(bytes32 list, address account) external;
 
-    function addAndRemoveFromList(bytes32 list, address accountToAdd, address accountToRemove) external;
-
     function removeFromList(bytes32 list, address account) external;
 
-    function setStandardProposalFee(uint256 newProposalFee) external;
+    function removeFromAndAddToList(bytes32 list, address accountToRemove, address accountToAdd) external;
 
-    function updateConfig(bytes32 key, bytes32 value_) external;
+    function setKey(bytes32 key, bytes32 value_) external;
+
+    function setStandardProposalFee(uint256 newProposalFee) external;
 }
