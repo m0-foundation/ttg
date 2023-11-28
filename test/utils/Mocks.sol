@@ -31,7 +31,7 @@ contract MockCashToken {
         _transferFromFail = transferFromFail_;
     }
 
-    function transferFrom(address, address, uint256) external returns (bool success_) {
+    function transferFrom(address, address, uint256) external view returns (bool success_) {
         return !_transferFromFail;
     }
 }

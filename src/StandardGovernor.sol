@@ -15,9 +15,6 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
-// TODO: Determine standard way to inform externals about which token can vote.
-
-// TODO: Implement `QuorumNumeratorUpdated` (`quorumNumerator`, `quorumDenominator`) in the DualGovernor contract.
 // TODO: Emit an event in the Governor or Power Token when a voter has voted on all standard proposals in an epoch.
 // TODO: Consider non-standard simplified versions of governor functions.
 
@@ -183,6 +180,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     function numberOfProposalsVotedOnAt(uint256 epoch_, address voter_) external view returns (uint256 count_) {
         return _numberOfProposalsVotedOn[epoch_][voter_];
+    }
+
+    function quorum() external pure returns (uint256 quorum_) {
+        return 0;
     }
 
     function quorum(uint256) external pure returns (uint256 quorum_) {

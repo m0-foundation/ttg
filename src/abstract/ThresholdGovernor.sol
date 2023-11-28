@@ -9,6 +9,12 @@ import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
 import { BatchGovernor } from "./BatchGovernor.sol";
 
+// TODO: Determine `quorumNumerator`/`quorumDenominator`/`QuorumNumeratorUpdated` stuff, and how it applies to tokens
+//       with a growing total supply.
+//       See: https://docs.tally.xyz/user-guides/tally-contract-compatibility/openzeppelin-governor
+//       See: https://docs.openzeppelin.com/contracts/4.x/api/governance#GovernorVotesQuorumFraction-quorumDenominator--
+//       See: https://portal.thirdweb.com/contracts/VoteERC20
+
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     uint16 public thresholdRatio;
 
@@ -77,6 +83,11 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
     function proposalFee() external pure returns (uint256 proposalFee_) {
         return 0;
+    }
+
+    function quorum() external view returns (uint256 quorum_) {
+        // NOTE: This will only be correct for the first epoch of a proposals lifetime.
+        return (thresholdRatio * _getTotalSupply(PureEpochs.currentEpoch() - 1)) / ONE;
     }
 
     function quorum(uint256 timepoint_) external view returns (uint256 quorum_) {
