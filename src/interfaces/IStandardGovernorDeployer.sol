@@ -3,8 +3,6 @@
 pragma solidity 0.8.21;
 
 interface IStandardGovernorDeployer {
-    error CallerIsNotRegistrar();
-
     error InvalidRegistrarAddress();
 
     error InvalidVaultAddress();
@@ -13,6 +11,8 @@ interface IStandardGovernorDeployer {
 
     error InvalidZeroTokenAddress();
 
+    error NotZeroGovernor();
+
     function deploy(
         address powerToken,
         address emergencyGovernor,
@@ -20,6 +20,8 @@ interface IStandardGovernorDeployer {
         uint256 proposalFee,
         uint256 maxTotalZeroRewardPerActiveEpoch
     ) external returns (address deployed);
+
+    function lastDeploy() external view returns (address lastDeploy);
 
     function nextDeploy() external view returns (address nextDeploy);
 

@@ -19,15 +19,15 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     }
 
     constructor(
-        address registrar_,
         address voteToken_,
-        address standardGovernor_,
         address zeroGovernor_,
+        address registrar_,
+        address standardGovernor_,
         uint16 thresholdRatio_
     ) ThresholdGovernor("EmergencyGovernor", voteToken_, thresholdRatio_) {
+        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
-        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
     }
 
     /******************************************************************************************************************\

@@ -8,30 +8,34 @@ import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
 import { PowerToken } from "./PowerToken.sol";
 
 contract PowerTokenDeployer is IPowerTokenDeployer {
-    address public immutable registrar;
     address public immutable vault;
+    address public immutable zeroGovernor;
+
+    address public lastDeploy;
 
     uint256 public nonce;
 
-    modifier onlyRegistrar() {
-        if (msg.sender != registrar) revert CallerIsNotRegistrar();
+    modifier onlyZeroGovernor() {
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
 
         _;
     }
 
-    constructor(address registrar_, address vault_) {
-        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+    constructor(address zeroGovernor_, address vault_) {
+        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
     }
 
     function deploy(
+        address bootstrapToken_,
         address standardGovernor_,
-        address cashToken_,
-        address bootstrapToken_
-    ) external onlyRegistrar returns (address deployed_) {
+        address cashToken_
+    ) external onlyZeroGovernor returns (address deployed_) {
         ++nonce;
 
-        return address(new PowerToken(standardGovernor_, cashToken_, vault, bootstrapToken_));
+        deployed_ = address(new PowerToken(bootstrapToken_, standardGovernor_, cashToken_, vault));
+
+        lastDeploy = deployed_;
     }
 
     function nextDeploy() external view returns (address nextDeploy_) {

@@ -6,16 +6,6 @@ import { IBatchGovernor } from "../abstract/interfaces/IBatchGovernor.sol";
 
 interface IStandardGovernor is IBatchGovernor {
     /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
-
-    event CashTokenSet(address indexed cashToken);
-
-    event ProposalFeeSet(uint256 proposalFee);
-
-    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);
-
-    /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
@@ -38,6 +28,16 @@ interface IStandardGovernor is IBatchGovernor {
     error NotSelfOrEmergencyGovernor();
 
     error NotZeroGovernor();
+
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    event CashTokenSet(address indexed cashToken);
+
+    event ProposalFeeSet(uint256 proposalFee);
+
+    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

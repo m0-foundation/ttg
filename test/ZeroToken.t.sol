@@ -7,7 +7,7 @@ import { ZeroToken } from "../src/ZeroToken.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract ZeroTokenTests is TestUtils {
-    address internal _registrar = makeAddr("registrar");
+    address internal _standardGovernorDeployer = makeAddr("standardGovernorDeployer");
 
     ZeroToken internal _zeroToken;
 
@@ -30,11 +30,11 @@ contract ZeroTokenTests is TestUtils {
     uint256[] internal _claimableEpochs;
 
     function setUp() external {
-        _zeroToken = new ZeroToken(_registrar, _initialAccounts, _initialAmounts);
+        _zeroToken = new ZeroToken(_standardGovernorDeployer, _initialAccounts, _initialAmounts);
     }
 
     function test_initialState() external {
-        assertEq(_zeroToken.registrar(), _registrar);
+        assertEq(_zeroToken.standardGovernorDeployer(), _standardGovernorDeployer);
 
         for (uint256 index_; index_ < _initialAccounts.length; index_++) {
             assertEq(_zeroToken.balanceOf(_initialAccounts[index_]), _initialAmounts[index_]);

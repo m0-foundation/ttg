@@ -3,15 +3,27 @@
 pragma solidity 0.8.21;
 
 interface IDistributionVault {
-    event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
-
-    event Claim(address indexed token, address indexed account, uint256 indexed epoch, uint256 amount);
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
 
     error AlreadyClaimed();
 
     error EpochTooHigh();
 
     error TransferFailed();
+
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
+
+    event Claim(address indexed token, address indexed account, uint256 indexed epoch, uint256 amount);
+
+    /******************************************************************************************************************\
+    |                                              Interactive Functions                                               |
+    \******************************************************************************************************************/
 
     function distribute(address token) external;
 
@@ -25,6 +37,10 @@ interface IDistributionVault {
         uint256 endEpoch,
         address destination
     ) external returns (uint256 claimed);
+
+    /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
 
     function claimableOfAt(address token, address account, uint256 epoch) external view returns (uint256 claimable);
 

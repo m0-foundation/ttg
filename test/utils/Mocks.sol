@@ -45,7 +45,12 @@ contract MockEmergencyGovernor {
 }
 
 contract MockEmergencyGovernorDeployer {
+    address public lastDeploy;
     address public nextDeploy;
+
+    function setLastDeploy(address lastDeploy_) external {
+        lastDeploy = lastDeploy_;
+    }
 
     function setNextDeploy(address nextDeploy_) external {
         nextDeploy = nextDeploy_;
@@ -129,7 +134,12 @@ contract MockPowerToken {
 }
 
 contract MockPowerTokenDeployer {
+    address public lastDeploy;
     address public nextDeploy;
+
+    function setLastDeploy(address lastDeploy_) external {
+        lastDeploy = lastDeploy_;
+    }
 
     function setNextDeploy(address nextDeploy_) external {
         nextDeploy = nextDeploy_;
@@ -148,11 +158,18 @@ contract MockRegistrar {
 
 contract MockStandardGovernor {
     address public cashToken;
+    address public voteToken;
 
     uint256 public proposalFee;
 
     function setCashToken(address cashToken_) external {
         cashToken = cashToken_;
+    }
+
+    function setCashToken(address, uint256) external {}
+
+    function setVoteToken(address voteToken_) external {
+        voteToken = voteToken_;
     }
 
     function setProposalFee(uint256 proposalFee_) external {
@@ -161,10 +178,15 @@ contract MockStandardGovernor {
 }
 
 contract MockStandardGovernorDeployer {
+    address public lastDeploy;
     address public nextDeploy;
     address public vault;
     address public zeroGovernor;
     address public zeroToken;
+
+    function setLastDeploy(address lastDeploy_) external {
+        lastDeploy = lastDeploy_;
+    }
 
     function setNextDeploy(address nextDeploy_) external {
         nextDeploy = nextDeploy_;
@@ -192,9 +214,24 @@ contract MockZeroToken {
 }
 
 contract MockZeroGovernor {
-    address public startingCashToken;
+    address public emergencyGovernorDeployer;
+    address public powerTokenDeployer;
+    address public standardGovernorDeployer;
+    address public voteToken;
 
-    function setStartingCashToken(address startingCashToken_) external {
-        startingCashToken = startingCashToken_;
+    function setEmergencyGovernorDeployer(address emergencyGovernorDeployer_) external {
+        emergencyGovernorDeployer = emergencyGovernorDeployer_;
+    }
+
+    function setPowerTokenDeployer(address powerTokenDeployer_) external {
+        powerTokenDeployer = powerTokenDeployer_;
+    }
+
+    function setStandardGovernorDeployer(address standardGovernorDeployer_) external {
+        standardGovernorDeployer = standardGovernorDeployer_;
+    }
+
+    function setVoteToken(address voteToken_) external {
+        voteToken = voteToken_;
     }
 }

@@ -4,6 +4,8 @@ pragma solidity 0.8.21;
 
 import { Test } from "../lib/forge-std/src/Test.sol";
 
+import { IStandardGovernorDeployer } from "../src/interfaces/IStandardGovernorDeployer.sol";
+
 import { StandardGovernorDeployer } from "../src/StandardGovernorDeployer.sol";
 
 contract StandardGovernorDeployerTests is Test {
@@ -15,7 +17,7 @@ contract StandardGovernorDeployerTests is Test {
     StandardGovernorDeployer internal _deployer;
 
     function setUp() external {
-        _deployer = new StandardGovernorDeployer(_registrar, _vault, _zeroGovernor, _zeroToken);
+        _deployer = new StandardGovernorDeployer(_zeroGovernor, _registrar, _vault, _zeroToken);
     }
 
     function test_initialState() external {
@@ -26,12 +28,17 @@ contract StandardGovernorDeployerTests is Test {
         assertEq(_deployer.nonce(), 0);
     }
 
+    function test_deployAddress_notZeroGovernor() external {
+        vm.expectRevert(IStandardGovernorDeployer.NotZeroGovernor.selector);
+        _deployer.deploy(makeAddr("powerToken"), makeAddr("emergencyGovernor"), makeAddr("cashToken"), 1, 1);
+    }
+
     function test_deployAddress() external {
         address nextDeploy_ = _deployer.nextDeploy();
 
-        vm.prank(_registrar);
+        vm.prank(_zeroGovernor);
         address deployed_ = _deployer.deploy(
-            makeAddr("voteToken"),
+            makeAddr("powerToken"),
             makeAddr("emergencyGovernor"),
             makeAddr("cashToken"),
             1,

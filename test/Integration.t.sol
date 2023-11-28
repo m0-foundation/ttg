@@ -49,9 +49,6 @@ contract IntegrationTests is TestUtils {
 
     uint256 internal _standardProposalFee = 1_000;
 
-    uint16 internal _emergencyProposalThresholdRatio = 5_000; // 50%
-    uint16 internal _zeroProposalThresholdRatio = 4_000; // 40%
-
     DeployBase internal _deploy;
 
     function setUp() external {
@@ -59,15 +56,12 @@ contract IntegrationTests is TestUtils {
 
         address registrar_ = _deploy.deploy(
             _deployer,
-            0,
-            _initialZeroAccounts,
-            _initialZeroBalances,
             _initialPowerAccounts,
             _initialPowerBalances,
-            _allowedCashTokens,
+            _initialZeroAccounts,
+            _initialZeroBalances,
             _standardProposalFee,
-            _emergencyProposalThresholdRatio,
-            _zeroProposalThresholdRatio
+            _allowedCashTokens
         );
 
         _registrar = IRegistrar(registrar_);

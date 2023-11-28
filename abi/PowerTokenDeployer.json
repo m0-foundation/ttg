@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
+        "name": "zeroGovernor_",
         "type": "address"
       },
       {
@@ -17,21 +17,26 @@
   },
   {
     "inputs": [],
-    "name": "CallerIsNotRegistrar",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidRegistrarAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidVaultAddress",
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "InvalidZeroGovernorAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotZeroGovernor",
+    "type": "error"
+  },
+  {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "bootstrapToken_",
+        "type": "address"
+      },
       {
         "internalType": "address",
         "name": "standardGovernor_",
@@ -40,11 +45,6 @@
       {
         "internalType": "address",
         "name": "cashToken_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "bootstrapToken_",
         "type": "address"
       }
     ],
@@ -57,6 +57,19 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastDeploy",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -87,7 +100,7 @@
   },
   {
     "inputs": [],
-    "name": "registrar",
+    "name": "vault",
     "outputs": [
       {
         "internalType": "address",
@@ -100,7 +113,7 @@
   },
   {
     "inputs": [],
-    "name": "vault",
+    "name": "zeroGovernor",
     "outputs": [
       {
         "internalType": "address",

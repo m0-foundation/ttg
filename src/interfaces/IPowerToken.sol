@@ -6,14 +6,6 @@ import { IEpochBasedInflationaryVoteToken } from "../abstract/interfaces/IEpochB
 
 interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
-
-    event Buy(address indexed buyer, uint256 amount, uint256 cost);
-
-    event TargetSupplyInflated(uint256 indexed targetEpoch, uint256 indexed targetSupply);
-
-    /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
@@ -30,6 +22,14 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     error TransferFromFailed();
 
     error ZeroGovernorAddress();
+
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    event Buy(address indexed buyer, uint256 amount, uint256 cost);
+
+    event TargetSupplyInflated(uint256 indexed targetEpoch, uint256 indexed targetSupply);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

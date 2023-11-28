@@ -8,57 +8,48 @@ import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 
 import { Registrar } from "../src/Registrar.sol";
 
-import { MockBootstrapToken, MockEmergencyGovernor, MockEmergencyGovernorDeployer } from "./utils/Mocks.sol";
-import { MockPowerTokenDeployer, MockStandardGovernor, MockStandardGovernorDeployer } from "./utils/Mocks.sol";
-import { MockZeroGovernor } from "./utils/Mocks.sol";
+import { MockEmergencyGovernorDeployer, MockPowerTokenDeployer } from "./utils/Mocks.sol";
+import { MockStandardGovernorDeployer, MockZeroGovernor } from "./utils/Mocks.sol";
 
 contract RegistrarTests is Test {
     address internal _account1 = makeAddr("account1");
     address internal _account2 = makeAddr("account2");
     address internal _account3 = makeAddr("account3");
+    address internal _emergencyGovernor = makeAddr("emergencyGovernor");
     address internal _powerToken = makeAddr("powerToken");
+    address internal _standardGovernor = makeAddr("standardGovernor");
     address internal _vault = makeAddr("vault");
     address internal _zeroToken = makeAddr("zeroToken");
 
     Registrar internal _registrar;
 
-    MockBootstrapToken internal _bootstrapToken;
-    MockEmergencyGovernor internal _emergencyGovernor;
     MockEmergencyGovernorDeployer internal _emergencyGovernorDeployer;
     MockPowerTokenDeployer internal _powerTokenDeployer;
-    MockStandardGovernor internal _standardGovernor;
     MockStandardGovernorDeployer internal _standardGovernorDeployer;
     MockZeroGovernor internal _zeroGovernor;
 
     function setUp() external {
-        _bootstrapToken = new MockBootstrapToken();
-        _emergencyGovernor = new MockEmergencyGovernor();
         _emergencyGovernorDeployer = new MockEmergencyGovernorDeployer();
         _powerTokenDeployer = new MockPowerTokenDeployer();
         _standardGovernorDeployer = new MockStandardGovernorDeployer();
-        _standardGovernor = new MockStandardGovernor();
         _zeroGovernor = new MockZeroGovernor();
 
-        _powerTokenDeployer.setNextDeploy(_powerToken);
+        _emergencyGovernorDeployer.setLastDeploy(_emergencyGovernor);
 
-        _standardGovernorDeployer.setNextDeploy(address(_standardGovernor));
-        _standardGovernorDeployer.setZeroGovernor(address(_zeroGovernor));
-        _standardGovernorDeployer.setZeroToken(_zeroToken);
+        _powerTokenDeployer.setLastDeploy(_powerToken);
+
+        _standardGovernorDeployer.setLastDeploy(_standardGovernor);
         _standardGovernorDeployer.setVault(_vault);
 
-        _emergencyGovernorDeployer.setNextDeploy(address(_emergencyGovernor));
+        _zeroGovernor.setEmergencyGovernorDeployer(address(_emergencyGovernorDeployer));
+        _zeroGovernor.setPowerTokenDeployer(address(_powerTokenDeployer));
+        _zeroGovernor.setStandardGovernorDeployer(address(_standardGovernorDeployer));
+        _zeroGovernor.setVoteToken(_zeroToken);
 
-        _registrar = new Registrar(
-            address(_standardGovernorDeployer),
-            address(_emergencyGovernorDeployer),
-            address(_powerTokenDeployer),
-            address(_bootstrapToken),
-            1,
-            1
-        );
+        _registrar = new Registrar(address(_zeroGovernor));
     }
 
-    function test_initialState_xxx() external {
+    function test_initialState() external {
         assertEq(_registrar.standardGovernorDeployer(), address(_standardGovernorDeployer));
         assertEq(_registrar.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_registrar.powerTokenDeployer(), address(_powerTokenDeployer));
@@ -71,7 +62,7 @@ contract RegistrarTests is Test {
     }
 
     function test_updateConfig_notStandardOrEmergencyGovernor() external {
-        vm.expectRevert(IRegistrar.CallerIsNotStandardOrEmergencyGovernor.selector);
+        vm.expectRevert(IRegistrar.NotStandardOrEmergencyGovernor.selector);
         _registrar.updateConfig("someKey", "someValue");
     }
 
@@ -119,7 +110,7 @@ contract RegistrarTests is Test {
     }
 
     function test_addToList_notStandardOrEmergencyGovernor() external {
-        vm.expectRevert(IRegistrar.CallerIsNotStandardOrEmergencyGovernor.selector);
+        vm.expectRevert(IRegistrar.NotStandardOrEmergencyGovernor.selector);
         _registrar.addToList("someList", _account1);
     }
 
@@ -159,7 +150,7 @@ contract RegistrarTests is Test {
     }
 
     function test_removeFromList_notStandardOrEmergencyGovernor() external {
-        vm.expectRevert(IRegistrar.CallerIsNotStandardOrEmergencyGovernor.selector);
+        vm.expectRevert(IRegistrar.NotStandardOrEmergencyGovernor.selector);
         _registrar.removeFromList("someList", _account1);
     }
 
@@ -208,27 +199,5 @@ contract RegistrarTests is Test {
         vm.stopPrank();
 
         assertFalse(_registrar.listContains("someList", accounts_));
-    }
-
-    function test_reset_notZeroGovernor() external {
-        vm.expectRevert(IRegistrar.CallerIsNotZeroGovernor.selector);
-        _registrar.reset(address(0));
-    }
-
-    function test_reset() external {
-        address newStandardGovernor_ = makeAddr("newStandardGovernor");
-        address newEmergencyGovernor_ = makeAddr("newEmergencyGovernor");
-        address newPowerToken_ = makeAddr("newPowerToken");
-
-        _standardGovernorDeployer.setNextDeploy(newStandardGovernor_);
-        _emergencyGovernorDeployer.setNextDeploy(newEmergencyGovernor_);
-        _powerTokenDeployer.setNextDeploy(newPowerToken_);
-
-        vm.prank(address(_zeroGovernor));
-        _registrar.reset(_zeroToken);
-
-        assertEq(_registrar.standardGovernor(), newStandardGovernor_);
-        assertEq(_registrar.emergencyGovernor(), newEmergencyGovernor_);
-        assertEq(_registrar.powerToken(), newPowerToken_);
     }
 }

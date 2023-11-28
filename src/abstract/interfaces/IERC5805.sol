@@ -8,9 +8,9 @@ import { IERC6372 } from "./IERC6372.sol";
 // See https://eips.ethereum.org/EIPS/eip-5805
 
 interface IERC5805 is IERC712, IERC6372 {
-    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
-
     event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+
+    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
     /******************************************************************************************************************\
     |                                             Interactive Functions                                                |
@@ -28,7 +28,7 @@ interface IERC5805 is IERC712, IERC6372 {
 
     function delegates(address account) external view returns (address delegatee);
 
-    function getVotes(address account) external view returns (uint256 votePower);
-
     function getPastVotes(address account, uint256 timepoint) external view returns (uint256 votePower);
+
+    function getVotes(address account) external view returns (uint256 votePower);
 }
