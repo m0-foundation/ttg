@@ -8,18 +8,8 @@
       },
       {
         "internalType": "address",
-        "name": "vault_",
+        "name": "zeroGovernor_",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "zeroToken_",
-        "type": "address"
-      },
-      {
-        "internalType": "address[]",
-        "name": "allowedCashTokens_",
-        "type": "address[]"
       }
     ],
     "stateMutability": "nonpayable",
@@ -32,55 +22,13 @@
   },
   {
     "inputs": [],
-    "name": "ZeroCashTokenAddress",
+    "name": "InvalidRegistrarAddress",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "ZeroRegistrarAddress",
+    "name": "InvalidZeroGovernorAddress",
     "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroVaultAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroZeroTokenAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "allowedCashTokens",
-    "outputs": [
-      {
-        "internalType": "address[]",
-        "name": "tokens_",
-        "type": "address[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "index_",
-        "type": "uint256"
-      }
-    ],
-    "name": "allowedCashTokensAt",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [
@@ -90,23 +38,13 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "proposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "maxTotalZeroRewardPerActiveEpoch_",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "standardGovernor_",
+        "type": "address"
       },
       {
         "internalType": "uint16",
-        "name": "powerTokenThresholdRatio_",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint16",
-        "name": "zeroTokenThresholdRatio_",
+        "name": "thresholdRatio_",
         "type": "uint16"
       }
     ],
@@ -123,7 +61,7 @@
   },
   {
     "inputs": [],
-    "name": "getNextDeploy",
+    "name": "nextDeploy",
     "outputs": [
       {
         "internalType": "address",
@@ -162,20 +100,7 @@
   },
   {
     "inputs": [],
-    "name": "vault",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "zeroToken",
+    "name": "zeroGovernor",
     "outputs": [
       {
         "internalType": "address",

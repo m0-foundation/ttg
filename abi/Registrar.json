@@ -3,7 +3,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "governorDeployer_",
+        "name": "standardGovernorDeployer_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "emergencyGovernorDeployer_",
         "type": "address"
       },
       {
@@ -15,6 +20,16 @@
         "internalType": "address",
         "name": "bootstrapToken_",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "standardProposalFee_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "emergencyProposalThresholdRatio_",
+        "type": "uint16"
       }
     ],
     "stateMutability": "nonpayable",
@@ -22,7 +37,64 @@
   },
   {
     "inputs": [],
-    "name": "CallerIsNotGovernor",
+    "name": "CallerIsNotStandardOrEmergencyGovernor",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CallerIsNotZeroGovernor",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidEmergencyGovernorDeployerAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPowerTokenDeployerAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidStandardGovernorDeployerAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidZeroGovernorAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "expected",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "deployed",
+        "type": "address"
+      }
+    ],
+    "name": "UnexpectedPowerTokenDeployed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "expected",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "deployed",
+        "type": "address"
+      }
+    ],
+    "name": "UnexpectedStandardGovernorDeployed",
     "type": "error"
   },
   {
@@ -84,7 +156,39 @@
   },
   {
     "anonymous": false,
-    "inputs": [],
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "standardGovernor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "emergencyGovernor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "powerToken",
+        "type": "address"
+      }
+    ],
+    "name": "EphemeralContractsDeployed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "bootstrapToken",
+        "type": "address"
+      }
+    ],
     "name": "ResetExecuted",
     "type": "event"
   },
@@ -104,6 +208,32 @@
     "name": "addToList",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyGovernor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyGovernorDeployer",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -139,32 +269,6 @@
         "internalType": "bytes32[]",
         "name": "values_",
         "type": "bytes32[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "governor",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "governorDeployer",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -276,6 +380,32 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "standardGovernor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "standardGovernorDeployer",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -296,6 +426,19 @@
   {
     "inputs": [],
     "name": "vault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zeroGovernor",
     "outputs": [
       {
         "internalType": "address",

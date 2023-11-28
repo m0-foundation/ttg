@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 
 import { Test } from "../../lib/forge-std/src/Test.sol";
 
-import { PureEpochs } from "../../src/PureEpochs.sol";
+import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 contract TestUtils is Test {
     function _goToNextEpoch() internal {

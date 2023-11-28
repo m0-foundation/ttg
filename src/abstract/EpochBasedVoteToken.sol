@@ -2,9 +2,10 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "../libs/PureEpochs.sol";
+
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
-import { PureEpochs } from "./PureEpochs.sol";
 import { ERC5805 } from "./ERC5805.sol";
 import { ERC20Permit } from "./ERC20Permit.sol";
 
@@ -12,7 +13,7 @@ import { ERC20Permit } from "./ERC20Permit.sol";
 // TODO: Consider `getPastVotes` for and array of epochs and between start and end epochs.
 // TODO: Consider `delegatesAt` for and array of epochs and between start and end epochs.
 
-contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
+abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     struct AmountWindow {
         uint16 startingEpoch;
         uint240 amount;

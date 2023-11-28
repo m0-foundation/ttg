@@ -2,8 +2,9 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
+
 import { DistributionVault } from "../src/DistributionVault.sol";
-import { PureEpochs } from "../src/PureEpochs.sol";
 
 import { MockERC20, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
@@ -37,8 +38,8 @@ contract DistributionVaultTests is TestUtils {
 
     function test_distribution() external {
         // Sets account balances this epoch.
-        _baseToken.setBalanceAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
-        _baseToken.setBalanceAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
+        _baseToken.setBalanceOfAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
+        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
         _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
 
         // Mint 1_000_000 funds tokens to the ZeroToken contract and distribute them.
@@ -53,8 +54,8 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.claimableOfAt(address(_token1), _accounts[4], _claimableEpochs), 333_333);
 
         // Sets account balances this epoch.
-        _baseToken.setBalanceAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
-        _baseToken.setBalanceAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
+        _baseToken.setBalanceOfAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
+        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
         _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
 
         // Mint 500_000 funds tokens to the ZeroToken contract and distribute them.
@@ -69,8 +70,8 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.claimableOfAt(address(_token1), _accounts[4], _claimableEpochs), 499_999);
 
         // Sets account balances this epoch (Account 0 transfers half their balance to Account 4).
-        _baseToken.setBalanceAt(_accounts[0], PureEpochs.currentEpoch(), 500_000); // 1_000_000 - 500_000
-        _baseToken.setBalanceAt(_accounts[4], PureEpochs.currentEpoch(), 5_500_000); // 5_000_000 + 500_000
+        _baseToken.setBalanceOfAt(_accounts[0], PureEpochs.currentEpoch(), 500_000); // 1_000_000 - 500_000
+        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 5_500_000); // 5_000_000 + 500_000
         _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
 
         // Check that the claimable funds tokens have not changed.
@@ -89,7 +90,7 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.claimableOfAt(address(_token1), _accounts[4], _claimableEpochs), 1_049_999);
 
         // Sets account balances this epoch (Account 0 transfers their remaining balance to Account 4).
-        _baseToken.setBalanceAt(_accounts[4], PureEpochs.currentEpoch(), 6_000_000); // 5_500_000 + 500_000
+        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 6_000_000); // 5_500_000 + 500_000
         _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
 
         // Check that the claimable funds tokens have not changed.

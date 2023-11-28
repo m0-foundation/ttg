@@ -4,11 +4,10 @@ pragma solidity 0.8.21;
 
 import { console2 } from "../lib/forge-std/src/Test.sol";
 
-import { PureEpochs } from "../src/PureEpochs.sol";
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBasedInflationaryVoteTokenHarness.sol";
 import { Invariants } from "./utils/Invariants.sol";
-
 import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_UsersVoteInflationUpgradeOnDelegation

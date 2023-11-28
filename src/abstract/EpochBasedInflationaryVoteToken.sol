@@ -2,23 +2,24 @@
 
 pragma solidity 0.8.21;
 
+import { PureEpochs } from "../libs/PureEpochs.sol";
+
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
-import { PureEpochs } from "./PureEpochs.sol";
 
 // TODO: Consider replacing all repetitive internal function calls with cleaner super calls.
 
-contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
+abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
     struct VoidWindow {
         uint16 startingEpoch;
     }
 
     uint256 public constant ONE = 10_000; // 100% in basis points.
 
-    uint256 internal immutable _participationInflation; // In basis points.
+    uint256 public immutable participationInflation; // In basis points.
 
     mapping(address delegatee => VoidWindow[] participationWindows) internal _participations;
 
@@ -42,7 +43,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
         uint8 decimals_,
         uint256 participationInflation_
     ) EpochBasedVoteToken(name_, symbol_, decimals_) {
-        _participationInflation = participationInflation_;
+        participationInflation = participationInflation_;
     }
 
     /******************************************************************************************************************\
@@ -64,10 +65,6 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
 
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
         return _getParticipationAt(delegatee_, epoch_);
-    }
-
-    function participationInflation() external view returns (uint256 participationInflation_) {
-        return _participationInflation;
     }
 
     /******************************************************************************************************************\
@@ -128,7 +125,7 @@ contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, Ep
     \******************************************************************************************************************/
 
     function _getInflation(uint256 amount_) internal view returns (uint256 inflation_) {
-        return (amount_ * _participationInflation) / ONE;
+        return (amount_ * participationInflation) / ONE;
     }
 
     function _getInflationOf(address account_) internal view returns (uint256 inflation_) {

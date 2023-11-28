@@ -22,19 +22,19 @@
   },
   {
     "inputs": [],
-    "name": "ZeroRegistrarAddress",
+    "name": "InvalidRegistrarAddress",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "ZeroVaultAddress",
+    "name": "InvalidVaultAddress",
     "type": "error"
   },
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "governor_",
+        "name": "standardGovernor_",
         "type": "address"
       },
       {
@@ -61,7 +61,7 @@
   },
   {
     "inputs": [],
-    "name": "getNextDeploy",
+    "name": "nextDeploy",
     "outputs": [
       {
         "internalType": "address",

@@ -26,11 +26,11 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
         _totalSupply = totalSupply_;
     }
 
-    function balanceOfAt(address account_, uint256 epoch_) external view returns (uint256 balance_) {
+    function balanceOfAt(address account_, uint256) external view returns (uint256 balance_) {
         return _balances[account_];
     }
 
-    function totalSupplyAt(uint256 epoch_) external view returns (uint256 totalSupply_) {
+    function totalSupplyAt(uint256) external view returns (uint256 totalSupply_) {
         return _totalSupply;
     }
 }

@@ -2,10 +2,11 @@
 
 pragma solidity 0.8.21;
 
-import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
-import { IEpochBasedInflationaryVoteToken } from "../src/interfaces/IEpochBasedInflationaryVoteToken.sol";
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
-import { PureEpochs } from "../src/PureEpochs.sol";
+import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
+
+import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 
 import { MockBootstrapToken, MockCashToken } from "./utils/Mocks.sol";
 import { PowerTokenHarness } from "./utils/PowerTokenHarness.sol";
@@ -54,7 +55,7 @@ contract PowerTokenTests is TestUtils {
     function test_initialState() external {
         assertEq(_powerToken.bootstrapToken(), address(_bootstrapToken));
         assertEq(_powerToken.cashToken(), address(_cashToken));
-        assertEq(_powerToken.governor(), _governor);
+        assertEq(_powerToken.standardGovernor(), _governor);
         assertEq(_powerToken.vault(), _vault);
         assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
 
@@ -178,7 +179,7 @@ contract PowerTokenTests is TestUtils {
 
         _cashToken.setTransferFromSuccess(true);
 
-        vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector);
+        vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector); // TODO: check if can use IPowerToken here
         vm.prank(_account);
         _powerToken.buy(1, _account);
     }
@@ -213,8 +214,8 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }
 
-    function test_setNextCashToken_notGovernor() external {
-        vm.expectRevert(IPowerToken.NotGovernor.selector);
+    function test_setNextCashToken_NotStandardGovernor() external {
+        vm.expectRevert(IPowerToken.NotStandardGovernor.selector);
         _powerToken.setNextCashToken(address(0));
     }
 

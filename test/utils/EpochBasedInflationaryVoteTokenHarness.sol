@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.21;
 
-import { EpochBasedInflationaryVoteToken } from "../../src/EpochBasedInflationaryVoteToken.sol";
+import { EpochBasedInflationaryVoteToken } from "../../src/abstract/EpochBasedInflationaryVoteToken.sol";
 
 contract EpochBasedInflationaryVoteTokenHarness is EpochBasedInflationaryVoteToken {
     constructor(

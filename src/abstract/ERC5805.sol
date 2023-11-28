@@ -3,7 +3,6 @@
 pragma solidity 0.8.21;
 
 import { IERC5805 } from "./interfaces/IERC5805.sol";
-import { IERC6372 } from "./interfaces/IERC6372.sol";
 
 import { ERC712 } from "./ERC712.sol";
 

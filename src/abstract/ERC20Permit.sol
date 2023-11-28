@@ -13,15 +13,15 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
     //     keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
 
-    string internal _symbol;
+    string public symbol;
 
-    uint8 internal immutable _decimals;
+    uint8 public immutable decimals;
 
     mapping(address account => mapping(address spender => uint256 allowance)) internal _allowance;
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC712(name_) {
-        _symbol = symbol_;
-        _decimals = decimals_;
+        symbol = symbol_;
+        decimals = decimals_;
     }
 
     /******************************************************************************************************************\
@@ -88,16 +88,8 @@ abstract contract ERC20Permit is IERC20Permit, ERC712 {
         return _allowance[account_][spender_];
     }
 
-    function decimals() external view returns (uint8 decimals_) {
-        return _decimals;
-    }
-
     function name() external view returns (string memory name_) {
         return _name;
-    }
-
-    function symbol() external view returns (string memory symbol_) {
-        return _symbol;
     }
 
     /******************************************************************************************************************\
