@@ -3,22 +3,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
+        "name": "zeroGovernor_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "zeroGovernor_",
+        "name": "registrar_",
         "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
-  },
-  {
-    "inputs": [],
-    "name": "CallerIsNotRegistrar",
-    "type": "error"
   },
   {
     "inputs": [],
@@ -28,6 +23,11 @@
   {
     "inputs": [],
     "name": "InvalidZeroGovernorAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotZeroGovernor",
     "type": "error"
   },
   {
@@ -57,6 +57,19 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastDeploy",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

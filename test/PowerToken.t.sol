@@ -15,8 +15,8 @@ import { TestUtils } from "./utils/TestUtils.sol";
 // TODO: Create amd use a harness functions instead of calling functions unrelated to each test.
 
 contract PowerTokenTests is TestUtils {
-    address internal _governor = makeAddr("governor");
     address internal _account = makeAddr("account");
+    address internal _standardGovernor = makeAddr("standardGovernor");
     address internal _vault = makeAddr("vault");
 
     address[] internal _initialAccounts = [
@@ -49,13 +49,13 @@ contract PowerTokenTests is TestUtils {
             _bootstrapToken.setBalance(_initialAccounts[index_], _initialAmounts[index_]);
         }
 
-        _powerToken = new PowerTokenHarness(_governor, address(_cashToken), _vault, address(_bootstrapToken));
+        _powerToken = new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(_cashToken), _vault);
     }
 
     function test_initialState() external {
         assertEq(_powerToken.bootstrapToken(), address(_bootstrapToken));
         assertEq(_powerToken.cashToken(), address(_cashToken));
-        assertEq(_powerToken.standardGovernor(), _governor);
+        assertEq(_powerToken.standardGovernor(), _standardGovernor);
         assertEq(_powerToken.vault(), _vault);
         assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
 
@@ -152,7 +152,7 @@ contract PowerTokenTests is TestUtils {
             _goToNextTransferEpoch();
 
             // During transfer epochs, the next voting epoch is the current epoch + 1.
-            vm.prank(_governor);
+            vm.prank(_standardGovernor);
             _powerToken.markNextVotingEpochAsActive();
 
             assertEq(_powerToken.amountToAuction(), inflation_);
@@ -162,7 +162,7 @@ contract PowerTokenTests is TestUtils {
             inflation_ = inflation_ + (_powerToken.INITIAL_SUPPLY() + inflation_) / 10;
 
             // During voting epochs, the next voting epoch is the current epoch + 2.
-            vm.prank(_governor);
+            vm.prank(_standardGovernor);
             _powerToken.markNextVotingEpochAsActive();
 
             assertEq(_powerToken.amountToAuction(), 0);
@@ -220,7 +220,7 @@ contract PowerTokenTests is TestUtils {
     function test_setNextCashToken_afterNextCashTokenStartingEpoch() external {
         address newCashToken_ = makeAddr("newCashToken");
 
-        vm.prank(_governor);
+        vm.prank(_standardGovernor);
         _powerToken.setNextCashToken(newCashToken_);
 
         assertEq(_powerToken.nextCashTokenStartingEpoch(), PureEpochs.currentEpoch() + 1);
@@ -243,7 +243,7 @@ contract PowerTokenTests is TestUtils {
         _powerToken.setInternalCashToken(address(_cashToken));
         _powerToken.setInternalNextCashToken(makeAddr("someCashToken"));
 
-        vm.prank(_governor);
+        vm.prank(_standardGovernor);
         _powerToken.setNextCashToken(newCashToken_);
 
         assertEq(_powerToken.nextCashTokenStartingEpoch(), nextCashTokenStartingEpoch_); // Unchanged.

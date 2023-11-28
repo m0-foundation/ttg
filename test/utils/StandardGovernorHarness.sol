@@ -6,24 +6,24 @@ import { StandardGovernor } from "../../src/StandardGovernor.sol";
 
 contract StandardGovernorHarness is StandardGovernor {
     constructor(
-        address registrar_,
         address voteToken_,
         address emergencyGovernor_,
         address zeroGovernor_,
-        address zeroToken_,
         address cashToken_,
+        address registrar_,
         address vault_,
+        address zeroToken_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
     )
         StandardGovernor(
-            registrar_,
             voteToken_,
             emergencyGovernor_,
             zeroGovernor_,
-            zeroToken_,
             cashToken_,
+            registrar_,
             vault_,
+            zeroToken_,
             proposalFee_,
             maxTotalZeroRewardPerActiveEpoch_
         )

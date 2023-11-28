@@ -3,6 +3,11 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "bootstrapToken_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "standardGovernor_",
         "type": "address"
       },
@@ -14,11 +19,6 @@
       {
         "internalType": "address",
         "name": "vault_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "bootstrapToken_",
         "type": "address"
       }
     ],

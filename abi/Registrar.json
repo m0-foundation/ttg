@@ -3,33 +3,8 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "standardGovernorDeployer_",
+        "name": "zeroGovernor_",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "emergencyGovernorDeployer_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "powerTokenDeployer_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "bootstrapToken_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "standardProposalFee_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "emergencyProposalThresholdRatio_",
-        "type": "uint16"
       }
     ],
     "stateMutability": "nonpayable",
@@ -37,27 +12,7 @@
   },
   {
     "inputs": [],
-    "name": "CallerIsNotStandardOrEmergencyGovernor",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CallerIsNotZeroGovernor",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidEmergencyGovernorDeployerAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidPowerTokenDeployerAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidStandardGovernorDeployerAddress",
+    "name": "InvalidVaultAddress",
     "type": "error"
   },
   {
@@ -66,35 +21,13 @@
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "expected",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "deployed",
-        "type": "address"
-      }
-    ],
-    "name": "UnexpectedPowerTokenDeployed",
+    "inputs": [],
+    "name": "InvalidZeroTokenAddress",
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "expected",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "deployed",
-        "type": "address"
-      }
-    ],
-    "name": "UnexpectedStandardGovernorDeployed",
+    "inputs": [],
+    "name": "NotStandardOrEmergencyGovernor",
     "type": "error"
   },
   {
@@ -155,44 +88,6 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "standardGovernor",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "emergencyGovernor",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "powerToken",
-        "type": "address"
-      }
-    ],
-    "name": "EphemeralContractsDeployed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "bootstrapToken",
-        "type": "address"
-      }
-    ],
-    "name": "ResetExecuted",
-    "type": "event"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -216,7 +111,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "emergencyGovernor_",
         "type": "address"
       }
     ],
@@ -328,7 +223,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "powerToken_",
         "type": "address"
       }
     ],
@@ -367,25 +262,12 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "bootstrapToken_",
-        "type": "address"
-      }
-    ],
-    "name": "reset",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "standardGovernor",
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "standardGovernor_",
         "type": "address"
       }
     ],

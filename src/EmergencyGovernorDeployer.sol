@@ -12,27 +12,33 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     address public immutable registrar;
     address public immutable zeroGovernor;
 
+    address public lastDeploy;
+
     uint256 public nonce;
 
-    modifier onlyRegistrar() {
-        if (msg.sender != registrar) revert CallerIsNotRegistrar();
+    modifier onlyZeroGovernor() {
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
 
         _;
     }
 
-    constructor(address registrar_, address zeroGovernor_) {
-        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+    constructor(address zeroGovernor_, address registrar_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
+        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
     }
 
     function deploy(
         address powerToken_,
         address standardGovernor_,
         uint16 thresholdRatio_
-    ) external onlyRegistrar returns (address deployed_) {
+    ) external onlyZeroGovernor returns (address deployed_) {
         ++nonce;
 
-        return address(new EmergencyGovernor(registrar, powerToken_, standardGovernor_, zeroGovernor, thresholdRatio_));
+        deployed_ = address(
+            new EmergencyGovernor(powerToken_, zeroGovernor, registrar, standardGovernor_, thresholdRatio_)
+        );
+
+        lastDeploy = deployed_;
     }
 
     function nextDeploy() external view returns (address nextDeploy_) {

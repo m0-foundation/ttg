@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
+        "name": "standardGovernorDeployer_",
         "type": "address"
       },
       {
@@ -38,6 +38,11 @@
   {
     "inputs": [],
     "name": "InvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidStandardGovernorDeployerAddress",
     "type": "error"
   },
   {
@@ -731,7 +736,20 @@
   },
   {
     "inputs": [],
-    "name": "registrar",
+    "name": "standardGovernor",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "standardGovernor_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "standardGovernorDeployer",
     "outputs": [
       {
         "internalType": "address",

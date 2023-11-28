@@ -53,21 +53,21 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     constructor(
-        address registrar_,
         address voteToken_,
         address emergencyGovernor_,
         address zeroGovernor_,
-        address zeroToken_,
         address cashToken_,
+        address registrar_,
         address vault_,
+        address zeroToken_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
     ) BatchGovernor("StandardGovernor", voteToken_) {
-        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((emergencyGovernor = emergencyGovernor_) == address(0)) revert InvalidEmergencyGovernorAddress();
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
-        if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
+        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
+        if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
 
         _setCashToken(cashToken_);
         _setProposalFee(proposalFee_);

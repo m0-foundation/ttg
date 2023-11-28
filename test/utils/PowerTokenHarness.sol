@@ -6,11 +6,11 @@ import { PowerToken } from "../../src/PowerToken.sol";
 
 contract PowerTokenHarness is PowerToken {
     constructor(
-        address governor_,
+        address bootstrapToken_,
+        address standardGovernor_,
         address cashToken_,
-        address vault_,
-        address bootstrapToken_
-    ) PowerToken(governor_, cashToken_, vault_, bootstrapToken_) {}
+        address vault_
+    ) PowerToken(bootstrapToken_, standardGovernor_, cashToken_, vault_) {}
 
     function setNextCashTokenStartingEpoch(uint256 nextCashTokenStartingEpoch_) external {
         _nextCashTokenStartingEpoch = nextCashTokenStartingEpoch_;

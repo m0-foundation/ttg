@@ -4,6 +4,18 @@ pragma solidity 0.8.21;
 
 interface IRegistrar {
     /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    error NotStandardOrEmergencyGovernor();
+
+    error InvalidVaultAddress();
+
+    error InvalidZeroGovernorAddress();
+
+    error InvalidZeroTokenAddress();
+
+    /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
@@ -13,34 +25,6 @@ interface IRegistrar {
 
     event ConfigUpdated(bytes32 indexed key, bytes32 indexed value);
 
-    event ResetExecuted(address indexed bootstrapToken);
-
-    event EphemeralContractsDeployed(
-        address indexed standardGovernor,
-        address indexed emergencyGovernor,
-        address indexed powerToken
-    );
-
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
-
-    error CallerIsNotStandardOrEmergencyGovernor();
-
-    error CallerIsNotZeroGovernor();
-
-    error InvalidEmergencyGovernorDeployerAddress();
-
-    error InvalidPowerTokenDeployerAddress();
-
-    error InvalidStandardGovernorDeployerAddress();
-
-    error InvalidZeroGovernorAddress();
-
-    error UnexpectedPowerTokenDeployed(address expected, address deployed);
-
-    error UnexpectedStandardGovernorDeployed(address expected, address deployed);
-
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
@@ -48,8 +32,6 @@ interface IRegistrar {
     function addToList(bytes32 list, address account) external;
 
     function removeFromList(bytes32 list, address account) external;
-
-    function reset(address bootstrapToken_) external;
 
     function updateConfig(bytes32 key, bytes32 value) external;
 

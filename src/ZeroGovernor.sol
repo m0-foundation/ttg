@@ -5,27 +5,46 @@ pragma solidity 0.8.21;
 import { ThresholdGovernor } from "./abstract/ThresholdGovernor.sol";
 
 import { IEmergencyGovernor } from "./interfaces/IEmergencyGovernor.sol";
-import { IRegistrar } from "./interfaces/IRegistrar.sol";
+import { IEmergencyGovernorDeployer } from "./interfaces/IEmergencyGovernorDeployer.sol";
+import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
+import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
-    address public immutable registrar;
-    address public immutable startingCashToken;
+    uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
+    uint256 internal constant _ONE = 10_000;
+
+    address public immutable emergencyGovernorDeployer;
+    address public immutable powerTokenDeployer;
+    address public immutable standardGovernorDeployer;
 
     mapping(address token => bool allowed) internal _allowedCashTokens;
 
     constructor(
-        address registrar_,
         address voteToken_,
-        address[] memory allowedCashTokens_,
-        uint16 thresholdRatio_
-    ) ThresholdGovernor("ZeroGovernor", voteToken_, thresholdRatio_) {
-        if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
+        address emergencyGovernorDeployer_,
+        address powerTokenDeployer_,
+        address standardGovernorDeployer_,
+        address bootstrapToken_,
+        uint256 standardProposalFee_,
+        uint16 emergencyProposalThresholdRatio_,
+        uint16 zeroProposalThresholdRatio_,
+        address[] memory allowedCashTokens_
+    ) ThresholdGovernor("ZeroGovernor", voteToken_, zeroProposalThresholdRatio_) {
+        if ((emergencyGovernorDeployer = emergencyGovernorDeployer_) == address(0)) {
+            revert InvalidEmergencyGovernorDeployerAddress();
+        }
+
+        if ((powerTokenDeployer = powerTokenDeployer_) == address(0)) {
+            revert InvalidPowerTokenDeployerAddress();
+        }
+
+        if ((standardGovernorDeployer = standardGovernorDeployer_) == address(0)) {
+            revert InvalidStandardGovernorDeployerAddress();
+        }
 
         if (allowedCashTokens_.length == 0) revert NoAllowedCashTokens();
-
-        startingCashToken = allowedCashTokens_[0];
 
         for (uint256 index_; index_ < allowedCashTokens_.length; ++index_) {
             address allowedCashToken_ = allowedCashTokens_[index_];
@@ -34,6 +53,21 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
 
             _allowedCashTokens[allowedCashToken_] = true;
         }
+
+        // Deploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
+        // - the token to bootstrap the `powerToken` balances and voting powers is defined in the constructor
+        // - the starting cash token is the first token in the `_allowedCashTokens` array
+        // - the starting `emergencyGovernor` threshold ratio is defined in the constructor
+        // - the starting `standardGovernor` proposal fee is defined in the constructor
+        _deployEphemeralContracts(
+            emergencyGovernorDeployer_,
+            powerTokenDeployer_,
+            standardGovernorDeployer_,
+            bootstrapToken_,
+            allowedCashTokens_[0],
+            emergencyProposalThresholdRatio_,
+            standardProposalFee_
+        );
     }
 
     /******************************************************************************************************************\
@@ -41,7 +75,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     function emergencyGovernor() public view returns (address emergencyGovernor_) {
-        return IRegistrar(registrar).emergencyGovernor();
+        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
     }
 
     function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
@@ -49,7 +83,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     }
 
     function standardGovernor() public view returns (address standardGovernor_) {
-        return IRegistrar(registrar).standardGovernor();
+        return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
     /******************************************************************************************************************\
@@ -57,11 +91,11 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     function resetToPowerHolders() external onlySelf {
-        IRegistrar(registrar).reset(IRegistrar(registrar).powerToken());
+        _resetContracts(IStandardGovernor(standardGovernor()).voteToken());
     }
 
     function resetToZeroHolders() external onlySelf {
-        IRegistrar(registrar).reset(voteToken);
+        _resetContracts(voteToken);
     }
 
     // TODO: Issue here where Zero holders can set the proposal fee by abusing this proposal.
@@ -77,6 +111,68 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
 
     function setZeroProposalThresholdRatio(uint16 newThresholdRatio_) external onlySelf {
         _setThresholdRatio(newThresholdRatio_);
+    }
+
+    /******************************************************************************************************************\
+    |                                          Internal Interactive Functions                                          |
+    \******************************************************************************************************************/
+
+    function _deployEphemeralContracts(
+        address emergencyGovernorDeployer_,
+        address powerTokenDeployer_,
+        address standardGovernorDeployer_,
+        address bootstrapToken_,
+        address cashToken_,
+        uint16 emergencyProposalThresholdRatio_,
+        uint256 proposalFee_
+    ) internal returns (address standardGovernor_, address emergencyGovernor_, address powerToken_) {
+        address expectedPowerToken_ = IPowerTokenDeployer(powerTokenDeployer_).nextDeploy();
+        address expectedStandardGovernor_ = IStandardGovernorDeployer(standardGovernorDeployer_).nextDeploy();
+
+        emergencyGovernor_ = IEmergencyGovernorDeployer(emergencyGovernorDeployer_).deploy(
+            expectedPowerToken_,
+            expectedStandardGovernor_,
+            emergencyProposalThresholdRatio_
+        );
+
+        standardGovernor_ = IStandardGovernorDeployer(standardGovernorDeployer_).deploy(
+            expectedPowerToken_,
+            emergencyGovernor_,
+            cashToken_,
+            proposalFee_,
+            _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH
+        );
+
+        if (expectedStandardGovernor_ != standardGovernor_) {
+            revert UnexpectedStandardGovernorDeployed(expectedPowerToken_, powerToken_);
+        }
+
+        powerToken_ = IPowerTokenDeployer(powerTokenDeployer_).deploy(bootstrapToken_, standardGovernor_, cashToken_);
+
+        if (expectedPowerToken_ != powerToken_) revert UnexpectedPowerTokenDeployed(expectedPowerToken_, powerToken_);
+    }
+
+    function _resetContracts(address bootstrapToken_) internal {
+        address standardGovernor_ = standardGovernor();
+        address emergencyGovernor_ = emergencyGovernor();
+        address powerToken_;
+
+        // Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
+        // - the token to bootstrap the `powerToken` balances and voting powers is defined in the arguments
+        // - the cash token is the same cash token in the existing `standardGovernor`
+        // - the `emergencyGovernor` threshold ratio is the same threshold ratio in the existing `emergencyGovernor`
+        // - the `standardGovernor` proposal fee is the same proposal fee in the existing `standardGovernor`
+        (standardGovernor_, emergencyGovernor_, powerToken_) = _deployEphemeralContracts(
+            emergencyGovernorDeployer,
+            powerTokenDeployer,
+            standardGovernorDeployer,
+            bootstrapToken_,
+            IStandardGovernor(standardGovernor_).cashToken(),
+            IEmergencyGovernor(emergencyGovernor_).thresholdRatio(),
+            IStandardGovernor(standardGovernor_).proposalFee()
+        );
+
+        emit ResetExecuted(bootstrapToken_, standardGovernor_, emergencyGovernor_, powerToken_);
     }
 
     /******************************************************************************************************************\

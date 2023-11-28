@@ -3,11 +3,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "voteToken_",
         "type": "address"
       },
@@ -23,17 +18,22 @@
       },
       {
         "internalType": "address",
-        "name": "zeroToken_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "cashToken_",
         "type": "address"
       },
       {
         "internalType": "address",
+        "name": "registrar_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "vault_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "zeroToken_",
         "type": "address"
       },
       {

@@ -14,18 +14,20 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
     address public immutable zeroGovernor;
     address public immutable zeroToken;
 
+    address public lastDeploy;
+
     uint256 public nonce;
 
-    modifier onlyRegistrar() {
-        if (msg.sender != registrar) revert CallerIsNotRegistrar();
+    modifier onlyZeroGovernor() {
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
 
         _;
     }
 
-    constructor(address registrar_, address vault_, address zeroGovernor_, address zeroToken_) {
+    constructor(address zeroGovernor_, address registrar_, address vault_, address zeroToken_) {
+        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
-        if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
     }
 
@@ -35,23 +37,24 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
         address cashToken_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
-    ) external onlyRegistrar returns (address deployed_) {
+    ) external onlyZeroGovernor returns (address deployed_) {
         ++nonce;
 
-        return
-            address(
-                new StandardGovernor(
-                    registrar,
-                    powerToken_,
-                    emergencyGovernor_,
-                    zeroGovernor,
-                    zeroToken,
-                    cashToken_,
-                    vault,
-                    proposalFee_,
-                    maxTotalZeroRewardPerActiveEpoch_
-                )
-            );
+        deployed_ = address(
+            new StandardGovernor(
+                powerToken_,
+                emergencyGovernor_,
+                zeroGovernor,
+                cashToken_,
+                registrar,
+                vault,
+                zeroToken,
+                proposalFee_,
+                maxTotalZeroRewardPerActiveEpoch_
+            )
+        );
+
+        lastDeploy = deployed_;
     }
 
     function nextDeploy() external view returns (address nextDeploy_) {

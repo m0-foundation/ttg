@@ -13,9 +13,28 @@ interface IZeroGovernor is IThresholdGovernor {
 
     error InvalidCashTokenAddress();
 
-    error InvalidRegistrarAddress();
+    error InvalidEmergencyGovernorDeployerAddress();
+
+    error InvalidPowerTokenDeployerAddress();
+
+    error InvalidStandardGovernorDeployerAddress();
 
     error NoAllowedCashTokens();
+
+    error UnexpectedPowerTokenDeployed(address expected, address deployed);
+
+    error UnexpectedStandardGovernorDeployed(address expected, address deployed);
+
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    event ResetExecuted(
+        address indexed bootstrapToken,
+        address standardGovernor,
+        address emergencyGovernor,
+        address powerToken
+    );
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
@@ -23,13 +42,15 @@ interface IZeroGovernor is IThresholdGovernor {
 
     function emergencyGovernor() external view returns (address emergencyGovernor);
 
+    function emergencyGovernorDeployer() external view returns (address emergencyGovernorDeployer);
+
     function isAllowedCashToken(address token) external view returns (bool isAllowed);
 
-    function registrar() external view returns (address registrar);
+    function powerTokenDeployer() external view returns (address powerTokenDeployer);
 
     function standardGovernor() external view returns (address standardGovernor);
 
-    function startingCashToken() external view returns (address startingCashToken);
+    function standardGovernorDeployer() external view returns (address standardGovernorDeployer);
 
     /******************************************************************************************************************\
     |                                                Proposal Functions                                                |

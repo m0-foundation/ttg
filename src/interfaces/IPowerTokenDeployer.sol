@@ -3,21 +3,21 @@
 pragma solidity 0.8.21;
 
 interface IPowerTokenDeployer {
-    error CallerIsNotRegistrar();
-
-    error InvalidRegistrarAddress();
-
     error InvalidVaultAddress();
 
+    error InvalidZeroGovernorAddress();
+
+    error NotZeroGovernor();
+
     function deploy(
+        address bootstrapToken,
         address standardGovernor,
-        address cashToken,
-        address bootstrapToken
+        address cashToken
     ) external returns (address deployed);
 
-    function nextDeploy() external view returns (address nextDeploy);
+    function lastDeploy() external view returns (address lastDeploy);
 
-    function registrar() external view returns (address registrar);
+    function nextDeploy() external view returns (address nextDeploy);
 
     function vault() external view returns (address vault);
 }

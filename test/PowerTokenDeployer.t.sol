@@ -4,29 +4,46 @@ pragma solidity 0.8.21;
 
 import { Test } from "../lib/forge-std/src/Test.sol";
 
+import { IPowerTokenDeployer } from "../src/interfaces/IPowerTokenDeployer.sol";
+
 import { PowerTokenDeployer } from "../src/PowerTokenDeployer.sol";
 
-import { MockEpochBasedVoteToken } from "./utils/Mocks.sol";
+import { MockBootstrapToken, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 
 contract DeployerTests is Test {
-    address internal _cashToken = makeAddr("cashToken");
-    address internal _governor = makeAddr("governor");
-    address internal _registrar = makeAddr("registrar");
     address internal _vault = makeAddr("vault");
+    address internal _zeroGovernor = makeAddr("zeroGovernor");
 
     PowerTokenDeployer internal _powerTokenDeployer;
-    MockEpochBasedVoteToken internal _zeroToken;
+    MockBootstrapToken internal _bootstrapToken;
 
     function setUp() external {
-        _zeroToken = new MockEpochBasedVoteToken();
-        _powerTokenDeployer = new PowerTokenDeployer(_registrar, _vault);
+        _powerTokenDeployer = new PowerTokenDeployer(_zeroGovernor, _vault);
+        _bootstrapToken = new MockBootstrapToken();
+
+        _bootstrapToken.setTotalSupply(1);
+    }
+
+    function test_initialState() external {
+        assertEq(_powerTokenDeployer.vault(), _vault);
+        assertEq(_powerTokenDeployer.zeroGovernor(), _zeroGovernor);
+        assertEq(_powerTokenDeployer.nonce(), 0);
+    }
+
+    function test_deployAddress_notZeroGovernor() external {
+        vm.expectRevert(IPowerTokenDeployer.NotZeroGovernor.selector);
+        _powerTokenDeployer.deploy(address(_bootstrapToken), makeAddr("standardGovernor"), makeAddr("cashToken"));
     }
 
     function test_deployAddress() external {
         address nextDeploy_ = _powerTokenDeployer.nextDeploy();
 
-        vm.prank(_registrar);
-        address deployed_ = _powerTokenDeployer.deploy(_governor, _cashToken, address(_zeroToken));
+        vm.prank(_zeroGovernor);
+        address deployed_ = _powerTokenDeployer.deploy(
+            address(_bootstrapToken),
+            makeAddr("standardGovernor"),
+            makeAddr("cashToken")
+        );
 
         assertEq(deployed_, nextDeploy_);
     }

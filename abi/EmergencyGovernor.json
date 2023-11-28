@@ -3,22 +3,22 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "registrar_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "voteToken_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "standardGovernor_",
+        "name": "zeroGovernor_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "zeroGovernor_",
+        "name": "registrar_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "standardGovernor_",
         "type": "address"
       },
       {
