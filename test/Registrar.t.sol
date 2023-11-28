@@ -61,30 +61,30 @@ contract RegistrarTests is Test {
         assertEq(_registrar.powerToken(), _powerToken);
     }
 
-    function test_updateConfig_notStandardOrEmergencyGovernor() external {
+    function test_setKey_notStandardOrEmergencyGovernor() external {
         vm.expectRevert(IRegistrar.NotStandardOrEmergencyGovernor.selector);
-        _registrar.updateConfig("someKey", "someValue");
+        _registrar.setKey("someKey", "someValue");
     }
 
-    function test_updateConfig_fromStandardGovernor() external {
+    function test_setKey_fromStandardGovernor() external {
         assertEq(_registrar.get("someKey"), bytes32(0));
 
         vm.prank(address(_standardGovernor));
-        _registrar.updateConfig("someKey", "someValue");
+        _registrar.setKey("someKey", "someValue");
 
         assertEq(_registrar.get("someKey"), "someValue");
     }
 
-    function test_updateConfig_fromEmergencyGovernor() external {
+    function test_setKey_fromEmergencyGovernor() external {
         assertEq(_registrar.get("someKey"), bytes32(0));
 
         vm.prank(address(_emergencyGovernor));
-        _registrar.updateConfig("someKey", "someValue");
+        _registrar.setKey("someKey", "someValue");
 
         assertEq(_registrar.get("someKey"), "someValue");
     }
 
-    function test_updateConfig_multiple() external {
+    function test_setKey_multiple() external {
         bytes32[] memory keys_ = new bytes32[](3);
         keys_[0] = "someKey1";
         keys_[1] = "someKey2";
@@ -97,9 +97,9 @@ contract RegistrarTests is Test {
         assertEq(values_[2], bytes32(0));
 
         vm.startPrank(address(_standardGovernor));
-        _registrar.updateConfig("someKey1", "someValue1");
-        _registrar.updateConfig("someKey2", "someValue2");
-        _registrar.updateConfig("someKey3", "someValue3");
+        _registrar.setKey("someKey1", "someValue1");
+        _registrar.setKey("someKey2", "someValue2");
+        _registrar.setKey("someKey3", "someValue3");
         vm.stopPrank();
 
         values_ = _registrar.get(keys_);

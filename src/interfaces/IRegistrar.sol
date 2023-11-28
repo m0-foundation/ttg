@@ -23,7 +23,7 @@ interface IRegistrar {
 
     event AddressRemovedFromList(bytes32 indexed list, address indexed account);
 
-    event ConfigUpdated(bytes32 indexed key, bytes32 indexed value);
+    event KeySet(bytes32 indexed key, bytes32 indexed value);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
@@ -33,7 +33,7 @@ interface IRegistrar {
 
     function removeFromList(bytes32 list, address account) external;
 
-    function updateConfig(bytes32 key, bytes32 value) external;
+    function setKey(bytes32 key, bytes32 value) external;
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |

@@ -46,21 +46,21 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         _addToList(list_, account_);
     }
 
-    function addAndRemoveFromList(bytes32 list_, address accountToAdd_, address accountToRemove_) external onlySelf {
-        _addToList(list_, accountToAdd_);
-        _removeFromList(list_, accountToRemove_);
-    }
-
     function removeFromList(bytes32 list_, address account_) external onlySelf {
         _removeFromList(list_, account_);
     }
 
-    function setStandardProposalFee(uint256 newProposalFee_) external onlySelf {
-        IStandardGovernor(standardGovernor).setProposalFee(newProposalFee_);
+    function removeFromAndAddToList(bytes32 list_, address accountToRemove_, address accountToAdd_) external onlySelf {
+        _removeFromList(list_, accountToRemove_);
+        _addToList(list_, accountToAdd_);
     }
 
-    function updateConfig(bytes32 key_, bytes32 value_) external onlySelf {
-        IRegistrar(registrar).updateConfig(key_, value_);
+    function setKey(bytes32 key_, bytes32 value_) external onlySelf {
+        IRegistrar(registrar).setKey(key_, value_);
+    }
+
+    function setStandardProposalFee(uint256 newProposalFee_) external onlySelf {
+        IStandardGovernor(standardGovernor).setProposalFee(newProposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -84,10 +84,10 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
 
         if (
             func_ != this.addToList.selector &&
-            func_ != this.addAndRemoveFromList.selector &&
             func_ != this.removeFromList.selector &&
-            func_ != this.setStandardProposalFee.selector &&
-            func_ != this.updateConfig.selector
+            func_ != this.removeFromAndAddToList.selector &&
+            func_ != this.setKey.selector &&
+            func_ != this.setStandardProposalFee.selector
         ) revert InvalidCallData();
     }
 

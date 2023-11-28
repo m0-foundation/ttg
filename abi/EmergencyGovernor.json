@@ -432,29 +432,6 @@
       },
       {
         "internalType": "address",
-        "name": "accountToAdd_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "accountToRemove_",
-        "type": "address"
-      }
-    ],
-    "name": "addAndRemoveFromList",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "list_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "address",
         "name": "account_",
         "type": "address"
       }
@@ -1141,11 +1118,52 @@
       },
       {
         "internalType": "address",
+        "name": "accountToRemove_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "accountToAdd_",
+        "type": "address"
+      }
+    ],
+    "name": "removeFromAndAddToList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "list_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
         "name": "account_",
         "type": "address"
       }
     ],
     "name": "removeFromList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "value_",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setKey",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1219,24 +1237,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "key_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "value_",
-        "type": "bytes32"
-      }
-    ],
-    "name": "updateConfig",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

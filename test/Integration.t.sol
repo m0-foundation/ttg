@@ -90,7 +90,7 @@ contract IntegrationTests is TestUtils {
         }
     }
 
-    function test_updateConfig() external {
+    function test_setKey() external {
         IStandardGovernor standardGovernor_ = IStandardGovernor(_registrar.standardGovernor());
 
         address[] memory targets_ = new address[](1);
@@ -102,7 +102,7 @@ contract IntegrationTests is TestUtils {
         bytes32 value_ = "TEST_VALUE";
 
         bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(standardGovernor_.updateConfig.selector, key_, value_);
+        callDatas_[0] = abi.encodeWithSelector(standardGovernor_.setKey.selector, key_, value_);
 
         string memory description_ = "Update config key/value pair";
 
@@ -136,7 +136,7 @@ contract IntegrationTests is TestUtils {
         assertEq(_cashToken1.balanceOf(address(standardGovernor_)), 0);
     }
 
-    function test_emergencyUpdateConfig() external {
+    function test_emergencySetKey() external {
         IEmergencyGovernor emergencyGovernor_ = IEmergencyGovernor(_registrar.emergencyGovernor());
 
         address[] memory targets_ = new address[](1);
@@ -148,7 +148,7 @@ contract IntegrationTests is TestUtils {
         bytes32 value_ = "TEST_VALUE";
 
         bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(emergencyGovernor_.updateConfig.selector, key_, value_);
+        callDatas_[0] = abi.encodeWithSelector(emergencyGovernor_.setKey.selector, key_, value_);
 
         string memory description_ = "Emergency update config key/value pair";
 
