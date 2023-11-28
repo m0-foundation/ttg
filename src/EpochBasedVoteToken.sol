@@ -225,7 +225,8 @@ contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
         if (length_ == 0) {
             if (amount_ > type(uint240).max) revert AmountExceedsUint240();
 
-            amountWindows_.push(AmountWindow(uint16(currentEpoch_), uint240(amount_)));
+            // NOTE: `operation_(0, amount_)` is necessary for almost all operations other than setting or adding.
+            amountWindows_.push(AmountWindow(uint16(currentEpoch_), uint240(operation_(0, amount_))));
 
             return (0, amount_);
         }
