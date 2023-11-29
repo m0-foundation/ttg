@@ -22,6 +22,8 @@ interface IBatchGovernor is IGovernorBySig {
 
     error ExecutionFailed(bytes data);
 
+    error InvalidEpoch();
+
     error InvalidCallData();
 
     error InvalidCallDatasLength();

@@ -93,6 +93,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidEpoch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidPowerTokenDeployerAddress",
     "type": "error"
   },

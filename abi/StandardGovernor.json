@@ -104,6 +104,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidEpoch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidRegistrarAddress",
     "type": "error"
   },
