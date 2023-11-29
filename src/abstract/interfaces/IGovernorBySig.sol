@@ -2,8 +2,9 @@
 
 pragma solidity 0.8.21;
 
+import { IERC712 } from "../../../lib/common/src/interfaces/IERC712.sol";
+
 import { IGovernor } from "./IGovernor.sol";
-import { IERC712 } from "./IERC712.sol";
 
 interface IGovernorBySig is IERC712, IGovernor {
     function castVoteBySig(

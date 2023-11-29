@@ -2,8 +2,9 @@
 
 pragma solidity 0.8.21;
 
+import { IERC20Permit } from "../../../lib/common/src/interfaces/IERC20Permit.sol";
+
 import { IERC5805 } from "./IERC5805.sol";
-import { IERC20Permit } from "./IERC20Permit.sol";
 
 interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     error AlreadyDelegated();

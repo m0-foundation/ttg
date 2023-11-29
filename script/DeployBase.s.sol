@@ -3,10 +3,9 @@
 pragma solidity 0.8.21;
 
 import { Script, console2 } from "../lib/forge-std/src/Script.sol";
+import { ContractHelper } from "../lib/common/src/ContractHelper.sol";
 
 import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
-
-import { ContractHelper } from "../src/libs/ContractHelper.sol";
 
 import { DistributionVault } from "../src/DistributionVault.sol";
 import { EmergencyGovernorDeployer } from "../src/EmergencyGovernorDeployer.sol";

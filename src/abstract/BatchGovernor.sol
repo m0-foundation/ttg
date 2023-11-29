@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.21;
 
+import { ERC712 } from "../../lib/common/src/ERC712.sol";
+
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
 import { IBatchGovernor } from "./interfaces/IBatchGovernor.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
-
-import { ERC712 } from "./ERC712.sol";
 
 abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.

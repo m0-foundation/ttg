@@ -2,12 +2,15 @@
 
 pragma solidity 0.8.21;
 
+import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
+
+import { ERC20Permit } from "../../lib/common/src/ERC20Permit.sol";
+
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
-import { ERC20Permit } from "./ERC20Permit.sol";
 
 // TODO: Consider making more external function (like `balanceOf`, and `balanceOfAt`) public to be used internally.
 // TODO: Consider `getPastVotes` for and array of epochs and between start and end epochs.
@@ -38,7 +41,9 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function balanceOf(address account_) external view virtual returns (uint256 balance_) {
+    function balanceOf(
+        address account_
+    ) external view virtual override(IERC20, ERC20Permit) returns (uint256 balance_) {
         return _getLatestValue(_balances[account_]);
     }
 
@@ -81,7 +86,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getValueAt(_votingPowers[account_], epoch_);
     }
 
-    function totalSupply() public view virtual returns (uint256 totalSupply_) {
+    function totalSupply() public view virtual override(IERC20, ERC20Permit) returns (uint256 totalSupply_) {
         return _getLatestValue(_totalSupplies);
     }
 

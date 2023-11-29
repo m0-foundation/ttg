@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.21;
 
-import { IERC5805 } from "./interfaces/IERC5805.sol";
+import { ERC712 } from "../../lib/common/src/ERC712.sol";
 
-import { ERC712 } from "./ERC712.sol";
+import { IERC5805 } from "./interfaces/IERC5805.sol";
 
 // TODO: Consider changing `address owner/account` and `uint256 expiry/deadline`, and thus the typehash literals.
 

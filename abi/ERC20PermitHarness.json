@@ -119,7 +119,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "account",
+        "name": "sender",
         "type": "address"
       },
       {
@@ -159,6 +159,25 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "_balances",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -216,7 +235,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "account",
+        "name": "account_",
         "type": "address"
       }
     ],
@@ -224,7 +243,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "balance",
+        "name": "balance_",
         "type": "uint256"
       }
     ],
@@ -404,7 +423,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "totalSupply_",
         "type": "uint256"
       }
     ],
