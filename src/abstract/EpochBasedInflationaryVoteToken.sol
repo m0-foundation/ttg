@@ -13,6 +13,11 @@ import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
 // TODO: Consider replacing all repetitive internal function calls with cleaner super calls.
 
+// NOTE: There is no feasible way to emit `Transfer` events for inflationary minting such that external client can
+//       index them and track balances and total supply correctly. Specifically,a nd only for total supply indexing, one
+//       can assume that total supply is the sum of all voting powers, thus tracking the deltas of the
+//       `DelegateVotesChanged` events will suffice.
+
 abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
     struct VoidWindow {
         uint16 startingEpoch;

@@ -897,11 +897,6 @@
         "type": "uint8"
       },
       {
-        "internalType": "uint16",
-        "name": "thresholdRatio_",
-        "type": "uint16"
-      },
-      {
         "internalType": "uint256",
         "name": "noVotes_",
         "type": "uint256"
@@ -915,6 +910,11 @@
         "internalType": "address",
         "name": "proposer_",
         "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "thresholdRatio_",
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",

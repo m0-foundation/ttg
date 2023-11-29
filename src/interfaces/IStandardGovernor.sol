@@ -35,6 +35,8 @@ interface IStandardGovernor is IBatchGovernor {
 
     event CashTokenSet(address indexed cashToken);
 
+    event HasVotedOnAllProposals(address indexed voter, uint256 indexed currentEpoch);
+
     event ProposalFeeSet(uint256 proposalFee);
 
     event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);

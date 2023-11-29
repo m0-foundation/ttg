@@ -231,6 +231,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             proposal_.yesWeight += weight_;
         }
 
+        // TODO: Check if ignoring the voter's reason breaks community compatibility of this event.
         emit VoteCast(voter_, proposalId_, support_, weight_, "");
     }
 

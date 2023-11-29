@@ -114,6 +114,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         }
 
         _nextCashToken = nextCashToken_;
+
+        emit NextCashTokenSet(_nextCashTokenStartingEpoch, _nextCashToken);
     }
 
     /******************************************************************************************************************\

@@ -265,7 +265,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         uint256 numberOfProposalsVotedOn_ = ++_numberOfProposalsVotedOn[currentEpoch_][voter_];
 
+        // NOTE: Will only get beyond this statement once per epoch as there is no way to vote on more proposals than
+        //       exist in this epoch.
         if (numberOfProposalsVotedOn_ != _numberOfProposals[currentEpoch_]) return (weight_, snapshot_);
+
+        emit HasVotedOnAllProposals(voter_, currentEpoch_);
 
         IPowerToken(voteToken).markParticipation(voter_);
 
