@@ -38,6 +38,8 @@ interface IBatchGovernor is IGovernorBySig {
 
     error InvalidVoteTokenAddress();
 
+    error InvalidGovernorSignature(address voter);
+
     error NotSelf();
 
     error ProposalCannotBeExecuted();

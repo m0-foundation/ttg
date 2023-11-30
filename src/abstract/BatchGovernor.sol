@@ -3,6 +3,7 @@
 pragma solidity 0.8.21;
 
 import { ERC712 } from "../../lib/common/src/ERC712.sol";
+import { SignatureChecker } from "../../lib/common/src/SignatureChecker.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
@@ -85,33 +86,41 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     function castVoteBySig(
         uint256 proposalId_,
         uint8 support_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
+        address voter_,
+        bytes memory signature_
     ) external returns (uint256 weight_) {
-        (weight_, ) = _castVote(_getSigner(_getBallotDigest(proposalId_, support_), v_, r_, s_), proposalId_, support_);
+        bool valid_ = SignatureChecker.isValidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
+        if (!valid_) revert InvalidGovernorSignature(voter_);
+
+        (weight_, ) = _castVote(voter_, proposalId_, support_);
     }
 
     function castVotesBySig(
         uint256[] calldata proposalIds_,
         uint8[] calldata supports_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
+        address voter_,
+        bytes memory signature_
     ) external returns (uint256 weight_) {
-        return _castVotes(_getSigner(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_), proposalIds_, supports_);
+        bool valid_ = SignatureChecker.isValidSignature(voter_, _getBallotsDigest(proposalIds_, supports_), signature_);
+        if (!valid_) revert InvalidGovernorSignature(voter_);
+        return _castVotes(voter_, proposalIds_, supports_);
     }
 
     function castVoteWithReasonBySig(
         uint256 proposalId_,
         uint8 support_,
         string calldata reason_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
+        address voter_,
+        bytes memory signature_
     ) external returns (uint256 weight_) {
+        bool valid_ = SignatureChecker.isValidSignature(
+            voter_,
+            _getBallotWithReasonDigest(proposalId_, support_, reason_),
+            signature_
+        );
+        if (!valid_) revert InvalidGovernorSignature(voter_);
         (weight_, ) = _castVote(
-            _getSigner(_getBallotWithReasonDigest(proposalId_, support_, reason_), v_, r_, s_),
+            voter_,
             proposalId_,
             support_
         );
@@ -121,13 +130,18 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint256[] calldata proposalIds_,
         uint8[] calldata supports_,
         string[] calldata reasons_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
+        address voter_,
+        bytes memory signature_
     ) external returns (uint256 weight_) {
+        bool valid_ = SignatureChecker.isValidSignature(
+            voter_,
+            _getBallotsWithReasonDigest(proposalIds_, supports_, reasons_),
+            signature_
+        );
+        if (!valid_) revert InvalidGovernorSignature(voter_);
         return
             _castVotes(
-                _getSigner(_getBallotsWithReasonDigest(proposalIds_, supports_, reasons_), v_, r_, s_),
+                voter_,
                 proposalIds_,
                 supports_
             );
