@@ -51,13 +51,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getValueAt(_balances[account_], epoch_);
     }
 
-    function balancesOfAt(
-        address account_,
-        uint256[] calldata epochs_
-    ) external view virtual returns (uint256[] memory balances_) {
-        return _getValuesAt(_balances[account_], epochs_);
-    }
-
     function balancesOfBetween(
         address account_,
         uint256 startEpoch_,
@@ -92,10 +85,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
     function totalSupplyAt(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
         return _getValueAt(_totalSupplies, epoch_);
-    }
-
-    function totalSuppliesAt(uint256[] calldata epochs_) public view virtual returns (uint256[] memory totalSupplies_) {
-        return _getValuesAt(_totalSupplies, epochs_);
     }
 
     function totalSuppliesBetween(
@@ -321,41 +310,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
             if (amountWindow_.startingEpoch <= epoch_) return amountWindow_.amount;
         } while (index_ > 0);
-    }
-
-    function _getValuesAt(
-        AmountWindow[] storage amountWindows_,
-        uint256[] memory epochs_
-    ) internal view returns (uint256[] memory values_) {
-        uint256 epochsIndex_ = epochs_.length;
-
-        values_ = new uint256[](epochsIndex_);
-
-        uint256 windowIndex_ = amountWindows_.length;
-
-        if (windowIndex_ == 0 || epochsIndex_ == 0) return values_;
-
-        uint256 epoch_ = epochs_[--epochsIndex_];
-
-        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
-        do {
-            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --windowIndex_);
-
-            uint256 amountWindowStartingEpoch_ = amountWindow_.startingEpoch;
-
-            // Keep checking if the AmountWindow's startingEpoch is applicable to the current and decrementing epoch.
-            while (amountWindowStartingEpoch_ <= epoch_) {
-                values_[epochsIndex_] = amountWindow_.amount;
-
-                if (epochsIndex_ == 0) return values_;
-
-                uint256 previousEpoch_ = epochs_[--epochsIndex_];
-
-                if (previousEpoch_ >= epoch_) revert InvalidEpochOrdering();
-
-                epoch_ = previousEpoch_;
-            }
-        } while (windowIndex_ > 0);
     }
 
     function _getValuesBetween(

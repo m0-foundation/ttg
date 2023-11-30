@@ -17,19 +17,15 @@ interface IDistributionVault {
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
-    event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
+    event Claim(address indexed token, address indexed account, uint256 startEpoch, uint256 endEpoch, uint256 amount);
 
-    event Claim(address indexed token, address indexed account, uint256 indexed epoch, uint256 amount);
+    event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
 
     function distribute(address token) external;
-
-    function claim(address token, uint256 epoch, address destination) external returns (uint256 claimed);
-
-    function claim(address token, uint256[] calldata epochs, address destination) external returns (uint256 claimed);
 
     function claim(
         address token,
@@ -42,15 +38,7 @@ interface IDistributionVault {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    function claimableOfAt(address token, address account, uint256 epoch) external view returns (uint256 claimable);
-
-    function claimableOfAt(
-        address token,
-        address account,
-        uint256[] calldata epochs
-    ) external view returns (uint256 claimable);
-
-    function claimableOfBetween(
+    function getClaimable(
         address token,
         address account,
         uint256 startEpoch,

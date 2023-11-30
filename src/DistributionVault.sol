@@ -39,85 +39,27 @@ contract DistributionVault is IDistributionVault {
         _lastTokenBalances[token_] = lastTokenBalances_ + amount_;
     }
 
-    function claim(address token_, uint256 epoch_, address destination_) external returns (uint256 claimed_) {
-        claimed_ = claimableOfAt(token_, msg.sender, epoch_);
-
-        _claims[token_][epoch_][msg.sender] = true;
-
-        emit Claim(token_, msg.sender, epoch_, claimed_);
-
-        // TODO: Consider replacing with a balance check and optional `distribute`.
-        _lastTokenBalances[token_] -= claimed_;
-
-        if (!ERC20Helper.transfer(token_, destination_, claimed_)) revert TransferFailed();
-    }
-
-    function claim(
-        address token_,
-        uint256[] calldata epochs_,
-        address destination_
-    ) external returns (uint256 claimed_) {
-        claimed_ = claimableOfAt(token_, msg.sender, epochs_);
-
-        for (uint256 index_; index_ < epochs_.length; ++index_) {
-            uint256 epoch_ = epochs_[index_];
-
-            _claims[token_][epoch_][msg.sender] = true;
-
-            emit Claim(token_, msg.sender, epoch_, claimed_);
-        }
-
-        // TODO: Consider replacing with a balance check and optional `distribute`.
-        _lastTokenBalances[token_] -= claimed_;
-
-        if (!ERC20Helper.transfer(token_, destination_, claimed_)) revert TransferFailed();
-    }
-
     function claim(
         address token_,
         uint256 startEpoch_,
         uint256 endEpoch_,
         address destination_
     ) external returns (uint256 claimed_) {
-        claimed_ = claimableOfBetween(token_, msg.sender, startEpoch_, endEpoch_);
+        claimed_ = getClaimable(token_, msg.sender, startEpoch_, endEpoch_);
 
         for (uint256 epoch_ = startEpoch_; epoch_ <= endEpoch_; ++epoch_) {
             _claims[token_][epoch_][msg.sender] = true;
-
-            emit Claim(token_, msg.sender, epoch_, claimed_);
         }
 
         // TODO: Consider replacing with a balance check and optional `distribute`.
         _lastTokenBalances[token_] -= claimed_;
 
+        emit Claim(token_, msg.sender, startEpoch_, endEpoch_, claimed_);
+
         if (!ERC20Helper.transfer(token_, destination_, claimed_)) revert TransferFailed();
     }
 
-    function claimableOfAt(address token_, address account_, uint256 epoch_) public view returns (uint256 claimable_) {
-        return
-            _getClaimable(
-                token_,
-                account_,
-                epoch_,
-                IEpochBasedVoteToken(baseToken).balanceOfAt(account_, epoch_),
-                IEpochBasedVoteToken(baseToken).totalSupplyAt(epoch_)
-            );
-    }
-
-    function claimableOfAt(
-        address token_,
-        address account_,
-        uint256[] calldata epochs_
-    ) public view returns (uint256 claimable_) {
-        uint256[] memory balances_ = IEpochBasedVoteToken(baseToken).balancesOfAt(account_, epochs_);
-        uint256[] memory totalSupplies_ = IEpochBasedVoteToken(baseToken).totalSuppliesAt(epochs_);
-
-        for (uint256 index_; index_ < epochs_.length; ++index_) {
-            claimable_ += _getClaimable(token_, account_, epochs_[index_], balances_[index_], totalSupplies_[index_]);
-        }
-    }
-
-    function claimableOfBetween(
+    function getClaimable(
         address token_,
         address account_,
         uint256 startEpoch_,
@@ -128,6 +70,7 @@ contract DistributionVault is IDistributionVault {
             startEpoch_,
             endEpoch_
         );
+
         uint256[] memory totalSupplies_ = IEpochBasedVoteToken(baseToken).totalSuppliesBetween(startEpoch_, endEpoch_);
 
         uint256 epochCount_ = endEpoch_ - startEpoch_ + 1;
@@ -154,14 +97,6 @@ contract DistributionVault is IDistributionVault {
 
         if (_claims[token_][epoch_][account_]) return 0;
 
-        return _getClaimable(_distributions[token_][epoch_], balance_, totalSupply_);
-    }
-
-    function _getClaimable(
-        uint256 totalDistribution_,
-        uint256 balance_,
-        uint256 totalSupply_
-    ) internal pure returns (uint256 claimable_) {
-        return (totalDistribution_ * balance_) / totalSupply_;
+        return (_distributions[token_][epoch_] * balance_) / totalSupply_;
     }
 }

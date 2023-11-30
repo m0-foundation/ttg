@@ -516,30 +516,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "balancesOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "balances_",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "startEpoch_",
         "type": "uint256"
@@ -1027,25 +1003,6 @@
         "internalType": "uint256",
         "name": "targetSupply_",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "totalSuppliesAt",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "totalSupplies_",
-        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",

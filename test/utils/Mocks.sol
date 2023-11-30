@@ -74,22 +74,26 @@ contract MockEpochBasedVoteToken {
         totalSupplyAt[epoch_] = totalSupplyAt_;
     }
 
-    function balancesOfAt(
+    function balancesOfBetween(
         address account_,
-        uint256[] calldata epochs_
+        uint256 startEpoch_,
+        uint256 endEpoch_
     ) external view returns (uint256[] memory balances_) {
-        balances_ = new uint256[](epochs_.length);
+        balances_ = new uint256[](endEpoch_ - startEpoch_ + 1);
 
-        for (uint256 index_; index_ < epochs_.length; ++index_) {
-            balances_[index_] = balanceOfAt[account_][epochs_[index_]];
+        for (uint256 index_; index_ < endEpoch_ - startEpoch_ + 1; ++index_) {
+            balances_[index_] = balanceOfAt[account_][startEpoch_ + index_];
         }
     }
 
-    function totalSuppliesAt(uint256[] calldata epochs_) external view returns (uint256[] memory totalSupplies_) {
-        totalSupplies_ = new uint256[](epochs_.length);
+    function totalSuppliesBetween(
+        uint256 startEpoch_,
+        uint256 endEpoch_
+    ) public view virtual returns (uint256[] memory totalSupplies_) {
+        totalSupplies_ = new uint256[](endEpoch_ - startEpoch_ + 1);
 
-        for (uint256 index_; index_ < epochs_.length; ++index_) {
-            totalSupplies_[index_] = totalSupplyAt[epochs_[index_]];
+        for (uint256 index_; index_ < endEpoch_ - startEpoch_ + 1; ++index_) {
+            totalSupplies_[index_] = totalSupplyAt[startEpoch_ + index_];
         }
     }
 }

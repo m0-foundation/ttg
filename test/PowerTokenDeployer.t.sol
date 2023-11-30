@@ -8,7 +8,7 @@ import { IPowerTokenDeployer } from "../src/interfaces/IPowerTokenDeployer.sol";
 
 import { PowerTokenDeployer } from "../src/PowerTokenDeployer.sol";
 
-import { MockBootstrapToken, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
+import { MockBootstrapToken } from "./utils/Mocks.sol";
 
 contract DeployerTests is Test {
     address internal _vault = makeAddr("vault");

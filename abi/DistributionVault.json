@@ -41,9 +41,15 @@
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
-        "name": "epoch",
+        "name": "startEpoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endEpoch",
         "type": "uint256"
       },
       {
@@ -134,114 +140,11 @@
         "internalType": "address",
         "name": "token_",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "destination_",
-        "type": "address"
       }
     ],
-    "name": "claim",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimed_",
-        "type": "uint256"
-      }
-    ],
+    "name": "distribute",
+    "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "address",
-        "name": "destination_",
-        "type": "address"
-      }
-    ],
-    "name": "claim",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimed_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "claimableOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimable_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "claimableOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimable_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -267,7 +170,7 @@
         "type": "uint256"
       }
     ],
-    "name": "claimableOfBetween",
+    "name": "getClaimable",
     "outputs": [
       {
         "internalType": "uint256",
@@ -276,19 +179,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "distribute",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
