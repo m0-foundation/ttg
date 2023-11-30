@@ -269,6 +269,25 @@
       {
         "indexed": true,
         "internalType": "uint256",
+        "name": "startingEpoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "nextCashToken",
+        "type": "address"
+      }
+    ],
+    "name": "NextCashTokenSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
         "name": "targetEpoch",
         "type": "uint256"
       },

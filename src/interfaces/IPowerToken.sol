@@ -29,6 +29,8 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     event Buy(address indexed buyer, uint256 amount, uint256 cost);
 
+    event NextCashTokenSet(uint256 indexed startingEpoch, address indexed nextCashToken);
+
     event TargetSupplyInflated(uint256 indexed targetEpoch, uint256 indexed targetSupply);
 
     /******************************************************************************************************************\

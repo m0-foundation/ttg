@@ -66,10 +66,10 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
             uint16 voteEnd_,
             bool executed_,
             ProposalState state_,
-            uint16 thresholdRatio_,
             uint256 noVotes_,
             uint256 yesVotes_,
-            address proposer_
+            address proposer_,
+            uint16 thresholdRatio_
         )
     {
         Proposal storage proposal_ = _proposals[proposalId_];
@@ -78,10 +78,10 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         voteEnd_ = proposal_.voteEnd;
         executed_ = proposal_.executed;
         state_ = state(proposalId_);
-        thresholdRatio_ = proposal_.thresholdRatio;
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
         proposer_ = proposal_.proposer;
+        thresholdRatio_ = proposal_.thresholdRatio;
     }
 
     function proposalFee() external pure returns (uint256 proposalFee_) {

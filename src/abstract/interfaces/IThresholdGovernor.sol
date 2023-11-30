@@ -31,10 +31,10 @@ interface IThresholdGovernor is IBatchGovernor {
             uint16 voteEnd,
             bool executed,
             ProposalState state,
-            uint16 thresholdRatio,
             uint256 noVotes,
             uint256 yesVotes,
-            address proposer
+            address proposer,
+            uint16 thresholdRatio
         );
 
     function thresholdRatio() external view returns (uint16 thresholdRatio);
