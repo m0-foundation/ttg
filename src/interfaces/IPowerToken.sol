@@ -39,8 +39,6 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     function buy(uint256 amount, address destination) external;
 
-    // TODO: buyWithPermit
-
     function markNextVotingEpochAsActive() external;
 
     function markParticipation(address delegatee) external;

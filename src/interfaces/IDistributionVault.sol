@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.21;
 
-interface IDistributionVault {
+import { IERC712 } from "../../lib/common/src/interfaces/IERC712.sol";
+
+interface IDistributionVault is IERC712 {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
@@ -25,8 +27,6 @@ interface IDistributionVault {
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
 
-    function distribute(address token) external;
-
     function claim(
         address token,
         uint256 startEpoch,
@@ -34,9 +34,23 @@ interface IDistributionVault {
         address destination
     ) external returns (uint256 claimed);
 
+    function claimBySig(
+        address account,
+        address token,
+        uint256 startEpoch,
+        uint256 endEpoch,
+        address destination,
+        uint256 deadline_,
+        bytes memory signature
+    ) external returns (uint256 claimed);
+
+    function distribute(address token) external;
+
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
+
+    function CLAIM_TYPEHASH() external view returns (bytes32 typehash);
 
     function getClaimable(
         address token,
@@ -44,4 +58,6 @@ interface IDistributionVault {
         uint256 startEpoch,
         uint256 endEpoch
     ) external view returns (uint256 claimable);
+
+    function name() external view returns (string memory name);
 }
