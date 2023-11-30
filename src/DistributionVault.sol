@@ -2,12 +2,13 @@
 
 pragma solidity 0.8.21;
 
+import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
+
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
 import { IEpochBasedVoteToken } from "./abstract/interfaces/IEpochBasedVoteToken.sol";
-import { IERC20 } from "./abstract/interfaces/IERC20.sol";
 
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 

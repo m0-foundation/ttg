@@ -2,9 +2,10 @@
 
 pragma solidity 0.8.21;
 
+import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
+
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
-import { IERC20 } from "./interfaces/IERC20.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflationaryVoteToken.sol";
 

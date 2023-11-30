@@ -2,7 +2,8 @@
 
 pragma solidity 0.8.21;
 
-import { IERC712 } from "./IERC712.sol";
+import { IERC712 } from "../../../lib/common/src/interfaces/IERC712.sol";
+
 import { IERC6372 } from "./IERC6372.sol";
 
 // See https://eips.ethereum.org/EIPS/eip-5805

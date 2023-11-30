@@ -2,13 +2,12 @@
 
 pragma solidity 0.8.21;
 
-import { ERC20Permit } from "../../src/abstract/ERC20Permit.sol";
-import { ERC712 } from "../../src/abstract/ERC712.sol";
+import { ERC20Permit } from "../../lib/common/src/ERC20Permit.sol";
 
 contract ERC20PermitHarness is ERC20Permit {
-    uint256 public totalSupply;
+    uint256 internal _totalSupply;
 
-    mapping(address account => uint256 balance) public balanceOf;
+    mapping(address account => uint256 balance) public _balances;
 
     constructor(
         string memory name_,
@@ -17,15 +16,23 @@ contract ERC20PermitHarness is ERC20Permit {
     ) ERC20Permit(name_, symbol_, uint8(decimals_)) {}
 
     function mint(address recipient_, uint256 amount_) external {
-        balanceOf[recipient_] += amount_;
-        totalSupply += amount_;
+        _balances[recipient_] += amount_;
+        _totalSupply += amount_;
 
         emit Transfer(address(0), recipient_, amount_);
     }
 
+    function balanceOf(address account_) external view override returns (uint256 balance_) {
+        return _balances[account_];
+    }
+
+    function totalSupply() external view override returns (uint256 totalSupply_) {
+        return _totalSupply;
+    }
+
     function _transfer(address sender_, address recipient_, uint256 amount_) internal override {
-        balanceOf[sender_] -= amount_;
-        balanceOf[recipient_] += amount_;
+        _balances[sender_] -= amount_;
+        _balances[recipient_] += amount_;
 
         emit Transfer(sender_, recipient_, amount_);
     }
