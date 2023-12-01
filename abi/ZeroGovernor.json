@@ -108,6 +108,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidStandardGovernorDeployerAddress",
     "type": "error"
   },
@@ -139,11 +144,6 @@
   {
     "inputs": [],
     "name": "InvalidVoteTokenAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MalleableSignature",
     "type": "error"
   },
   {
@@ -215,18 +215,7 @@
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "SignerMismatch",
     "type": "error"
   },
@@ -432,33 +421,7 @@
   },
   {
     "inputs": [],
-    "name": "BALLOTS_WITH_REASON_TYPEHASH",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "BALLOT_TYPEHASH",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "BALLOT_WITH_REASON_TYPEHASH",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -587,6 +550,40 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "voter_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proposalId_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "support_",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature_",
+        "type": "bytes"
+      }
+    ],
+    "name": "castVoteBySig",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "weight_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "proposalId_",
         "type": "uint256"
@@ -616,37 +613,17 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "proposalId_",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "proposalIds_",
+        "type": "uint256[]"
       },
       {
-        "internalType": "uint8",
-        "name": "support_",
-        "type": "uint8"
-      },
-      {
-        "internalType": "string",
-        "name": "reason_",
-        "type": "string"
-      },
-      {
-        "internalType": "uint8",
-        "name": "v_",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "r_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "s_",
-        "type": "bytes32"
+        "internalType": "uint8[]",
+        "name": "supports_",
+        "type": "uint8[]"
       }
     ],
-    "name": "castVoteWithReasonBySig",
+    "name": "castVotes",
     "outputs": [
       {
         "internalType": "uint256",
@@ -660,6 +637,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "voter_",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "proposalIds_",
         "type": "uint256[]"
@@ -668,9 +650,14 @@
         "internalType": "uint8[]",
         "name": "supports_",
         "type": "uint8[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature_",
+        "type": "bytes"
       }
     ],
-    "name": "castVotes",
+    "name": "castVotesBySig",
     "outputs": [
       {
         "internalType": "uint256",
@@ -710,79 +697,6 @@
       }
     ],
     "name": "castVotesBySig",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "weight_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "proposalIds_",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint8[]",
-        "name": "supports_",
-        "type": "uint8[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "",
-        "type": "string[]"
-      }
-    ],
-    "name": "castVotesWithReason",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "weight_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "proposalIds_",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint8[]",
-        "name": "supports_",
-        "type": "uint8[]"
-      },
-      {
-        "internalType": "string[]",
-        "name": "reasons_",
-        "type": "string[]"
-      },
-      {
-        "internalType": "uint8",
-        "name": "v_",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "r_",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "s_",
-        "type": "bytes32"
-      }
-    ],
-    "name": "castVotesWithReasonBySig",
     "outputs": [
       {
         "internalType": "uint256",

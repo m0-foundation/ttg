@@ -38,6 +38,21 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20Permit(name_, symbol_, decimals_) {}
 
     /******************************************************************************************************************\
+    |                                      External/Public Interactive Functions                                       |
+    \******************************************************************************************************************/
+
+    function delegateBySig(
+        address account_,
+        address delegatee_,
+        uint256 nonce_,
+        uint256 expiry_,
+        bytes memory signature_
+    ) external {
+        _revertIfInvalidSignature(account_, _getDelegationDigest(delegatee_, nonce_, expiry_), signature_);
+        _delegateBySig(account_, delegatee_, nonce_, expiry_);
+    }
+
+    /******************************************************************************************************************\
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 

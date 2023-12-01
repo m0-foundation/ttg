@@ -28,16 +28,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // keccak256("Ballot(uint256 proposalId,uint8 support)")
     bytes32 public constant BALLOT_TYPEHASH = 0x150214d74d59b7d1e90c73fc22ef3d991dd0a76b046543d4d80ab92d2a50328f;
 
-    // keccak256("Ballots(uint256[] proposalIds,uint8[] supports)")
-    bytes32 public constant BALLOTS_TYPEHASH = 0xb20d034e2b92f6b024d089dda1efe87253106a2d1a82b2a19ec386d383e7aa32;
-
-    // keccak256("Ballot(uint256 proposalId,uint8 support,string reason)")
-    bytes32 public constant BALLOT_WITH_REASON_TYPEHASH =
-        0x61550a894bd041be3cb7ce7ed747abee6eca83842eee10ff98891711d55a697f;
-
-    // keccak256("Ballots(uint256[] proposalIds,uint8[] supports,string[] reasons)")
-    bytes32 public constant BALLOTS_WITH_REASON_TYPEHASH =
-        0x4a8d949a35428f9a377e2e2b89d8883cda4fbc8055ff94f098fc4955c82d42ff;
+    // keccak256("Ballots(uint256[] proposalIds,uint8[] support)")
+    bytes32 public constant BALLOTS_TYPEHASH = 0x17b363a9cc71c97648659dc006723bbea6565fe35148add65f6887abf5158d39;
 
     address public immutable voteToken;
 
@@ -74,14 +66,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         (weight_, ) = _castVote(msg.sender, proposalId_, support_);
     }
 
-    function castVotesWithReason(
-        uint256[] calldata proposalIds_,
-        uint8[] calldata supports_,
-        string[] calldata
-    ) external returns (uint256 weight_) {
-        return _castVotes(msg.sender, proposalIds_, supports_);
-    }
-
     function castVoteBySig(
         uint256 proposalId_,
         uint8 support_,
@@ -89,7 +73,22 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         bytes32 r_,
         bytes32 s_
     ) external returns (uint256 weight_) {
-        (weight_, ) = _castVote(_getSigner(_getBallotDigest(proposalId_, support_), v_, r_, s_), proposalId_, support_);
+        (weight_, ) = _castVote(
+            _getSignerAndRevertItInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
+            proposalId_,
+            support_
+        );
+    }
+
+    function castVoteBySig(
+        address voter_,
+        uint256 proposalId_,
+        uint8 support_,
+        bytes memory signature_
+    ) external returns (uint256 weight_) {
+        _revertIfInvalidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
+
+        (weight_, ) = _castVote(voter_, proposalId_, support_);
     }
 
     function castVotesBySig(
@@ -99,38 +98,23 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         bytes32 r_,
         bytes32 s_
     ) external returns (uint256 weight_) {
-        return _castVotes(_getSigner(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_), proposalIds_, supports_);
-    }
-
-    function castVoteWithReasonBySig(
-        uint256 proposalId_,
-        uint8 support_,
-        string calldata reason_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
-    ) external returns (uint256 weight_) {
-        (weight_, ) = _castVote(
-            _getSigner(_getBallotWithReasonDigest(proposalId_, support_, reason_), v_, r_, s_),
-            proposalId_,
-            support_
-        );
-    }
-
-    function castVotesWithReasonBySig(
-        uint256[] calldata proposalIds_,
-        uint8[] calldata supports_,
-        string[] calldata reasons_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
-    ) external returns (uint256 weight_) {
         return
             _castVotes(
-                _getSigner(_getBallotsWithReasonDigest(proposalIds_, supports_, reasons_), v_, r_, s_),
+                _getSignerAndRevertItInvalidSignature(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_),
                 proposalIds_,
                 supports_
             );
+    }
+
+    function castVotesBySig(
+        address voter_,
+        uint256[] calldata proposalIds_,
+        uint8[] calldata supports_,
+        bytes memory signature_
+    ) external returns (uint256 weight_) {
+        _revertIfInvalidSignature(voter_, _getBallotsDigest(proposalIds_, supports_), signature_);
+
+        return _castVotes(voter_, proposalIds_, supports_);
     }
 
     /******************************************************************************************************************\
@@ -332,26 +316,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint8[] calldata supports_
     ) internal view returns (bytes32 digest_) {
         digest_ = _getDigest(keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, supports_)));
-    }
-
-    function _getBallotWithReasonDigest(
-        uint256 proposalId_,
-        uint8 support_,
-        string calldata reason_
-    ) internal view returns (bytes32 digest_) {
-        digest_ = _getDigest(keccak256(abi.encode(BALLOT_WITH_REASON_TYPEHASH, proposalId_, support_, reason_)));
-    }
-
-    function _getBallotsWithReasonDigest(
-        uint256[] calldata proposalIds_,
-        uint8[] calldata supports_,
-        string[] calldata reasons_
-    ) internal view returns (bytes32 digest_) {
-        digest_ = _getDigest(keccak256(abi.encode(BALLOTS_WITH_REASON_TYPEHASH, proposalIds_, supports_, reasons_)));
-    }
-
-    function _getSigner(bytes32 digest_, uint8 v_, bytes32 r_, bytes32 s_) internal view returns (address signer_) {
-        signer_ = _getSigner(digest_, type(uint256).max, v_, r_, s_); // NOTE: No expiration.
     }
 
     function _getTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
