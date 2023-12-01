@@ -67,12 +67,12 @@
   },
   {
     "inputs": [],
-    "name": "InvalidVaultAddress",
+    "name": "InvalidSignatureLength",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "MalleableSignature",
+    "name": "InvalidVaultAddress",
     "type": "error"
   },
   {
@@ -118,18 +118,7 @@
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "SignerMismatch",
     "type": "error"
   },
@@ -150,17 +139,7 @@
   },
   {
     "inputs": [],
-    "name": "ZeroDecreaseAllowance",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "ZeroGovernorAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroIncreaseAllowance",
     "type": "error"
   },
   {
@@ -516,30 +495,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "balancesOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "balances_",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
         "name": "startEpoch_",
         "type": "uint256"
@@ -712,6 +667,39 @@
         "internalType": "bytes32",
         "name": "s_",
         "type": "bytes32"
+      }
+    ],
+    "name": "delegateBySig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "delegatee_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nonce_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expiry_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature_",
+        "type": "bytes"
       }
     ],
     "name": "delegateBySig",
@@ -960,6 +948,39 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes",
+        "name": "signature_",
+        "type": "bytes"
+      }
+    ],
+    "name": "permit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "spender_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline_",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint8",
         "name": "v_",
         "type": "uint8"
@@ -1027,25 +1048,6 @@
         "internalType": "uint256",
         "name": "targetSupply_",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "totalSuppliesAt",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "totalSupplies_",
-        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",

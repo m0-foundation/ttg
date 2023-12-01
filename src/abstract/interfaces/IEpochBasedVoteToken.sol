@@ -16,12 +16,22 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     error TransferToSelf();
 
     /******************************************************************************************************************\
+    |                                             Interactive Functions                                                |
+    \******************************************************************************************************************/
+
+    function delegateBySig(
+        address account,
+        address delegatee,
+        uint256 nonce,
+        uint256 expiry,
+        bytes memory signature
+    ) external;
+
+    /******************************************************************************************************************\
     |                                              View/Pure Functions                                                 |
     \******************************************************************************************************************/
 
     function balanceOfAt(address account, uint256 epoch) external view returns (uint256 balance);
-
-    function balancesOfAt(address account, uint256[] calldata epochs) external view returns (uint256[] memory balances);
 
     function balancesOfBetween(
         address account,
@@ -32,8 +42,6 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     function delegatesAt(address account, uint256 epoch) external view returns (address delegatee);
 
     function totalSupplyAt(uint256 epoch) external view returns (uint256 totalSupply);
-
-    function totalSuppliesAt(uint256[] calldata epochs) external view returns (uint256[] memory totalSupplies);
 
     function totalSuppliesBetween(
         uint256 startEpoch,

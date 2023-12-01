@@ -29,19 +29,12 @@ abstract contract ERC5805 is IERC5805, ERC712 {
         bytes32 r_,
         bytes32 s_
     ) external {
-        bytes32 digest_ = _getDelegationDigest(delegatee_, nonce_, expiry_);
-        address signer_ = _getSigner(digest_, expiry_, v_, r_, s_);
-        uint256 currentNonce_ = _nonces[signer_];
-
-        // Nonce must equal the current unused nonce, before it is incremented.
-        if (nonce_ == currentNonce_) revert ReusedNonce(nonce_, currentNonce_);
-
-        // Nonce realistically cannot overflow.
-        unchecked {
-            _nonces[signer_] = currentNonce_ + 1;
-        }
-
-        _delegate(signer_, delegatee_);
+        _delegateBySig(
+            _getSignerAndRevertIfInvalidSignature(_getDelegationDigest(delegatee_, nonce_, expiry_), v_, r_, s_),
+            delegatee_,
+            nonce_,
+            expiry_
+        );
     }
 
     /******************************************************************************************************************\
@@ -49,6 +42,21 @@ abstract contract ERC5805 is IERC5805, ERC712 {
     \******************************************************************************************************************/
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual;
+
+    function _delegateBySig(address account_, address delegatee_, uint256 nonce_, uint256 expiry_) internal {
+        _revertIfExpired(expiry_);
+
+        uint256 currentNonce_ = _nonces[account_];
+
+        // Nonce must equal the current unused nonce, before it is incremented.
+        if (nonce_ == currentNonce_) revert ReusedNonce(nonce_, currentNonce_);
+
+        unchecked {
+            _nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
+        }
+
+        _delegate(account_, delegatee_);
+    }
 
     /******************************************************************************************************************\
     |                                           Internal View/Pure Functions                                           |

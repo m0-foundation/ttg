@@ -27,7 +27,7 @@
   },
   {
     "inputs": [],
-    "name": "MalleableSignature",
+    "name": "InvalidSignatureLength",
     "type": "error"
   },
   {
@@ -63,29 +63,8 @@
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "SignerMismatch",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroDecreaseAllowance",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroIncreaseAllowance",
     "type": "error"
   },
   {
@@ -359,6 +338,39 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "spender_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature_",
+        "type": "bytes"
+      }
+    ],
+    "name": "permit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

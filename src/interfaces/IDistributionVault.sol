@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.21;
 
-interface IDistributionVault {
+import { IERC712 } from "../../lib/common/src/interfaces/IERC712.sol";
+
+interface IDistributionVault is IERC712 {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
@@ -17,19 +19,13 @@ interface IDistributionVault {
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
-    event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
+    event Claim(address indexed token, address indexed account, uint256 startEpoch, uint256 endEpoch, uint256 amount);
 
-    event Claim(address indexed token, address indexed account, uint256 indexed epoch, uint256 amount);
+    event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
-
-    function distribute(address token) external;
-
-    function claim(address token, uint256 epoch, address destination) external returns (uint256 claimed);
-
-    function claim(address token, uint256[] calldata epochs, address destination) external returns (uint256 claimed);
 
     function claim(
         address token,
@@ -38,22 +34,30 @@ interface IDistributionVault {
         address destination
     ) external returns (uint256 claimed);
 
+    function claimBySig(
+        address account,
+        address token,
+        uint256 startEpoch,
+        uint256 endEpoch,
+        address destination,
+        uint256 deadline,
+        bytes memory signature
+    ) external returns (uint256 claimed);
+
+    function distribute(address token) external;
+
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    function claimableOfAt(address token, address account, uint256 epoch) external view returns (uint256 claimable);
+    function CLAIM_TYPEHASH() external view returns (bytes32 typehash);
 
-    function claimableOfAt(
-        address token,
-        address account,
-        uint256[] calldata epochs
-    ) external view returns (uint256 claimable);
-
-    function claimableOfBetween(
+    function getClaimable(
         address token,
         address account,
         uint256 startEpoch,
         uint256 endEpoch
     ) external view returns (uint256 claimable);
+
+    function name() external view returns (string memory name);
 }

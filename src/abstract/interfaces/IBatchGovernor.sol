@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.21;
 
-import { IGovernorBySig } from "./IGovernorBySig.sol";
+import { IGovernor } from "./IGovernor.sol";
 
-interface IBatchGovernor is IGovernorBySig {
+interface IBatchGovernor is IGovernor {
     /******************************************************************************************************************\
     |                                                      Enums                                                       |
     \******************************************************************************************************************/
@@ -49,16 +49,36 @@ interface IBatchGovernor is IGovernorBySig {
     error ProposalNotActive(ProposalState state);
 
     /******************************************************************************************************************\
+    |                                      External/Public Interactive Functions                                       |
+    \******************************************************************************************************************/
+
+    function castVoteBySig(
+        address voter,
+        uint256 proposalId,
+        uint8 support,
+        bytes memory signature
+    ) external returns (uint256 weight);
+
+    function castVotesBySig(
+        uint256[] calldata proposalIds,
+        uint8[] calldata support,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 weight);
+
+    function castVotesBySig(
+        address voter,
+        uint256[] calldata proposalIds,
+        uint8[] calldata support,
+        bytes memory signature
+    ) external returns (uint256 weight);
+
+    /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
-
-    function BALLOT_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
-
     function BALLOTS_TYPEHASH() external pure returns (bytes32 typehash);
-
-    function BALLOTS_WITH_REASON_TYPEHASH() external pure returns (bytes32 typehash);
 
     function ONE() external pure returns (uint256 one);
 

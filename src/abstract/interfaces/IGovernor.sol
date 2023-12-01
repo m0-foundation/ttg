@@ -2,9 +2,11 @@
 
 pragma solidity 0.8.21;
 
+import { IERC712 } from "../../../lib/common/src/interfaces/IERC712.sol";
+
 import { IERC6372 } from "./IERC6372.sol";
 
-interface IGovernor is IERC6372 {
+interface IGovernor is IERC6372, IERC712 {
     enum ProposalState {
         Pending,
         Active,
@@ -38,6 +40,14 @@ interface IGovernor is IERC6372 {
 
     function castVote(uint256 proposalId, uint8 support) external returns (uint256 weight);
 
+    function castVoteBySig(
+        uint256 proposalId,
+        uint8 support,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 weight);
+
     function castVoteWithReason(
         uint256 proposalId,
         uint8 support,
@@ -62,6 +72,8 @@ interface IGovernor is IERC6372 {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
+    function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
+
     function COUNTING_MODE() external view returns (string memory countingMode);
 
     function getVotes(address account, uint256 timepoint) external view returns (uint256 weight);
@@ -75,6 +87,8 @@ interface IGovernor is IERC6372 {
 
     // NOTE: Does not seem to be needed by Tally, but is implemented in OpenZeppelin's Governor contract.
     function hasVoted(uint256 proposalId, address account) external view returns (bool hasVoted);
+
+    function name() external view returns (string memory name);
 
     function proposalDeadline(uint256 proposalId) external view returns (uint256 deadline);
 

@@ -47,7 +47,7 @@ interface IStandardGovernor is IBatchGovernor {
 
     function sendProposalFeeToVault(uint256 proposalId) external;
 
-    function setCashToken(address newCashToken, uint256 newProposalFee_) external;
+    function setCashToken(address newCashToken, uint256 newProposalFee) external;
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
@@ -98,7 +98,7 @@ interface IStandardGovernor is IBatchGovernor {
 
     function removeFromAndAddToList(bytes32 list, address accountToRemove, address accountToAdd) external;
 
-    function setKey(bytes32 key, bytes32 value_) external;
+    function setKey(bytes32 key, bytes32 value) external;
 
     function setProposalFee(uint256 newProposalFee) external;
 }

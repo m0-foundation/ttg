@@ -22,6 +22,53 @@
   },
   {
     "inputs": [],
+    "name": "InvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "nonce",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentNonce",
+        "type": "uint256"
+      }
+    ],
+    "name": "ReusedNonce",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "SignatureExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SignerMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "TransferFailed",
     "type": "error"
   },
@@ -41,9 +88,15 @@
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
-        "name": "epoch",
+        "name": "startEpoch",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endEpoch",
         "type": "uint256"
       },
       {
@@ -80,6 +133,32 @@
     ],
     "name": "Distribution",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "CLAIM_TYPEHASH",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DOMAIN_SEPARATOR",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "domainSeparator_",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -132,25 +211,45 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "token_",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "epoch_",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
         "type": "uint256"
       },
       {
         "internalType": "address",
         "name": "destination_",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature_",
+        "type": "bytes"
       }
     ],
-    "name": "claim",
+    "name": "claimBySig",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "claimed_",
+        "name": "claimed",
         "type": "uint256"
       }
     ],
@@ -163,85 +262,11 @@
         "internalType": "address",
         "name": "token_",
         "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "address",
-        "name": "destination_",
-        "type": "address"
       }
     ],
-    "name": "claim",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimed_",
-        "type": "uint256"
-      }
-    ],
+    "name": "distribute",
+    "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "claimableOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimable_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "epochs_",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "claimableOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "claimable_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -267,7 +292,7 @@
         "type": "uint256"
       }
     ],
-    "name": "claimableOfBetween",
+    "name": "getClaimable",
     "outputs": [
       {
         "internalType": "uint256",
@@ -279,16 +304,35 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name_",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
-        "name": "token_",
+        "name": "account_",
         "type": "address"
       }
     ],
-    "name": "distribute",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "nonces",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "nonce_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]
