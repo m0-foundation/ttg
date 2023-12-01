@@ -81,8 +81,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         _mint(destination_, amount_);
     }
 
-    // TODO: buyWithPermit via ERC712 inheritance.
-
     function markNextVotingEpochAsActive() external onlyStandardGovernor {
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 

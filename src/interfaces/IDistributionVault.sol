@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.21;
 
-import { IERC712 } from "../../lib/common/src/interfaces/IERC712.sol";
+import { IStatefulERC712 } from "../../lib/common/src/interfaces/IStatefulERC712.sol";
 
-interface IDistributionVault is IERC712 {
+interface IDistributionVault is IStatefulERC712 {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/

@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 
 import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
 
-import { ERC712 } from "../lib/common/src/ERC712.sol";
+import { StatefulERC712 } from "../lib/common/src/StatefulERC712.sol";
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
@@ -14,7 +14,7 @@ import { IEpochBasedVoteToken } from "./abstract/interfaces/IEpochBasedVoteToken
 
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
-contract DistributionVault is IDistributionVault, ERC712 {
+contract DistributionVault is IDistributionVault, StatefulERC712 {
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
     bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
 
@@ -26,7 +26,7 @@ contract DistributionVault is IDistributionVault, ERC712 {
 
     mapping(address token => mapping(uint256 epoch => mapping(address account => bool claimed))) internal _claims;
 
-    constructor(address baseToken_) ERC712("DistributionVault") {
+    constructor(address baseToken_) StatefulERC712("DistributionVault") {
         baseToken = baseToken_;
     }
 

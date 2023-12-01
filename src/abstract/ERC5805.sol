@@ -2,13 +2,13 @@
 
 pragma solidity 0.8.21;
 
-import { ERC712 } from "../../lib/common/src/ERC712.sol";
+import { StatefulERC712 } from "../../lib/common/src/StatefulERC712.sol";
 
 import { IERC5805 } from "./interfaces/IERC5805.sol";
 
 // TODO: Consider changing `address owner/account` and `uint256 expiry/deadline`, and thus the typehash literals.
 
-abstract contract ERC5805 is IERC5805, ERC712 {
+abstract contract ERC5805 is IERC5805, StatefulERC712 {
     // DELEGATION_TYPEHASH =
     //     keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
     bytes32 public constant DELEGATION_TYPEHASH = 0xe48329057bfd03d55e49b547132e39cffd9c1820ad7b9d4c5307691425d15adf;

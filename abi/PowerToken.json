@@ -337,7 +337,7 @@
     "outputs": [
       {
         "internalType": "bytes32",
-        "name": "domainSeparator_",
+        "name": "",
         "type": "bytes32"
       }
     ],
@@ -387,12 +387,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "account_",
+        "name": "account",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "spender_",
+        "name": "spender",
         "type": "address"
       }
     ],
@@ -400,7 +400,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "allowance_",
+        "name": "allowance",
         "type": "uint256"
       }
     ],
@@ -939,7 +939,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "amount_",
+        "name": "value_",
         "type": "uint256"
       },
       {
@@ -972,7 +972,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "amount_",
+        "name": "value_",
         "type": "uint256"
       },
       {
