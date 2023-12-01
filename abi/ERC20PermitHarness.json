@@ -68,16 +68,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "ZeroDecreaseAllowance",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroIncreaseAllowance",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {

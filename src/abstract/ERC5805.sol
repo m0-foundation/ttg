@@ -30,7 +30,7 @@ abstract contract ERC5805 is IERC5805, ERC712 {
         bytes32 s_
     ) external {
         _delegateBySig(
-            _getSignerAndRevertItInvalidSignature(_getDelegationDigest(delegatee_, nonce_, expiry_), v_, r_, s_),
+            _getSignerAndRevertIfInvalidSignature(_getDelegationDigest(delegatee_, nonce_, expiry_), v_, r_, s_),
             delegatee_,
             nonce_,
             expiry_

@@ -139,17 +139,7 @@
   },
   {
     "inputs": [],
-    "name": "ZeroDecreaseAllowance",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "ZeroGovernorAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ZeroIncreaseAllowance",
     "type": "error"
   },
   {

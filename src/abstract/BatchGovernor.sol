@@ -74,7 +74,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         bytes32 s_
     ) external returns (uint256 weight_) {
         (weight_, ) = _castVote(
-            _getSignerAndRevertItInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
+            _getSignerAndRevertIfInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
             proposalId_,
             support_
         );
@@ -100,7 +100,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     ) external returns (uint256 weight_) {
         return
             _castVotes(
-                _getSignerAndRevertItInvalidSignature(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_),
+                _getSignerAndRevertIfInvalidSignature(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_),
                 proposalIds_,
                 supports_
             );
