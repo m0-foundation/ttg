@@ -43,7 +43,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
 
     function markParticipation(address delegatee) external;
 
-    function setNextCashToken(address nextCashToken_) external;
+    function setNextCashToken(address nextCashToken) external;
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |

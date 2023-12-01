@@ -40,7 +40,7 @@ interface IDistributionVault is IERC712 {
         uint256 startEpoch,
         uint256 endEpoch,
         address destination,
-        uint256 deadline_,
+        uint256 deadline,
         bytes memory signature
     ) external returns (uint256 claimed);
 
