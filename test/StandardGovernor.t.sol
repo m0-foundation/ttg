@@ -94,7 +94,7 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.setNumberOfProposals(currentEpoch, 10);
 
         _powerToken.setVotePower(1);
-        _powerToken.setTotalSupplyAt(1);
+        _powerToken.setPastTotalSupply(1);
 
         // TODO: Expect _no_ IPowerToken.markParticipation
         // TODO: Expect _no_ IZeroToken.mint
@@ -114,7 +114,7 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.setNumberOfProposals(currentEpoch, 1);
 
         _powerToken.setVotePower(1);
-        _powerToken.setTotalSupplyAt(1);
+        _powerToken.setPastTotalSupply(1);
 
         // TODO: Expect IPowerToken.markParticipation
         // TODO: Expect IZeroToken.mint

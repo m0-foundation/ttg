@@ -9,12 +9,22 @@ import { IERC6372 } from "./IERC6372.sol";
 // See https://eips.ethereum.org/EIPS/eip-5805
 
 interface IERC5805 is IStatefulERC712, IERC6372 {
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    error NotPastEpoch(uint256 epoch, uint256 currentEpoch);
+
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
     event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
 
     event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
     /******************************************************************************************************************\
-    |                                             Interactive Functions                                                |
+    |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
 
     function delegate(address delegatee) external;
@@ -22,7 +32,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
     function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) external;
 
     /******************************************************************************************************************\
-    |                                              View/Pure Functions                                                 |
+    |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
     function DELEGATION_TYPEHASH() external view returns (bytes32 typehash);

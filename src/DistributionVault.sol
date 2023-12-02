@@ -90,13 +90,9 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) public view returns (uint256 claimable_) {
-        uint256[] memory balances_ = IEpochBasedVoteToken(baseToken).balancesOfBetween(
-            account_,
-            startEpoch_,
-            endEpoch_
-        );
+        uint256[] memory balances_ = IEpochBasedVoteToken(baseToken).pastBalancesOf(account_, startEpoch_, endEpoch_);
 
-        uint256[] memory totalSupplies_ = IEpochBasedVoteToken(baseToken).totalSuppliesBetween(startEpoch_, endEpoch_);
+        uint256[] memory totalSupplies_ = IEpochBasedVoteToken(baseToken).pastTotalSupplies(startEpoch_, endEpoch_);
 
         uint256 epochCount_ = endEpoch_ - startEpoch_ + 1;
 

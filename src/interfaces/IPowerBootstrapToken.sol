@@ -5,7 +5,7 @@ pragma solidity 0.8.21;
 interface IPowerBootstrapToken {
     error LengthMismatch(uint256 accountsLength, uint256 balancesLength);
 
-    function balanceOfAt(address account, uint256 epoch) external view returns (uint256 balance);
+    function pastBalanceOf(address account, uint256 epoch) external view returns (uint256 balance);
 
-    function totalSupplyAt(uint256 epoch) external view returns (uint256 totalSupply);
+    function pastTotalSupply(uint256 epoch) external view returns (uint256 totalSupply);
 }

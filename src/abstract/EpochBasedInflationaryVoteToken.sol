@@ -62,7 +62,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         return _getLatestValue(_balances[account_]) + _getInflationOf(account_);
     }
 
-    function balanceOfAt(
+    function pastBalanceOf(
         address account_,
         uint256 epoch_
     ) public view virtual override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 balance_) {

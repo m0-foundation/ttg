@@ -319,7 +319,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function _getTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
-        return IEpochBasedVoteToken(voteToken).totalSupplyAt(timepoint_);
+        return IEpochBasedVoteToken(voteToken).pastTotalSupply(timepoint_);
     }
 
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {

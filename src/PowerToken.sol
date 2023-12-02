@@ -51,7 +51,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address cashToken_,
         address vault_
     ) EpochBasedInflationaryVoteToken("Power Token", "POWER", 0, ONE / 10) {
-        _bootstrapSupply = IEpochBasedVoteToken(bootstrapToken = bootstrapToken_).totalSupplyAt(
+        _bootstrapSupply = IEpochBasedVoteToken(bootstrapToken = bootstrapToken_).pastTotalSupply(
             bootstrapEpoch = (PureEpochs.currentEpoch() - 1)
         );
 
@@ -138,14 +138,14 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
                 : super.balanceOf(account_);
     }
 
-    function balanceOfAt(
+    function pastBalanceOf(
         address account_,
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
         return
             (epoch_ <= bootstrapEpoch) || (_balances[account_].length == 0)
                 ? _bootstrapBalanceOfAt(account_, epoch_)
-                : super.balanceOfAt(account_, epoch_);
+                : super.pastBalanceOf(account_, epoch_);
     }
 
     function cashToken() public view returns (address cashToken_) {
@@ -165,7 +165,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         return
             (ONE * amount_ * ((remainder_ * leftPoint_) + ((blocksPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
-            (blocksPerPeriod_ * totalSupplyAt(currentEpoch_ - 1));
+            (blocksPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
     }
 
     function getVotes(
@@ -195,10 +195,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return PureEpochs.currentEpoch() <= bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupply();
     }
 
-    function totalSupplyAt(
+    function pastTotalSupply(
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 totalSupply_) {
-        return epoch_ <= bootstrapEpoch ? INITIAL_SUPPLY : super.totalSupplyAt(epoch_);
+        return epoch_ <= bootstrapEpoch ? INITIAL_SUPPLY : super.pastTotalSupply(epoch_);
     }
 
     /******************************************************************************************************************\
@@ -217,7 +217,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     function _bootstrapBalanceOfAt(address account_, uint256 epoch_) internal view returns (uint256 balance_) {
-        return (IEpochBasedVoteToken(bootstrapToken).balanceOfAt(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
+        return
+            (IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
     }
 
     function _delegate(address delegator_, address newDelegatee_) internal override {

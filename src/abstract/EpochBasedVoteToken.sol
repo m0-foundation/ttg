@@ -12,9 +12,9 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
 
-// TODO: Consider making more external function (like `balanceOf`, and `balanceOfAt`) public to be used internally.
+// TODO: Consider making more external function (like `balanceOf`, and `pastBalanceOf`) public to be used internally.
 // TODO: Consider `getPastVotes` for and array of epochs and between start and end epochs.
-// TODO: Consider `delegatesAt` for and array of epochs and between start and end epochs.
+// TODO: Consider `pastDelegates` for and array of epochs and between start and end epochs.
 
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     struct AmountWindow {
@@ -62,15 +62,19 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getLatestValue(_balances[account_]);
     }
 
-    function balanceOfAt(address account_, uint256 epoch_) external view virtual returns (uint256 balance_) {
+    function pastBalanceOf(address account_, uint256 epoch_) external view virtual returns (uint256 balance_) {
+        _revertIfNotPastEpoch(epoch_);
+
         return _getValueAt(_balances[account_], epoch_);
     }
 
-    function balancesOfBetween(
+    function pastBalancesOf(
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view virtual returns (uint256[] memory balances_) {
+        _revertIfNotPastEpoch(endEpoch_);
+
         return _getValuesBetween(_balances[account_], startEpoch_, endEpoch_);
     }
 
@@ -82,7 +86,9 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getDelegatee(account_);
     }
 
-    function delegatesAt(address account_, uint256 epoch_) external view returns (address delegatee_) {
+    function pastDelegates(address account_, uint256 epoch_) external view returns (address delegatee_) {
+        _revertIfNotPastEpoch(epoch_);
+
         return _getDelegateeAt(account_, epoch_);
     }
 
@@ -91,6 +97,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     }
 
     function getPastVotes(address account_, uint256 epoch_) public view virtual returns (uint256 votingPower_) {
+        _revertIfNotPastEpoch(epoch_);
+
         return _getValueAt(_votingPowers[account_], epoch_);
     }
 
@@ -98,14 +106,18 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getLatestValue(_totalSupplies);
     }
 
-    function totalSupplyAt(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
+    function pastTotalSupply(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
+        _revertIfNotPastEpoch(epoch_);
+
         return _getValueAt(_totalSupplies, epoch_);
     }
 
-    function totalSuppliesBetween(
+    function pastTotalSupplies(
         uint256 startEpoch_,
         uint256 endEpoch_
     ) public view virtual returns (uint256[] memory totalSupplies_) {
+        _revertIfNotPastEpoch(endEpoch_);
+
         return _getValuesBetween(_totalSupplies, startEpoch_, endEpoch_);
     }
 
@@ -340,7 +352,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
         uint256 windowIndex_ = amountWindows_.length;
 
-        if (windowIndex_ == 0 || epochsIndex_ == 0) return values_;
+        if (windowIndex_ == 0) return values_;
 
         // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
         do {
@@ -369,6 +381,12 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
     function _getZeroIfDefault(address input_, address default_) internal pure returns (address output_) {
         return input_ == default_ ? address(0) : input_;
+    }
+
+    function _revertIfNotPastEpoch(uint256 epoch_) internal view {
+        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+
+        if (epoch_ >= currentEpoch_) revert NotPastEpoch(epoch_, currentEpoch_);
     }
 
     function _sub(uint256 a_, uint256 b_) internal pure returns (uint256 difference_) {

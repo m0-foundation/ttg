@@ -76,7 +76,7 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextTransferEpoch();
 
-        uint256 totalSupply_ = _powerToken.totalSupplyAt(PureEpochs.currentEpoch() - 1);
+        uint256 totalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1);
         uint256 onePercentOfTotalSupply_ = totalSupply_ / 100;
         uint256 oneBasisPointOfTotalSupply_ = onePercentOfTotalSupply_ / 100;
 
@@ -200,7 +200,7 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextTransferEpoch();
 
-        uint256 oneBasisPointOfTotalSupply_ = _powerToken.totalSupplyAt(PureEpochs.currentEpoch() - 1) / 10_000;
+        uint256 oneBasisPointOfTotalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1) / 10_000;
 
         vm.expectCall(
             address(_cashToken),

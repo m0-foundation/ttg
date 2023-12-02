@@ -15,11 +15,11 @@ contract MockBootstrapToken {
         _totalSupply = totalSupply_;
     }
 
-    function balanceOfAt(address account_, uint256) external view returns (uint256 balance_) {
+    function pastBalanceOf(address account_, uint256) external view returns (uint256 balance_) {
         return _balances[account_];
     }
 
-    function totalSupplyAt(uint256) external view returns (uint256 totalSupply_) {
+    function pastTotalSupply(uint256) external view returns (uint256 totalSupply_) {
         return _totalSupply;
     }
 }
@@ -62,19 +62,19 @@ contract MockEmergencyGovernorDeployer {
 }
 
 contract MockEpochBasedVoteToken {
-    mapping(address account => mapping(uint256 epoch => uint256 balance)) public balanceOfAt;
+    mapping(address account => mapping(uint256 epoch => uint256 balance)) public pastBalanceOf;
 
-    mapping(uint256 epoch => uint256 totalSupply) public totalSupplyAt;
+    mapping(uint256 epoch => uint256 totalSupply) public pastTotalSupply;
 
-    function setBalanceOfAt(address account_, uint256 epoch_, uint256 balance_) external {
-        balanceOfAt[account_][epoch_] = balance_;
+    function setPastBalanceOf(address account_, uint256 epoch_, uint256 balance_) external {
+        pastBalanceOf[account_][epoch_] = balance_;
     }
 
-    function setTotalSupplyAt(uint256 epoch_, uint256 totalSupplyAt_) external {
-        totalSupplyAt[epoch_] = totalSupplyAt_;
+    function setPastTotalSupply(uint256 epoch_, uint256 totalSupplyAt_) external {
+        pastTotalSupply[epoch_] = totalSupplyAt_;
     }
 
-    function balancesOfBetween(
+    function pastBalancesOf(
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
@@ -82,18 +82,18 @@ contract MockEpochBasedVoteToken {
         balances_ = new uint256[](endEpoch_ - startEpoch_ + 1);
 
         for (uint256 index_; index_ < endEpoch_ - startEpoch_ + 1; ++index_) {
-            balances_[index_] = balanceOfAt[account_][startEpoch_ + index_];
+            balances_[index_] = pastBalanceOf[account_][startEpoch_ + index_];
         }
     }
 
-    function totalSuppliesBetween(
+    function pastTotalSupplies(
         uint256 startEpoch_,
         uint256 endEpoch_
     ) public view virtual returns (uint256[] memory totalSupplies_) {
         totalSupplies_ = new uint256[](endEpoch_ - startEpoch_ + 1);
 
         for (uint256 index_; index_ < endEpoch_ - startEpoch_ + 1; ++index_) {
-            totalSupplies_[index_] = totalSupplyAt[startEpoch_ + index_];
+            totalSupplies_[index_] = pastTotalSupply[startEpoch_ + index_];
         }
     }
 }
@@ -118,7 +118,7 @@ contract MockPowerToken {
         _votePower = votePower_;
     }
 
-    function setTotalSupplyAt(uint256 totalSupplyAt_) external {
+    function setPastTotalSupply(uint256 totalSupplyAt_) external {
         _totalSupplyAt = totalSupplyAt_;
     }
 
@@ -132,7 +132,7 @@ contract MockPowerToken {
 
     function setNextCashToken(address newCashToken_) external {}
 
-    function totalSupplyAt(uint256) external view returns (uint256 totalSupply_) {
+    function pastTotalSupply(uint256) external view returns (uint256 totalSupply_) {
         return _totalSupplyAt;
     }
 }

@@ -67,6 +67,22 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentEpoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "NotPastEpoch",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "NotStandardGovernor",
     "type": "error"
@@ -338,59 +354,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "balanceOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "balance_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "startEpoch_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endEpoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "balancesOfBetween",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "balances_",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "clock",
     "outputs": [
@@ -556,30 +519,6 @@
         "type": "uint256"
       }
     ],
-    "name": "delegatesAt",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "delegatee_",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
     "name": "getPastVotes",
     "outputs": [
       {
@@ -678,6 +617,126 @@
       {
         "internalType": "uint256",
         "name": "nonce_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastBalanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "balance_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastBalancesOf",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "balances_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastDelegates",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "delegatee_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastTotalSupplies",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "totalSupplies_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastTotalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalSupply_",
         "type": "uint256"
       }
     ],
@@ -800,51 +859,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "startEpoch_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endEpoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalSuppliesBetween",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "totalSupplies_",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "totalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "totalSupply_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalSupplyAt",
     "outputs": [
       {
         "internalType": "uint256",
