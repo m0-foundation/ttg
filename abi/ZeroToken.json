@@ -110,6 +110,11 @@
   },
   {
     "inputs": [],
+    "name": "StartEpochAfterEndEpoch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "TransferToSelf",
     "type": "error"
   },

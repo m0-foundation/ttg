@@ -13,6 +13,8 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
 
     error InvalidEpochOrdering();
 
+    error StartEpochAfterEndEpoch();
+
     error TransferToSelf();
 
     /******************************************************************************************************************\

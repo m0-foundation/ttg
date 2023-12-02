@@ -124,6 +124,11 @@
   },
   {
     "inputs": [],
+    "name": "StartEpochAfterEndEpoch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "TransferFromFailed",
     "type": "error"
   },

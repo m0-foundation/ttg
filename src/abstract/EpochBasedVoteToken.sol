@@ -332,6 +332,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         uint256 startEpoch_,
         uint256 endEpoch_
     ) internal view returns (uint256[] memory values_) {
+        if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch();
+
         uint256 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
 
         values_ = new uint256[](epochsIndex_);
@@ -340,8 +342,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
         if (windowIndex_ == 0 || epochsIndex_ == 0) return values_;
 
-        uint256 epoch_ = endEpoch_;
-
         // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
         do {
             AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --windowIndex_);
@@ -349,13 +349,12 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
             uint256 amountWindowStartingEpoch_ = amountWindow_.startingEpoch;
 
             // Keep checking if the AmountWindow's startingEpoch is applicable to the current and decrementing epoch.
-            while (amountWindowStartingEpoch_ <= epoch_) {
-                values_[epochsIndex_] = amountWindow_.amount;
+            while (amountWindowStartingEpoch_ <= endEpoch_) {
+                values_[--epochsIndex_] = amountWindow_.amount;
 
                 if (epochsIndex_ == 0) return values_;
 
-                --epochsIndex_;
-                --epoch_;
+                --endEpoch_;
             }
         } while (windowIndex_ > 0);
     }
