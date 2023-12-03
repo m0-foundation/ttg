@@ -33,6 +33,12 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     |                                              View/Pure Functions                                                 |
     \******************************************************************************************************************/
 
+    function getPastVotes(
+        address account,
+        uint256 startEpoch,
+        uint256 endEpoch
+    ) external view returns (uint256[] memory votingPowers);
+
     function pastBalanceOf(address account, uint256 epoch) external view returns (uint256 balance);
 
     function pastBalancesOf(
@@ -42,6 +48,12 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     ) external view returns (uint256[] memory balances);
 
     function pastDelegates(address account, uint256 epoch) external view returns (address delegatee);
+
+    function pastDelegates(
+        address account,
+        uint256 startEpoch,
+        uint256 endEpoch
+    ) external view returns (address[] memory delegatees);
 
     function pastTotalSupply(uint256 epoch) external view returns (uint256 totalSupply);
 

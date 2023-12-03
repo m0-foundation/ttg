@@ -743,6 +743,35 @@
         "internalType": "address",
         "name": "account_",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPastVotes",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "votingPowers_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
       }
     ],
     "name": "getVotes",
@@ -941,6 +970,35 @@
         "internalType": "address",
         "name": "delegatee_",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastDelegates",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "delegatees_",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
