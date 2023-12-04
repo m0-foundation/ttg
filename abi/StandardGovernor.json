@@ -56,11 +56,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "EpochHasNoProposals",
-    "type": "error"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes",
@@ -164,6 +159,11 @@
   },
   {
     "inputs": [],
+    "name": "NoFeeToSend",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotSelf",
     "type": "error"
   },
@@ -222,6 +222,16 @@
   {
     "inputs": [],
     "name": "SignerMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TransferFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TransferFromFailed",
     "type": "error"
   },
   {
@@ -292,7 +302,7 @@
       {
         "indexed": false,
         "internalType": "bytes[]",
-        "name": "calldatas",
+        "name": "callDatas",
         "type": "bytes[]"
       },
       {
@@ -348,7 +358,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "proposalFee",
+        "name": "amount",
         "type": "uint256"
       }
     ],
@@ -1001,7 +1011,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "epoch_",
+        "name": "epoch",
         "type": "uint256"
       }
     ],
@@ -1009,7 +1019,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "count_",
+        "name": "count",
         "type": "uint256"
       }
     ],
@@ -1019,21 +1029,21 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "voter_",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
       }
     ],
     "name": "numberOfProposalsVotedOnAt",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "count_",
+        "name": "count",
         "type": "uint256"
       }
     ],

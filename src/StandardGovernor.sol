@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
@@ -15,9 +15,7 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
-// TODO: Emit an event in the Governor or Power Token when a voter has voted on all standard proposals in an epoch.
-// TODO: Consider non-standard simplified versions of governor functions.
-
+/// @title An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
 contract StandardGovernor is IStandardGovernor, BatchGovernor {
     struct ProposalFeeInfo {
         address cashToken;
@@ -38,9 +36,9 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     mapping(uint256 proposalId => ProposalFeeInfo proposalFee) internal _proposalFees;
 
-    mapping(uint256 epoch => uint256 count) internal _numberOfProposals;
+    mapping(uint256 epoch => uint256 count) public numberOfProposalsAt;
 
-    mapping(uint256 epoch => mapping(address voter => uint256 count)) internal _numberOfProposalsVotedOn;
+    mapping(address voter => mapping(uint256 epoch => uint256 count)) public numberOfProposalsVotedOnAt;
 
     modifier onlyZeroGovernor() {
         _revertIfNotZeroGovernor();
@@ -94,6 +92,15 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint256 earliestPossibleVoteStart_ = latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0;
 
         proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
+
+        ProposalFeeInfo storage proposalFeeInfo_ = _proposalFees[proposalId_];
+        uint256 proposalFee_ = proposalFeeInfo_.fee;
+        address cashToken_ = proposalFeeInfo_.cashToken;
+
+        if (proposalFee_ > 0) {
+            delete _proposalFees[proposalId_];
+            _transfer(cashToken_, _proposals[proposalId_].proposer, proposalFee_);
+        }
     }
 
     function propose(
@@ -107,16 +114,19 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         (proposalId_, voteStart_) = _propose(targets_, values_, callDatas_, description_);
 
         // If this is the first proposal for the `voteStart_` epoch, inflate its target total supply of `PowerToken`.
-        if (++_numberOfProposals[voteStart_] == 1) {
+        if (++numberOfProposalsAt[voteStart_] == 1) {
             IPowerToken(voteToken).markNextVotingEpochAsActive();
         }
 
-        address cashToken_ = cashToken;
         uint256 proposalFee_ = proposalFee;
+
+        if (proposalFee_ == 0) return proposalId_;
+
+        address cashToken_ = cashToken;
 
         _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
 
-        ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_);
+        if (!ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_)) revert TransferFromFailed();
     }
 
     function sendProposalFeeToVault(uint256 proposalId_) external {
@@ -126,16 +136,18 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         if (state_ != ProposalState.Expired && state_ != ProposalState.Defeated) revert FeeNotDestinedForVault(state_);
 
         uint256 proposalFee_ = _proposalFees[proposalId_].fee;
+
+        if (proposalFee_ == 0) revert NoFeeToSend();
+
         address cashToken_ = _proposalFees[proposalId_].cashToken;
 
         delete _proposalFees[proposalId_];
 
         emit ProposalFeeSentToVault(proposalId_, cashToken_, proposalFee_);
 
-        // NOTE: Not calling `distribute` on vault since:
-        //         - anyone can do it, anytime
-        //         - `DualGovernor` should not need to know how the vault works
-        ERC20Helper.transfer(cashToken_, vault, proposalFee_);
+        // NOTE: Not calling `distribute` on vault since anyone can do it, anytime, and this contract should not need to
+        //       know how the vault works
+        _transfer(cashToken_, vault, proposalFee_);
     }
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
@@ -174,15 +186,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     function hasVotedOnAllProposals(address voter_, uint256 epoch_) external view returns (bool hasVoted_) {
-        return _numberOfProposalsVotedOn[epoch_][voter_] == _numberOfProposals[epoch_];
-    }
-
-    function numberOfProposalsAt(uint256 epoch_) external view returns (uint256 count_) {
-        return _numberOfProposals[epoch_];
-    }
-
-    function numberOfProposalsVotedOnAt(uint256 epoch_, address voter_) external view returns (uint256 count_) {
-        return _numberOfProposalsVotedOn[epoch_][voter_];
+        return numberOfProposalsVotedOnAt[voter_][epoch_] == numberOfProposalsAt[epoch_];
     }
 
     function quorum() external pure returns (uint256 quorum_) {
@@ -200,11 +204,12 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
         uint256 voteStart_ = proposal_.voteStart;
-        uint256 voteEnd_ = proposal_.voteEnd;
 
         if (voteStart_ == 0) revert ProposalDoesNotExist();
 
         if (currentEpoch_ < voteStart_) return ProposalState.Pending;
+
+        uint256 voteEnd_ = proposal_.voteEnd;
 
         if (currentEpoch_ <= voteEnd_) return ProposalState.Active;
 
@@ -263,11 +268,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         uint256 currentEpoch_ = PureEpochs.currentEpoch();
 
-        uint256 numberOfProposalsVotedOn_ = ++_numberOfProposalsVotedOn[currentEpoch_][voter_];
+        uint256 numberOfProposalsVotedOn_ = ++numberOfProposalsVotedOnAt[voter_][currentEpoch_];
 
         // NOTE: Will only get beyond this statement once per epoch as there is no way to vote on more proposals than
         //       exist in this epoch.
-        if (numberOfProposalsVotedOn_ != _numberOfProposals[currentEpoch_]) return (weight_, snapshot_);
+        if (numberOfProposalsVotedOn_ != numberOfProposalsAt[currentEpoch_]) return (weight_, snapshot_);
 
         emit HasVotedOnAllProposals(voter_, currentEpoch_);
 
@@ -291,17 +296,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         });
     }
 
-    function _execute(bytes memory callData_, uint256 voteStart_) internal override returns (uint256 proposalId_) {
-        proposalId_ = super._execute(callData_, voteStart_);
-
-        uint256 proposalFee_ = _proposalFees[proposalId_].fee;
-        address cashToken_ = _proposalFees[proposalId_].cashToken;
-
-        delete _proposalFees[proposalId_];
-
-        ERC20Helper.transfer(cashToken_, _proposals[proposalId_].proposer, proposalFee_);
-    }
-
     function _removeFromList(bytes32 list_, address account_) internal {
         IRegistrar(registrar).removeFromList(list_, account_);
     }
@@ -316,15 +310,20 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         emit ProposalFeeSet(proposalFee = newProposalFee_);
     }
 
+    function _transfer(address token_, address to_, uint256 amount_) internal {
+        if (!ERC20Helper.transfer(token_, to_, amount_)) revert TransferFailed();
+    }
+
     /******************************************************************************************************************\
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
     // TODO: Consider inlining this in the only place it's used.
     function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
-        isVotingEpoch_ = epoch_ % 2 == 1;
+        isVotingEpoch_ = epoch_ % 2 == 1; // Voting epochs are odd numbered.
     }
 
+    /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
 

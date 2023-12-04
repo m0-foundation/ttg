@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
@@ -76,7 +76,7 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextTransferEpoch();
 
-        uint256 totalSupply_ = _powerToken.totalSupplyAt(PureEpochs.currentEpoch() - 1);
+        uint256 totalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1);
         uint256 onePercentOfTotalSupply_ = totalSupply_ / 100;
         uint256 oneBasisPointOfTotalSupply_ = onePercentOfTotalSupply_ / 100;
 
@@ -170,8 +170,8 @@ contract PowerTokenTests is TestUtils {
     }
 
     function test_buy_insufficientAuctionSupply() external {
-        vm.expectRevert(IPowerToken.InsufficientAuctionSupply.selector);
-        _powerToken.buy(1, _account);
+        vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, 1));
+        _powerToken.buy(1, 1, _account);
     }
 
     function test_buy_notInVotePeriod() external {
@@ -179,9 +179,9 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextVoteEpoch();
 
-        vm.expectRevert(IPowerToken.InsufficientAuctionSupply.selector);
+        vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, 1));
         vm.prank(_account);
-        _powerToken.buy(1, _account);
+        _powerToken.buy(1, 1, _account);
     }
 
     function test_buy_transferFromFailed() external {
@@ -192,7 +192,7 @@ contract PowerTokenTests is TestUtils {
         _cashToken.setTransferFromFail(true);
 
         vm.expectRevert(IPowerToken.TransferFromFailed.selector);
-        _powerToken.buy(1, _account);
+        _powerToken.buy(1, 1, _account);
     }
 
     function test_buy() external {
@@ -200,14 +200,14 @@ contract PowerTokenTests is TestUtils {
 
         _goToNextTransferEpoch();
 
-        uint256 oneBasisPointOfTotalSupply_ = _powerToken.totalSupplyAt(PureEpochs.currentEpoch() - 1) / 10_000;
+        uint256 oneBasisPointOfTotalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1) / 10_000;
 
         vm.expectCall(
             address(_cashToken),
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
         vm.prank(_account);
-        _powerToken.buy(oneBasisPointOfTotalSupply_, _account);
+        _powerToken.buy(0, oneBasisPointOfTotalSupply_, _account);
 
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }

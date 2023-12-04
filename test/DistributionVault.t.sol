@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
@@ -38,9 +38,9 @@ contract DistributionVaultTests is TestUtils {
 
     function test_distribution() external {
         // Sets account balances this epoch.
-        _baseToken.setBalanceOfAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
-        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
-        _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
+        _baseToken.setPastBalanceOf(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
+        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
 
         // Mint 1_000_000 funds tokens to the ZeroToken contract and distribute them.
         _token1.setBalance(address(_vault), 1_000_000);
@@ -56,9 +56,9 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[4], startEpoch_, endEpoch_), 333_333);
 
         // Sets account balances this epoch.
-        _baseToken.setBalanceOfAt(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
-        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
-        _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
+        _baseToken.setPastBalanceOf(_accounts[4], PureEpochs.currentEpoch(), 5_000_000);
+        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
 
         // Mint 500_000 funds tokens to the ZeroToken contract and distribute them.
         _token1.setBalance(address(_vault), 1_500_000); // 1_000_000 + 500_000
@@ -73,9 +73,9 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[4], startEpoch_, endEpoch_), 499_999);
 
         // Sets account balances this epoch (Account 0 transfers half their balance to Account 4).
-        _baseToken.setBalanceOfAt(_accounts[0], PureEpochs.currentEpoch(), 500_000); // 1_000_000 - 500_000
-        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 5_500_000); // 5_000_000 + 500_000
-        _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 500_000); // 1_000_000 - 500_000
+        _baseToken.setPastBalanceOf(_accounts[4], PureEpochs.currentEpoch(), 5_500_000); // 5_000_000 + 500_000
+        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
 
         // Check that the claimable funds tokens have not changed.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 99_999);
@@ -94,8 +94,8 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[4], startEpoch_, endEpoch_), 1_049_999);
 
         // Sets account balances this epoch (Account 0 transfers their remaining balance to Account 4).
-        _baseToken.setBalanceOfAt(_accounts[4], PureEpochs.currentEpoch(), 6_000_000); // 5_500_000 + 500_000
-        _baseToken.setTotalSupplyAt(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[4], PureEpochs.currentEpoch(), 6_000_000); // 5_500_000 + 500_000
+        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
 
         // Check that the claimable funds tokens have not changed.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 149_999);

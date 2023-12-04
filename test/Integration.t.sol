@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { console2 } from "../lib/forge-std/src/console2.sol";
 
@@ -167,13 +167,14 @@ contract IntegrationTests is TestUtils {
 
     function test_setCashToken() external {
         IZeroGovernor zeroGovernor_ = IZeroGovernor(_registrar.zeroGovernor());
+        IStandardGovernor standardGovernor_ = IStandardGovernor(_registrar.standardGovernor());
 
         address[] memory targets_ = new address[](1);
         targets_[0] = address(zeroGovernor_);
 
         uint256[] memory values_ = new uint256[](1);
 
-        uint256 newProposalFee_ = zeroGovernor_.proposalFee() * 2;
+        uint256 newProposalFee_ = standardGovernor_.proposalFee() * 2;
 
         bytes[] memory callDatas_ = new bytes[](1);
         callDatas_[0] = abi.encodeWithSelector(
@@ -195,8 +196,6 @@ contract IntegrationTests is TestUtils {
         assertEq(weight_, 60_000_000);
 
         zeroGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
-
-        IStandardGovernor standardGovernor_ = IStandardGovernor(_registrar.standardGovernor());
 
         assertEq(standardGovernor_.cashToken(), address(_cashToken2));
         assertEq(standardGovernor_.proposalFee(), newProposalFee_);

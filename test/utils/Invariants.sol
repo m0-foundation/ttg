@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { console2 } from "../../lib/forge-std/src/Test.sol";
 import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";

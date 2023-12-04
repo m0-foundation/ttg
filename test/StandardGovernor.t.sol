@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
 
@@ -17,7 +17,7 @@ import { TestUtils } from "./utils/TestUtils.sol";
 
 contract StandardGovernorTests is TestUtils {
     event CashTokenSet(address indexed cashToken);
-    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 proposalFee);
+    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 amount);
     event ProposalFeeSet(uint256 proposalFee);
 
     uint256 internal constant _ONE = 10_000;
@@ -94,7 +94,7 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.setNumberOfProposals(currentEpoch, 10);
 
         _powerToken.setVotePower(1);
-        _powerToken.setTotalSupplyAt(1);
+        _powerToken.setPastTotalSupply(1);
 
         // TODO: Expect _no_ IPowerToken.markParticipation
         // TODO: Expect _no_ IZeroToken.mint
@@ -102,7 +102,7 @@ contract StandardGovernorTests is TestUtils {
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
 
-        assertEq(_standardGovernor.numberOfProposalsVotedOnAt(currentEpoch, _alice), 1);
+        assertEq(_standardGovernor.numberOfProposalsVotedOnAt(_alice, currentEpoch), 1);
     }
 
     function test_castVote_votedOnAllProposals() external {
@@ -114,7 +114,7 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.setNumberOfProposals(currentEpoch, 1);
 
         _powerToken.setVotePower(1);
-        _powerToken.setTotalSupplyAt(1);
+        _powerToken.setPastTotalSupply(1);
 
         // TODO: Expect IPowerToken.markParticipation
         // TODO: Expect IZeroToken.mint
@@ -122,7 +122,7 @@ contract StandardGovernorTests is TestUtils {
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
 
-        assertEq(_standardGovernor.numberOfProposalsVotedOnAt(currentEpoch, _alice), 1);
+        assertEq(_standardGovernor.numberOfProposalsVotedOnAt(_alice, currentEpoch), 1);
     }
 
     // TODO: This is really a test for `BatchGovernor.t.sol`.

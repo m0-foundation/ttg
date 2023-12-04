@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ContractHelper } from "../lib/common/src/ContractHelper.sol";
 
@@ -8,6 +8,7 @@ import { IEmergencyGovernorDeployer } from "./interfaces/IEmergencyGovernorDeplo
 
 import { EmergencyGovernor } from "./EmergencyGovernor.sol";
 
+/// @title A Deterministic deployer of Emergency Governor contracts using CREATE.
 contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     address public immutable registrar;
     address public immutable zeroGovernor;
@@ -18,7 +19,6 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
 
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
-
         _;
     }
 

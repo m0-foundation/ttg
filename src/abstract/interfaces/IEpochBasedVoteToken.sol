@@ -1,26 +1,32 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IERC20Permit } from "../../../lib/common/src/interfaces/IERC20Permit.sol";
 
 import { IERC5805 } from "./IERC5805.sol";
 
+/// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
 interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
-    error AlreadyDelegated();
-
-    error AmountExceedsUint240();
-
-    error InvalidEpochOrdering();
-
-    error StartEpochAfterEndEpoch();
-
-    error TransferToSelf();
-
     /******************************************************************************************************************\
-    |                                             Interactive Functions                                                |
+    |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
+    /// @notice Revert message when an number being casted to a uint240 exceeds the maximum uint240 value.
+    error AmountExceedsUint240();
+
+    /******************************************************************************************************************\
+    |                                              Interactive Functions                                               |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Changes the voting power delegation for `account` to `delegatee`.
+     * @param  account   The purported address of the signing account.
+     * @param  delegatee The address the voting power of `account` will be delegated to.
+     * @param  nonce     The nonce used for the signature.
+     * @param  expiry    The last block number where the signature is still valid.
+     * @param  signature A byte array signature.
+     */
     function delegateBySig(
         address account,
         address delegatee,
@@ -30,23 +36,29 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     ) external;
 
     /******************************************************************************************************************\
-    |                                              View/Pure Functions                                                 |
+    |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    function balanceOfAt(address account, uint256 epoch) external view returns (uint256 balance);
+    /**
+     * @notice Returns the token balance of `account` at a past clock value `epoch`.
+     * @param  account The address of some account.
+     * @param  epoch   The epoch number as a clock value.
+     * @return balance The token balance `account` at `epoch`.
+     */
+    function pastBalanceOf(address account, uint256 epoch) external view returns (uint256 balance);
 
-    function balancesOfBetween(
-        address account,
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (uint256[] memory balances);
+    /**
+     * @notice Returns the delegatee of `account` at a past clock value `epoch`.
+     * @param  account   The address of some account.
+     * @param  epoch     The epoch number as a clock value.
+     * @return delegatee The delegatee of the voting power of `account` at `epoch`.
+     */
+    function pastDelegates(address account, uint256 epoch) external view returns (address delegatee);
 
-    function delegatesAt(address account, uint256 epoch) external view returns (address delegatee);
-
-    function totalSupplyAt(uint256 epoch) external view returns (uint256 totalSupply);
-
-    function totalSuppliesBetween(
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (uint256[] memory totalSupplies);
+    /**
+     * @notice Returns the total token supply at a past clock value `epoch`.
+     * @param  epoch       The epoch number as a clock value.
+     * @return totalSupply The total token supply at `epoch`.
+     */
+    function pastTotalSupply(uint256 epoch) external view returns (uint256 totalSupply);
 }

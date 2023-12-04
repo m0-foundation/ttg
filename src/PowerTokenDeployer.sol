@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ContractHelper } from "../lib/common/src/ContractHelper.sol";
 
@@ -7,6 +7,7 @@ import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
 
 import { PowerToken } from "./PowerToken.sol";
 
+/// @title A Deterministic deployer of Power Token contracts using CREATE.
 contract PowerTokenDeployer is IPowerTokenDeployer {
     address public immutable vault;
     address public immutable zeroGovernor;
@@ -17,7 +18,6 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
 
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
-
         _;
     }
 

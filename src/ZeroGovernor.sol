@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ThresholdGovernor } from "./abstract/ThresholdGovernor.sol";
 
@@ -11,6 +11,7 @@ import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
+/// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
     uint256 internal constant _ONE = 10_000;
@@ -179,6 +180,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
+    /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
 

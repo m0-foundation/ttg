@@ -3,22 +3,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "baseToken_",
+        "name": "zeroToken_",
         "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
-  },
-  {
-    "inputs": [],
-    "name": "AlreadyClaimed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "EpochTooHigh",
-    "type": "error"
   },
   {
     "inputs": [],
@@ -28,6 +18,22 @@
   {
     "inputs": [],
     "name": "InvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "timepoint",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "clock",
+        "type": "uint256"
+      }
+    ],
+    "name": "NotPastTimepoint",
     "type": "error"
   },
   {
@@ -149,25 +155,25 @@
   },
   {
     "inputs": [],
+    "name": "CLOCK_MODE",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "clockMode_",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "DOMAIN_SEPARATOR",
     "outputs": [
       {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "baseToken",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -257,6 +263,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "clock",
+    "outputs": [
+      {
+        "internalType": "uint48",
+        "name": "clock_",
+        "type": "uint48"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -265,8 +284,38 @@
       }
     ],
     "name": "distribute",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount_",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "distributionOfAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -304,6 +353,35 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "hasClaimed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "name",
     "outputs": [
@@ -330,6 +408,19 @@
         "internalType": "uint256",
         "name": "nonce_",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zeroToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

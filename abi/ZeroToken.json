@@ -22,17 +22,7 @@
   },
   {
     "inputs": [],
-    "name": "AlreadyDelegated",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "AmountExceedsUint240",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidEpochOrdering",
     "type": "error"
   },
   {
@@ -54,16 +44,32 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "length1",
+        "name": "accountsLength",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "length2",
+        "name": "balancesLength",
         "type": "uint256"
       }
     ],
     "name": "LengthMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "timepoint",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "clock",
+        "type": "uint256"
+      }
+    ],
+    "name": "NotPastTimepoint",
     "type": "error"
   },
   {
@@ -114,11 +120,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "TransferToSelf",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -155,13 +156,13 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "fromDelegate",
+        "name": "fromDelegatee",
         "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "toDelegate",
+        "name": "toDelegatee",
         "type": "address"
       }
     ],
@@ -174,7 +175,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "delegate",
+        "name": "delegatee",
         "type": "address"
       },
       {
@@ -332,59 +333,6 @@
         "internalType": "uint256",
         "name": "balance_",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "balanceOfAt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "balance_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "startEpoch_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endEpoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "balancesOfBetween",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "balances_",
-        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -556,12 +504,12 @@
         "type": "uint256"
       }
     ],
-    "name": "delegatesAt",
+    "name": "getPastVotes",
     "outputs": [
       {
-        "internalType": "address",
-        "name": "delegatee_",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "votingPower_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -576,16 +524,21 @@
       },
       {
         "internalType": "uint256",
-        "name": "epoch_",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
         "type": "uint256"
       }
     ],
     "name": "getPastVotes",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "votingPower_",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "votingPowers_",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -678,6 +631,155 @@
       {
         "internalType": "uint256",
         "name": "nonce_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastBalanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "balance_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastBalancesOf",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "balances_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastDelegates",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "delegatee_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastDelegates",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "delegatees_",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startEpoch_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endEpoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastTotalSupplies",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "totalSupplies_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "epoch_",
+        "type": "uint256"
+      }
+    ],
+    "name": "pastTotalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalSupply_",
         "type": "uint256"
       }
     ],
@@ -800,51 +902,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "startEpoch_",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "endEpoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalSuppliesBetween",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "totalSupplies_",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "totalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "totalSupply_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch_",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalSupplyAt",
     "outputs": [
       {
         "internalType": "uint256",

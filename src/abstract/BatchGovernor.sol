@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ERC712 } from "../../lib/common/src/ERC712.sol";
 
@@ -9,6 +9,7 @@ import { PureEpochs } from "../libs/PureEpochs.sol";
 import { IBatchGovernor } from "./interfaces/IBatchGovernor.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
+/// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
 abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
     // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
@@ -126,7 +127,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function COUNTING_MODE() external pure returns (string memory countingMode_) {
-        return "support=alpha&quorum=bravo";
+        return "support=for,against&quorum=for";
     }
 
     function clock() external view returns (uint48 clock_) {
@@ -244,7 +245,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint256[] memory values_,
         bytes[] memory callDatas_,
         string memory description_
-    ) internal virtual returns (uint256 proposalId_, uint256 voteStart_) {
+    ) internal returns (uint256 proposalId_, uint256 voteStart_) {
         if (targets_.length != 1) revert InvalidTargetsLength();
         if (targets_[0] != address(this)) revert InvalidTarget();
 
@@ -268,7 +269,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             msg.sender,
             targets_,
             values_,
-            new string[](targets_.length), // TODO: `string[] signatures` is silly.
+            new string[](targets_.length),
             callDatas_,
             voteStart_,
             voteEnd_,
@@ -277,11 +278,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     /**
-     * @dev This function tries to execute a proposal based on the calldata and a range of possible vote starts. This is
-     *      needed due to the fact that proposalId's are generated based on the calldata and vote start time, and so an
-     *      executed function will need this in order to attempt to find and execute a proposal given a known range of
-     *      possible vote start times which depends on the how the inheriting implementation handles determine the vote
-     *      start time and expiry of proposals based on the time of the proposal creation.
+     * @dev This function tries to execute a proposal based on the call data and a range of possible vote starts. This
+     *      is needed due to the fact that proposalId's are generated based on the call data and vote start time, and so
+     *      an executed function will need this in order to attempt to find and execute a proposal given a known range
+     *      of possible vote start times which depends on the how the inheriting implementation handles determine the
+     *      vote start time and expiry of proposals based on the time of the proposal creation.
      */
     function _tryExecute(
         bytes memory callData_,
@@ -319,15 +320,15 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function _getTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
-        return IEpochBasedVoteToken(voteToken).totalSupplyAt(timepoint_);
+        return IEpochBasedVoteToken(voteToken).pastTotalSupply(timepoint_);
     }
 
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {
         return _hashProposal(callData_, PureEpochs.currentEpoch() + votingDelay());
     }
 
-    function _hashProposal(bytes memory callData_, uint256 voteStart_) internal pure returns (uint256 proposalId_) {
-        return uint256(keccak256(abi.encode(callData_, voteStart_)));
+    function _hashProposal(bytes memory callData_, uint256 voteStart_) internal view returns (uint256 proposalId_) {
+        return uint256(keccak256(abi.encode(callData_, voteStart_, address(this))));
     }
 
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure virtual;

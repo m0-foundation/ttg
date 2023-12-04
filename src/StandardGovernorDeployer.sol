@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ContractHelper } from "../lib/common/src/ContractHelper.sol";
 
@@ -20,7 +20,6 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
 
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
-
         _;
     }
 

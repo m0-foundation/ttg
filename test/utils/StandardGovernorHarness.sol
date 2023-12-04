@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { StandardGovernor } from "../../src/StandardGovernor.sol";
 
@@ -59,10 +59,10 @@ contract StandardGovernorHarness is StandardGovernor {
     }
 
     function setNumberOfProposals(uint256 epoch_, uint256 count_) external {
-        _numberOfProposals[epoch_] = count_;
+        numberOfProposalsAt[epoch_] = count_;
     }
 
-    function setNumberOfProposalsVotedOn(uint256 epoch_, address voter_, uint256 count_) external {
-        _numberOfProposalsVotedOn[epoch_][voter_] = count_;
+    function setNumberOfProposalsVotedOn(address voter_, uint256 epoch_, uint256 count_) external {
+        numberOfProposalsVotedOnAt[voter_][epoch_] = count_;
     }
 }
