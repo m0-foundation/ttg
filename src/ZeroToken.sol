@@ -7,12 +7,15 @@ import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
+/**
+ * @title An instance of an EpochBasedVoteToken delegating minting control to a Standard Governor, and enabling
+ *        range queries for past balances, voting powers, delegations, and  total supplies.
+ */
 contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     address public immutable standardGovernorDeployer;
 
     modifier onlyStandardGovernor() {
         if (msg.sender != standardGovernor()) revert NotStandardGovernor();
-
         _;
     }
 
@@ -51,8 +54,8 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view virtual returns (uint256[] memory votingPowers_) {
-        _revertIfNotPastEpoch(endEpoch_);
+    ) external view returns (uint256[] memory votingPowers_) {
+        _revertIfNotPastTimepoint(endEpoch_);
 
         return _getValuesBetween(_votingPowers[account_], startEpoch_, endEpoch_);
     }
@@ -61,8 +64,8 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view virtual returns (uint256[] memory balances_) {
-        _revertIfNotPastEpoch(endEpoch_);
+    ) external view returns (uint256[] memory balances_) {
+        _revertIfNotPastTimepoint(endEpoch_);
 
         return _getValuesBetween(_balances[account_], startEpoch_, endEpoch_);
     }
@@ -72,7 +75,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view returns (address[] memory delegatees_) {
-        _revertIfNotPastEpoch(endEpoch_);
+        _revertIfNotPastTimepoint(endEpoch_);
 
         return _getDelegateesBetween(account_, startEpoch_, endEpoch_);
     }
@@ -80,8 +83,8 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     function pastTotalSupplies(
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view virtual returns (uint256[] memory totalSupplies_) {
-        _revertIfNotPastEpoch(endEpoch_);
+    ) external view returns (uint256[] memory totalSupplies_) {
+        _revertIfNotPastTimepoint(endEpoch_);
 
         return _getValuesBetween(_totalSupplies, startEpoch_, endEpoch_);
     }
@@ -105,19 +108,19 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
 
         delegatees_ = new address[](epochsIndex_);
 
-        AccountWindow[] storage accountWindows_ = _delegatees[account_];
+        AccountSnap[] storage accountSnaps_ = _delegatees[account_];
 
-        uint256 windowIndex_ = accountWindows_.length;
+        uint256 snapIndex_ = accountSnaps_.length;
 
-        // Keep going back as long as the epoch is greater or equal to the previous AccountWindow's startingEpoch.
-        while (windowIndex_ > 0) {
-            AccountWindow storage accountWindow_ = _unsafeAccountWindowAccess(accountWindows_, --windowIndex_);
+        // Keep going back as long as the epoch is greater or equal to the previous AccountSnap's startingEpoch.
+        while (snapIndex_ > 0) {
+            AccountSnap storage accountSnap_ = _unsafeAccess(accountSnaps_, --snapIndex_);
 
-            uint256 accountWindowStartingEpoch_ = accountWindow_.startingEpoch;
+            uint256 snapStartingEpoch_ = accountSnap_.startingEpoch;
 
-            // Keep checking if the AccountWindow's startingEpoch is applicable to the current and decrementing epoch.
-            while (accountWindowStartingEpoch_ <= endEpoch_) {
-                delegatees_[--epochsIndex_] = _getDefaultIfZero(accountWindow_.account, account_);
+            // Keep checking if the AccountSnap's startingEpoch is applicable to the current and decrementing epoch.
+            while (snapStartingEpoch_ <= endEpoch_) {
+                delegatees_[--epochsIndex_] = _getDefaultIfZero(accountSnap_.account, account_);
 
                 if (epochsIndex_ == 0) return delegatees_;
 
@@ -125,14 +128,14 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
             }
         }
 
-        // Set the remaining delegatee values (from before any accountWindows existed) to the account itself.
+        // Set the remaining delegatee values (from before any accountSnaps existed) to the account itself.
         while (epochsIndex_ > 0) {
             delegatees_[--epochsIndex_] = account_;
         }
     }
 
     function _getValuesBetween(
-        AmountWindow[] storage amountWindows_,
+        AmountSnap[] storage amountSnaps_,
         uint256 startEpoch_,
         uint256 endEpoch_
     ) internal view returns (uint256[] memory values_) {
@@ -142,17 +145,17 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
 
         values_ = new uint256[](epochsIndex_);
 
-        uint256 windowIndex_ = amountWindows_.length;
+        uint256 snapIndex_ = amountSnaps_.length;
 
-        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
-        while (windowIndex_ > 0) {
-            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --windowIndex_);
+        // Keep going back as long as the epoch is greater or equal to the previous AmountSnap's startingEpoch.
+        while (snapIndex_ > 0) {
+            AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, --snapIndex_);
 
-            uint256 amountWindowStartingEpoch_ = amountWindow_.startingEpoch;
+            uint256 snapStartingEpoch_ = amountSnap_.startingEpoch;
 
-            // Keep checking if the AmountWindow's startingEpoch is applicable to the current and decrementing epoch.
-            while (amountWindowStartingEpoch_ <= endEpoch_) {
-                values_[--epochsIndex_] = amountWindow_.amount;
+            // Keep checking if the AmountSnap's startingEpoch is applicable to the current and decrementing epoch.
+            while (snapStartingEpoch_ <= endEpoch_) {
+                values_[--epochsIndex_] = amountSnap_.amount;
 
                 if (epochsIndex_ == 0) return values_;
 

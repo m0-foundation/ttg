@@ -12,19 +12,19 @@ contract EpochBasedVoteTokenHarness is EpochBasedVoteToken {
     ) EpochBasedVoteToken(name_, symbol_, uint8(decimals_)) {}
 
     function pushBalance(address account_, uint256 startingEpoch_, uint256 balance_) external {
-        _balances[account_].push(AmountWindow(uint16(startingEpoch_), uint240(balance_)));
+        _balances[account_].push(AmountSnap(uint16(startingEpoch_), uint240(balance_)));
     }
 
     function pushDelegatee(address account_, uint256 startingEpoch_, address delegatee) external {
-        _delegatees[account_].push(AccountWindow(uint16(startingEpoch_), delegatee));
+        _delegatees[account_].push(AccountSnap(uint16(startingEpoch_), delegatee));
     }
 
     function pushVotes(address account_, uint256 startingEpoch_, uint256 votingPower) external {
-        _votingPowers[account_].push(AmountWindow(uint16(startingEpoch_), uint240(votingPower)));
+        _votingPowers[account_].push(AmountSnap(uint16(startingEpoch_), uint240(votingPower)));
     }
 
     function pushTotalSupply(uint256 startingEpoch_, uint256 totalSupply_) external {
-        _totalSupplies.push(AmountWindow(uint16(startingEpoch_), uint240(totalSupply_)));
+        _totalSupplies.push(AmountSnap(uint16(startingEpoch_), uint240(totalSupply_)));
     }
 
     function mint(address account_, uint256 amount_) external {

@@ -35,13 +35,13 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 13);
     }
 
-    function test_pastBalanceOf_notPastEpoch() external {
+    function test_pastBalanceOf_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _vote.pastBalanceOf(_alice, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.pastBalanceOf(_alice, currentEpoch_ + 1);
     }
 
@@ -64,13 +64,13 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.delegates(_alice), _bob);
     }
 
-    function test_pastDelegates_notPastEpoch() external {
+    function test_pastDelegates_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _vote.pastDelegates(_alice, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.pastDelegates(_alice, currentEpoch_ + 1);
     }
 
@@ -97,13 +97,13 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.getVotes(_alice), 13);
     }
 
-    function test_getPastVotes_notPastEpoch() external {
+    function test_getPastVotes_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _vote.getPastVotes(_alice, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.getPastVotes(_alice, currentEpoch_ + 1);
     }
 
@@ -126,13 +126,13 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.totalSupply(), 13);
     }
 
-    function test_pastTotalSupply_notPastEpoch() external {
+    function test_pastTotalSupply_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _vote.pastTotalSupply(currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.pastTotalSupply(currentEpoch_ + 1);
     }
 

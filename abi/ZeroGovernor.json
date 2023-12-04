@@ -271,7 +271,7 @@
       {
         "indexed": false,
         "internalType": "bytes[]",
-        "name": "calldatas",
+        "name": "callDatas",
         "type": "bytes[]"
       },
       {
@@ -981,19 +981,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "proposalFee",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "proposalFee_",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "pure",
     "type": "function"
   },
   {

@@ -46,13 +46,13 @@ contract ZeroTokenTests is TestUtils {
         }
     }
 
-    function test_pastBalancesOf_notPastEpoch() external {
+    function test_pastBalancesOf_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _zeroToken.pastBalancesOf(_alice, currentEpoch_ - 1, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.pastBalancesOf(_alice, currentEpoch_ - 1, currentEpoch_ + 1);
     }
 
@@ -96,7 +96,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 5);
     }
 
-    function test_pastBalancesOf_beforeAllWindows() external {
+    function test_pastBalancesOf_beforeAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushBalance(_alice, currentEpoch_ - 6, 5);
@@ -109,7 +109,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 0);
     }
 
-    function test_pastBalancesOf_afterAllWindows() external {
+    function test_pastBalancesOf_afterAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushBalance(_alice, currentEpoch_ - 10, 2);
@@ -125,13 +125,13 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 5);
     }
 
-    function test_pastDelegates_multi_notPastEpoch() external {
+    function test_pastDelegates_multi_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _zeroToken.pastDelegates(_alice, currentEpoch_ - 1, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.pastDelegates(_alice, currentEpoch_ - 1, currentEpoch_ + 1);
     }
 
@@ -174,7 +174,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(delegatees_[0], _alice);
     }
 
-    function test_pastDelegates_multi_beforeAllWindows() external {
+    function test_pastDelegates_multi_beforeAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushDelegatee(_alice, currentEpoch_ - 7, _carol);
@@ -188,7 +188,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(delegatees_[1], _alice);
     }
 
-    function test_pastDelegates_multi_afterAllWindows() external {
+    function test_pastDelegates_multi_afterAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushDelegatee(_alice, currentEpoch_ - 7, _carol);
@@ -203,13 +203,13 @@ contract ZeroTokenTests is TestUtils {
         assertEq(delegatees_[2], _bob);
     }
 
-    function test_getPastVotes_multi_notPastEpoch() external {
+    function test_getPastVotes_multi_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _zeroToken.getPastVotes(_alice, currentEpoch_ - 1, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.getPastVotes(_alice, currentEpoch_ - 1, currentEpoch_ + 1);
     }
 
@@ -253,7 +253,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 5);
     }
 
-    function test_getPastVotes_multi_beforeAllWindows() external {
+    function test_getPastVotes_multi_beforeAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushVotes(_alice, currentEpoch_ - 6, 5);
@@ -266,7 +266,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 0);
     }
 
-    function test_getPastVotes_multi_afterAllWindows() external {
+    function test_getPastVotes_multi_afterAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushVotes(_alice, currentEpoch_ - 10, 2);
@@ -282,13 +282,13 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 5);
     }
 
-    function test_pastTotalSupplies_notPastEpoch() external {
+    function test_pastTotalSupplies_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_, currentEpoch_));
         _zeroToken.pastTotalSupplies(currentEpoch_ - 1, currentEpoch_);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastEpoch.selector, currentEpoch_ + 1, currentEpoch_));
+        vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.pastTotalSupplies(currentEpoch_ - 1, currentEpoch_ + 1);
     }
 
@@ -332,7 +332,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(totalSupplies_[0], 5);
     }
 
-    function test_pastTotalSupplies_beforeAllWindows() external {
+    function test_pastTotalSupplies_beforeAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushTotalSupply(currentEpoch_ - 6, 5);
@@ -345,7 +345,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(totalSupplies_[0], 0);
     }
 
-    function test_pastTotalSupplies_afterAllWindows() external {
+    function test_pastTotalSupplies_afterAllSnaps() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         _zeroToken.pushTotalSupply(currentEpoch_ - 10, 2);

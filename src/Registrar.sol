@@ -8,6 +8,7 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
+/// @title A book of record of SPOG-specific contracts and arbitrary key-value pairs and lists.
 contract Registrar is IRegistrar {
     address public immutable emergencyGovernorDeployer;
     address public immutable powerTokenDeployer;
@@ -20,7 +21,6 @@ contract Registrar is IRegistrar {
 
     modifier onlyStandardOrEmergencyGovernor() {
         _revertIfNotStandardOrEmergencyGovernor();
-
         _;
     }
 

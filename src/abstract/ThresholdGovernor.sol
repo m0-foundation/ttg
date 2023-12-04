@@ -15,6 +15,7 @@ import { BatchGovernor } from "./BatchGovernor.sol";
 //       See: https://docs.openzeppelin.com/contracts/4.x/api/governance#GovernorVotesQuorumFraction-quorumDenominator--
 //       See: https://portal.thirdweb.com/contracts/VoteERC20
 
+/// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     uint16 public thresholdRatio;
 
@@ -82,10 +83,6 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         yesVotes_ = proposal_.yesWeight;
         proposer_ = proposal_.proposer;
         thresholdRatio_ = proposal_.thresholdRatio;
-    }
-
-    function proposalFee() external pure returns (uint256 proposalFee_) {
-        return 0;
     }
 
     function quorum() external view returns (uint256 quorum_) {
