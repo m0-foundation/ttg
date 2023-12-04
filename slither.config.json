@@ -2,6 +2,5 @@
     "detectors_to_run": "all",
     "exclude_informational": true,
     "exclude_low": false,
-    "fail_pedantic": false,
     "filter_paths": "lib|test|script"
 }
