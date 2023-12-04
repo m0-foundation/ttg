@@ -11,6 +11,10 @@ contract EpochBasedVoteTokenHarness is EpochBasedVoteToken {
         uint256 decimals_
     ) EpochBasedVoteToken(name_, symbol_, uint8(decimals_)) {}
 
+    function pushBalance(address account_, uint256 startingEpoch_, uint256 balance_) external {
+        _balances[account_].push(AmountWindow(uint16(startingEpoch_), uint240(balance_)));
+    }
+
     function mint(address account_, uint256 amount_) external {
         _mint(account_, amount_);
     }
