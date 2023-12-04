@@ -23,22 +23,23 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+          version: nightly
 
+      - name: Install lcov
+        uses: hrishikesh-kadam/setup-lcov@v1
+      
       - name: Run coverage
+        env:
+          MNEMONIC: ${{ secrets.MNEMONIC_FOR_TESTS }}
         run: |
-          forge coverage --report lcov
+          forge coverage --report lcov && lcov --extract lcov.info -o lcov.info 'src/*'
         id: coverage
-
-      - name: Install lcov and filter report
-        run: |
-          sudo apt-get install -y lcov
-          lcov --remove ./lcov.info -o ./lcov.info 'script/*' 'test/*'
 
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v3
         with:
           coverage-files: lcov.info
           artifact-name: code-coverage-report
+          minimun-coverage: 100
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
