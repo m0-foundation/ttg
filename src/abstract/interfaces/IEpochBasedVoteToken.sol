@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IERC20Permit } from "../../../lib/common/src/interfaces/IERC20Permit.sol";
 
@@ -10,10 +10,6 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     error AlreadyDelegated();
 
     error AmountExceedsUint240();
-
-    error InvalidEpochOrdering();
-
-    error StartEpochAfterEndEpoch();
 
     error TransferToSelf();
 
@@ -33,32 +29,9 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
     |                                              View/Pure Functions                                                 |
     \******************************************************************************************************************/
 
-    function getPastVotes(
-        address account,
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (uint256[] memory votingPowers);
-
     function pastBalanceOf(address account, uint256 epoch) external view returns (uint256 balance);
-
-    function pastBalancesOf(
-        address account,
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (uint256[] memory balances);
 
     function pastDelegates(address account, uint256 epoch) external view returns (address delegatee);
 
-    function pastDelegates(
-        address account,
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (address[] memory delegatees);
-
     function pastTotalSupply(uint256 epoch) external view returns (uint256 totalSupply);
-
-    function pastTotalSupplies(
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (uint256[] memory totalSupplies);
 }

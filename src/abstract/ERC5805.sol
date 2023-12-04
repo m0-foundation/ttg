@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { StatefulERC712 } from "../../lib/common/src/StatefulERC712.sol";
 

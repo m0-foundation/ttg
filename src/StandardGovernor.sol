@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
 
@@ -59,14 +59,14 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     function balanceOf(
         address account_
     ) public view virtual override(IERC20, EpochBasedVoteToken) returns (uint256 balance_) {
-        return _getLatestValue(_balances[account_]) + _getInflationOf(account_);
+        return super.balanceOf(account_) + _getInflationOf(account_);
     }
 
     function pastBalanceOf(
         address account_,
         uint256 epoch_
     ) public view virtual override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 balance_) {
-        return _getValueAt(_balances[account_], epoch_) + _getInflationOfAt(account_, epoch_);
+        return super.pastBalanceOf(account_, epoch_) + _getInflationOfAt(account_, epoch_);
     }
 
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
@@ -146,8 +146,9 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         if (balance_ == 0) return 0;
 
-        address delegatee_ = _getDefaultIfZero(_getAccountAt(_delegatees[account_], lastEpoch_), account_);
+        address delegatee_ = _getDelegateeAt(account_, lastEpoch_);
 
+        // TODO: Could optimize with `epoch_ < lastEpoch_ + 1`, or convert to a while loop.
         for (uint256 epoch_ = _getLatestEpochAt(_lastSyncs[account_], lastEpoch_) + 1; epoch_ <= lastEpoch_; ++epoch_) {
             if (!_isVotingEpoch(epoch_)) continue;
 
@@ -158,9 +159,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     }
 
     function _getLatestEpoch(VoidWindow[] storage voidWindows_) internal view returns (uint256 latestEpoch_) {
-        uint256 length_ = voidWindows_.length;
-
-        return length_ == 0 ? 0 : _unsafeVoidWindowAccess(voidWindows_, length_ - 1).startingEpoch;
+        return _getLatestEpochAt(voidWindows_, PureEpochs.currentEpoch());
     }
 
     function _getLatestEpochAt(
@@ -169,16 +168,14 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     ) internal view returns (uint256 latestEpoch_) {
         uint256 index_ = voidWindows_.length;
 
-        if (index_ == 0) return 0;
-
         // Keep going back as long as the epoch is greater or equal to the previous VoidWindow's startingEpoch.
-        do {
+        while (index_ > 0) {
             VoidWindow storage voidWindow_ = _unsafeVoidWindowAccess(voidWindows_, --index_);
 
             uint256 voidWindowStartingEpoch_ = voidWindow_.startingEpoch;
 
             if (voidWindowStartingEpoch_ <= epoch_) return voidWindowStartingEpoch_;
-        } while (index_ > 0);
+        }
     }
 
     function _getParticipationAt(address delegatee_, uint256 epoch_) internal view returns (bool participated_) {
@@ -186,10 +183,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         uint256 index_ = voidWindows_.length;
 
-        if (index_ == 0) return false;
-
         // Keep going back as long as the epoch is greater or equal to the previous VoidWindow's startingEpoch.
-        do {
+        while (index_ > 0) {
             VoidWindow storage voidWindow_ = _unsafeVoidWindowAccess(voidWindows_, --index_);
 
             uint256 voidWindowStartingEpoch_ = voidWindow_.startingEpoch;
@@ -197,7 +192,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
             if (voidWindowStartingEpoch_ > epoch_) continue;
 
             return voidWindowStartingEpoch_ == epoch_;
-        } while (index_ > 0);
+        }
     }
 
     function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {

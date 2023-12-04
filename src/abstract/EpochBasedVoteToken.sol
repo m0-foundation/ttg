@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
 
@@ -11,8 +11,6 @@ import { PureEpochs } from "../libs/PureEpochs.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
-
-// TODO: Consider making more external function (like `balanceOf`, and `pastBalanceOf`) public to be used internally.
 
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
     struct AmountWindow {
@@ -54,26 +52,18 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function balanceOf(
-        address account_
-    ) external view virtual override(IERC20, ERC20Permit) returns (uint256 balance_) {
+    function CLOCK_MODE() external pure returns (string memory clockMode_) {
+        return "mode=epoch";
+    }
+
+    function balanceOf(address account_) public view virtual override returns (uint256 balance_) {
         return _getLatestValue(_balances[account_]);
     }
 
-    function pastBalanceOf(address account_, uint256 epoch_) external view virtual returns (uint256 balance_) {
+    function pastBalanceOf(address account_, uint256 epoch_) public view virtual returns (uint256 balance_) {
         _revertIfNotPastEpoch(epoch_);
 
         return _getValueAt(_balances[account_], epoch_);
-    }
-
-    function pastBalancesOf(
-        address account_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) external view virtual returns (uint256[] memory balances_) {
-        _revertIfNotPastEpoch(endEpoch_);
-
-        return _getValuesBetween(_balances[account_], startEpoch_, endEpoch_);
     }
 
     function clock() external view returns (uint48 clock_) {
@@ -90,16 +80,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getDelegateeAt(account_, epoch_);
     }
 
-    function pastDelegates(
-        address account_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) external view returns (address[] memory delegatees_) {
-        _revertIfNotPastEpoch(endEpoch_);
-
-        return _getDelegateesBetween(account_, startEpoch_, endEpoch_);
-    }
-
     function getVotes(address account_) public view virtual returns (uint256 votingPower_) {
         return _getLatestValue(_votingPowers[account_]);
     }
@@ -110,17 +90,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getValueAt(_votingPowers[account_], epoch_);
     }
 
-    function getPastVotes(
-        address account_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) public view virtual returns (uint256[] memory votingPowers_) {
-        _revertIfNotPastEpoch(endEpoch_);
-
-        return _getValuesBetween(_votingPowers[account_], startEpoch_, endEpoch_);
-    }
-
-    function totalSupply() public view virtual override(IERC20, ERC20Permit) returns (uint256 totalSupply_) {
+    function totalSupply() public view virtual override returns (uint256 totalSupply_) {
         return _getLatestValue(_totalSupplies);
     }
 
@@ -128,19 +98,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         _revertIfNotPastEpoch(epoch_);
 
         return _getValueAt(_totalSupplies, epoch_);
-    }
-
-    function pastTotalSupplies(
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) public view virtual returns (uint256[] memory totalSupplies_) {
-        _revertIfNotPastEpoch(endEpoch_);
-
-        return _getValuesBetween(_totalSupplies, startEpoch_, endEpoch_);
-    }
-
-    function CLOCK_MODE() external pure returns (string memory clockMode_) {
-        return "mode=epoch";
     }
 
     /******************************************************************************************************************\
@@ -306,129 +263,46 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    function _getLatestAccount(AccountWindow[] storage accountWindows_) internal view returns (address account_) {
-        uint256 length_ = accountWindows_.length;
-
-        return length_ == 0 ? address(0) : _unsafeAccountWindowAccess(accountWindows_, length_ - 1).account;
-    }
-
-    function _getAccountAt(
-        AccountWindow[] storage accountWindows_,
-        uint256 epoch_
-    ) internal view returns (address account_) {
-        uint256 index_ = accountWindows_.length;
-
-        if (index_ == 0) return address(0);
-
-        // Keep going back as long as the epoch is greater or equal to the previous AccountWindow's startingEpoch.
-        do {
-            AccountWindow storage accountWindow_ = _unsafeAccountWindowAccess(accountWindows_, --index_);
-
-            if (accountWindow_.startingEpoch <= epoch_) return accountWindow_.account;
-        } while (index_ > 0);
-    }
-
-    function _getDelegatee(address account_) internal view returns (address delegatee_) {
-        // The delegatee is the account itself if there are no or were no delegatees.
-        return _getDefaultIfZero(_getLatestAccount(_delegatees[account_]), account_);
-    }
-
-    function _getDelegateeAt(address account_, uint256 epoch_) internal view returns (address delegatee_) {
-        // The delegatee is the account itself if there are no or were no delegatees.
-        return _getDefaultIfZero(_getAccountAt(_delegatees[account_], epoch_), account_);
-    }
-
-    function _getDelegateesBetween(
-        address account_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) internal view returns (address[] memory delegatees_) {
-        if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch();
-
-        uint256 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
-
-        delegatees_ = new address[](epochsIndex_);
-
-        AccountWindow[] storage accountWindows_ = _delegatees[account_];
-
-        uint256 windowIndex_ = accountWindows_.length;
-
-        if (windowIndex_ == 0) return delegatees_;
-
-        // Keep going back as long as the epoch is greater or equal to the previous AccountWindow's startingEpoch.
-        do {
-            AccountWindow storage accountWindow_ = _unsafeAccountWindowAccess(accountWindows_, --windowIndex_);
-
-            uint256 accountWindowStartingEpoch_ = accountWindow_.startingEpoch;
-
-            // Keep checking if the AccountWindow's startingEpoch is applicable to the current and decrementing epoch.
-            while (accountWindowStartingEpoch_ <= endEpoch_) {
-                delegatees_[--epochsIndex_] = _getDefaultIfZero(accountWindow_.account, account_);
-
-                if (epochsIndex_ == 0) return delegatees_;
-
-                --endEpoch_;
-            }
-        } while (windowIndex_ > 0);
-    }
-
-    function _getLatestValue(AmountWindow[] storage amountWindows_) internal view returns (uint256 value_) {
-        uint256 length_ = amountWindows_.length;
-
-        return length_ == 0 ? 0 : _unsafeAmountWindowAccess(amountWindows_, length_ - 1).amount;
-    }
-
-    function _getValueAt(AmountWindow[] storage amountWindows_, uint256 epoch_) internal view returns (uint256 value_) {
-        uint256 index_ = amountWindows_.length;
-
-        if (index_ == 0) return 0;
-
-        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
-        do {
-            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --index_);
-
-            if (amountWindow_.startingEpoch <= epoch_) return amountWindow_.amount;
-        } while (index_ > 0);
-    }
-
-    function _getValuesBetween(
-        AmountWindow[] storage amountWindows_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) internal view returns (uint256[] memory values_) {
-        if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch();
-
-        uint256 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
-
-        values_ = new uint256[](epochsIndex_);
-
-        uint256 windowIndex_ = amountWindows_.length;
-
-        if (windowIndex_ == 0) return values_;
-
-        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
-        do {
-            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --windowIndex_);
-
-            uint256 amountWindowStartingEpoch_ = amountWindow_.startingEpoch;
-
-            // Keep checking if the AmountWindow's startingEpoch is applicable to the current and decrementing epoch.
-            while (amountWindowStartingEpoch_ <= endEpoch_) {
-                values_[--epochsIndex_] = amountWindow_.amount;
-
-                if (epochsIndex_ == 0) return values_;
-
-                --endEpoch_;
-            }
-        } while (windowIndex_ > 0);
-    }
-
     function _add(uint256 a_, uint256 b_) internal pure returns (uint256 sum_) {
         return a_ + b_;
     }
 
     function _getDefaultIfZero(address input_, address default_) internal pure returns (address output_) {
         return input_ == address(0) ? default_ : input_;
+    }
+
+    function _getDelegatee(address account_) internal view returns (address delegatee_) {
+        return _getDelegateeAt(account_, PureEpochs.currentEpoch());
+    }
+
+    function _getDelegateeAt(address account_, uint256 epoch_) internal view returns (address delegatee_) {
+        AccountWindow[] storage accountWindows_ = _delegatees[account_];
+
+        uint256 index_ = accountWindows_.length;
+
+        // Keep going back as long as the epoch is greater or equal to the previous AccountWindow's startingEpoch.
+        while (index_ > 0) {
+            AccountWindow storage accountWindow_ = _unsafeAccountWindowAccess(accountWindows_, --index_);
+
+            if (accountWindow_.startingEpoch <= epoch_) return _getDefaultIfZero(accountWindow_.account, account_);
+        }
+
+        return account_;
+    }
+
+    function _getLatestValue(AmountWindow[] storage amountWindows_) internal view returns (uint256 value_) {
+        return _getValueAt(amountWindows_, PureEpochs.currentEpoch());
+    }
+
+    function _getValueAt(AmountWindow[] storage amountWindows_, uint256 epoch_) internal view returns (uint256 value_) {
+        uint256 index_ = amountWindows_.length;
+
+        // Keep going back as long as the epoch is greater or equal to the previous AmountWindow's startingEpoch.
+        while (index_ > 0) {
+            AmountWindow storage amountWindow_ = _unsafeAmountWindowAccess(amountWindows_, --index_);
+
+            if (amountWindow_.startingEpoch <= epoch_) return amountWindow_.amount;
+        }
     }
 
     function _getZeroIfDefault(address input_, address default_) internal pure returns (address output_) {

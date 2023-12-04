@@ -2,14 +2,14 @@
 
 pragma solidity 0.8.23;
 
-import { EpochBasedVoteToken } from "../../src/abstract/EpochBasedVoteToken.sol";
+import { ZeroToken } from "../../src/ZeroToken.sol";
 
-contract EpochBasedVoteTokenHarness is EpochBasedVoteToken {
+contract ZeroTokenHarness is ZeroToken {
     constructor(
-        string memory name_,
-        string memory symbol_,
-        uint256 decimals_
-    ) EpochBasedVoteToken(name_, symbol_, uint8(decimals_)) {}
+        address standardGovernorDeployer_,
+        address[] memory initialAccounts_,
+        uint256[] memory initialBalances_
+    ) ZeroToken(standardGovernorDeployer_, initialAccounts_, initialBalances_) {}
 
     function pushBalance(address account_, uint256 startingEpoch_, uint256 balance_) external {
         _balances[account_].push(AmountWindow(uint16(startingEpoch_), uint240(balance_)));
@@ -25,9 +25,5 @@ contract EpochBasedVoteTokenHarness is EpochBasedVoteToken {
 
     function pushTotalSupply(uint256 startingEpoch_, uint256 totalSupply_) external {
         _totalSupplies.push(AmountWindow(uint16(startingEpoch_), uint240(totalSupply_)));
-    }
-
-    function mint(address account_, uint256 amount_) external {
-        _mint(account_, amount_);
     }
 }

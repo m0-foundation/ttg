@@ -32,11 +32,6 @@
   },
   {
     "inputs": [],
-    "name": "InvalidEpochOrdering",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidSignature",
     "type": "error"
   },

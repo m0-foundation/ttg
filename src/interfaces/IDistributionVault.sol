@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IStatefulERC712 } from "../../lib/common/src/interfaces/IStatefulERC712.sol";
 
@@ -60,4 +60,6 @@ interface IDistributionVault is IStatefulERC712 {
     ) external view returns (uint256 claimable);
 
     function name() external view returns (string memory name);
+
+    function zeroToken() external view returns (address zeroToken);
 }

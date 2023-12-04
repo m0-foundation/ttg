@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IPowerBootstrapToken } from "./interfaces/IPowerBootstrapToken.sol";
 
@@ -19,7 +19,7 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
 
         uint256 totalSupply_;
 
-        for (uint256 index_; index_ < accountsLength_; index_++) {
+        for (uint256 index_; index_ < accountsLength_; ++index_) {
             totalSupply_ += _balances[initialAccounts_[index_]] = initialBalances_[index_];
         }
 

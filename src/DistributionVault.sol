@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.21;
+pragma solidity 0.8.23;
 
 import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
 
@@ -10,7 +10,7 @@ import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
-import { IEpochBasedVoteToken } from "./abstract/interfaces/IEpochBasedVoteToken.sol";
+import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
@@ -18,7 +18,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
     bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
 
-    address public immutable baseToken;
+    address public immutable zeroToken;
 
     mapping(address token => uint256 balance) internal _lastTokenBalances;
 
@@ -26,8 +26,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
     mapping(address token => mapping(uint256 epoch => mapping(address account => bool claimed))) internal _claims;
 
-    constructor(address baseToken_) StatefulERC712("DistributionVault") {
-        baseToken = baseToken_;
+    constructor(address zeroToken_) StatefulERC712("DistributionVault") {
+        zeroToken = zeroToken_;
     }
 
     /******************************************************************************************************************\
@@ -90,9 +90,9 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) public view returns (uint256 claimable_) {
-        uint256[] memory balances_ = IEpochBasedVoteToken(baseToken).pastBalancesOf(account_, startEpoch_, endEpoch_);
+        uint256[] memory balances_ = IZeroToken(zeroToken).pastBalancesOf(account_, startEpoch_, endEpoch_);
 
-        uint256[] memory totalSupplies_ = IEpochBasedVoteToken(baseToken).pastTotalSupplies(startEpoch_, endEpoch_);
+        uint256[] memory totalSupplies_ = IZeroToken(zeroToken).pastTotalSupplies(startEpoch_, endEpoch_);
 
         uint256 epochCount_ = endEpoch_ - startEpoch_ + 1;
 
@@ -124,7 +124,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     ) internal returns (uint256 claimed_) {
         claimed_ = getClaimable(token_, account_, startEpoch_, endEpoch_);
 
-        for (uint256 epoch_ = startEpoch_; epoch_ <= endEpoch_; ++epoch_) {
+        for (uint256 epoch_ = startEpoch_; epoch_ < endEpoch_ + 1; ++epoch_) {
             _claims[token_][epoch_][account_] = true;
         }
 
