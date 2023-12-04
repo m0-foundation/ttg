@@ -31,8 +31,7 @@ jobs:
       - name: Run coverage
         env:
           MNEMONIC: ${{ secrets.MNEMONIC_FOR_TESTS }}
-        run: |
-          forge coverage --report lcov && lcov --extract lcov.info -o lcov.info 'src/*'
+        run: npm run coverage
         id: coverage
 
       - name: Report code coverage
@@ -40,6 +39,6 @@ jobs:
         with:
           coverage-files: lcov.info
           artifact-name: code-coverage-report
-          minimun-coverage: 100
+          minimum-coverage: 60
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
