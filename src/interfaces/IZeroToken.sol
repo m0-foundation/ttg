@@ -94,9 +94,15 @@ interface IZeroToken is IEpochBasedVoteToken {
         uint256 endEpoch
     ) external view returns (uint256[] memory totalSupplies);
 
-    /// @notice Returns the address of the Standard Governor.
-    function standardGovernor() external view returns (address standardGovernor);
+    /**
+     * @notice Returns the address of the Standard Governor.
+     * @return The Standard Governor address.
+     */
+    function standardGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Standard Governor Deployer.
-    function standardGovernorDeployer() external view returns (address standardGovernorDeployer);
+    /**
+     * @notice Returns the address of the Standard Governor Deployer.
+     * @return The Standard Governor Deployer address.
+     */
+    function standardGovernorDeployer() external view returns (address);
 }

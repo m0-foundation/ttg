@@ -38,12 +38,21 @@ interface IPowerTokenDeployer {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the last Power Token deployed by this contract.
-    function lastDeploy() external view returns (address lastDeploy);
+    /**
+     * @notice Returns the address of the last Power Token deployed by this contract.
+     * @return Last deployed Power Token address.
+     */
+    function lastDeploy() external view returns (address);
 
-    /// @notice Returns the address of the new Power Token this contract will deploy
-    function nextDeploy() external view returns (address nextDeploy);
+    /**
+     * @notice Returns the address of the new Power Token this contract will deploy
+     * @return Next deployed Power Token address.
+     */
+    function nextDeploy() external view returns (address);
 
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address vault);
+    /**
+     * @notice Returns the address of the Vault.
+     * @return The Vault address.
+     */
+    function vault() external view returns (address);
 }

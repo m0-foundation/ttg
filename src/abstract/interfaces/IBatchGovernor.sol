@@ -131,5 +131,5 @@ interface IBatchGovernor is IGovernor {
     function hashProposal(bytes memory callData) external view returns (uint256 proposalId);
 
     /// @notice Returns the EIP-5805 token contact used for determine voting power and total supplies.
-    function voteToken() external view returns (address voteToken);
+    function voteToken() external view returns (address);
 }

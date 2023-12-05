@@ -48,21 +48,39 @@ interface IStandardGovernorDeployer {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the last Standard Governor deployed by this contract.
-    function lastDeploy() external view returns (address lastDeploy);
+    /**
+     * @notice Returns the address of the last Standard Governor deployed by this contract.
+     * @return Last deployed Standard Governor address.
+     */
+    function lastDeploy() external view returns (address);
 
-    /// @notice Returns the address of the new Standard Governor this contract will deploy
-    function nextDeploy() external view returns (address nextDeploy);
+    /**
+     * @notice Returns the address of the new Standard Governor this contract will deploy
+     * @return Next deployed Standard Governor address.
+     */
+    function nextDeploy() external view returns (address);
 
-    /// @notice Returns the address of the Registrar.
-    function registrar() external view returns (address registrar);
+    /**
+     * @notice Returns the address of the Registrar.
+     * @return Registrar address.
+     */
+    function registrar() external view returns (address);
 
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address vault);
+    /**
+     * @notice Returns the address of the Vault.
+     * @return Vault address.
+     */
+    function vault() external view returns (address);
 
-    /// @notice Returns the address of the Zero Governor.
-    function zeroGovernor() external view returns (address zeroGovernor);
+    /**
+     * @notice Returns the address of the Zero Governor.
+     * @return Zero Governor address.
+     */
+    function zeroGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Zero Token.
-    function zeroToken() external view returns (address zeroToken);
+    /**
+     * @notice Returns the address of the Zero Token.
+     * @return Zero Token address.
+     */
+    function zeroToken() external view returns (address);
 }

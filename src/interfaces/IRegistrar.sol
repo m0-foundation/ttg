@@ -74,23 +74,29 @@ interface IRegistrar {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the Emergency Governor.
-    function emergencyGovernor() external view returns (address emergencyGovernor);
+    /**
+     * @notice Returns the address of the Emergency Governor.
+     * @return The Emergency Governor address.
+     */
+    function emergencyGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Emergency Governor Deployer.
-    function emergencyGovernorDeployer() external view returns (address emergencyGovernorDeployer);
+    /**
+     * @notice Returns the address of the Emergency Governor Deployer.
+     * @return The Emergency Governor Deployer address.
+     */
+    function emergencyGovernorDeployer() external view returns (address);
 
     /**
      * @notice Returns the value of `key`.
      * @param  key   Some key.
-     * @param  value Some value.
+     * @return  value Some value.
      */
     function get(bytes32 key) external view returns (bytes32 value);
 
     /**
      * @notice Returns the values of `keys` respectively.
      * @param  keys   Some keys.
-     * @param  values Some values.
+     * @return values Some values.
      */
     function get(bytes32[] calldata keys) external view returns (bytes32[] memory values);
 
@@ -98,36 +104,57 @@ interface IRegistrar {
      * @notice Returns whether `list` contains `account`.
      * @param  list     The key for some list.
      * @param  account  The address of some account.
-     * @return contains Whether `list` contains `account`.
+     * @return Whether `list` contains `account`.
      */
-    function listContains(bytes32 list, address account) external view returns (bool contains);
+    function listContains(bytes32 list, address account) external view returns (bool);
 
     /**
      * @notice Returns whether `list` contains all specified accounts.
      * @param  list     The key for some list.
      * @param  accounts An array of addressed of some accounts.
-     * @return contains Whether `list` contains all specified accounts.
+     * @return Whether `list` contains all specified accounts.
      */
-    function listContains(bytes32 list, address[] calldata accounts) external view returns (bool contains);
+    function listContains(bytes32 list, address[] calldata accounts) external view returns (bool);
 
-    /// @notice Returns the address of the Power Token.
-    function powerToken() external view returns (address powerToken);
+    /**
+     * @notice Returns the address of the Power Token.
+     * @return The Power Token address.
+     */
+    function powerToken() external view returns (address);
 
-    /// @notice Returns the address of the Power Token Deployer.
-    function powerTokenDeployer() external view returns (address powerTokenDeployer);
+    /**
+     * @notice Returns the address of the Power Token Deployer.
+     * @return The Power Token Deployer address.
+     */
+    function powerTokenDeployer() external view returns (address);
 
-    /// @notice Returns the address of the Standard Governor.
-    function standardGovernor() external view returns (address standardGovernor);
+    /**
+     * @notice Returns the address of the Standard Governor.
+     * @return The Standard Governor address.
+     */
+    function standardGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Standard Governor Deployer.
-    function standardGovernorDeployer() external view returns (address standardGovernorDeployer);
+    /**
+     * @notice Returns the address of the Standard Governor Deployer.
+     * @return The Standard Governor Deployer address.
+     */
+    function standardGovernorDeployer() external view returns (address);
 
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address vault);
+    /**
+     * @notice Returns the address of the Vault.
+     * @return The Vault address.
+     */
+    function vault() external view returns (address);
 
-    /// @notice Returns the address of the Zero Governor.
-    function zeroGovernor() external view returns (address zeroGovernor);
+    /**
+     * @notice Returns the address of the Zero Governor.
+     * @return The Zero Governor address.
+     */
+    function zeroGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Zero Token.
-    function zeroToken() external view returns (address zeroToken);
+    /**
+     * @notice Returns the address of the Zero Token.
+     * @return The Zero Token address.
+     */
+    function zeroToken() external view returns (address);
 }

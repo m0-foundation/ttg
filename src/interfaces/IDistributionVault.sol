@@ -121,17 +121,23 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     ) external view returns (uint256 claimable);
 
     /**
-     * @notice Returns whether `account` has already claimed their `token` distribution for epoch `epoch`.
+     * @notice Returns whether `account` has already claimed their `token` distribution for `epoch`.
      * @param  token   The address of some token.
      * @param  account The address of some account.
      * @param  epoch   The epoch number as a clock value.
-     * @return claimed Whether `account` has already made a claimed for this token for this epoch.
+     * @return Whether `account` has already claimed `token` rewards for `epoch`.
      */
-    function hasClaimed(address token, uint256 epoch, address account) external view returns (bool claimed);
+    function hasClaimed(address token, uint256 epoch, address account) external view returns (bool);
 
-    /// @notice Returns the name of the contract.
-    function name() external view returns (string memory name);
+    /**
+     * @notice Returns the name of the contract.
+     * @return The contract name.
+     */
+    function name() external view returns (string memory);
 
-    /// @notice Returns the address of the Zero Token holders must have in order to be eligible for distributions.
-    function zeroToken() external view returns (address zeroToken);
+    /**
+     * @notice Returns the address of the Zero Token holders must have in order to be eligible for distributions.
+     * @return The Zero Token address.
+     */
+    function zeroToken() external view returns (address);
 }
