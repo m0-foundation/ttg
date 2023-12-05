@@ -23,11 +23,11 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: 1.0.0
 
       - name: Install lcov
         uses: hrishikesh-kadam/setup-lcov@v1
-      
+
       - name: Run coverage
         env:
           MNEMONIC: ${{ secrets.MNEMONIC_FOR_TESTS }}
