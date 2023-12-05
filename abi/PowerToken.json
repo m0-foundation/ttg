@@ -1049,6 +1049,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidBootstrapTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidCashTokenAddress",
     "inputs": []
   },

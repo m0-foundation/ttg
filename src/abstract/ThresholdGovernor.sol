@@ -17,8 +17,15 @@ import { BatchGovernor } from "./BatchGovernor.sol";
 
 /// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
+    /// @inheritdoc IThresholdGovernor
     uint16 public thresholdRatio;
 
+    /**
+     * @notice Construct a new ThresholdGovernor contract.
+     * @param  name_           The name of the contract. Used to compute EIP712 domain separator.
+     * @param  voteToken_      The address of the token used to vote.
+     * @param  thresholdRatio_ The ratio of yes votes votes required for a proposal to succeed.
+     */
     constructor(string memory name_, address voteToken_, uint16 thresholdRatio_) BatchGovernor(name_, voteToken_) {
         _setThresholdRatio(thresholdRatio_);
     }
@@ -27,6 +34,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IGovernor
     function execute(
         address[] memory,
         uint256[] memory,
@@ -44,6 +52,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
     }
 
+    /// @inheritdoc IGovernor
     function propose(
         address[] memory targets_,
         uint256[] memory values_,
@@ -57,6 +66,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IThresholdGovernor
     function getProposal(
         uint256 proposalId_
     )
@@ -85,16 +95,19 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         thresholdRatio_ = proposal_.thresholdRatio;
     }
 
+    /// @inheritdoc IGovernor
     function quorum() external view returns (uint256 quorum_) {
         // NOTE: This will only be correct for the first epoch of a proposals lifetime.
         return (thresholdRatio * _getTotalSupply(PureEpochs.currentEpoch() - 1)) / ONE;
     }
 
+    /// @inheritdoc IGovernor
     function quorum(uint256 timepoint_) external view returns (uint256 quorum_) {
         // NOTE: This will only be correct for the first epoch of a proposals lifetime.
         return (thresholdRatio * _getTotalSupply(timepoint_ - 1)) / ONE;
     }
 
+    /// @inheritdoc IGovernor
     function state(uint256 proposalId_) public view override(BatchGovernor, IGovernor) returns (ProposalState state_) {
         Proposal storage proposal_ = _proposals[proposalId_];
 
@@ -124,10 +137,12 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         return ProposalState.Defeated;
     }
 
+    /// @inheritdoc IGovernor
     function votingDelay() public pure override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
         return 0;
     }
 
+    /// @inheritdoc IGovernor
     function votingPeriod() public pure override returns (uint256 votingPeriod_) {
         return 1;
     }

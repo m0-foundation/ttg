@@ -57,7 +57,7 @@
     ],
     "outputs": [
       {
-        "name": "deployed_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -83,7 +83,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "nextDeploy_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }

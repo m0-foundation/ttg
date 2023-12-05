@@ -326,17 +326,32 @@
   },
   {
     "type": "error",
+    "name": "InvalidEmergencyGovernorDeployerAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidPowerTokenDeployerAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidStandardGovernorDeployerAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidVaultAddress",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidZeroGovernorAddress",
+    "name": "InvalidVoteTokenAddress",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidZeroTokenAddress",
+    "name": "InvalidZeroGovernorAddress",
     "inputs": []
   },
   {

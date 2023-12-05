@@ -193,12 +193,15 @@ interface IGovernor is IERC6372, IERC712 {
      * @notice Returns whether `account` has voted on the proposal with identifier `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
      * @param  account    The address of some account.
-     * @return hasVoted   Whether `account` has already voted on the proposal.
+     * @return Whether `account` has already voted on the proposal.
      */
-    function hasVoted(uint256 proposalId, address account) external view returns (bool hasVoted);
+    function hasVoted(uint256 proposalId, address account) external view returns (bool);
 
-    /// @notice Returns the name of the contract.
-    function name() external view returns (string memory name);
+    /**
+     * @notice Returns the name of the contract.
+     * @return Contract name.
+     */
+    function name() external view returns (string memory);
 
     /**
      * @notice Returns the last clock value when voting on the proposal with identifier `proposalId` is allowed.
@@ -221,29 +224,41 @@ interface IGovernor is IERC6372, IERC712 {
      */
     function proposalSnapshot(uint256 proposalId) external view returns (uint256 snapshot);
 
-    /// @notice Returns the required voting power an account needs to create a proposal.
+    /**
+     * @notice Returns the required voting power an account needs to create a proposal.
+     * @return threshold The proposal threshold.
+     */
     function proposalThreshold() external view returns (uint256 threshold);
 
-    /// @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed.
-    function quorum() external view returns (uint256 quorum);
+    /**
+     * @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed.
+     * @return The quorum value.
+     */
+    function quorum() external view returns (uint256);
 
     /**
      * @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed at `timepoint`.
      * @param  timepoint The point in time, according to the clock mode the contract is operating on.
-     * @return quorum    The minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed.
+     * @return The quorum value at `timepoint`.
      */
-    function quorum(uint256 timepoint) external view returns (uint256 quorum);
+    function quorum(uint256 timepoint) external view returns (uint256);
 
     /**
      * @notice Returns the state of a proposal with identifier `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
-     * @return state      The state of the proposal.
+     * @return The state of the proposal.
      */
-    function state(uint256 proposalId) external view returns (ProposalState state);
+    function state(uint256 proposalId) external view returns (ProposalState);
 
-    /// @notice Returns the number of clock values that must elapse before voting begins for a newly created proposal.
-    function votingDelay() external view returns (uint256 votingDelay);
+    /**
+     * @notice Returns the number of clock values that must elapse before voting begins for a newly created proposal.
+     * @return The voting delay.
+     */
+    function votingDelay() external view returns (uint256);
 
-    /// @notice Returns the number of clock values between the vote start and vote end.
-    function votingPeriod() external view returns (uint256 votingPeriod);
+    /**
+     * @notice Returns the number of clock values between the vote start and vote end.
+     * @return The voting period.
+     */
+    function votingPeriod() external view returns (uint256);
 }

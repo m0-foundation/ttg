@@ -23,17 +23,23 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the value used as 100%, to be used to correctly ascertain the participation inflation rate.
-    function ONE() external pure returns (uint256 one);
+    /**
+     * @notice Returns 100% in basis point, to be used to correctly ascertain the participation inflation rate.
+     * @return 100% in basis point.
+     */
+    function ONE() external pure returns (uint256);
 
     /**
      * @notice Returns whether `delegatee` has participated in voting during clock value `epoch`.
      * @param  delegatee    The address of a delegatee with voting power.
      * @param  epoch        The epoch number as a clock value.
-     * @param  participated Whether `delegatee` has participated in voting during `epoch`.
+     * @return  Whether `delegatee` has participated in voting during `epoch`.
      */
-    function hasParticipatedAt(address delegatee, uint256 epoch) external view returns (bool participated);
+    function hasParticipatedAt(address delegatee, uint256 epoch) external view returns (bool);
 
-    /// @notice Returns the participation inflation rate used to inflate tokens for participation.
-    function participationInflation() external view returns (uint256 participationInflation);
+    /**
+     * @notice Returns the participation inflation rate used to inflate tokens for participation.
+     * @return Participation inflation rate.
+     */
+    function participationInflation() external view returns (uint256);
 }

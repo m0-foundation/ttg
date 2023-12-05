@@ -3,6 +3,7 @@
 pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
+import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
 
 import { ZeroGovernor } from "../src/ZeroGovernor.sol";
 
@@ -85,6 +86,81 @@ contract ZeroGovernorTests is TestUtils {
         assertEq(_zeroGovernor.thresholdRatio(), _zeroProposalThresholdRatio);
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken1), true);
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken2), true);
+    }
+
+    function test_constructor_invalidEmergencyGovernorDeployerAddress() external {
+        vm.expectRevert(IZeroGovernor.InvalidEmergencyGovernorDeployerAddress.selector);
+        new ZeroGovernor(
+            address(_zeroToken),
+            address(0),
+            address(_powerTokenDeployer),
+            address(_standardGovernorDeployer),
+            address(_bootstrapToken),
+            1,
+            1,
+            _zeroProposalThresholdRatio,
+            _allowedCashTokens
+        );
+    }
+
+    function test_constructor_invalidPowerTokenDeployerAddress() external {
+        vm.expectRevert(IZeroGovernor.InvalidPowerTokenDeployerAddress.selector);
+        new ZeroGovernor(
+            address(_zeroToken),
+            address(_emergencyGovernorDeployer),
+            address(0),
+            address(_standardGovernorDeployer),
+            address(_bootstrapToken),
+            1,
+            1,
+            _zeroProposalThresholdRatio,
+            _allowedCashTokens
+        );
+    }
+
+    function test_constructor_invalidStandardGovernorDeployerAddress() external {
+        vm.expectRevert(IZeroGovernor.InvalidStandardGovernorDeployerAddress.selector);
+        new ZeroGovernor(
+            address(_zeroToken),
+            address(_emergencyGovernorDeployer),
+            address(_powerTokenDeployer),
+            address(0),
+            address(_bootstrapToken),
+            1,
+            1,
+            _zeroProposalThresholdRatio,
+            _allowedCashTokens
+        );
+    }
+
+    function test_constructor_noAllowedCashTokens() external {
+        vm.expectRevert(IZeroGovernor.NoAllowedCashTokens.selector);
+        new ZeroGovernor(
+            address(_zeroToken),
+            address(_emergencyGovernorDeployer),
+            address(_powerTokenDeployer),
+            address(_standardGovernorDeployer),
+            address(_bootstrapToken),
+            1,
+            1,
+            _zeroProposalThresholdRatio,
+            new address[](0)
+        );
+    }
+
+    function test_constructor_invalidCashTokenAddress() external {
+        vm.expectRevert(IZeroGovernor.InvalidCashTokenAddress.selector);
+        new ZeroGovernor(
+            address(_zeroToken),
+            address(_emergencyGovernorDeployer),
+            address(_powerTokenDeployer),
+            address(_standardGovernorDeployer),
+            address(_bootstrapToken),
+            1,
+            1,
+            _zeroProposalThresholdRatio,
+            new address[](1)
+        );
     }
 
     function test_resetToPowerHolders_notZeroGovernor() external {

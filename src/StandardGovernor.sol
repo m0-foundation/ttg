@@ -89,9 +89,12 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         // Proposals have voteStart=N and voteEnd=N, and can be executed only during epochs N+1 and N+2.
         uint256 latestPossibleVoteStart_ = currentEpoch_ - 1;
-        uint256 earliestPossibleVoteStart_ = latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0;
 
-        proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
+        proposalId_ = _tryExecute(
+            callDatas_[0],
+            latestPossibleVoteStart_,
+            latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0 // earliestPossibleVoteStart
+        );
 
         ProposalFeeInfo storage proposalFeeInfo_ = _proposalFees[proposalId_];
         uint256 proposalFee_ = proposalFeeInfo_.fee;
@@ -113,11 +116,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         (proposalId_, voteStart_) = _propose(targets_, values_, callDatas_, description_);
 
-        // If this is the first proposal for the `voteStart_` epoch, inflate its target total supply of `PowerToken`.
-        if (++numberOfProposalsAt[voteStart_] == 1) {
-            IPowerToken(voteToken).markNextVotingEpochAsActive();
-        }
-
         uint256 proposalFee_ = proposalFee;
 
         if (proposalFee_ == 0) return proposalId_;
@@ -125,6 +123,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         address cashToken_ = cashToken;
 
         _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
+
+        // If this is the first proposal for the `voteStart_` epoch, inflate its target total supply of `PowerToken`.
+        if (++numberOfProposalsAt[voteStart_] == 1) {
+            IPowerToken(voteToken).markNextVotingEpochAsActive();
+        }
 
         if (!ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_)) revert TransferFromFailed();
     }

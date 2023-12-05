@@ -64,27 +64,42 @@ interface IZeroGovernor is IThresholdGovernor {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice The address of the Emergency Governor.
-    function emergencyGovernor() external view returns (address emergencyGovernor);
-
-    /// @notice The address of the Emergency Governor Deployer.
-    function emergencyGovernorDeployer() external view returns (address emergencyGovernorDeployer);
-
     /**
      * @notice Returns whether `token` is an allowed Cash Token of the system, as a parameter in setCashToken proposal.
-     * @param  token     The address some token.
-     * @return isAllowed Whether `token` is an allowed Cash Token.
+     * @param  token The address of some token.
+     * @return Whether `token` is an allowed Cash Token.
      */
-    function isAllowedCashToken(address token) external view returns (bool isAllowed);
+    function isAllowedCashToken(address token) external view returns (bool);
 
-    /// @notice The address of the Power Token Deployer.
-    function powerTokenDeployer() external view returns (address powerTokenDeployer);
+    /**
+     * @notice Returns the address of the Emergency Governor.
+     * @return The Emergency Governor address.
+     */
+    function emergencyGovernor() external view returns (address);
 
-    /// @notice The address of the Standard Governor.
-    function standardGovernor() external view returns (address standardGovernor);
+    /**
+     * @notice Returns the address of the Emergency Governor Deployer.
+     * @return The Emergency Governor Deployer address.
+     */
+    function emergencyGovernorDeployer() external view returns (address);
 
-    /// @notice The address of the Standard Governor Deployer.
-    function standardGovernorDeployer() external view returns (address standardGovernorDeployer);
+    /**
+     * @notice Returns the address of the Power Token Deployer.
+     * @return The Power Token Deployer address.
+     */
+    function powerTokenDeployer() external view returns (address);
+
+    /**
+     * @notice Returns the address of the Standard Governor.
+     * @return The Standard Governor address.
+     */
+    function standardGovernor() external view returns (address);
+
+    /**
+     * @notice Returns the address of the Standard Governor Deployer.
+     * @return The Standard Governor Deployer address.
+     */
+    function standardGovernorDeployer() external view returns (address);
 
     /******************************************************************************************************************\
     |                                                Proposal Functions                                                |

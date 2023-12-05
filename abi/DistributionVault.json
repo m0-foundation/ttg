@@ -370,6 +370,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidZeroTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotPastTimepoint",
     "inputs": [
       {

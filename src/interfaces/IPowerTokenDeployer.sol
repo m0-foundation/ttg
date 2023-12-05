@@ -2,8 +2,10 @@
 
 pragma solidity 0.8.23;
 
+import { IDeployer } from "./IDeployer.sol";
+
 /// @title A Deterministic deployer of Power Token contracts using CREATE.
-interface IPowerTokenDeployer {
+interface IPowerTokenDeployer is IDeployer {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
@@ -26,24 +28,23 @@ interface IPowerTokenDeployer {
      * @param  bootstrapToken   The address of some token to bootstrap from.
      * @param  standardGovernor The address of some Standard Governor.
      * @param  cashToken        The address of some Cash Token.
-     * @return deployed         The address the deployed Emergency Governor.
+     * @return The address of the deployed Emergency Governor.
      */
-    function deploy(
-        address bootstrapToken,
-        address standardGovernor,
-        address cashToken
-    ) external returns (address deployed);
+    function deploy(address bootstrapToken, address standardGovernor, address cashToken) external returns (address);
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the last Power Token deployed by this contract.
-    function lastDeploy() external view returns (address lastDeploy);
+    /**
+     * @notice Returns the address of the Vault.
+     * @return The Vault address.
+     */
+    function vault() external view returns (address);
 
-    /// @notice Returns the address of the new Power Token this contract will deploy
-    function nextDeploy() external view returns (address nextDeploy);
-
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address vault);
+    /**
+     * @notice Returns the address of the Zero Governor.
+     * @return The Zero Governor address.
+     */
+    function zeroGovernor() external view returns (address);
 }

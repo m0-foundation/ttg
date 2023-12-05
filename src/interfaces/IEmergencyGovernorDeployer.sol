@@ -2,8 +2,10 @@
 
 pragma solidity 0.8.23;
 
+import { IDeployer } from "./IDeployer.sol";
+
 /// @title A Deterministic deployer of Emergency Governor contracts using CREATE.
-interface IEmergencyGovernorDeployer {
+interface IEmergencyGovernorDeployer is IDeployer {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
@@ -26,27 +28,23 @@ interface IEmergencyGovernorDeployer {
      * @param  powerToken       The address of some Power Token that will be used by voters.
      * @param  standardGovernor The address of some Standard Governor.
      * @param  thresholdRatio   The threshold ratio to use for proposals.
-     * @return deployed         The address the deployed Emergency Governor.
+     * @return The address of the deployed Emergency Governor.
      */
-    function deploy(
-        address powerToken,
-        address standardGovernor,
-        uint16 thresholdRatio
-    ) external returns (address deployed);
+    function deploy(address powerToken, address standardGovernor, uint16 thresholdRatio) external returns (address);
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the last Emergency Governor deployed by this contract.
-    function lastDeploy() external view returns (address lastDeploy);
+    /**
+     * @notice Returns the address of the Registrar.
+     * @return The Registrar address.
+     */
+    function registrar() external view returns (address);
 
-    /// @notice Returns the address of the new Emergency Governor this contract will deploy
-    function nextDeploy() external view returns (address nextDeploy);
-
-    /// @notice Returns the address of the Registrar.
-    function registrar() external view returns (address registrar);
-
-    /// @notice Returns the address of the Zero Governor.
-    function zeroGovernor() external view returns (address zeroGovernor);
+    /**
+     * @notice Returns the address of the Zero Governor.
+     * @return The Zero Governor address.
+     */
+    function zeroGovernor() external view returns (address);
 }
