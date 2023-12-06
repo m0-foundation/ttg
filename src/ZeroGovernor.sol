@@ -13,15 +13,30 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 /// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
-    uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
-    uint256 internal constant _ONE = 10_000;
-
+    /// @inheritdoc IZeroGovernor
     address public immutable emergencyGovernorDeployer;
+
+    /// @inheritdoc IZeroGovernor
     address public immutable powerTokenDeployer;
+
+    /// @inheritdoc IZeroGovernor
     address public immutable standardGovernorDeployer;
 
+    /// @notice The set of allowed cash tokens.
     mapping(address token => bool allowed) internal _allowedCashTokens;
 
+    /**
+     * @notice Construct a new ZeroGovernor contract.
+     * @param  voteToken_                           The address of the token used to vote.
+     * @param  emergencyGovernorDeployer_           The address of the Emergency Governor Deployer contract.
+     * @param  powerTokenDeployer_                  The address of the Power Token Deployer contract.
+     * @param  standardGovernorDeployer_            The address of the Standard Governor Deployer contract.
+     * @param  bootstrapToken_                      The address of token (Zero Token or old Power Token), that bootstraps the reset.
+     * @param  standardProposalFee_                 The proposal fee for the Standard Governor.
+     * @param  emergencyProposalThresholdRatio_     The threshold ratio for the Emergency Governor.
+     * @param  zeroProposalThresholdRatio_          The threshold ratio for the Zero Governor.
+     * @param  allowedCashTokens_                   The set of allowed cash tokens.
+     */
     constructor(
         address voteToken_,
         address emergencyGovernorDeployer_,
@@ -75,14 +90,17 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function emergencyGovernor() public view returns (address emergencyGovernor_) {
-        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
-    }
-
+    /// @inheritdoc IZeroGovernor
     function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
         return _allowedCashTokens[token_];
     }
 
+    /// @inheritdoc IZeroGovernor
+    function emergencyGovernor() public view returns (address emergencyGovernor_) {
+        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
+    }
+
+    /// @inheritdoc IZeroGovernor
     function standardGovernor() public view returns (address standardGovernor_) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
@@ -141,7 +159,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
             emergencyGovernor_,
             cashToken_,
             proposalFee_,
-            _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH
+            1_000 // maxTotalZeroRewardPerActiveEpoch
         );
 
         if (expectedStandardGovernor_ != standardGovernor_) {
