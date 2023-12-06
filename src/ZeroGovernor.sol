@@ -153,27 +153,31 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         if (expectedPowerToken_ != powerToken_) revert UnexpectedPowerTokenDeployed(expectedPowerToken_, powerToken_);
     }
 
+    /**
+     * @notice Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
+     *         - the cash token is the same cash token in the existing `standardGovernor`
+     *         - the `emergencyGovernor` threshold ratio is the same threshold ratio in the existing `emergencyGovernor`
+     *         - the `standardGovernor` proposal fee is the same proposal fee in the existing `standardGovernor`
+     * @param bootstrapToken_ The token to bootstrap the `powerToken` balances and voting powers.
+     */
     function _resetContracts(address bootstrapToken_) internal {
-        address standardGovernor_ = standardGovernor();
-        address emergencyGovernor_ = emergencyGovernor();
-        address powerToken_;
+        IStandardGovernor standardGovernor_ = IStandardGovernor(standardGovernor());
 
-        // Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
-        // - the token to bootstrap the `powerToken` balances and voting powers is defined in the arguments
-        // - the cash token is the same cash token in the existing `standardGovernor`
-        // - the `emergencyGovernor` threshold ratio is the same threshold ratio in the existing `emergencyGovernor`
-        // - the `standardGovernor` proposal fee is the same proposal fee in the existing `standardGovernor`
-        (standardGovernor_, emergencyGovernor_, powerToken_) = _deployEphemeralContracts(
-            emergencyGovernorDeployer,
-            powerTokenDeployer,
-            standardGovernorDeployer,
-            bootstrapToken_,
-            IStandardGovernor(standardGovernor_).cashToken(),
-            IEmergencyGovernor(emergencyGovernor_).thresholdRatio(),
-            IStandardGovernor(standardGovernor_).proposalFee()
-        );
+        (
+            address newStandardGovernor_,
+            address newEmergencyGovernor_,
+            address newPowerToken_
+        ) = _deployEphemeralContracts(
+                emergencyGovernorDeployer,
+                powerTokenDeployer,
+                standardGovernorDeployer,
+                bootstrapToken_,
+                standardGovernor_.cashToken(),
+                IEmergencyGovernor(emergencyGovernor()).thresholdRatio(),
+                standardGovernor_.proposalFee()
+            );
 
-        emit ResetExecuted(bootstrapToken_, standardGovernor_, emergencyGovernor_, powerToken_);
+        emit ResetExecuted(bootstrapToken_, newStandardGovernor_, newEmergencyGovernor_, newPowerToken_);
     }
 
     /******************************************************************************************************************\
