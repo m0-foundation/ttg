@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 
 import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
+import { IDistributionVault } from "../src/interfaces/IDistributionVault.sol";
 import { DistributionVault } from "../src/DistributionVault.sol";
 
 import { MockERC20, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
@@ -32,8 +33,16 @@ contract DistributionVaultTests is TestUtils {
         _token3 = new MockERC20();
 
         _baseToken = new MockEpochBasedVoteToken();
-
         _vault = new DistributionVault(address(_baseToken));
+    }
+
+    function test_constructor() external {
+        assertEq(_vault.zeroToken(), address(_baseToken));
+    }
+
+    function test_constructor_invalidZeroTokenAddress() external {
+        vm.expectRevert(IDistributionVault.InvalidZeroTokenAddress.selector);
+        new DistributionVault(address(0));
     }
 
     function test_distribution() external {

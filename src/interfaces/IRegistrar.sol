@@ -8,14 +8,23 @@ interface IRegistrar {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
+    /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
+    error InvalidEmergencyGovernorDeployerAddress();
+
+    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
+    error InvalidPowerTokenDeployerAddress();
+
+    /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
+    error InvalidStandardGovernorDeployerAddress();
+
     /// @notice Revert message when the Vault retrieved in the constructor is address(0).
     error InvalidVaultAddress();
 
+    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
+    error InvalidVoteTokenAddress();
+
     /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
     error InvalidZeroGovernorAddress();
-
-    /// @notice Revert message when the Zero Token retrieved in the constructor is address(0).
-    error InvalidZeroTokenAddress();
 
     /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
     error NotStandardOrEmergencyGovernor();
@@ -75,18 +84,6 @@ interface IRegistrar {
     \******************************************************************************************************************/
 
     /**
-     * @notice Returns the address of the Emergency Governor.
-     * @return The Emergency Governor address.
-     */
-    function emergencyGovernor() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Emergency Governor Deployer.
-     * @return The Emergency Governor Deployer address.
-     */
-    function emergencyGovernorDeployer() external view returns (address);
-
-    /**
      * @notice Returns the value of `key`.
      * @param  key   Some key.
      * @return  value Some value.
@@ -115,6 +112,18 @@ interface IRegistrar {
      * @return Whether `list` contains all specified accounts.
      */
     function listContains(bytes32 list, address[] calldata accounts) external view returns (bool);
+
+    /**
+     * @notice Returns the address of the Emergency Governor.
+     * @return The Emergency Governor address.
+     */
+    function emergencyGovernor() external view returns (address);
+
+    /**
+     * @notice Returns the address of the Emergency Governor Deployer.
+     * @return The Emergency Governor Deployer address.
+     */
+    function emergencyGovernorDeployer() external view returns (address);
 
     /**
      * @notice Returns the address of the Power Token.

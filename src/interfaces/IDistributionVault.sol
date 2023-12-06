@@ -11,6 +11,9 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
+    /// @notice Revert message when the Zero Token address set at deployment is address(0).
+    error InvalidZeroTokenAddress();
+
     /**
      * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
      * @param  timepoint The timepoint being queried.
@@ -68,7 +71,7 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @param  token       The address of the token being claimed.
      * @param  startEpoch  The starting epoch number as a clock value.
      * @param  endEpoch    The ending epoch number as a clock value.
-     * @param  destination The address the account where the claimed token will be sent.
+     * @param  destination The address of the account where the claimed token will be sent.
      * @param  deadline    The last block number where the signature is still valid.
      * @param  signature   A byte array signature.
      * @return claimed     The total amount of token claimed by `account`.

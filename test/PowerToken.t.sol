@@ -12,7 +12,7 @@ import { MockBootstrapToken, MockCashToken } from "./utils/Mocks.sol";
 import { PowerTokenHarness } from "./utils/PowerTokenHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
-// TODO: Create amd use a harness functions instead of calling functions unrelated to each test.
+// TODO: Create and use a harness functions instead of calling functions unrelated to each test.
 
 contract PowerTokenTests is TestUtils {
     address internal _account = makeAddr("account");
@@ -69,6 +69,26 @@ contract PowerTokenTests is TestUtils {
                 ((_initialAmounts[index_] * _powerToken.INITIAL_SUPPLY()) / (15_000_000 * 1e6))
             );
         }
+    }
+
+    function test_constructor_invalidBootstrapTokenAddress() external {
+        vm.expectRevert(IPowerToken.InvalidBootstrapTokenAddress.selector);
+        new PowerTokenHarness(address(0), _standardGovernor, address(_cashToken), _vault);
+    }
+
+    function test_constructor_invalidStandardGovernorAddress() external {
+        vm.expectRevert(IPowerToken.InvalidStandardGovernorAddress.selector);
+        new PowerTokenHarness(address(_bootstrapToken), address(0), address(_cashToken), _vault);
+    }
+
+    function test_constructor_invalidCashTokenAddress() external {
+        vm.expectRevert(IPowerToken.InvalidCashTokenAddress.selector);
+        new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(0), _vault);
+    }
+
+    function test_constructor_invalidVaultAddress() external {
+        vm.expectRevert(IPowerToken.InvalidVaultAddress.selector);
+        new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(_cashToken), address(0));
     }
 
     function test_getCost() external {

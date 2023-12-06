@@ -20,6 +20,9 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     error InsufficientAuctionSupply(uint256 amountToAuction, uint256 minAmountRequested);
 
+    /// @notice Revert message when the Bootstrap Token specified in the constructor is address(0).
+    error InvalidBootstrapTokenAddress();
+
     /// @notice Revert message when the Cash Token specified in the constructor is address(0).
     error InvalidCashTokenAddress();
 
