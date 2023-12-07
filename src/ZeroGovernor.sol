@@ -13,6 +13,9 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 /// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
+    /// @notice The maximum number of Zero tokens that can be rewarded per active epoch.
+    uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
+
     /// @inheritdoc IZeroGovernor
     address public immutable emergencyGovernorDeployer;
 
@@ -159,7 +162,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
             emergencyGovernor_,
             cashToken_,
             proposalFee_,
-            1_000 // maxTotalZeroRewardPerActiveEpoch
+            _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH
         );
 
         if (expectedStandardGovernor_ != standardGovernor_) {

@@ -43,6 +43,7 @@ contract Registrar is IRegistrar {
      */
     constructor(address zeroGovernor_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
+
         IZeroGovernor zeroGovernorInstance_ = IZeroGovernor(zeroGovernor_);
 
         if ((emergencyGovernorDeployer = zeroGovernorInstance_.emergencyGovernorDeployer()) == address(0))
@@ -52,6 +53,7 @@ contract Registrar is IRegistrar {
             revert InvalidPowerTokenDeployerAddress();
 
         address standardGovernorDeployer_ = standardGovernorDeployer = zeroGovernorInstance_.standardGovernorDeployer();
+
         if (standardGovernorDeployer_ == address(0)) revert InvalidStandardGovernorDeployerAddress();
 
         if ((zeroToken = zeroGovernorInstance_.voteToken()) == address(0)) revert InvalidVoteTokenAddress();

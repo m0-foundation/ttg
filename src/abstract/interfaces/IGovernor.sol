@@ -193,7 +193,7 @@ interface IGovernor is IERC6372, IERC712 {
      * @notice Returns whether `account` has voted on the proposal with identifier `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
      * @param  account    The address of some account.
-     * @return            Whether `account` has already voted on the proposal.
+     * @return Whether `account` has already voted on the proposal.
      */
     function hasVoted(uint256 proposalId, address account) external view returns (bool);
 

@@ -51,6 +51,7 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
         uint16 thresholdRatio_
     ) external onlyZeroGovernor returns (address) {
         ++nonce;
+
         return
             lastDeploy = address(
                 new EmergencyGovernor(powerToken_, zeroGovernor, registrar, standardGovernor_, thresholdRatio_)

@@ -36,9 +36,9 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
     /**
      * @notice Constructs a new StandardGovernorDeployer contract.
      * @param zeroGovernor_ The address of the ZeroGovernor contract.
-     * @param registrar_ The address of the Registrar contract.
-     * @param vault_ The address of the Vault contract.
-     * @param zeroToken_ The address of the ZeroToken contract.
+     * @param registrar_    The address of the Registrar contract.
+     * @param vault_        The address of the Vault contract.
+     * @param zeroToken_    The address of the ZeroToken contract.
      */
     constructor(address zeroGovernor_, address registrar_, address vault_, address zeroToken_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
@@ -56,6 +56,7 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
         uint256 maxTotalZeroRewardPerActiveEpoch_
     ) external onlyZeroGovernor returns (address) {
         ++nonce;
+
         return
             lastDeploy = address(
                 new StandardGovernor(

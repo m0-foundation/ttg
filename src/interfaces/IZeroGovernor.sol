@@ -72,7 +72,7 @@ interface IZeroGovernor is IThresholdGovernor {
     function isAllowedCashToken(address token) external view returns (bool);
 
     /**
-     * @notice Returns the address of the Cash Token of the system.
+     * @notice Returns the address of the Emergency Governor.
      * @return The Emergency Governor address.
      */
     function emergencyGovernor() external view returns (address);

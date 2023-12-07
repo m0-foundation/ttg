@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-/// @title A Deterministic deployer of Standard Governor contracts using CREATE.
+/// @title A Deterministic deployer of contracts using CREATE.
 interface IDeployer {
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
