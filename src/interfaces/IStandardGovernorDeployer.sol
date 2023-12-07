@@ -2,8 +2,10 @@
 
 pragma solidity 0.8.23;
 
+import { IDeployer } from "./IDeployer.sol";
+
 /// @title A Deterministic deployer of Standard Governor contracts using CREATE.
-interface IStandardGovernorDeployer {
+interface IStandardGovernorDeployer is IDeployer {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
@@ -28,13 +30,13 @@ interface IStandardGovernorDeployer {
     \******************************************************************************************************************/
 
     /**
-     * @notice Deploys a new instance of an Standard Governor.
+     * @notice Deploys a new instance of a Standard Governor.
      * @param  powerToken                       The address of some Power Token that will be used by voters.
      * @param  emergencyGovernor                The address of some Emergency Governor.
      * @param  cashToken                        The address of some Cash Token.
      * @param  proposalFee                      The proposal fee required to create proposals.
      * @param  maxTotalZeroRewardPerActiveEpoch The maximum amount of Zero Token rewarded per active epoch.
-     * @return deployed                         The address the deployed Standard Governor.
+     * @return The address of the deployed Standard Governor.
      */
     function deploy(
         address powerToken,
@@ -42,27 +44,33 @@ interface IStandardGovernorDeployer {
         address cashToken,
         uint256 proposalFee,
         uint256 maxTotalZeroRewardPerActiveEpoch
-    ) external returns (address deployed);
+    ) external returns (address);
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the last Standard Governor deployed by this contract.
-    function lastDeploy() external view returns (address lastDeploy);
+    /**
+     * @notice Returns the address of the Registrar.
+     * @return Registrar address.
+     */
+    function registrar() external view returns (address);
 
-    /// @notice Returns the address of the new Standard Governor this contract will deploy
-    function nextDeploy() external view returns (address nextDeploy);
+    /**
+     * @notice Returns the address of the Vault.
+     * @return Vault address.
+     */
+    function vault() external view returns (address);
 
-    /// @notice Returns the address of the Registrar.
-    function registrar() external view returns (address registrar);
+    /**
+     * @notice Returns the address of the Zero Governor.
+     * @return Zero Governor address.
+     */
+    function zeroGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address vault);
-
-    /// @notice Returns the address of the Zero Governor.
-    function zeroGovernor() external view returns (address zeroGovernor);
-
-    /// @notice Returns the address of the Zero Token.
-    function zeroToken() external view returns (address zeroToken);
+    /**
+     * @notice Returns the address of the Zero Token.
+     * @return Zero Token address.
+     */
+    function zeroToken() external view returns (address);
 }

@@ -11,6 +11,9 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
+    /// @notice Revert message when the Zero Token address set at deployment is address(0).
+    error InvalidZeroTokenAddress();
+
     /**
      * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
      * @param  timepoint The timepoint being queried.
@@ -68,7 +71,7 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @param  token       The address of the token being claimed.
      * @param  startEpoch  The starting epoch number as a clock value.
      * @param  endEpoch    The ending epoch number as a clock value.
-     * @param  destination The address the account where the claimed token will be sent.
+     * @param  destination The address of the account where the claimed token will be sent.
      * @param  deadline    The last block number where the signature is still valid.
      * @param  signature   A byte array signature.
      * @return claimed     The total amount of token claimed by `account`.
@@ -121,17 +124,23 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     ) external view returns (uint256 claimable);
 
     /**
-     * @notice Returns whether `account` has already claimed their `token` distribution for epoch `epoch`.
+     * @notice Returns whether `account` has already claimed their `token` distribution for `epoch`.
      * @param  token   The address of some token.
      * @param  account The address of some account.
      * @param  epoch   The epoch number as a clock value.
-     * @return claimed Whether `account` has already made a claimed for this token for this epoch.
+     * @return Whether `account` has already claimed `token` rewards for `epoch`.
      */
-    function hasClaimed(address token, uint256 epoch, address account) external view returns (bool claimed);
+    function hasClaimed(address token, uint256 epoch, address account) external view returns (bool);
 
-    /// @notice Returns the name of the contract.
-    function name() external view returns (string memory name);
+    /**
+     * @notice Returns the name of the contract.
+     * @return The contract name.
+     */
+    function name() external view returns (string memory);
 
-    /// @notice Returns the address of the Zero Token holders must have in order to be eligible for distributions.
-    function zeroToken() external view returns (address zeroToken);
+    /**
+     * @notice Returns the address of the Zero Token holders must have in order to be eligible for distributions.
+     * @return The Zero Token address.
+     */
+    function zeroToken() external view returns (address);
 }

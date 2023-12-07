@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 
 /// @notice Defines epochs as 15 days worth of blocks (108,000) away from 'The Merge' block.
 library PureEpochs {
+    /// @notice The number of seconds in a block.
     uint256 internal constant _SECONDS_PER_BLOCK = 12;
 
     uint256 internal constant _EPOCH_PERIOD = 15 days / _SECONDS_PER_BLOCK;

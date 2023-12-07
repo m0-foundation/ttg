@@ -13,15 +13,33 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 /// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
+    /// @notice The maximum number of Zero tokens that can be rewarded per active epoch.
     uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 1_000;
-    uint256 internal constant _ONE = 10_000;
 
+    /// @inheritdoc IZeroGovernor
     address public immutable emergencyGovernorDeployer;
+
+    /// @inheritdoc IZeroGovernor
     address public immutable powerTokenDeployer;
+
+    /// @inheritdoc IZeroGovernor
     address public immutable standardGovernorDeployer;
 
+    /// @notice The set of allowed cash tokens.
     mapping(address token => bool allowed) internal _allowedCashTokens;
 
+    /**
+     * @notice Construct a new ZeroGovernor contract.
+     * @param  voteToken_                           The address of the token used to vote.
+     * @param  emergencyGovernorDeployer_           The address of the Emergency Governor Deployer contract.
+     * @param  powerTokenDeployer_                  The address of the Power Token Deployer contract.
+     * @param  standardGovernorDeployer_            The address of the Standard Governor Deployer contract.
+     * @param  bootstrapToken_                      The address of token (Zero Token or old Power Token), that bootstraps the reset.
+     * @param  standardProposalFee_                 The proposal fee for the Standard Governor.
+     * @param  emergencyProposalThresholdRatio_     The threshold ratio for the Emergency Governor.
+     * @param  zeroProposalThresholdRatio_          The threshold ratio for the Zero Governor.
+     * @param  allowedCashTokens_                   The set of allowed cash tokens.
+     */
     constructor(
         address voteToken_,
         address emergencyGovernorDeployer_,
@@ -75,14 +93,17 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function emergencyGovernor() public view returns (address emergencyGovernor_) {
-        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
-    }
-
+    /// @inheritdoc IZeroGovernor
     function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
         return _allowedCashTokens[token_];
     }
 
+    /// @inheritdoc IZeroGovernor
+    function emergencyGovernor() public view returns (address emergencyGovernor_) {
+        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
+    }
+
+    /// @inheritdoc IZeroGovernor
     function standardGovernor() public view returns (address standardGovernor_) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
@@ -153,27 +174,31 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         if (expectedPowerToken_ != powerToken_) revert UnexpectedPowerTokenDeployed(expectedPowerToken_, powerToken_);
     }
 
+    /**
+     * @notice Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
+     *         - the cash token is the same cash token in the existing `standardGovernor`
+     *         - the `emergencyGovernor` threshold ratio is the same threshold ratio in the existing `emergencyGovernor`
+     *         - the `standardGovernor` proposal fee is the same proposal fee in the existing `standardGovernor`
+     * @param bootstrapToken_ The token to bootstrap the `powerToken` balances and voting powers.
+     */
     function _resetContracts(address bootstrapToken_) internal {
-        address standardGovernor_ = standardGovernor();
-        address emergencyGovernor_ = emergencyGovernor();
-        address powerToken_;
+        IStandardGovernor standardGovernor_ = IStandardGovernor(standardGovernor());
 
-        // Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
-        // - the token to bootstrap the `powerToken` balances and voting powers is defined in the arguments
-        // - the cash token is the same cash token in the existing `standardGovernor`
-        // - the `emergencyGovernor` threshold ratio is the same threshold ratio in the existing `emergencyGovernor`
-        // - the `standardGovernor` proposal fee is the same proposal fee in the existing `standardGovernor`
-        (standardGovernor_, emergencyGovernor_, powerToken_) = _deployEphemeralContracts(
-            emergencyGovernorDeployer,
-            powerTokenDeployer,
-            standardGovernorDeployer,
-            bootstrapToken_,
-            IStandardGovernor(standardGovernor_).cashToken(),
-            IEmergencyGovernor(emergencyGovernor_).thresholdRatio(),
-            IStandardGovernor(standardGovernor_).proposalFee()
-        );
+        (
+            address newStandardGovernor_,
+            address newEmergencyGovernor_,
+            address newPowerToken_
+        ) = _deployEphemeralContracts(
+                emergencyGovernorDeployer,
+                powerTokenDeployer,
+                standardGovernorDeployer,
+                bootstrapToken_,
+                standardGovernor_.cashToken(),
+                IEmergencyGovernor(emergencyGovernor()).thresholdRatio(),
+                standardGovernor_.proposalFee()
+            );
 
-        emit ResetExecuted(bootstrapToken_, standardGovernor_, emergencyGovernor_, powerToken_);
+        emit ResetExecuted(bootstrapToken_, newStandardGovernor_, newEmergencyGovernor_, newPowerToken_);
     }
 
     /******************************************************************************************************************\

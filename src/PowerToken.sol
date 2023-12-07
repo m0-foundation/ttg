@@ -56,14 +56,15 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address cashToken_,
         address vault_
     ) EpochBasedInflationaryVoteToken("Power Token", "POWER", 0, ONE / 10) {
-        uint256 bootstrapEpoch_ = bootstrapEpoch = (PureEpochs.currentEpoch() - 1);
-        _bootstrapSupply = IEpochBasedVoteToken(bootstrapToken = bootstrapToken_).pastTotalSupply(bootstrapEpoch_);
-
-        _addTotalSupply(INITIAL_SUPPLY);
-
+        if ((bootstrapToken = bootstrapToken_) == address(0)) revert InvalidBootstrapTokenAddress();
         if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
         if ((_nextCashToken = cashToken_) == address(0)) revert InvalidCashTokenAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
+
+        uint256 bootstrapEpoch_ = bootstrapEpoch = (PureEpochs.currentEpoch() - 1);
+        _bootstrapSupply = IEpochBasedVoteToken(bootstrapToken_).pastTotalSupply(bootstrapEpoch_);
+
+        _addTotalSupply(INITIAL_SUPPLY);
     }
 
     /******************************************************************************************************************\

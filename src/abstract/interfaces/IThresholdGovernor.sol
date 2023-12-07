@@ -55,6 +55,9 @@ interface IThresholdGovernor is IBatchGovernor {
             uint16 thresholdRatio
         );
 
-    /// @notice Returns the threshold ratio to be applied to determine the threshold/quorum for a proposal.
-    function thresholdRatio() external view returns (uint16 thresholdRatio);
+    /**
+     * @notice Returns the threshold ratio to be applied to determine the threshold/quorum for a proposal.
+     * @return The threshold ratio.
+     */
+    function thresholdRatio() external view returns (uint16);
 }

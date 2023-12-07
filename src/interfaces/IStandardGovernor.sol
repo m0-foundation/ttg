@@ -91,7 +91,7 @@ interface IStandardGovernor is IBatchGovernor {
     function sendProposalFeeToVault(uint256 proposalId) external;
 
     /**
-     * @notice Set the cash token and proposal fee ot be used to create proposals going forward.
+     * @notice Set the cash token and proposal fee to be used to create proposals going forward.
      * @param  newCashToken   The address of the new cash token.
      * @param  newProposalFee The amount of cash token required onwards to create proposals.
      */
@@ -101,11 +101,11 @@ interface IStandardGovernor is IBatchGovernor {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the address of the cash token.
-    function cashToken() external view returns (address cashToken);
-
-    /// @notice Returns the address of the Emergency Governor.
-    function emergencyGovernor() external view returns (address emergencyGovernor);
+    /**
+     * @notice Returns the required amount of cashToken it costs an account to create a proposal.
+     * @return Proposal fee amount.
+     */
+    function proposalFee() external view returns (uint256);
 
     /**
      * @notice Returns all the proposal details for a proposal with identifier `proposalId`.
@@ -134,14 +134,9 @@ interface IStandardGovernor is IBatchGovernor {
         );
 
     /**
-     * @notice Returns whether `voter` has voted on all proposals in epoch `epoch`.
-     * @param  voter    The address of some account.
-     * @param  epoch    The epoch as a clock value.
-     * @return hasVoted Whether `voter` has voted on all proposals in epoch `epoch`.
+     * @notice Returns the maximum amount of Zero Token that can be rewarded to all vote casters per active epoch.
+     * @return reward Maximum amount of Zero Token rewards.
      */
-    function hasVotedOnAllProposals(address voter, uint256 epoch) external view returns (bool hasVoted);
-
-    /// @notice Returns the maximum amount of Zero Token that can be rewarded to all vote casters per active epoch.
     function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
 
     /**
@@ -152,27 +147,56 @@ interface IStandardGovernor is IBatchGovernor {
     function numberOfProposalsAt(uint256 epoch) external view returns (uint256 count);
 
     /**
-     * @notice Returns the number of proposals at epoch `epoch`.
+     * @notice Returns the number of proposals that were voted on at `epoch`.
      * @param  voter The address of some account.
      * @param  epoch The epoch as a clock value.
-     * @return count The number of proposals at epoch `epoch`.
+     * @return count The number of proposals at `epoch`.
      */
     function numberOfProposalsVotedOnAt(address voter, uint256 epoch) external view returns (uint256 count);
 
-    /// @notice Returns the required amount of cashToken it costs an account to create a proposal.
-    function proposalFee() external view returns (uint256 proposalFee);
+    /**
+     * @notice Returns whether `voter` has voted on all proposals in `epoch`.
+     * @param  voter    The address of some account.
+     * @param  epoch    The epoch as a clock value.
+     * @return Whether `voter` has voted on all proposals in `epoch`.
+     */
+    function hasVotedOnAllProposals(address voter, uint256 epoch) external view returns (bool);
 
-    /// @notice Returns the address of the Registrar.
-    function registrar() external view returns (address registrar);
+    /**
+     * @notice Returns the address of the Cash Token.
+     * @return Address of the Cash Token.
+     */
+    function cashToken() external view returns (address);
 
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address vault);
+    /**
+     * @notice Returns the address of the Emergency Governor.
+     * @return Address of the Emergency Governor.
+     */
+    function emergencyGovernor() external view returns (address);
 
-    /// @notice Returns the address of the Zero Governor.
-    function zeroGovernor() external view returns (address zeroGovernor);
+    /**
+     * @notice Returns the address of the Registrar.
+     * @return Address of the Registrar.
+     */
+    function registrar() external view returns (address);
 
-    /// @notice Returns the address of the Zero Token.
-    function zeroToken() external view returns (address zeroToken);
+    /**
+     * @notice Returns the address of the Vault.
+     * @return Address of the Vault.
+     */
+    function vault() external view returns (address);
+
+    /**
+     * @notice Returns the address of the Zero Governor.
+     * @return Address of the Zero Governor.
+     */
+    function zeroGovernor() external view returns (address);
+
+    /**
+     * @notice Returns the address of the Zero Token.
+     * @return Address of the Zero Token.
+     */
+    function zeroToken() external view returns (address);
 
     /******************************************************************************************************************\
     |                                                Proposal Functions                                                |

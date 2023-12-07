@@ -28,7 +28,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     mapping(address token => mapping(uint256 epoch => mapping(address account => bool claimed))) public hasClaimed;
 
     constructor(address zeroToken_) StatefulERC712("DistributionVault") {
-        zeroToken = zeroToken_;
+        if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
     }
 
     /******************************************************************************************************************\
