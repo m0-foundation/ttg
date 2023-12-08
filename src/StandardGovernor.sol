@@ -83,7 +83,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
 
         if (currentEpoch_ == 0) revert InvalidEpoch();
 
@@ -168,8 +168,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         external
         view
         returns (
-            uint16 voteStart_,
-            uint16 voteEnd_,
+            uint48 voteStart_,
+            uint48 voteEnd_,
             bool executed_,
             ProposalState state_,
             uint256 noVotes_,
@@ -180,7 +180,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         Proposal storage proposal_ = _proposals[proposalId_];
 
         voteStart_ = proposal_.voteStart;
-        voteEnd_ = proposal_.voteEnd;
+        voteEnd_ = _getVoteEnd(voteStart_);
         executed_ = proposal_.executed;
         state_ = state(proposalId_);
         noVotes_ = proposal_.noWeight;
@@ -205,14 +205,14 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         if (proposal_.executed) return ProposalState.Executed;
 
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
         uint256 voteStart_ = proposal_.voteStart;
 
         if (voteStart_ == 0) revert ProposalDoesNotExist();
 
         if (currentEpoch_ < voteStart_) return ProposalState.Pending;
 
-        uint256 voteEnd_ = proposal_.voteEnd;
+        uint256 voteEnd_ = _getVoteEnd(voteStart_);
 
         if (currentEpoch_ <= voteEnd_) return ProposalState.Active;
 
@@ -222,10 +222,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     function votingDelay() public view override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
-        return _isVotingEpoch(PureEpochs.currentEpoch()) ? 2 : 1;
+        return _isVotingEpoch(clock()) ? 2 : 1;
     }
 
-    function votingPeriod() public pure returns (uint256 votingPeriod_) {
+    function votingPeriod() public pure override(BatchGovernor, IGovernor) returns (uint256 votingPeriod_) {
         return 0;
     }
 
@@ -269,8 +269,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     ) internal override returns (uint256 weight_, uint256 snapshot_) {
         (weight_, snapshot_) = super._castVote(voter_, proposalId_, support_);
 
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
+        uint256 currentEpoch_ = clock();
         uint256 numberOfProposalsVotedOn_ = ++numberOfProposalsVotedOnAt[voter_][currentEpoch_];
 
         // NOTE: Will only get beyond this statement once per epoch as there is no way to vote on more proposals than
@@ -284,12 +283,9 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         IZeroToken(zeroToken).mint(voter_, (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(snapshot_));
     }
 
-    function _createProposal(uint256 proposalId_, uint256 voteStart_) internal override returns (uint256 voteEnd_) {
-        voteEnd_ = voteStart_;
-
+    function _createProposal(uint256 proposalId_, uint256 voteStart_) internal override {
         _proposals[proposalId_] = Proposal({
-            voteStart: uint16(voteStart_),
-            voteEnd: uint16(voteEnd_),
+            voteStart: uint48(voteStart_),
             executed: false,
             proposer: msg.sender,
             thresholdRatio: 0,

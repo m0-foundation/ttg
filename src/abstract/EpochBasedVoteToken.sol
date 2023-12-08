@@ -69,13 +69,12 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         return _getValueAt(_balances[account_], epoch_);
     }
 
-    // TODO: Consider making `clock` public and using it everywhere instead of `PureEpochs.currentEpoch()` (gas?).
-    function clock() external view returns (uint48 clock_) {
+    function clock() public view returns (uint48 clock_) {
         return uint48(PureEpochs.currentEpoch());
     }
 
     function delegates(address account_) public view returns (address delegatee_) {
-        return _getDelegateeAt(account_, PureEpochs.currentEpoch());
+        return _getDelegateeAt(account_, clock());
     }
 
     function pastDelegates(address account_, uint256 epoch_) external view returns (address delegatee_) {
@@ -155,7 +154,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
         // The delegatee to write to storage will be `address(0)` if `delegatee_` is `delegator_` (the default).
         address delegateeToWrite_ = _getZeroIfDefault(delegatee_, delegator_);
-        uint16 currentEpoch_ = uint16(PureEpochs.currentEpoch());
+        uint16 currentEpoch_ = uint16(clock());
         AccountSnap[] storage delegateeSnaps_ = _delegatees[delegator_];
         uint256 length_ = delegateeSnaps_.length;
 
@@ -203,7 +202,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         function(uint256, uint256) returns (uint256) operation_,
         uint256 amount_
     ) internal returns (uint256 oldAmount_, uint256 newAmount_) {
-        uint16 currentEpoch_ = uint16(PureEpochs.currentEpoch());
+        uint16 currentEpoch_ = uint16(clock());
         uint256 length_ = snaps_.length;
 
         // If this will be the first AmountSnap, we can just push it onto the empty array.
@@ -275,7 +274,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     }
 
     function _getLatestValue(AmountSnap[] storage snaps_) internal view returns (uint256 value_) {
-        return _getValueAt(snaps_, PureEpochs.currentEpoch());
+        return _getValueAt(snaps_, clock());
     }
 
     function _getValueAt(AmountSnap[] storage snaps_, uint256 epoch_) internal view returns (uint256 value_) {
@@ -295,7 +294,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
     }
 
     function _revertIfNotPastTimepoint(uint256 epoch_) internal view {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
 
         if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_);
     }

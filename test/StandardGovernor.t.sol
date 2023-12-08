@@ -76,7 +76,7 @@ contract StandardGovernorTests is TestUtils {
 
         uint256 currentEpoch = _standardGovernor.clock();
 
-        _standardGovernor.setProposal(proposalId_, currentEpoch + 1, currentEpoch + 10);
+        _standardGovernor.setProposal(proposalId_, currentEpoch + 1);
 
         vm.expectRevert(
             abi.encodeWithSelector(IBatchGovernor.ProposalNotActive.selector, IGovernor.ProposalState.Pending)
@@ -90,7 +90,7 @@ contract StandardGovernorTests is TestUtils {
 
         uint256 currentEpoch = _standardGovernor.clock();
 
-        _standardGovernor.setProposal(proposalId_, currentEpoch, currentEpoch + 1);
+        _standardGovernor.setProposal(proposalId_, currentEpoch);
         _standardGovernor.setNumberOfProposals(currentEpoch, 10);
 
         _powerToken.setVotePower(1);
@@ -110,7 +110,7 @@ contract StandardGovernorTests is TestUtils {
 
         uint256 currentEpoch = _standardGovernor.clock();
 
-        _standardGovernor.setProposal(proposalId_, currentEpoch, currentEpoch + 1);
+        _standardGovernor.setProposal(proposalId_, currentEpoch);
         _standardGovernor.setNumberOfProposals(currentEpoch, 1);
 
         _powerToken.setVotePower(1);
@@ -177,7 +177,7 @@ contract StandardGovernorTests is TestUtils {
 
         uint256 voteStart_ = _standardGovernor.clock() + _standardGovernor.votingDelay();
 
-        _standardGovernor.setProposal(_standardGovernor.hashProposal(callDatas_[0]), voteStart_, voteStart_);
+        _standardGovernor.setProposal(_standardGovernor.hashProposal(callDatas_[0]), voteStart_);
 
         vm.expectRevert(IBatchGovernor.ProposalExists.selector);
         _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
@@ -225,7 +225,7 @@ contract StandardGovernorTests is TestUtils {
 
         uint256 proposalId_ = _standardGovernor.hashProposal(callDatas_[0]);
 
-        _standardGovernor.setProposal(proposalId_, 1, 1);
+        _standardGovernor.setProposal(proposalId_, 1);
 
         vm.expectRevert(IBatchGovernor.ProposalCannotBeExecuted.selector);
         _standardGovernor.execute(targets_, new uint256[](1), callDatas_, keccak256(bytes("")));
@@ -271,7 +271,7 @@ contract StandardGovernorTests is TestUtils {
         uint256 currentEpoch_ = _standardGovernor.clock();
 
         _standardGovernor.setProposalFeeInfo(proposalId_, address(_cashToken), 1000);
-        _standardGovernor.setProposal(proposalId_, currentEpoch_, currentEpoch_);
+        _standardGovernor.setProposal(proposalId_, currentEpoch_);
 
         vm.expectRevert(abi.encodeWithSelector(IStandardGovernor.FeeNotDestinedForVault.selector, 1));
         _standardGovernor.sendProposalFeeToVault(proposalId_);
@@ -281,7 +281,7 @@ contract StandardGovernorTests is TestUtils {
         uint256 proposalId_ = 1;
 
         _standardGovernor.setProposalFeeInfo(proposalId_, address(_cashToken), 1000);
-        _standardGovernor.setProposal(proposalId_, 1, 1);
+        _standardGovernor.setProposal(proposalId_, 1);
 
         vm.expectEmit();
         emit ProposalFeeSentToVault(proposalId_, address(_cashToken), 1000);

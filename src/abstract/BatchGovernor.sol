@@ -14,8 +14,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
     // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
     struct Proposal {
-        uint16 voteStart;
-        uint16 voteEnd; // TODO: This can be inferred from voteStart.
+        uint48 voteStart;
         bool executed;
         address proposer;
         uint16 thresholdRatio;
@@ -130,7 +129,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return "support=for,against&quorum=for";
     }
 
-    function clock() external view returns (uint48 clock_) {
+    function clock() public view returns (uint48 clock_) {
         return uint48(PureEpochs.currentEpoch());
     }
 
@@ -156,7 +155,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function proposalDeadline(uint256 proposalId_) external view returns (uint256 deadline_) {
-        return _proposals[proposalId_].voteEnd;
+        return _getVoteEnd(_proposals[proposalId_].voteStart);
     }
 
     function proposalProposer(uint256 proposalId_) external view returns (address proposer_) {
@@ -174,6 +173,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     function state(uint256 proposalId_) public view virtual returns (ProposalState state_);
 
     function votingDelay() public view virtual returns (uint256 votingDelay_);
+
+    function votingPeriod() public view virtual returns (uint256 votingPeriod_);
 
     /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
@@ -220,7 +221,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         emit VoteCast(voter_, proposalId_, support_, weight_, "");
     }
 
-    function _createProposal(uint256 proposalId_, uint256 voteStart_) internal virtual returns (uint256 voteEnd_);
+    function _createProposal(uint256 proposalId_, uint256 voteStart_) internal virtual;
 
     function _execute(bytes memory callData_, uint256 voteStart_) internal virtual returns (uint256 proposalId_) {
         proposalId_ = _hashProposal(callData_, voteStart_);
@@ -256,13 +257,13 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
         _revertIfInvalidCalldata(callDatas_[0]);
 
-        voteStart_ = PureEpochs.currentEpoch() + votingDelay();
+        voteStart_ = _getVoteStart(clock());
 
         proposalId_ = _hashProposal(callDatas_[0], voteStart_);
 
         if (_proposals[proposalId_].voteStart != 0) revert ProposalExists();
 
-        uint256 voteEnd_ = _createProposal(proposalId_, voteStart_);
+        _createProposal(proposalId_, voteStart_);
 
         emit ProposalCreated(
             proposalId_,
@@ -272,7 +273,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             new string[](targets_.length),
             callDatas_,
             voteStart_,
-            voteEnd_,
+            _getVoteEnd(voteStart_),
             description_
         );
     }
@@ -323,8 +324,16 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return IEpochBasedVoteToken(voteToken).pastTotalSupply(timepoint_);
     }
 
+    function _getVoteEnd(uint256 voteStart_) internal view returns (uint48 voteEnd_) {
+        return uint48(voteStart_ + votingPeriod());
+    }
+
+    function _getVoteStart(uint256 proposalClock_) internal view returns (uint48 voteStart_) {
+        return uint48(proposalClock_ + votingDelay());
+    }
+
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {
-        return _hashProposal(callData_, PureEpochs.currentEpoch() + votingDelay());
+        return _hashProposal(callData_, _getVoteStart(clock()));
     }
 
     function _hashProposal(bytes memory callData_, uint256 voteStart_) internal view returns (uint256 proposalId_) {

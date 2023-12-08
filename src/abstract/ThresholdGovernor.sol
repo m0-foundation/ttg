@@ -41,12 +41,12 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
 
         if (currentEpoch_ == 0) revert InvalidEpoch();
 
         // Proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.
-        uint256 latestPossibleVoteStart_ = PureEpochs.currentEpoch();
+        uint256 latestPossibleVoteStart_ = currentEpoch_;
         uint256 earliestPossibleVoteStart_ = latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0;
 
         proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
@@ -73,8 +73,8 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         external
         view
         returns (
-            uint16 voteStart_,
-            uint16 voteEnd_,
+            uint48 voteStart_,
+            uint48 voteEnd_,
             bool executed_,
             ProposalState state_,
             uint256 noVotes_,
@@ -86,7 +86,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         Proposal storage proposal_ = _proposals[proposalId_];
 
         voteStart_ = proposal_.voteStart;
-        voteEnd_ = proposal_.voteEnd;
+        voteEnd_ = _getVoteEnd(voteStart_);
         executed_ = proposal_.executed;
         state_ = state(proposalId_);
         noVotes_ = proposal_.noWeight;
@@ -98,7 +98,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     /// @inheritdoc IGovernor
     function quorum() external view returns (uint256 quorum_) {
         // NOTE: This will only be correct for the first epoch of a proposals lifetime.
-        return (thresholdRatio * _getTotalSupply(PureEpochs.currentEpoch() - 1)) / ONE;
+        return (thresholdRatio * _getTotalSupply(clock() - 1)) / ONE;
     }
 
     /// @inheritdoc IGovernor
@@ -117,7 +117,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
         if (voteStart_ == 0) revert ProposalDoesNotExist();
 
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
 
         if (currentEpoch_ < voteStart_) return ProposalState.Pending;
 
@@ -126,13 +126,13 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
         // If proposal is currently succeeding, it has either succeeded or expired.
         if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {
-            return currentEpoch_ <= proposal_.voteEnd ? ProposalState.Succeeded : ProposalState.Expired;
+            return currentEpoch_ <= _getVoteEnd(voteStart_) ? ProposalState.Succeeded : ProposalState.Expired;
         }
 
         bool canSucceed_ = (totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_;
 
         // If proposal can succeed while voting is open, it is active.
-        if (canSucceed_ && currentEpoch_ <= proposal_.voteEnd) return ProposalState.Active;
+        if (canSucceed_ && currentEpoch_ <= _getVoteEnd(voteStart_)) return ProposalState.Active;
 
         return ProposalState.Defeated;
     }
@@ -143,7 +143,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     }
 
     /// @inheritdoc IGovernor
-    function votingPeriod() public pure override returns (uint256 votingPeriod_) {
+    function votingPeriod() public pure override(BatchGovernor, IGovernor) returns (uint256 votingPeriod_) {
         return 1;
     }
 
@@ -151,12 +151,9 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
-    function _createProposal(uint256 proposalId_, uint256 voteStart_) internal override returns (uint256 voteEnd_) {
-        voteEnd_ = voteStart_ + 1;
-
+    function _createProposal(uint256 proposalId_, uint256 voteStart_) internal override {
         _proposals[proposalId_] = Proposal({
-            voteStart: uint16(voteStart_),
-            voteEnd: uint16(voteEnd_),
+            voteStart: uint48(voteStart_),
             executed: false,
             proposer: msg.sender,
             thresholdRatio: thresholdRatio,
