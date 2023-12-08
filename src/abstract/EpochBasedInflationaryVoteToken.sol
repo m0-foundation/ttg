@@ -113,7 +113,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     }
 
     function _update(VoidSnap[] storage voidSnaps_) internal returns (bool updated_) {
-        uint16 currentEpoch_ = uint16(PureEpochs.currentEpoch());
+        uint16 currentEpoch_ = uint16(clock());
         uint256 length_ = voidSnaps_.length;
 
         // If this will be the first or a new VoidSnap, just push it onto the array.
@@ -131,7 +131,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     }
 
     function _getUnrealizedInflationOf(address account_) internal view returns (uint256 inflation_) {
-        return _getUnrealizedInflationOfAt(account_, PureEpochs.currentEpoch());
+        return _getUnrealizedInflationOfAt(account_, clock());
     }
 
     function _getUnrealizedInflationOfAt(
@@ -197,11 +197,11 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     }
 
     function _revertIfInVoteEpoch() internal view {
-        if (_isVotingEpoch(PureEpochs.currentEpoch())) revert VoteEpoch();
+        if (_isVotingEpoch(clock())) revert VoteEpoch();
     }
 
     function _revertIfNotInVoteEpoch() internal view {
-        if (!_isVotingEpoch(PureEpochs.currentEpoch())) revert NotVoteEpoch();
+        if (!_isVotingEpoch(clock())) revert NotVoteEpoch();
     }
 
     function _unsafeAccess(

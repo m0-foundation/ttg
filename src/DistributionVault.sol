@@ -67,7 +67,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     }
 
     function distribute(address token_) external returns (uint256 amount_) {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
         uint256 lastTokenBalance_ = _lastTokenBalances[token_];
 
         // Determine the additional balance of `token_` tha is not accounted for in `lastTokenBalance_`.
@@ -87,7 +87,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         return "mode=epoch";
     }
 
-    function clock() external view returns (uint48 clock_) {
+    function clock() public view returns (uint48 clock_) {
         return uint48(PureEpochs.currentEpoch());
     }
 
@@ -150,7 +150,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 balance_,
         uint256 totalSupply_
     ) internal view returns (uint256 claimable_) {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
 
         if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_); // Must be a past epoch.
 

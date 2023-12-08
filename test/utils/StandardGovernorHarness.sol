@@ -29,22 +29,20 @@ contract StandardGovernorHarness is StandardGovernor {
         )
     {}
 
-    function setProposal(uint256 proposalId_, uint256 voteStart_, uint256 voteEnd_) external {
-        setProposal(proposalId_, voteStart_, voteEnd_, false, address(0), 0, 0);
+    function setProposal(uint256 proposalId_, uint256 voteStart_) external {
+        setProposal(proposalId_, voteStart_, false, address(0), 0, 0);
     }
 
     function setProposal(
         uint256 proposalId_,
         uint256 voteStart_,
-        uint256 voteEnd_,
         bool executed_,
         address proposer_,
         uint256 noWeight_,
         uint256 yesWeight_
     ) public {
         _proposals[proposalId_] = Proposal({
-            voteStart: uint16(voteStart_),
-            voteEnd: uint16(voteEnd_),
+            voteStart: uint48(voteStart_),
             executed: executed_,
             proposer: proposer_,
             thresholdRatio: 0,

@@ -45,8 +45,8 @@ interface IThresholdGovernor is IBatchGovernor {
         external
         view
         returns (
-            uint16 voteStart,
-            uint16 voteEnd,
+            uint48 voteStart,
+            uint48 voteEnd,
             bool executed,
             ProposalState state,
             uint256 noVotes,

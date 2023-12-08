@@ -61,7 +61,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if ((_nextCashToken = cashToken_) == address(0)) revert InvalidCashTokenAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
 
-        uint256 bootstrapEpoch_ = bootstrapEpoch = (PureEpochs.currentEpoch() - 1);
+        uint256 bootstrapEpoch_ = bootstrapEpoch = (clock() - 1);
         _bootstrapSupply = IEpochBasedVoteToken(bootstrapToken_).pastTotalSupply(bootstrapEpoch_);
 
         _addTotalSupply(INITIAL_SUPPLY);
@@ -93,7 +93,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     function markNextVotingEpochAsActive() external onlyStandardGovernor {
         // The next voting epoch is the targetEpoch.
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
         uint256 targetEpoch_ = currentEpoch_ + (_isVotingEpoch(currentEpoch_) ? 2 : 1);
 
         // If the current epoch is already on or after the `_nextTargetSupplyStartingEpoch`, then rotate the variables
@@ -116,7 +116,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (nextCashToken_ == address(0)) revert InvalidCashTokenAddress();
 
         // The next epoch is the targetEpoch.
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
         uint256 targetEpoch_ = currentEpoch_ + 1;
 
         // If the current epoch is already on or after the `_nextCashTokenStartingEpoch`, then rotate the variables
@@ -136,7 +136,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     function amountToAuction() public view returns (uint256 amountToAuction_) {
-        if (_isVotingEpoch(PureEpochs.currentEpoch())) return 0; // No auction during voting epochs.
+        if (_isVotingEpoch(clock())) return 0; // No auction during voting epochs.
 
         uint256 targetSupply_ = targetSupply();
         uint256 totalSupply_ = totalSupply();
@@ -166,13 +166,13 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     function cashToken() public view returns (address cashToken_) {
-        return PureEpochs.currentEpoch() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
+        return clock() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
     }
 
     /// @dev The price is computed per basis point of the last epoch's total supply, and drops by half (it is right
     //       shifted) every auction period, until it reaches 0. During each auction period, the price drops linearly.
     function getCost(uint256 amount_) public view returns (uint256 cost_) {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+        uint256 currentEpoch_ = clock();
 
         uint256 blocksRemaining_ = _isVotingEpoch(currentEpoch_)
             ? PureEpochs._EPOCH_PERIOD
@@ -209,7 +209,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     function targetSupply() public view returns (uint256 targetSupply_) {
-        return PureEpochs.currentEpoch() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
+        return clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
     function pastTotalSupply(
