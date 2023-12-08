@@ -13,6 +13,18 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
     // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
+
+    /**
+     * @notice Proposal struct for storing all relevant proposal informations.
+     * @param voteStart      The inclusive epoch, at which voting begins.
+     *                       i.e. if `voteStart` is 1 and `voteEnd` is 2, then token holders can vote during epochs 1 and 2.
+     * @param executed       Whether or not the proposal has been executed.
+     * @param proposer       The address of the proposer.
+     * @param thresholdRatio The ratio of yes votes required for a proposal to succeed.
+     * @param quorumRatio    The ratio of total votes required for a proposal to succeed.
+     * @param noWeight       The total number of votes against the proposal.
+     * @param yesWeight      The total number of votes for the proposal.
+     */
     struct Proposal {
         uint48 voteStart;
         bool executed;
@@ -155,7 +167,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function proposalDeadline(uint256 proposalId_) external view returns (uint256 deadline_) {
-        return _getVoteEnd(_proposals[proposalId_].voteStart);
+        return _voteEnd(_proposals[proposalId_].voteStart);
     }
 
     function proposalProposer(uint256 proposalId_) external view returns (address proposer_) {
@@ -273,7 +285,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             new string[](targets_.length),
             callDatas_,
             voteStart_,
-            _getVoteEnd(voteStart_),
+            _voteEnd(voteStart_),
             description_
         );
     }
@@ -324,11 +336,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return IEpochBasedVoteToken(voteToken).pastTotalSupply(timepoint_);
     }
 
-    function _voteStart() internal view returns (uint48 voteStart_) {
+    function _voteStart() internal view returns (uint48) {
         return clock() + uint48(votingDelay());
     }
 
-    function _getVoteEnd(uint256 voteStart_) internal view returns (uint48 voteEnd_) {
+    function _voteEnd(uint256 voteStart_) internal view returns (uint48) {
         return uint48(voteStart_ + votingPeriod());
     }
 

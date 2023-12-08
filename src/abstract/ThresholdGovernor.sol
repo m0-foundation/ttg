@@ -86,7 +86,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         Proposal storage proposal_ = _proposals[proposalId_];
 
         voteStart_ = proposal_.voteStart;
-        voteEnd_ = _getVoteEnd(voteStart_);
+        voteEnd_ = _voteEnd(voteStart_);
         executed_ = proposal_.executed;
         state_ = state(proposalId_);
         noVotes_ = proposal_.noWeight;
@@ -124,15 +124,22 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         uint256 totalSupply_ = _getTotalSupply(voteStart_ - 1);
         uint256 thresholdRatio_ = proposal_.thresholdRatio;
 
-        // If proposal is currently succeeding, it has either succeeded or expired.
-        if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {
-            return currentEpoch_ <= _getVoteEnd(voteStart_) ? ProposalState.Succeeded : ProposalState.Expired;
+        bool isVotingOpen_ = currentEpoch_ <= _voteEnd(voteStart_);
+
+        // If the total supply of Vote Tokens is 0 and the vote has not ended yet, the proposal is active.
+        // The proposal will expire once the voting period closes.
+        if (totalSupply_ == 0) {
+            return isVotingOpen_ ? ProposalState.Active : ProposalState.Expired;
         }
 
-        bool canSucceed_ = (totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_;
+        // If proposal is currently succeeding, it has either succeeded or expired.
+        if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {
+            return isVotingOpen_ ? ProposalState.Succeeded : ProposalState.Expired;
+        }
 
         // If proposal can succeed while voting is open, it is active.
-        if (canSucceed_ && currentEpoch_ <= _getVoteEnd(voteStart_)) return ProposalState.Active;
+        if (((totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_) && isVotingOpen_)
+            return ProposalState.Active;
 
         return ProposalState.Defeated;
     }

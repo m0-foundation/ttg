@@ -8,6 +8,17 @@ import { IERC6372 } from "./IERC6372.sol";
 
 /// @title Minimal OpenZeppelin-style, Tally-compatible governor.
 interface IGovernor is IERC6372, IERC712 {
+    /**
+     * @notice Proposal state.
+     * @param  Pending   The proposal has been created, but the vote has not started yet.
+     * @param  Active    The proposal is currently in the voting period.
+     * @param  Canceled  The proposal has been canceled.
+     * @param  Defeated  The proposal has been defeated.
+     * @param  Succeeded The proposal has succeeded.
+     * @param  Queued    The proposal has been queued.
+     * @param  Expired   The proposal has expired.
+     * @param  Executed  The proposal has been executed.
+     */
     enum ProposalState {
         Pending,
         Active,

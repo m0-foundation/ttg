@@ -7,10 +7,27 @@ import { Test } from "../../lib/forge-std/src/Test.sol";
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 contract TestUtils is Test {
-    function _goToNextEpoch() internal {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
+    uint256 internal constant EPOCH_LENGTH = 15 days;
+    uint256 internal constant START_BLOCK_NUMBER = 17_740_856;
+    uint256 internal constant START_BLOCK_TIMESTAMP = 1_689_934_508;
 
-        _jumpToEpoch(currentEpoch_ + 1);
+    // Tests start at a voting epoch, at epoch 165
+    uint256 internal constant START_EPOCH = START_BLOCK_NUMBER / PureEpochs._EPOCH_PERIOD + 1;
+
+    function _currentEpoch() internal view returns (uint256) {
+        return PureEpochs.currentEpoch();
+    }
+
+    function _isVotingEpoch(uint256 epoch_) internal pure returns (bool) {
+        return epoch_ % 2 == 1;
+    }
+
+    function _isTransferEpoch(uint256 epoch_) internal pure returns (bool) {
+        return epoch_ % 2 == 0;
+    }
+
+    function _goToNextEpoch() internal {
+        _jumpToEpoch(PureEpochs.currentEpoch() + 1);
     }
 
     function _goToNextVoteEpoch() internal {

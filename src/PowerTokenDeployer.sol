@@ -50,6 +50,7 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
         address cashToken_
     ) external onlyZeroGovernor returns (address) {
         ++nonce;
+
         return lastDeploy = address(new PowerToken(bootstrapToken_, standardGovernor_, cashToken_, vault));
     }
 

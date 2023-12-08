@@ -115,7 +115,7 @@ interface IZeroGovernor is IThresholdGovernor {
 
     /**
      * @notice One of the valid proposals. Reset the Standard Governor, Emergency Governor, and Power Token to the
-     *         ZeroToken holders. This would be used by ZeroToken holders if they no longer have faith in the current
+     *         ZeroToken holders. This would be used by Zero Token holders if they no longer have faith in the current
      *         set of PowerToken holders and/or the state of either the Standard Governor or Emergency Governor.
      */
     function resetToZeroHolders() external;

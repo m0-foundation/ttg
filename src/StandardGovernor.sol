@@ -180,7 +180,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         Proposal storage proposal_ = _proposals[proposalId_];
 
         voteStart_ = proposal_.voteStart;
-        voteEnd_ = _getVoteEnd(voteStart_);
+        voteEnd_ = _voteEnd(voteStart_);
         executed_ = proposal_.executed;
         state_ = state(proposalId_);
         noVotes_ = proposal_.noWeight;
@@ -212,7 +212,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         if (currentEpoch_ < voteStart_) return ProposalState.Pending;
 
-        uint256 voteEnd_ = _getVoteEnd(voteStart_);
+        uint256 voteEnd_ = _voteEnd(voteStart_);
 
         if (currentEpoch_ <= voteEnd_) return ProposalState.Active;
 
