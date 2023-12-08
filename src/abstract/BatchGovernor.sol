@@ -257,7 +257,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
         _revertIfInvalidCalldata(callDatas_[0]);
 
-        voteStart_ = _getVoteStart(clock());
+        voteStart_ = _voteStart();
 
         proposalId_ = _hashProposal(callDatas_[0], voteStart_);
 
@@ -324,16 +324,16 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return IEpochBasedVoteToken(voteToken).pastTotalSupply(timepoint_);
     }
 
+    function _voteStart() internal view returns (uint48 voteStart_) {
+        return clock() + uint48(votingDelay());
+    }
+
     function _getVoteEnd(uint256 voteStart_) internal view returns (uint48 voteEnd_) {
         return uint48(voteStart_ + votingPeriod());
     }
 
-    function _getVoteStart(uint256 proposalClock_) internal view returns (uint48 voteStart_) {
-        return uint48(proposalClock_ + votingDelay());
-    }
-
     function _hashProposal(bytes memory callData_) internal view returns (uint256 proposalId_) {
-        return _hashProposal(callData_, _getVoteStart(clock()));
+        return _hashProposal(callData_, _voteStart());
     }
 
     function _hashProposal(bytes memory callData_, uint256 voteStart_) internal view returns (uint256 proposalId_) {
