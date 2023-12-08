@@ -217,6 +217,9 @@ contract StandardGovernorTests is TestUtils {
 
     // TODO: This can be duplicated into a `BatchGovernor.t.sol -> test_propose_invalidCallData`.
     function test_execute_proposalCannotBeExecuted() external {
+        _goToNextEpoch();
+        _goToNextEpoch();
+
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
 
@@ -278,6 +281,9 @@ contract StandardGovernorTests is TestUtils {
     }
 
     function test_sendProposalFeeToVault() external {
+        _goToNextEpoch();
+        _goToNextEpoch();
+
         uint256 proposalId_ = 1;
 
         _standardGovernor.setProposalFeeInfo(proposalId_, address(_cashToken), 1000);

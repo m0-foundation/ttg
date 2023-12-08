@@ -3,18 +3,21 @@
 pragma solidity 0.8.23;
 
 /// @notice Defines epochs as 15 days worth of blocks (108,000) away from 'The Merge' block.
-/// @dev    Current `_EPOCH_DURATION` and `_SECONDS_PER_BLOCK` allows for a `uint16` epoch up to block 7,077,672,000.
+/// @dev    Current `_STARTING_BLOCK`, `_EPOCH_DURATION` and `_SECONDS_PER_BLOCK` allows for a `uint16` epoch up to block 8,124,339.
 library PureEpochs {
+    /// @notice The fist block that defines the stat of epoch 0.
+    uint256 internal constant _STARTING_BLOCK = 4_847_639;
+
     /// @notice The approximate target of seconds an epoch should endure.
-    uint256 internal constant _EPOCH_DURATION = 15 days;
+    uint256 internal constant _EPOCH_DURATION = 400 seconds;
 
     /// @notice The approximate number of seconds between blocks.
-    uint256 internal constant _SECONDS_PER_BLOCK = 12;
+    uint256 internal constant _SECONDS_PER_BLOCK = 8;
 
     uint256 internal constant _EPOCH_PERIOD = _EPOCH_DURATION / _SECONDS_PER_BLOCK;
 
     function currentEpoch() internal view returns (uint256 currentEpoch_) {
-        return (block.number / _EPOCH_PERIOD) + 1; // Epoch at block 0 is 1.
+        return ((block.number - _STARTING_BLOCK) / _EPOCH_PERIOD) + 1; // Epoch at _STARTING_BLOCK is 1.
     }
 
     function startBlockOfCurrentEpoch() internal view returns (uint256 startBlock_) {

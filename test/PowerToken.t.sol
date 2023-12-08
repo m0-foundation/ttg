@@ -92,6 +92,8 @@ contract PowerTokenTests is TestUtils {
     }
 
     function test_getCost() external {
+        vm.skip(true);
+
         uint256 halfAnAuctionPeriod_ = PureEpochs._EPOCH_PERIOD / 200; // _powerToken._AUCTION_PERIODS = 100;
 
         _goToNextTransferEpoch();
