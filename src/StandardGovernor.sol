@@ -4,8 +4,6 @@ pragma solidity 0.8.23;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
-import { PureEpochs } from "./libs/PureEpochs.sol";
-
 import { IGovernor } from "./abstract/interfaces/IGovernor.sol";
 
 import { BatchGovernor } from "./abstract/BatchGovernor.sol";

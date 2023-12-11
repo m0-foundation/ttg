@@ -9,8 +9,8 @@ import { IEmergencyGovernorDeployer } from "../../../../src/interfaces/IEmergenc
 
 import { IntegrationBaseSetup, IGovernor } from "../../IntegrationBaseSetup.t.sol";
 
-contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
-    function test_resetToPowerHolders_totalSupplyZero() external {
+contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
+    function test_resetToZeroHolders_totalSupplyZero() external {
         (
             address[] memory targets_,
             uint256[] memory values_,
@@ -46,7 +46,7 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
         assertEq(uint256(expiredState_), 6);
     }
 
-    function test_resetToPowerHolders_proposalActiveExpired() external {
+    function test_resetToZeroHolders_proposalActiveExpired() external {
         (
             address[] memory targets_,
             uint256[] memory values_,
@@ -66,7 +66,7 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
         assertEq(uint256(expiredState_), 6);
     }
 
-    function test_resetToPowerHolders_proposalActiveDefeated() external {
+    function test_resetToZeroHolders_proposalActiveDefeated() external {
         (
             address[] memory targets_,
             uint256[] memory values_,
@@ -91,7 +91,7 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
         assertEq(uint256(defeatedState_), 3);
     }
 
-    function test_resetToPowerHolders_proposalActiveSucceededExecute() external {
+    function test_resetToZeroHolders_proposalActiveSucceededExecute() external {
         (
             address[] memory targets_,
             uint256[] memory values_,
@@ -127,13 +127,12 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
         assertEq(_registrar.standardGovernor(), nextStandardGovernor_);
         assertEq(_registrar.emergencyGovernor(), nextEmergencyGovernor_);
 
-        // Epoch 0 is used cause the value doesn't depend on the epoch but is retrieved from the `_balances` of PowerBootstrapToken.
-        assertEq(nextPowerToken_.balanceOf(_alice), nextPowerToken_.pastBalanceOf(_alice, 0));
-        assertEq(nextPowerToken_.balanceOf(_bob), nextPowerToken_.pastBalanceOf(_bob, 0));
-        assertEq(nextPowerToken_.balanceOf(_carol), nextPowerToken_.pastBalanceOf(_carol, 0));
-        assertEq(nextPowerToken_.balanceOf(_dave), 0);
-        assertEq(nextPowerToken_.balanceOf(_eve), 0);
-        assertEq(nextPowerToken_.balanceOf(_frank), 0);
+        assertEq(nextPowerToken_.balanceOf(_alice), 0);
+        assertEq(nextPowerToken_.balanceOf(_bob), 0);
+        assertEq(nextPowerToken_.balanceOf(_carol), 0);
+        assertEq(nextPowerToken_.balanceOf(_dave), nextPowerToken_.pastBalanceOf(_dave, START_EPOCH));
+        assertEq(nextPowerToken_.balanceOf(_eve), nextPowerToken_.pastBalanceOf(_eve, START_EPOCH));
+        assertEq(nextPowerToken_.balanceOf(_frank), nextPowerToken_.pastBalanceOf(_frank, START_EPOCH));
     }
 
     function _getProposeParams()
@@ -152,8 +151,8 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
         values_ = new uint256[](1);
 
         callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector);
+        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToZeroHolders.selector);
 
-        description_ = "Reset to Power holders";
+        description_ = "Reset to Zero holders";
     }
 }

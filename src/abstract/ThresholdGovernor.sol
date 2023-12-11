@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { PureEpochs } from "../libs/PureEpochs.sol";
-
 import { IGovernor } from "./interfaces/IGovernor.sol";
 import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
