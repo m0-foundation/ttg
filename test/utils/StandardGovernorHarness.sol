@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { StandardGovernor } from "../../src/StandardGovernor.sol";
+import { StandardGovernor, BatchGovernor } from "../../src/StandardGovernor.sol";
 
 contract StandardGovernorHarness is StandardGovernor {
     constructor(
@@ -28,6 +28,14 @@ contract StandardGovernorHarness is StandardGovernor {
             maxTotalZeroRewardPerActiveEpoch_
         )
     {}
+
+    function revertIfInvalidCalldata(bytes memory callData_) external pure {
+        return _revertIfInvalidCalldata(callData_);
+    }
+
+    function setHasVoted(uint256 proposalId_, address voter_) external {
+        hasVoted[proposalId_][voter_] = true;
+    }
 
     function setProposal(uint256 proposalId_, uint256 voteStart_) external {
         setProposal(proposalId_, voteStart_, false, address(0), 0, 0);

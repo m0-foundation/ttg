@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { PureEpochs } from "../libs/PureEpochs.sol";
-
 import { IGovernor } from "./interfaces/IGovernor.sol";
 import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
@@ -124,15 +122,21 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         uint256 totalSupply_ = _getTotalSupply(voteStart_ - 1);
         uint256 thresholdRatio_ = proposal_.thresholdRatio;
 
+        bool isVotingOpen_ = currentEpoch_ <= _getVoteEnd(voteStart_);
+
+        // If the total supply of Vote Tokens is 0 and the vote has not ended yet, the proposal is active.
+        // The proposal will expire once the voting period closes.
+        if (totalSupply_ == 0) return isVotingOpen_ ? ProposalState.Active : ProposalState.Expired;
+
         // If proposal is currently succeeding, it has either succeeded or expired.
         if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {
-            return currentEpoch_ <= _getVoteEnd(voteStart_) ? ProposalState.Succeeded : ProposalState.Expired;
+            return isVotingOpen_ ? ProposalState.Succeeded : ProposalState.Expired;
         }
 
-        bool canSucceed_ = (totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_;
-
         // If proposal can succeed while voting is open, it is active.
-        if (canSucceed_ && currentEpoch_ <= _getVoteEnd(voteStart_)) return ProposalState.Active;
+        if (((totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_) && isVotingOpen_) {
+            return ProposalState.Active;
+        }
 
         return ProposalState.Defeated;
     }

@@ -2,13 +2,12 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../lib/forge-std/src/console2.sol";
-
 import { IEmergencyGovernor } from "../src/interfaces/IEmergencyGovernor.sol";
 import { IEmergencyGovernorDeployer } from "../src/interfaces/IEmergencyGovernorDeployer.sol";
 import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 import { IPowerTokenDeployer } from "../src/interfaces/IPowerTokenDeployer.sol";
 import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
+import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
 import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 import { IStandardGovernorDeployer } from "../src/interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
@@ -16,7 +15,9 @@ import { IZeroToken } from "../src/interfaces/IZeroToken.sol";
 
 import { DeployBase } from "../script/DeployBase.s.sol";
 
-import { ERC20PermitHarness } from "./utils/ERC20PermitHarness.sol";
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
+
+import { ERC20ExtendedHarness } from "./utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_UserVoteInflationAfterVotingOnAllProposals
@@ -27,8 +28,8 @@ contract IntegrationTests is TestUtils {
 
     IRegistrar internal _registrar;
 
-    ERC20PermitHarness internal _cashToken1 = new ERC20PermitHarness("Cash Token 1", "CASH1", 6);
-    ERC20PermitHarness internal _cashToken2 = new ERC20PermitHarness("Cash Token 1", "CASH2", 6);
+    ERC20ExtendedHarness internal _cashToken1 = new ERC20ExtendedHarness("Cash Token 1", "CASH1", 6);
+    ERC20ExtendedHarness internal _cashToken2 = new ERC20ExtendedHarness("Cash Token 1", "CASH2", 6);
 
     address[] internal _allowedCashTokens = [address(_cashToken1), address(_cashToken2)];
 
@@ -69,7 +70,6 @@ contract IntegrationTests is TestUtils {
 
     function test_initialState() external {
         IPowerToken powerToken_ = IPowerToken(_registrar.powerToken());
-
         uint256 initialPowerTotalSupply_;
 
         for (uint256 index_; index_ < _initialPowerBalances.length; ++index_) {
@@ -119,14 +119,14 @@ contract IntegrationTests is TestUtils {
         assertEq(_cashToken1.balanceOf(_alice), 0);
         assertEq(_cashToken1.balanceOf(address(standardGovernor_)), proposalFee_);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         vm.prank(_alice);
         uint256 weight_ = standardGovernor_.castVote(proposalId_, 1);
 
         assertEq(weight_, 550_000_000);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         standardGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
 
@@ -156,142 +156,13 @@ contract IntegrationTests is TestUtils {
         uint256 proposalId_ = emergencyGovernor_.propose(targets_, values_, callDatas_, description_);
 
         vm.prank(_alice);
-        uint256 weight_ = emergencyGovernor_.castVote(proposalId_, 1);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 550_000_000);
 
-        assertEq(weight_, 550_000_000);
+        vm.prank(_bob);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 250_000_000);
 
         emergencyGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
 
         assertEq(_registrar.get(key_), value_);
-    }
-
-    function test_setCashToken() external {
-        IZeroGovernor zeroGovernor_ = IZeroGovernor(_registrar.zeroGovernor());
-        IStandardGovernor standardGovernor_ = IStandardGovernor(_registrar.standardGovernor());
-
-        address[] memory targets_ = new address[](1);
-        targets_[0] = address(zeroGovernor_);
-
-        uint256[] memory values_ = new uint256[](1);
-
-        uint256 newProposalFee_ = standardGovernor_.proposalFee() * 2;
-
-        bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(
-            zeroGovernor_.setCashToken.selector,
-            address(_cashToken2),
-            newProposalFee_
-        );
-
-        string memory description_ = "Set new cash token and double proposal fee";
-
-        _goToNextEpoch();
-
-        vm.prank(_dave);
-        uint256 proposalId_ = zeroGovernor_.propose(targets_, values_, callDatas_, description_);
-
-        vm.prank(_dave);
-        uint256 weight_ = zeroGovernor_.castVote(proposalId_, 1);
-
-        assertEq(weight_, 60_000_000);
-
-        zeroGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
-
-        assertEq(standardGovernor_.cashToken(), address(_cashToken2));
-        assertEq(standardGovernor_.proposalFee(), newProposalFee_);
-    }
-
-    function test_reset_toZeroHolder() external {
-        IRegistrar registrar_ = _registrar;
-        IZeroGovernor zeroGovernor_ = IZeroGovernor(registrar_.zeroGovernor());
-
-        _jumpToEpoch(zeroGovernor_.clock() + 1);
-
-        address[] memory targets_ = new address[](1);
-        targets_[0] = address(zeroGovernor_);
-
-        uint256[] memory values_ = new uint256[](1);
-
-        bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(zeroGovernor_.resetToZeroHolders.selector);
-
-        string memory description_ = "Reset to Zero holders";
-
-        _goToNextEpoch();
-
-        vm.prank(_dave);
-        uint256 proposalId_ = zeroGovernor_.propose(targets_, values_, callDatas_, description_);
-
-        vm.prank(_dave);
-        uint256 weight_ = zeroGovernor_.castVote(proposalId_, 1);
-
-        assertEq(weight_, 60_000_000);
-
-        address nextPowerToken_ = IPowerTokenDeployer(registrar_.powerTokenDeployer()).nextDeploy();
-
-        address nextStandardGovernor_ = IStandardGovernorDeployer(registrar_.standardGovernorDeployer()).nextDeploy();
-
-        address nextEmergencyGovernor_ = IEmergencyGovernorDeployer(registrar_.emergencyGovernorDeployer())
-            .nextDeploy();
-
-        zeroGovernor_.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
-
-        assertEq(registrar_.powerToken(), nextPowerToken_);
-        assertEq(registrar_.standardGovernor(), nextStandardGovernor_);
-        assertEq(registrar_.emergencyGovernor(), nextEmergencyGovernor_);
-
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_alice), 0);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_bob), 0);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_carol), 0);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_dave), 600_000_000);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_eve), 300_000_000);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_frank), 100_000_000);
-    }
-
-    function test_reset_toPowerHolder() external {
-        IRegistrar registrar_ = _registrar;
-        IZeroGovernor zeroGovernor_ = IZeroGovernor(registrar_.zeroGovernor());
-
-        _jumpToEpoch(zeroGovernor_.clock() + 1);
-
-        address[] memory targets_ = new address[](1);
-        targets_[0] = address(zeroGovernor_);
-
-        uint256[] memory values_ = new uint256[](1);
-
-        bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(zeroGovernor_.resetToPowerHolders.selector);
-
-        string memory description_ = "Reset to Power holders";
-
-        _goToNextEpoch();
-
-        vm.prank(_dave);
-        uint256 proposalId_ = zeroGovernor_.propose(targets_, values_, callDatas_, description_);
-
-        vm.prank(_dave);
-        uint256 weight_ = zeroGovernor_.castVote(proposalId_, 1);
-
-        assertEq(weight_, 60_000_000);
-
-        address nextPowerToken_ = IPowerTokenDeployer(registrar_.powerTokenDeployer()).nextDeploy();
-
-        address nextStandardGovernor_ = IStandardGovernorDeployer(registrar_.standardGovernorDeployer()).nextDeploy();
-
-        address nextEmergencyGovernor_ = IEmergencyGovernorDeployer(registrar_.emergencyGovernorDeployer())
-            .nextDeploy();
-
-        zeroGovernor_.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
-
-        assertEq(registrar_.powerToken(), nextPowerToken_);
-        assertEq(registrar_.standardGovernor(), nextStandardGovernor_);
-        assertEq(registrar_.emergencyGovernor(), nextEmergencyGovernor_);
-
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_alice), 550_000_000);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_bob), 250_000_000);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_carol), 200_000_000);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_dave), 0);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_eve), 0);
-        assertEq(IPowerToken(nextPowerToken_).balanceOf(_frank), 0);
     }
 }

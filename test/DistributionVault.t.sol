@@ -58,7 +58,7 @@ contract DistributionVaultTests is TestUtils {
         uint256 startEpoch_ = PureEpochs.currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         // Check that the first 1_000_000 distribution was successful.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 66_666);
@@ -75,7 +75,7 @@ contract DistributionVaultTests is TestUtils {
 
         endEpoch_ = PureEpochs.currentEpoch();
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         // Check that the second 500_000 distribution was successful.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 99_999);
@@ -96,7 +96,7 @@ contract DistributionVaultTests is TestUtils {
 
         endEpoch_ = PureEpochs.currentEpoch();
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         // Check that the third 1_500_000 distribution was successful.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 149_999);
@@ -116,7 +116,7 @@ contract DistributionVaultTests is TestUtils {
 
         endEpoch_ = PureEpochs.currentEpoch();
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         // Check that the fourth 100_000 distribution was successful.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 149_999);

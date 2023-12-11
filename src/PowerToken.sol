@@ -158,33 +158,53 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        // For epochs before the bootstrap epoch, or if no balance snaps, return the bootstrap balance.
-        return
-            (epoch_ <= bootstrapEpoch) || (_balances[account_].length == 0)
-                ? _bootstrapBalanceOfAt(account_, epoch_)
-                : super.pastBalanceOf(account_, epoch_);
+        // For epochs before the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _bootstrapBalanceOfAt(account_, epoch_);
+
+        // If no balance snaps, return the bootstrap balance at the bootstrap epoch.
+        if (_balances[account_].length == 0) return _bootstrapBalanceOfAt(account_, bootstrapEpoch);
+
+        return super.pastBalanceOf(account_, epoch_);
     }
 
     function cashToken() public view returns (address cashToken_) {
         return clock() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
     }
 
-    /// @dev The price is computed per basis point of the last epoch's total supply, and drops by half (it is right
-    //       shifted) every auction period, until it reaches 0. During each auction period, the price drops linearly.
     function getCost(uint256 amount_) public view returns (uint256 cost_) {
         uint256 currentEpoch_ = clock();
 
-        uint256 blocksRemaining_ = _isVotingEpoch(currentEpoch_)
+        uint256 timeRemaining_ = _isVotingEpoch(currentEpoch_)
             ? PureEpochs._EPOCH_PERIOD
-            : PureEpochs.blocksRemainingInCurrentEpoch();
+            : PureEpochs.timeRemainingInCurrentEpoch();
 
-        uint256 blocksPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
-        uint256 leftPoint_ = 1 << (blocksRemaining_ / blocksPerPeriod_);
-        uint256 remainder_ = blocksRemaining_ % blocksPerPeriod_;
+        uint256 secondsPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
+        uint256 leftPoint_ = 1 << (timeRemaining_ / secondsPerPeriod_);
+        uint256 remainder_ = timeRemaining_ % secondsPerPeriod_;
 
+        /**
+         * @dev Auction curve:
+         *        - During every auction period (1/100th of an epoch) the price starts at some "leftPoint" and decreases
+         *          linearly, with time, to some "rightPoint" (which is half of that "leftPoint"). This is done by
+         *          computing the weighted average between the "leftPoint" and "rightPoint" for the time remaining in
+         *          the auction period.
+         *        - For the next next auction period, the new "leftPoint" is half of the previous period's "leftPoint"
+         *          (which also equals the previous period's "rightPoint").
+         *        - Combined, this results in the price decreasing by half every auction period at a macro level, but
+         *          decreasing linearly at a micro-level during each period, without any jumps.
+         *      Relative price computation:
+         *        - Since the parameters of this auction are fixed forever (there are no mutable auction parameters and
+         *          this is not an upgradeable contract), and the token supply is expected to increase relatively
+         *          quickly and consistently, the result would be that the price Y for some Z% of the total supply would
+         *          occur earlier and earlier in the auction.
+         *        - Instead, the desired behavior is that after X seconds into the auction, there will be a price Y for
+         *          some Z% of the total supply. In other words, it will always cost 572,662,306,133 cash tokens to buy
+         *          1% of the previous epoch's total supply with 5 days left in the auction period.
+         *        - To achieve this, the price is instead computed per basis point of the last epoch's total supply.
+         */
         return
-            (ONE * amount_ * ((remainder_ * leftPoint_) + ((blocksPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
-            (blocksPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
+            (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
+            (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
     }
 
     function getVotes(
@@ -201,11 +221,13 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint256 epoch_
     ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
-        // For epochs before the bootstrap epoch, or if no voting power snaps, return the bootstrap voting power.
-        return
-            _votingPowers[account_].length == 0
-                ? _bootstrapBalanceOfAt(account_, epoch_)
-                : super.getPastVotes(account_, epoch_);
+        // For epochs before the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _bootstrapBalanceOfAt(account_, epoch_);
+
+        // If no balance snaps, return the bootstrap balance at the bootstrap epoch.
+        if (_votingPowers[account_].length == 0) return _bootstrapBalanceOfAt(account_, bootstrapEpoch);
+
+        return super.getPastVotes(account_, epoch_);
     }
 
     function targetSupply() public view returns (uint256 targetSupply_) {

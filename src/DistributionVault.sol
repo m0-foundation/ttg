@@ -53,14 +53,14 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 deadline_,
         bytes memory signature_
     ) external returns (uint256 claimed) {
-        uint256 currentNonce_ = _nonces[account_];
+        uint256 currentNonce_ = nonces[account_];
         bytes32 digest_ = _getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
 
         _revertIfInvalidSignature(account_, digest_, signature_);
         _revertIfExpired(deadline_);
 
         unchecked {
-            _nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
+            nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
         }
 
         return _claim(account_, token_, startEpoch_, endEpoch_, destination_);
@@ -97,6 +97,10 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) public view returns (uint256 claimable_) {
+        uint256 currentEpoch_ = clock();
+
+        if (endEpoch_ >= currentEpoch_) revert NotPastTimepoint(endEpoch_, currentEpoch_); // Range must be past epochs.
+
         uint256[] memory balances_ = IZeroToken(zeroToken).pastBalancesOf(account_, startEpoch_, endEpoch_);
         uint256[] memory totalSupplies_ = IZeroToken(zeroToken).pastTotalSupplies(startEpoch_, endEpoch_);
         uint256 epochCount_ = endEpoch_ - startEpoch_ + 1;
@@ -105,7 +109,9 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             uint256 balance_ = balances_[index_];
             uint256 totalSupply_ = totalSupplies_[index_];
 
-            claimable_ += _getClaimable(token_, account_, startEpoch_ + index_, balance_, totalSupply_);
+            claimable_ += hasClaimed[token_][startEpoch_ + index_][account_]
+                ? 0
+                : (distributionOfAt[token_][startEpoch_ + index_] * balance_) / totalSupply_;
         }
     }
 
@@ -142,20 +148,6 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     /******************************************************************************************************************\
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
-
-    function _getClaimable(
-        address token_,
-        address account_,
-        uint256 epoch_,
-        uint256 balance_,
-        uint256 totalSupply_
-    ) internal view returns (uint256 claimable_) {
-        uint256 currentEpoch_ = clock();
-
-        if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_); // Must be a past epoch.
-
-        return hasClaimed[token_][epoch_][account_] ? 0 : (distributionOfAt[token_][epoch_] * balance_) / totalSupply_;
-    }
 
     function _getClaimDigest(
         address token_,

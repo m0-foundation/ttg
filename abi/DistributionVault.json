@@ -269,14 +269,14 @@
     "name": "nonces",
     "inputs": [
       {
-        "name": "account_",
+        "name": "account",
         "type": "address",
         "internalType": "address"
       }
     ],
     "outputs": [
       {
-        "name": "nonce_",
+        "name": "nonce",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -399,7 +399,7 @@
         "internalType": "uint256"
       },
       {
-        "name": "currentNonce",
+        "name": "expectedNonce",
         "type": "uint256",
         "internalType": "uint256"
       }
