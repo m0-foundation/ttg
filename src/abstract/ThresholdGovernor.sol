@@ -126,9 +126,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
         // If the total supply of Vote Tokens is 0 and the vote has not ended yet, the proposal is active.
         // The proposal will expire once the voting period closes.
-        if (totalSupply_ == 0) {
-            return isVotingOpen_ ? ProposalState.Active : ProposalState.Expired;
-        }
+        if (totalSupply_ == 0) return isVotingOpen_ ? ProposalState.Active : ProposalState.Expired;
 
         // If proposal is currently succeeding, it has either succeeded or expired.
         if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {
@@ -136,8 +134,9 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         }
 
         // If proposal can succeed while voting is open, it is active.
-        if (((totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_) && isVotingOpen_)
+        if (((totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_) && isVotingOpen_) {
             return ProposalState.Active;
+        }
 
         return ProposalState.Defeated;
     }
