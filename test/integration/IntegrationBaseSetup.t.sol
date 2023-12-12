@@ -5,6 +5,7 @@ pragma solidity 0.8.23;
 import { DeployBase } from "../../script/DeployBase.s.sol";
 
 import { IGovernor } from "../../src/abstract/interfaces/IGovernor.sol";
+import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IRegistrar } from "../../src/interfaces/IRegistrar.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
@@ -16,6 +17,7 @@ import { TestUtils } from "../utils/TestUtils.sol";
 abstract contract IntegrationBaseSetup is TestUtils {
     address internal _deployer = makeAddr("deployer");
 
+    IPowerToken _powerToken;
     IRegistrar internal _registrar;
     IZeroGovernor _zeroGovernor;
     IZeroToken _zeroToken;
@@ -62,6 +64,7 @@ abstract contract IntegrationBaseSetup is TestUtils {
         );
 
         _registrar = IRegistrar(registrar_);
+        _powerToken = IPowerToken(_registrar.powerToken());
         _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
         _zeroToken = IZeroToken(_registrar.zeroToken());
     }

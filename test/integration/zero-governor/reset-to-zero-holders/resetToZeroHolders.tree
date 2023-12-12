@@ -1,25 +1,11 @@
 resetToZeroHolders.t.sol
-├─ Dave calls `propose` with `resetToZeroHolders` as calldata (test_resetToZeroHolders_totalSupplyZero)
-│  ├─ Given Dave doesn't hold any Zero Tokens and the `pastTotalSupply` of Zero Tokens is 0
-│  ├─ Then the state of the proposal upon creation is `Active`
-│  ├─ When the voting period ends and no Zero Tokens have been minted
-│  └─ Then the state of the proposal is `Expired`
-├─ Dave calls `propose` with `resetToZeroHolders` as calldata (test_resetToZeroHolders_proposalActiveExpired)
-│  ├─ Given no one votes on the proposal
-│  ├─ Then the state of the proposal upon creation is `Active`
-│  ├─ When the voting period ends and the threshold ratio hasn't been met
-│  └─ Then the state of the proposal is `Expired`
-├─ Eve calls `propose` with `resetToZeroHolders` as calldata (test_resetToZeroHolders_proposalActiveDefeated)
-│  ├─ Given Eve holds a minority of Zero Tokens
-│  ├─ Then the state of the proposal upon creation is `Active`
-│  ├─ When Eve is the only one to vote on the proposal with her minority voting power
-│  └─ Then the state of the proposal at the end of the voting period is `Defeated`
-└─ Dave calls `propose` with `resetToZeroHolders` as calldata (test_resetToZeroHolders_proposalActiveSucceeded)
+└─ Dave calls `propose` with `resetToZeroHolders` as calldata
    ├─ Given Dave holds 60,000,000 Zero Tokens and currently has the highest voting power
    ├─ Then the state of the proposal upon creation is `Active`
    ├─ When Dave votes on the proposal with his majority voting power
    ├─ Then the state of the proposal is `Succeeded`
    ├─ When Dave executes the proposal
+   ├─ Then the `ResetExecuted` event is emitted
    ├─ Then a new Power Token is deployed
    ├─ Then a new Standard Governor is deployed
    ├─ Then a new Emergency Governor is deployed
@@ -28,4 +14,6 @@ resetToZeroHolders.t.sol
    ├─ Then the Power Token balance of Carol is 0
    ├─ Then the Power Token balance of Dave is 600,000,000
    ├─ Then the Power Token balance of Eve is 300,000,000
-   └─ Then the Power Token balance of Frank is 100,000,00
+   ├─ Then the Power Token balance of Frank is 100,000,000
+   └─ Then the state of the proposal is `Executed`
+

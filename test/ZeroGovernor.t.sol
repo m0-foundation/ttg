@@ -163,45 +163,18 @@ contract ZeroGovernorTests is TestUtils {
         );
     }
 
+    function test_getProposal_ProposalDoesNotExist() external {
+        vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
+        _zeroGovernor.getProposal(0);
+    }
+
     function test_resetToPowerHolders_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _zeroGovernor.resetToPowerHolders();
     }
 
-    function test_resetToPowerHolders() external {
-        address newStandardGovernor_ = makeAddr("newStandardGovernor");
-        address newEmergencyGovernor_ = makeAddr("newEmergencyGovernor");
-        address newPowerToken_ = makeAddr("newPowerToken");
-
-        _standardGovernorDeployer.setNextDeploy(newStandardGovernor_);
-        _emergencyGovernorDeployer.setNextDeploy(newEmergencyGovernor_);
-        _powerTokenDeployer.setNextDeploy(newPowerToken_);
-
-        vm.expectEmit();
-        emit ResetExecuted(address(_powerToken), newStandardGovernor_, newEmergencyGovernor_, newPowerToken_);
-
-        vm.prank(address(_zeroGovernor));
-        _zeroGovernor.resetToPowerHolders();
-    }
-
     function test_resetToZeroHolders_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
-        _zeroGovernor.resetToZeroHolders();
-    }
-
-    function test_resetToZeroHolders() external {
-        address newStandardGovernor_ = makeAddr("newStandardGovernor");
-        address newEmergencyGovernor_ = makeAddr("newEmergencyGovernor");
-        address newPowerToken_ = makeAddr("newPowerToken");
-
-        _standardGovernorDeployer.setNextDeploy(newStandardGovernor_);
-        _emergencyGovernorDeployer.setNextDeploy(newEmergencyGovernor_);
-        _powerTokenDeployer.setNextDeploy(newPowerToken_);
-
-        vm.expectEmit();
-        emit ResetExecuted(address(_zeroToken), newStandardGovernor_, newEmergencyGovernor_, newPowerToken_);
-
-        vm.prank(address(_zeroGovernor));
         _zeroGovernor.resetToZeroHolders();
     }
 }
