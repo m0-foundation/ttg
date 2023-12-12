@@ -9,21 +9,21 @@ import { IEmergencyGovernorDeployer } from "../../../../src/interfaces/IEmergenc
 
 import { IntegrationBaseSetup, IGovernor, IStandardGovernor, IThresholdGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
 
-contract SetEmergencyProposalThresholdRatio_IntegrationTest is IntegrationBaseSetup {
-    function test_setEmergencyProposalThresholdRatio() external {
+contract SetZeroProposalThresholdRatio_IntegrationTest is IntegrationBaseSetup {
+    function test_setZeroProposalThresholdRatio() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_zeroGovernor);
 
         uint256[] memory values_ = new uint256[](1);
-        uint16 newEmergencyProposalThresholdRatio_ = 9_000; // 90%
+        uint16 newZeroProposalThresholdRatio_ = 7_000; // 70%
 
         bytes[] memory callDatas_ = new bytes[](1);
         callDatas_[0] = abi.encodeWithSelector(
-            _zeroGovernor.setEmergencyProposalThresholdRatio.selector,
-            newEmergencyProposalThresholdRatio_
+            _zeroGovernor.setZeroProposalThresholdRatio.selector,
+            newZeroProposalThresholdRatio_
         );
 
-        string memory description_ = "Set Emergency Proposal threshold ratio";
+        string memory description_ = "Set Zero Proposal threshold ratio";
 
         _goToNextEpoch();
 
@@ -65,11 +65,11 @@ contract SetEmergencyProposalThresholdRatio_IntegrationTest is IntegrationBaseSe
         emit IGovernor.ProposalExecuted(proposalId_);
 
         vm.expectEmit();
-        emit IThresholdGovernor.ThresholdRatioSet(newEmergencyProposalThresholdRatio_);
+        emit IThresholdGovernor.ThresholdRatioSet(newZeroProposalThresholdRatio_);
 
         _zeroGovernor.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
 
-        assertEq(_emergencyGovernor.thresholdRatio(), newEmergencyProposalThresholdRatio_);
+        assertEq(_zeroGovernor.thresholdRatio(), newZeroProposalThresholdRatio_);
 
         (, , , IGovernor.ProposalState executedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(executedState_), 7);

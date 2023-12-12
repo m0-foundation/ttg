@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.23;
 
+import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
 import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
 
@@ -22,6 +23,7 @@ contract ZeroGovernorTests is TestUtils {
     address internal _cashToken1 = makeAddr("cashToken1");
     address internal _cashToken2 = makeAddr("cashToken2");
 
+    uint16 internal _emergencyProposalThresholdRatio = 9_000; // 90%
     uint16 internal _zeroProposalThresholdRatio = 6_000; // 60%
 
     address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
@@ -163,7 +165,7 @@ contract ZeroGovernorTests is TestUtils {
         );
     }
 
-    function test_getProposal_ProposalDoesNotExist() external {
+    function test_getProposal_proposalDoesNotExist() external {
         vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
         _zeroGovernor.getProposal(0);
     }
@@ -180,10 +182,22 @@ contract ZeroGovernorTests is TestUtils {
 
     function test_setEmergencyProposalThresholdRatio_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
-        _zeroGovernor.setEmergencyProposalThresholdRatio(_zeroProposalThresholdRatio);
+        _zeroGovernor.setEmergencyProposalThresholdRatio(_emergencyProposalThresholdRatio);
     }
 
-    function test_setCashToken_InvalidCashToken() external {
+    function test_setZeroProposalThresholdRatio_notZeroGovernor() external {
+        vm.expectRevert(IBatchGovernor.NotSelf.selector);
+        _zeroGovernor.setZeroProposalThresholdRatio(_zeroProposalThresholdRatio);
+    }
+
+    function test_setZeroProposalThresholdRatio_invalidThresholdRatio() external {
+        vm.prank(address(_zeroGovernor));
+
+        vm.expectRevert(IThresholdGovernor.InvalidThresholdRatio.selector);
+        _zeroGovernor.setZeroProposalThresholdRatio(10_001);
+    }
+
+    function test_setCashToken_invalidCashToken() external {
         vm.prank(address(_zeroGovernor));
 
         vm.expectRevert(IZeroGovernor.InvalidCashToken.selector);
