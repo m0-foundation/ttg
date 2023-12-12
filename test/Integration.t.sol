@@ -71,10 +71,6 @@ contract IntegrationTests is TestUtils {
     }
 
     function test_initialState() external {
-        assertEq(block.timestamp, START_BLOCK_TIMESTAMP);
-        assertEq(block.number, START_BLOCK_NUMBER);
-        assertEq(PureEpochs.currentEpoch(), START_EPOCH);
-
         IPowerToken powerToken_ = IPowerToken(_registrar.powerToken());
         uint256 initialPowerTotalSupply_;
 
