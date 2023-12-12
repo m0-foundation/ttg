@@ -167,7 +167,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     function proposalDeadline(uint256 proposalId_) external view returns (uint256 deadline_) {
-        return _voteEnd(_proposals[proposalId_].voteStart);
+        return _getVoteEnd(_proposals[proposalId_].voteStart);
     }
 
     function proposalProposer(uint256 proposalId_) external view returns (address proposer_) {
@@ -285,7 +285,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             new string[](targets_.length),
             callDatas_,
             voteStart_,
-            _voteEnd(voteStart_),
+            _getVoteEnd(voteStart_),
             description_
         );
     }
@@ -340,7 +340,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return clock() + uint48(votingDelay());
     }
 
-    function _voteEnd(uint256 voteStart_) internal view returns (uint48) {
+    function _getVoteEnd(uint256 voteStart_) internal view returns (uint48) {
         return uint48(voteStart_ + votingPeriod());
     }
 
