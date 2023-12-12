@@ -4,10 +4,12 @@ pragma solidity 0.8.23;
 
 import { DeployBase } from "../../script/DeployBase.s.sol";
 
+import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
 import { IGovernor } from "../../src/abstract/interfaces/IGovernor.sol";
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IRegistrar } from "../../src/interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
+import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 
@@ -18,11 +20,14 @@ import { TestUtils } from "../utils/TestUtils.sol";
 abstract contract IntegrationBaseSetup is TestUtils {
     address internal _deployer = makeAddr("deployer");
 
-    IPowerToken _powerToken;
     IRegistrar internal _registrar;
+
+    IPowerToken _powerToken;
+    IZeroToken _zeroToken;
+
+    IEmergencyGovernor _emergencyGovernor;
     IStandardGovernor _standardGovernor;
     IZeroGovernor _zeroGovernor;
-    IZeroToken _zeroToken;
 
     ERC20PermitHarness internal _cashToken1 = new ERC20PermitHarness("Cash Token 1", "CASH1", 18);
     ERC20PermitHarness internal _cashToken2 = new ERC20PermitHarness("Cash Token 1", "CASH2", 6);
@@ -68,8 +73,10 @@ abstract contract IntegrationBaseSetup is TestUtils {
         _registrar = IRegistrar(registrar_);
 
         _powerToken = IPowerToken(_registrar.powerToken());
+        _zeroToken = IZeroToken(_registrar.zeroToken());
+
+        _emergencyGovernor = IEmergencyGovernor(_registrar.emergencyGovernor());
         _standardGovernor = IStandardGovernor(_registrar.standardGovernor());
         _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
-        _zeroToken = IZeroToken(_registrar.zeroToken());
     }
 }

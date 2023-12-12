@@ -65,6 +65,9 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
             .nextDeploy();
 
         vm.expectEmit();
+        emit IGovernor.ProposalExecuted(proposalId_);
+
+        vm.expectEmit();
         emit IZeroGovernor.ResetExecuted(
             address(_powerToken),
             nextStandardGovernor_,

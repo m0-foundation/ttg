@@ -22,7 +22,7 @@ contract ZeroGovernorTests is TestUtils {
     address internal _cashToken1 = makeAddr("cashToken1");
     address internal _cashToken2 = makeAddr("cashToken2");
 
-    uint16 internal _zeroProposalThresholdRatio;
+    uint16 internal _zeroProposalThresholdRatio = 6_000; // 60%
 
     address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
 
@@ -176,6 +176,11 @@ contract ZeroGovernorTests is TestUtils {
     function test_resetToZeroHolders_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _zeroGovernor.resetToZeroHolders();
+    }
+
+    function test_setEmergencyProposalThresholdRatio_notZeroGovernor() external {
+        vm.expectRevert(IBatchGovernor.NotSelf.selector);
+        _zeroGovernor.setEmergencyProposalThresholdRatio(_zeroProposalThresholdRatio);
     }
 
     function test_setCashToken_InvalidCashToken() external {

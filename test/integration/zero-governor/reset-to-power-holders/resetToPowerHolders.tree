@@ -7,6 +7,7 @@ resetToPowerHolders.t.sol
    ├─ Then the `VoteCast` event is emitted
    ├─ Then the state of the proposal is `Succeeded`
    ├─ When the proposal is executed
+   ├─ Then the `ProposalExecuted` event is emitted
    ├─ Then the `ResetExecuted` event is emitted
    ├─ Then a new Power Token is deployed
    ├─ Then a new Standard Governor is deployed

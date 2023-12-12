@@ -233,8 +233,14 @@ contract StandardGovernorTests is TestUtils {
 
     function test_setCashToken_notZeroGovernor() external {
         vm.expectRevert(IStandardGovernor.NotZeroGovernor.selector);
-
         _standardGovernor.setCashToken(makeAddr("someCashToken"), _proposalFee);
+    }
+
+    function test_setCashToken_InvalidCashTokenAddress() external {
+        vm.expectRevert(IStandardGovernor.InvalidCashTokenAddress.selector);
+
+        vm.prank(_zeroGovernor);
+        _standardGovernor.setCashToken(address(0), _proposalFee);
     }
 
     function test_setCashToken() external {

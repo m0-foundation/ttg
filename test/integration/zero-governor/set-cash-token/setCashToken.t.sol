@@ -63,6 +63,9 @@ contract SetCashToken_IntegrationTest is IntegrationBaseSetup {
         assertEq(uint256(succeededState_), 4);
 
         vm.expectEmit();
+        emit IGovernor.ProposalExecuted(proposalId_);
+
+        vm.expectEmit();
         emit IStandardGovernor.CashTokenSet(address(_cashToken2));
 
         vm.expectEmit();
