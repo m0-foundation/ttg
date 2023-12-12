@@ -40,7 +40,7 @@ interface IGovernor is IERC6372, IERC712 {
      * @param  proposer    The address of the account that created the proposal.
      * @param  targets     An array of addresses that will be called upon the execution.
      * @param  values      An array of ETH amounts that will be sent to each respective target upon execution.
-     * @param  signatures  A useless array that is required by the Governor contract.
+     * @param  signatures  Empty string array required to be compatible with OZ governor contract.
      * @param  callDatas   An array of call data used to call each respective target upon execution.
      * @param  voteStart   The first clock value when voting on the proposal is allowed.
      * @param  voteEnd     The last clock value when voting on the proposal is allowed.
@@ -81,7 +81,7 @@ interface IGovernor is IERC6372, IERC712 {
     /**
      * @notice Allows the caller to cast a vote on a proposal with id `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @return weight     The number of votes cast.
      */
     function castVote(uint256 proposalId, uint8 support) external returns (uint256 weight);

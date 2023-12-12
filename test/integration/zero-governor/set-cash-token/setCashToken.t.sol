@@ -7,19 +7,24 @@ import { IPowerTokenDeployer } from "../../../../src/interfaces/IPowerTokenDeplo
 import { IStandardGovernorDeployer } from "../../../../src/interfaces/IStandardGovernorDeployer.sol";
 import { IEmergencyGovernorDeployer } from "../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
 
-import { IntegrationBaseSetup, IGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IntegrationBaseSetup, IGovernor, IStandardGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
 
-contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
-    function test_resetToPowerHolders() external {
+contract SetCashToken_IntegrationTest is IntegrationBaseSetup {
+    function test_setCashToken() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_zeroGovernor);
 
         uint256[] memory values_ = new uint256[](1);
+        uint256 newProposalFee_ = _standardGovernor.proposalFee() * 2;
 
         bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector);
+        callDatas_[0] = abi.encodeWithSelector(
+            _zeroGovernor.setCashToken.selector,
+            address(_cashToken2),
+            newProposalFee_
+        );
 
-        string memory description_ = "Reset to Power holders";
+        string memory description_ = "Set new cash token and double proposal fee";
 
         _goToNextEpoch();
 
@@ -57,34 +62,16 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
         (, , , IGovernor.ProposalState succeededState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 
-        IPowerToken nextPowerToken_ = IPowerToken(IPowerTokenDeployer(_registrar.powerTokenDeployer()).nextDeploy());
-
-        address nextStandardGovernor_ = IStandardGovernorDeployer(_registrar.standardGovernorDeployer()).nextDeploy();
-
-        address nextEmergencyGovernor_ = IEmergencyGovernorDeployer(_registrar.emergencyGovernorDeployer())
-            .nextDeploy();
+        vm.expectEmit();
+        emit IStandardGovernor.CashTokenSet(address(_cashToken2));
 
         vm.expectEmit();
-        emit IZeroGovernor.ResetExecuted(
-            address(_powerToken),
-            nextStandardGovernor_,
-            nextEmergencyGovernor_,
-            address(nextPowerToken_)
-        );
+        emit IStandardGovernor.ProposalFeeSet(newProposalFee_);
 
         _zeroGovernor.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
 
-        assertEq(_registrar.powerToken(), address(nextPowerToken_));
-        assertEq(_registrar.standardGovernor(), nextStandardGovernor_);
-        assertEq(_registrar.emergencyGovernor(), nextEmergencyGovernor_);
-
-        // Epoch 0 is used cause the value doesn't depend on the epoch but is retrieved from the `_balances` of PowerBootstrapToken.
-        assertEq(nextPowerToken_.balanceOf(_alice), nextPowerToken_.pastBalanceOf(_alice, 0));
-        assertEq(nextPowerToken_.balanceOf(_bob), nextPowerToken_.pastBalanceOf(_bob, 0));
-        assertEq(nextPowerToken_.balanceOf(_carol), nextPowerToken_.pastBalanceOf(_carol, 0));
-        assertEq(nextPowerToken_.balanceOf(_dave), 0);
-        assertEq(nextPowerToken_.balanceOf(_eve), 0);
-        assertEq(nextPowerToken_.balanceOf(_frank), 0);
+        assertEq(_standardGovernor.cashToken(), address(_cashToken2));
+        assertEq(_standardGovernor.proposalFee(), newProposalFee_);
 
         (, , , IGovernor.ProposalState executedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(executedState_), 7);

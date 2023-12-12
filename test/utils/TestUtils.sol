@@ -58,4 +58,12 @@ contract TestUtils is Test {
         vm.roll(block.number + blocks_);
         vm.warp(block.timestamp + (blocks_ * PureEpochs._SECONDS_PER_BLOCK));
     }
+
+    function _hashProposal(
+        bytes memory callData_,
+        uint256 voteStart_,
+        address governor_
+    ) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encode(callData_, voteStart_, governor_)));
+    }
 }

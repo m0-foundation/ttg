@@ -26,8 +26,24 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             abi.encode(0)
         );
 
+        uint256 voteStart_ = _currentEpoch();
+        uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_zeroGovernor));
+
+        vm.expectEmit();
+        emit IGovernor.ProposalCreated(
+            proposalId_,
+            _dave,
+            targets_,
+            values_,
+            new string[](targets_.length),
+            callDatas_,
+            voteStart_,
+            voteStart_ + _zeroGovernor.votingPeriod(),
+            description_
+        );
+
         vm.prank(_dave);
-        uint256 proposalId_ = _zeroGovernor.propose(targets_, values_, callDatas_, description_);
+        _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
         (, , , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
@@ -54,8 +70,24 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             string memory description_
         ) = _getProposeParams();
 
+        uint256 voteStart_ = _currentEpoch();
+        uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_zeroGovernor));
+
+        vm.expectEmit();
+        emit IGovernor.ProposalCreated(
+            proposalId_,
+            _dave,
+            targets_,
+            values_,
+            new string[](targets_.length),
+            callDatas_,
+            voteStart_,
+            voteStart_ + _zeroGovernor.votingPeriod(),
+            description_
+        );
+
         vm.prank(_dave);
-        uint256 proposalId_ = _zeroGovernor.propose(targets_, values_, callDatas_, description_);
+        _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
         (, , , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
@@ -76,8 +108,24 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         _goToNextEpoch();
 
+        uint256 voteStart_ = _currentEpoch();
+        uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_zeroGovernor));
+
+        vm.expectEmit();
+        emit IGovernor.ProposalCreated(
+            proposalId_,
+            _eve,
+            targets_,
+            values_,
+            new string[](targets_.length),
+            callDatas_,
+            voteStart_,
+            voteStart_ + _zeroGovernor.votingPeriod(),
+            description_
+        );
+
         vm.prank(_eve);
-        uint256 proposalId_ = _zeroGovernor.propose(targets_, values_, callDatas_, description_);
+        _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
         (, , , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);

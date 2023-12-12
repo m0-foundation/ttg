@@ -17,8 +17,8 @@ import { ZeroGovernor } from "../src/ZeroGovernor.sol";
 import { ZeroToken } from "../src/ZeroToken.sol";
 
 contract DeployBase is Script {
-    uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 5_000; // 50%
-    uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 5_000; // 50%
+    uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 8_000; // 80%
+    uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 6_000; // 60%
 
     // NOTE: Ensure this is the current nonce (transaction count) of the deploying address.
     uint256 internal constant _DEPLOYER_NONCE = 0;

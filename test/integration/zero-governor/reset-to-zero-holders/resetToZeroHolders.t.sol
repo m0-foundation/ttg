@@ -11,24 +11,48 @@ import { IntegrationBaseSetup, IGovernor, IZeroGovernor } from "../../Integratio
 
 contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
     function test_resetToZeroHolders() external {
-        (
-            address[] memory targets_,
-            uint256[] memory values_,
-            bytes[] memory callDatas_,
-            string memory description_
-        ) = _getProposeParams();
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        uint256[] memory values_ = new uint256[](1);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToZeroHolders.selector);
+
+        string memory description_ = "Reset to Zero holders";
 
         _goToNextEpoch();
 
+        uint256 voteStart_ = _currentEpoch();
+        uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_zeroGovernor));
+
+        vm.expectEmit();
+        emit IGovernor.ProposalCreated(
+            proposalId_,
+            _dave,
+            targets_,
+            values_,
+            new string[](targets_.length),
+            callDatas_,
+            voteStart_,
+            voteStart_ + _zeroGovernor.votingPeriod(),
+            description_
+        );
+
         vm.prank(_dave);
-        uint256 proposalId_ = _zeroGovernor.propose(targets_, values_, callDatas_, description_);
+        _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
         (, , , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
 
         assertEq(uint256(activeState_), 1);
 
+        uint8 yesSupport_ = 1;
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_dave, proposalId_, yesSupport_, _daveWeight, "");
+
         vm.prank(_dave);
-        assertEq(_zeroGovernor.castVote(proposalId_, 1), _daveWeight);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), _daveWeight);
 
         (, , , IGovernor.ProposalState succeededState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
@@ -63,26 +87,5 @@ contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
 
         (, , , IGovernor.ProposalState executedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(executedState_), 7);
-    }
-
-    function _getProposeParams()
-        internal
-        view
-        returns (
-            address[] memory targets_,
-            uint256[] memory values_,
-            bytes[] memory callDatas_,
-            string memory description_
-        )
-    {
-        targets_ = new address[](1);
-        targets_[0] = address(_zeroGovernor);
-
-        values_ = new uint256[](1);
-
-        callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToZeroHolders.selector);
-
-        description_ = "Reset to Zero holders";
     }
 }

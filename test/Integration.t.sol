@@ -166,40 +166,4 @@ contract IntegrationTests is TestUtils {
 
         assertEq(_registrar.get(key_), value_);
     }
-
-    function test_setCashToken() external {
-        IZeroGovernor zeroGovernor_ = IZeroGovernor(_registrar.zeroGovernor());
-        IStandardGovernor standardGovernor_ = IStandardGovernor(_registrar.standardGovernor());
-
-        address[] memory targets_ = new address[](1);
-        targets_[0] = address(zeroGovernor_);
-
-        uint256[] memory values_ = new uint256[](1);
-
-        uint256 newProposalFee_ = standardGovernor_.proposalFee() * 2;
-
-        bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(
-            zeroGovernor_.setCashToken.selector,
-            address(_cashToken2),
-            newProposalFee_
-        );
-
-        string memory description_ = "Set new cash token and double proposal fee";
-
-        _goToNextEpoch();
-
-        vm.prank(_dave);
-        uint256 proposalId_ = zeroGovernor_.propose(targets_, values_, callDatas_, description_);
-
-        vm.prank(_dave);
-        uint256 weight_ = zeroGovernor_.castVote(proposalId_, 1);
-
-        assertEq(weight_, 60_000_000);
-
-        zeroGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
-
-        assertEq(standardGovernor_.cashToken(), address(_cashToken2));
-        assertEq(standardGovernor_.proposalFee(), newProposalFee_);
-    }
 }

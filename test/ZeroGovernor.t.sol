@@ -177,4 +177,11 @@ contract ZeroGovernorTests is TestUtils {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _zeroGovernor.resetToZeroHolders();
     }
+
+    function test_setCashToken_InvalidCashToken() external {
+        vm.prank(address(_zeroGovernor));
+
+        vm.expectRevert(IZeroGovernor.InvalidCashToken.selector);
+        _zeroGovernor.setCashToken(address(0), 1);
+    }
 }

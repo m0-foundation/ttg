@@ -1,0 +1,14 @@
+setCashToken.t.sol
+└─ Dave calls `propose` with `setCashToken` as calldata
+   ├─ Given Dave holds 60,000,000 Zero Tokens and currently has the highest voting power
+   ├─ Then the `ProposalCreated` event is emitted
+   ├─ Then the state of the proposal upon creation is `Active`
+   ├─ When Dave votes on the proposal with his majority voting power
+   ├─ Then the `VoteCast` event is emitted
+   ├─ Then the state of the proposal is `Succeeded`
+   ├─ When the proposal is executed
+   ├─ Then the `CashTokenSet` event is emitted
+   ├─ Then the `ProposalFeeSet` event is emitted
+   ├─ Then a new Cash Token is set
+   ├─ Then a new Proposal Fee is set
+   └─ Then the state of the proposal is `Executed`

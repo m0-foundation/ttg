@@ -7,6 +7,7 @@ import { DeployBase } from "../../script/DeployBase.s.sol";
 import { IGovernor } from "../../src/abstract/interfaces/IGovernor.sol";
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IRegistrar } from "../../src/interfaces/IRegistrar.sol";
+import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 
@@ -19,6 +20,7 @@ abstract contract IntegrationBaseSetup is TestUtils {
 
     IPowerToken _powerToken;
     IRegistrar internal _registrar;
+    IStandardGovernor _standardGovernor;
     IZeroGovernor _zeroGovernor;
     IZeroToken _zeroToken;
 
@@ -64,7 +66,9 @@ abstract contract IntegrationBaseSetup is TestUtils {
         );
 
         _registrar = IRegistrar(registrar_);
+
         _powerToken = IPowerToken(_registrar.powerToken());
+        _standardGovernor = IStandardGovernor(_registrar.standardGovernor());
         _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
         _zeroToken = IZeroToken(_registrar.zeroToken());
     }
