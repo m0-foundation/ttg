@@ -130,6 +130,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         if (!ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_)) revert TransferFromFailed();
     }
 
+    function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
+        _setCashToken(newCashToken_);
+        _setProposalFee(newProposalFee_);
+    }
+
     function sendProposalFeeToVault(uint256 proposalId_) external {
         ProposalState state_ = state(proposalId_);
 
@@ -149,11 +154,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         // NOTE: Not calling `distribute` on vault since anyone can do it, anytime, and this contract should not need to
         //       know how the vault works
         _transfer(cashToken_, vault, proposalFee_);
-    }
-
-    function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
-        _setCashToken(newCashToken_);
-        _setProposalFee(newProposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -219,11 +219,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         return (currentEpoch_ <= voteEnd_ + 2) ? ProposalState.Succeeded : ProposalState.Expired;
     }
 
-    function votingDelay() public view override(BatchGovernor, IGovernor) returns (uint256 votingDelay_) {
-        return _isVotingEpoch(clock()) ? 2 : 1;
+    function votingDelay() public view override(BatchGovernor, IGovernor) returns (uint256) {
+        return clock() % 2 == 1 ? 2 : 1; // Voting epochs are odd numbered
     }
 
-    function votingPeriod() public pure override(BatchGovernor, IGovernor) returns (uint256 votingPeriod_) {
+    function votingPeriod() public pure override(BatchGovernor, IGovernor) returns (uint256) {
         return 0;
     }
 
@@ -313,11 +313,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     /******************************************************************************************************************\
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
-
-    // TODO: Consider inlining this in the only place it's used.
-    function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
-        isVotingEpoch_ = epoch_ % 2 == 1; // Voting epochs are odd numbered.
-    }
 
     /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
