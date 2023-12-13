@@ -8,8 +8,12 @@ import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 
 import { Registrar } from "../src/Registrar.sol";
 
-import { MockEmergencyGovernorDeployer, MockPowerTokenDeployer } from "./utils/Mocks.sol";
-import { MockStandardGovernorDeployer, MockZeroGovernor } from "./utils/Mocks.sol";
+import {
+    MockEmergencyGovernorDeployer,
+    MockPowerTokenDeployer,
+    MockStandardGovernorDeployer,
+    MockZeroGovernor
+} from "./utils/Mocks.sol";
 
 contract RegistrarTests is Test {
     address internal _account1 = makeAddr("account1");
