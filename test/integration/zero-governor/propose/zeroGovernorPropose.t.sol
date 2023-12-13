@@ -131,7 +131,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         assertEq(uint256(activeState_), 1);
 
         vm.prank(_eve);
-        assertEq(_zeroGovernor.castVote(proposalId_, 1), _eveWeight);
+        assertEq(_zeroGovernor.castVote(proposalId_, 1), _eveZeroWeight);
 
         _goToNextTransferEpoch();
 

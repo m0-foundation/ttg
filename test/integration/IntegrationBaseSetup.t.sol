@@ -43,15 +43,29 @@ abstract contract IntegrationBaseSetup is TestUtils {
 
     address[] internal _initialPowerAccounts = [_alice, _bob, _carol];
 
-    uint256[] internal _initialPowerBalances = [55, 25, 20];
+    uint256 _aliceInitialPowerBalance = 55;
+    uint256 _bobInitialPowerBalance = 25;
+    uint256 _carolInitialPowerBalance = 20;
+
+    uint256 _alicePowerWeight = _aliceInitialPowerBalance * 1e7;
+    uint256 _bobPowerWeight = _bobInitialPowerBalance * 1e7;
+    uint256 _carolPowerWeight = _carolInitialPowerBalance * 1e7;
+
+    uint256[] internal _initialPowerBalances = [
+        _aliceInitialPowerBalance,
+        _bobInitialPowerBalance,
+        _carolInitialPowerBalance
+    ];
 
     address[] internal _initialZeroAccounts = [_dave, _eve, _frank];
+    uint256 _initialZeroAccountsLength = _initialZeroAccounts.length;
+    uint256 _cashToken1MaxAmount = type(uint256).max / _initialZeroAccountsLength;
 
-    uint256 _daveWeight = 60_000_000e6;
-    uint256 _eveWeight = 30_000_000e6;
-    uint256 _frankWeight = 10_000_000e6;
+    uint256 _daveZeroWeight = 60_000_000e6;
+    uint256 _eveZeroWeight = 30_000_000e6;
+    uint256 _frankZeroWeight = 10_000_000e6;
 
-    uint256[] internal _initialZeroBalances = [_daveWeight, _eveWeight, _frankWeight];
+    uint256[] internal _initialZeroBalances = [_daveZeroWeight, _eveZeroWeight, _frankZeroWeight];
 
     uint256 internal _standardProposalFee = 1e18;
 
@@ -78,5 +92,13 @@ abstract contract IntegrationBaseSetup is TestUtils {
         _emergencyGovernor = IEmergencyGovernor(_registrar.emergencyGovernor());
         _standardGovernor = IStandardGovernor(_registrar.standardGovernor());
         _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
+
+        for (uint256 i; i < _initialZeroAccounts.length; i++) {
+            address account_ = _initialZeroAccounts[i];
+            _cashToken1.mint(account_, _cashToken1MaxAmount);
+
+            vm.prank(account_);
+            _cashToken1.approve(address(_standardGovernor), _cashToken1MaxAmount);
+        }
     }
 }

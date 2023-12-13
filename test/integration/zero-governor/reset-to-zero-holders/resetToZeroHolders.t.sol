@@ -49,10 +49,10 @@ contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
         uint8 yesSupport_ = 1;
 
         vm.expectEmit();
-        emit IGovernor.VoteCast(_dave, proposalId_, yesSupport_, _daveWeight, "");
+        emit IGovernor.VoteCast(_dave, proposalId_, yesSupport_, _daveZeroWeight, "");
 
         vm.prank(_dave);
-        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), _daveWeight);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), _daveZeroWeight);
 
         (, , , IGovernor.ProposalState succeededState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);

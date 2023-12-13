@@ -277,7 +277,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         emit HasVotedOnAllProposals(voter_, currentEpoch_);
 
         IPowerToken(voteToken).markParticipation(voter_);
-
         IZeroToken(zeroToken).mint(voter_, (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(snapshot_));
     }
 

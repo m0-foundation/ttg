@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../lib/forge-std/src/console2.sol";
-
 import { IEmergencyGovernor } from "../src/interfaces/IEmergencyGovernor.sol";
 import { IEmergencyGovernorDeployer } from "../src/interfaces/IEmergencyGovernorDeployer.sol";
 import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
@@ -138,6 +136,7 @@ contract IntegrationTests is TestUtils {
         assertEq(_cashToken1.balanceOf(address(standardGovernor_)), 0);
     }
 
+    // TODO: fix or remove, fail if not run after the previous test_setKey test
     function test_emergencySetKey() external {
         IEmergencyGovernor emergencyGovernor_ = IEmergencyGovernor(_registrar.emergencyGovernor());
 

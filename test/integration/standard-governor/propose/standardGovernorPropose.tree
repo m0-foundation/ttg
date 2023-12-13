@@ -1,0 +1,30 @@
+standardGovernorPropose.t.sol [WIP]
+├─ Dave calls `propose` with `addToList` as calldata (test_standardGovernorPropose_proposalPendingActiveDefeated)
+│  ├─ Given Dave holds Cash tokens to create the proposal but nobody votes
+│  ├─ Then the `ProposalCreated` event is emitted
+│  ├─ Then the `TargetSupplyInflated` event is emitted
+│  ├─ Then the `Approval` event is emitted
+│  ├─ Then the `Transfer` event is emitted
+│  ├─ Then the state of the proposal upon creation is `Pending`
+│  ├─ When the next voting period starts
+│  ├─ Then the state of the proposal is `Active`
+│  ├─ When the next epoch starts
+│  └─ Then the state of the proposal is `Defeated`
+├─ Dave calls `propose` with `addToList` as calldata (test_standardGovernorPropose_proposalPendingActiveSuceeded)
+│  ├─ Given no one votes on the proposal
+│  ├─ Given Dave holds Cash tokens to create the proposal and Eve votes on it
+│  ├─ Then the `ProposalCreated` event is emitted
+│  ├─ Then the `TargetSupplyInflated` event is emitted
+│  ├─ Then the `Approval` event is emitted
+│  ├─ Then the `Transfer` event is emitted
+│  ├─ Then the state of the proposal upon creation is `Pending`
+│  ├─ When the next voting period starts
+│  ├─ Then the state of the proposal is `Active`
+│  ├─ When Eve votes on the proposal
+│  └─ Then the state of the proposal is `Expired`
+└─ Eve calls `propose` with `resetToPowerHolders` as calldata (test_zeroGovernorPropose_proposalActiveDefeated)
+   ├─ Given Eve holds a minority of Zero Tokens
+   ├─ Then the `ProposalCreated` event is emitted
+   ├─ Then the state of the proposal upon creation is `Active`
+   ├─ When Eve is the only one to vote on the proposal with her minority voting power
+   └─ Then the state of the proposal at the end of the voting period is `Defeated`
