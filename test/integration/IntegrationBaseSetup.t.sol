@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 
 import { DeployBase } from "../../script/DeployBase.s.sol";
 
+import { IBatchGovernor } from "../../src/abstract/interfaces/IBatchGovernor.sol";
 import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
 import { IGovernor } from "../../src/abstract/interfaces/IGovernor.sol";
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";

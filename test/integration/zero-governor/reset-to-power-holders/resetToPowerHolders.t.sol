@@ -7,7 +7,7 @@ import { IPowerTokenDeployer } from "../../../../src/interfaces/IPowerTokenDeplo
 import { IStandardGovernorDeployer } from "../../../../src/interfaces/IStandardGovernorDeployer.sol";
 import { IEmergencyGovernorDeployer } from "../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
 
-import { IntegrationBaseSetup, IGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IntegrationBaseSetup, IBatchGovernor, IGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
 
 contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
     function test_resetToPowerHolders() external {
@@ -46,7 +46,7 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
 
         assertEq(uint256(activeState_), 1);
 
-        uint8 yesSupport_ = 1;
+        uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
 
         vm.expectEmit();
         emit IGovernor.VoteCast(_dave, proposalId_, yesSupport_, _daveZeroWeight, "");

@@ -33,6 +33,10 @@ contract StandardGovernorHarness is StandardGovernor {
         return _revertIfInvalidCalldata(callData_);
     }
 
+    function setHasVoted(uint256 proposalId_, address voter_) external {
+        hasVoted[proposalId_][voter_] = true;
+    }
+
     function setProposal(uint256 proposalId_, uint256 voteStart_) external {
         setProposal(proposalId_, voteStart_, false, address(0), 0, 0);
     }
