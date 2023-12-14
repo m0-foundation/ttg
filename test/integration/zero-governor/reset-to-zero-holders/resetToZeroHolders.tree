@@ -1,0 +1,22 @@
+resetToZeroHolders.t.sol
+└─ Dave calls `propose` with `resetToZeroHolders` as calldata
+   ├─ Given Dave holds 60,000,000 Zero Tokens and currently has the highest voting power
+   ├─ Then the `ProposalCreated` event is emitted
+   ├─ Then the state of the proposal upon creation is `Active`
+   ├─ When Dave votes on the proposal with his majority voting power
+   ├─ Then the `VoteCast` event is emitted
+   ├─ Then the state of the proposal is `Succeeded`
+   ├─ When the proposal is executed
+   ├─ Then the `ProposalExecuted` event is emitted
+   ├─ Then the `ResetExecuted` event is emitted
+   ├─ Then a new Power Token is deployed
+   ├─ Then a new Standard Governor is deployed
+   ├─ Then a new Emergency Governor is deployed
+   ├─ Then the Power Token balance of Alice is 0
+   ├─ Then the Power Token balance of Bob is 0
+   ├─ Then the Power Token balance of Carol is 0
+   ├─ Then the Power Token balance of Dave is 600,000,000
+   ├─ Then the Power Token balance of Eve is 300,000,000
+   ├─ Then the Power Token balance of Frank is 100,000,000
+   └─ Then the state of the proposal is `Executed`
+

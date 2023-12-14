@@ -1,0 +1,54 @@
+standardGovernorPropose.t.sol
+├─ Dave calls `propose` with `removeFromAndAddToList` as calldata (test_standardGovernorPropose_proposalPendingActiveDefeated)
+│  ├─ Given Dave holds Cash tokens to create the proposal but nobody votes
+│  ├─ Then the `ProposalCreated` event is emitted
+│  ├─ Then the `TargetSupplyInflated` event is emitted
+│  ├─ Then the `Approval` event is emitted
+│  ├─ Then the `Transfer` event is emitted
+│  ├─ Then the state of the proposal upon creation is `Pending`
+│  ├─ When the next voting period starts
+│  ├─ Then the state of the proposal is `Active`
+│  ├─ When the next epoch starts
+│  └─ Then the state of the proposal is `Defeated`
+├─ Dave calls `propose` with `removeFromAndAddToList` as calldata (test_standardGovernorPropose_proposalPendingActiveSucceededExpired)
+│  ├─ Given Dave holds Cash tokens to create the proposal and Alice votes on it with her majority voting power
+│  ├─ Then the `ProposalCreated` event is emitted
+│  ├─ Then the `TargetSupplyInflated` event is emitted
+│  ├─ Then the `Approval` event is emitted
+│  ├─ Then the `Transfer` event is emitted
+│  ├─ Then the state of the proposal upon creation is `Pending`
+│  ├─ When the next voting period starts
+│  ├─ Then the state of the proposal is `Active`
+│  ├─ When Alice votes on the proposal
+│  ├─ Then the `VoteCast` event is emitted
+│  ├─ Then the `HasVotedOnAllProposals` event is emitted
+│  ├─ Then the `DelegateVotesChanged` event is emitted twice
+│  ├─ Then the `Transfer` event is emitted
+│  ├─ Then the `DelegateVotesChanged` event is emitted
+│  ├─ When the next voting period starts
+│  ├─ Then the state of the proposal is `Succeeded`
+│  ├─ When the next period starts and the proposal has not been executed
+│  └─ Then the state of the proposal is `Expired`
+└─ Dave calls `propose` with `removeFromAndAddToList` as calldata (test_standardGovernorPropose_proposalPendingActiveSucceededExecuted)
+  ├─ Given Dave holds Cash tokens to create the proposal and Alice votes on it with her majority voting power
+  ├─ Then the `ProposalCreated` event is emitted
+  ├─ Then the `TargetSupplyInflated` event is emitted
+  ├─ Then the `Approval` event is emitted
+  ├─ Then the `Transfer` event is emitted
+  ├─ Then the state of the proposal upon creation is `Pending`
+  ├─ When the next voting period starts
+  ├─ Then the state of the proposal is `Active`
+  ├─ When Alice votes on the proposal
+  ├─ Then the `VoteCast` event is emitted
+  ├─ Then the `HasVotedOnAllProposals` event is emitted
+  ├─ Then the `DelegateVotesChanged` event is emitted twice
+  ├─ Then the `Transfer` event is emitted
+  ├─ Then the `DelegateVotesChanged` event is emitted
+  ├─ When the next voting period starts
+  ├─ Then the state of the proposal is `Succeeded`
+  ├─ When the proposal is executed
+  ├─ Then the `ProposalExecuted` event is emitted
+  ├─ Then the `AddressRemovedFromList` event is emitted
+  ├─ Then the `AddressAddedToList` event is emitted
+  ├─ Then the `Transfer` event is emitted
+  └─ Then the state of the proposal is `Executed`

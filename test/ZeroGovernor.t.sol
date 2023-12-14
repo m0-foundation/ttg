@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.23;
 
+import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
+import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
 
 import { ZeroGovernor } from "../src/ZeroGovernor.sol";
@@ -12,17 +14,11 @@ import { MockPowerTokenDeployer, MockStandardGovernor, MockStandardGovernorDeplo
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract ZeroGovernorTests is TestUtils {
-    event ResetExecuted(
-        address indexed bootstrapToken,
-        address standardGovernor,
-        address emergencyGovernor,
-        address powerToken
-    );
-
     address internal _cashToken1 = makeAddr("cashToken1");
     address internal _cashToken2 = makeAddr("cashToken2");
 
-    uint16 internal _zeroProposalThresholdRatio;
+    uint16 internal _emergencyProposalThresholdRatio = 9_000; // 90%
+    uint16 internal _zeroProposalThresholdRatio = 6_000; // 60%
 
     address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
 
@@ -57,7 +53,7 @@ contract ZeroGovernorTests is TestUtils {
 
         _standardGovernor.setVoteToken(address(_powerToken));
         _standardGovernor.setCashToken(_cashToken1);
-        _standardGovernor.setProposalFee(1);
+        _standardGovernor.setProposalFee(1e18);
 
         _standardGovernorDeployer.setNextDeploy(address(_standardGovernor));
 
@@ -88,6 +84,7 @@ contract ZeroGovernorTests is TestUtils {
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken2), true);
     }
 
+    /* ============ constructor ============ */
     function test_constructor_invalidEmergencyGovernorDeployerAddress() external {
         vm.expectRevert(IZeroGovernor.InvalidEmergencyGovernorDeployerAddress.selector);
         new ZeroGovernor(
@@ -163,6 +160,13 @@ contract ZeroGovernorTests is TestUtils {
         );
     }
 
+    /* ============ getProposal ============ */
+    function test_getProposal_proposalDoesNotExist() external {
+        vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
+        _zeroGovernor.getProposal(0);
+    }
+
+    /* ============ resetToPowerHolders ============ */
     function test_resetToPowerHolders_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _zeroGovernor.resetToPowerHolders();
@@ -178,12 +182,18 @@ contract ZeroGovernorTests is TestUtils {
         _powerTokenDeployer.setNextDeploy(newPowerToken_);
 
         vm.expectEmit();
-        emit ResetExecuted(address(_powerToken), newStandardGovernor_, newEmergencyGovernor_, newPowerToken_);
+        emit IZeroGovernor.ResetExecuted(
+            address(_powerToken),
+            newStandardGovernor_,
+            newEmergencyGovernor_,
+            newPowerToken_
+        );
 
         vm.prank(address(_zeroGovernor));
         _zeroGovernor.resetToPowerHolders();
     }
 
+    /* ============ resetToZeroHolders ============ */
     function test_resetToZeroHolders_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _zeroGovernor.resetToZeroHolders();
@@ -199,9 +209,46 @@ contract ZeroGovernorTests is TestUtils {
         _powerTokenDeployer.setNextDeploy(newPowerToken_);
 
         vm.expectEmit();
-        emit ResetExecuted(address(_zeroToken), newStandardGovernor_, newEmergencyGovernor_, newPowerToken_);
+        emit IZeroGovernor.ResetExecuted(
+            address(_zeroToken),
+            newStandardGovernor_,
+            newEmergencyGovernor_,
+            newPowerToken_
+        );
 
         vm.prank(address(_zeroGovernor));
         _zeroGovernor.resetToZeroHolders();
+    }
+
+    /* ============ setCashToken ============ */
+    function test_setCashToken_notZeroGovernor() external {
+        vm.expectRevert(IBatchGovernor.NotSelf.selector);
+        _zeroGovernor.setCashToken(_cashToken2, 1e18);
+    }
+
+    function test_setCashToken_invalidCashToken() external {
+        vm.prank(address(_zeroGovernor));
+
+        vm.expectRevert(IZeroGovernor.InvalidCashToken.selector);
+        _zeroGovernor.setCashToken(address(0), 1e18);
+    }
+
+    /* ============ setEmergencyProposalThresholdRatio ============ */
+    function test_setEmergencyProposalThresholdRatio_notZeroGovernor() external {
+        vm.expectRevert(IBatchGovernor.NotSelf.selector);
+        _zeroGovernor.setEmergencyProposalThresholdRatio(_emergencyProposalThresholdRatio);
+    }
+
+    /* ============ setZeroProposalThresholdRatio ============ */
+    function test_setZeroProposalThresholdRatio_notZeroGovernor() external {
+        vm.expectRevert(IBatchGovernor.NotSelf.selector);
+        _zeroGovernor.setZeroProposalThresholdRatio(_zeroProposalThresholdRatio);
+    }
+
+    function test_setZeroProposalThresholdRatio_invalidThresholdRatio() external {
+        vm.prank(address(_zeroGovernor));
+
+        vm.expectRevert(IThresholdGovernor.InvalidThresholdRatio.selector);
+        _zeroGovernor.setZeroProposalThresholdRatio(10_001);
     }
 }
