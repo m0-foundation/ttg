@@ -136,7 +136,6 @@ contract IntegrationTests is TestUtils {
         assertEq(_cashToken1.balanceOf(address(standardGovernor_)), 0);
     }
 
-    // TODO: fix or remove, fail if not run after the previous test_setKey test
     function test_emergencySetKey() external {
         IEmergencyGovernor emergencyGovernor_ = IEmergencyGovernor(_registrar.emergencyGovernor());
 
@@ -157,9 +156,10 @@ contract IntegrationTests is TestUtils {
         uint256 proposalId_ = emergencyGovernor_.propose(targets_, values_, callDatas_, description_);
 
         vm.prank(_alice);
-        uint256 weight_ = emergencyGovernor_.castVote(proposalId_, 1);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 550_000_000);
 
-        assertEq(weight_, 550_000_000);
+        vm.prank(_bob);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 250_000_000);
 
         emergencyGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
 

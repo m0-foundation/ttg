@@ -239,7 +239,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         proposalId_ = _hashProposal(callData_, voteStart_);
 
         Proposal storage proposal_ = _proposals[proposalId_];
-
         if (proposal_.voteStart != voteStart_) return 0;
 
         if (state(proposalId_) != ProposalState.Succeeded) return 0;
