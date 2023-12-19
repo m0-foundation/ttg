@@ -48,8 +48,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         (, , , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
-        _goToNextEpoch();
-        _goToNextEpoch();
+        _jumpEpochs(2);
 
         vm.mockCall(address(_zeroToken), abi.encodeWithSelector(_zeroToken.balanceOf.selector, _dave), abi.encode(0));
 
@@ -93,8 +92,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         (, , , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
-        _goToNextEpoch();
-        _goToNextEpoch();
+        _jumpEpochs(2);
 
         (, , , IGovernor.ProposalState expiredState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(expiredState_), 6);
@@ -108,7 +106,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             string memory description_
         ) = _getProposeParams();
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         uint256 voteStart_ = _currentEpoch();
         uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_zeroGovernor));
@@ -135,9 +133,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_eve);
         assertEq(_zeroGovernor.castVote(proposalId_, 1), _eveZeroWeight);
 
-        _goToNextEpoch();
-        _goToNextEpoch();
-        _goToNextEpoch();
+        _jumpEpochs(3);
 
         (, , , IGovernor.ProposalState defeatedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(defeatedState_), 3);

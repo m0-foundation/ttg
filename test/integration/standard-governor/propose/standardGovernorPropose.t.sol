@@ -58,12 +58,12 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         (, , , IGovernor.ProposalState pendingState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(pendingState_), 0);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         (, , , IGovernor.ProposalState activeState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         (, , , IGovernor.ProposalState defeatedState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(defeatedState_), 3);
@@ -108,7 +108,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         (, , , IGovernor.ProposalState pendingState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(pendingState_), 0);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         (, , , IGovernor.ProposalState activeState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
@@ -142,12 +142,12 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, yesSupport_);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         (, , , IGovernor.ProposalState succeededState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         (, , , IGovernor.ProposalState expiredState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(expiredState_), 6);
@@ -195,7 +195,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         (, , , IGovernor.ProposalState pendingState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(pendingState_), 0);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         (, , , IGovernor.ProposalState activeState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
@@ -229,7 +229,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, yesSupport_);
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         (, , , IGovernor.ProposalState succeededState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);

@@ -94,7 +94,7 @@ contract PowerTokenTests is TestUtils {
     function test_getCost() external {
         uint256 halfAnAuctionPeriod_ = PureEpochs._EPOCH_PERIOD / 200; // _powerToken._AUCTION_PERIODS = 100;
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         uint256 totalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1);
         uint256 onePercentOfTotalSupply_ = totalSupply_ / 100;
@@ -105,61 +105,73 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 99));
         assertEq(_powerToken.getCost(1), uint256(1 * (1 << 99)) / 100_000);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), (10_000 * ((1 << 99) + (1 << 98))) / 2);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), (100 * ((1 << 99) + (1 << 98))) / 2);
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), (1 * ((1 << 99) + (1 << 98))) / 2);
         assertEq(_powerToken.getCost(1), uint256(1 * ((1 << 99) + (1 << 98))) / 200_000);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 98));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 98));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 98));
         assertEq(_powerToken.getCost(1), uint256(1 * (1 << 98)) / 100_000);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), (10_000 * ((1 << 98) + (1 << 97))) / 2);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), (100 * ((1 << 98) + (1 << 97))) / 2);
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), (1 * ((1 << 98) + (1 << 97))) / 2);
         assertEq(_powerToken.getCost(1), uint256(1 * ((1 << 98) + (1 << 97))) / 200_000);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 97));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 97));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 97));
         assertEq(_powerToken.getCost(1), uint256(1 * (1 << 97)) / 100_000);
 
-        _jumpBlocks(192 * halfAnAuctionPeriod_);
+        _jumpSeconds(192 * halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 1));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 1));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 1));
         assertEq(_powerToken.getCost(1), 0);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), (10_000 * ((1 << 1) + (1 << 0))) / 2);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), (100 * ((1 << 1) + (1 << 0))) / 2);
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1);
         assertEq(_powerToken.getCost(1), 0);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 0));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 0));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 0));
         assertEq(_powerToken.getCost(1), 0);
 
-        _jumpBlocks(halfAnAuctionPeriod_);
+        _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 5_000 * (1 << 0));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 50 * (1 << 0));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
         assertEq(_powerToken.getCost(1), 0);
 
-        _jumpBlocks(halfAnAuctionPeriod_ - 1);
-        assertEq(_powerToken.getCost(totalSupply_), 9 * (1 << 0));
+        _jumpSeconds(halfAnAuctionPeriod_ / 2);
+        assertEq(_powerToken.getCost(totalSupply_), 2_500 * (1 << 0));
+        assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 25 * (1 << 0));
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
+        assertEq(_powerToken.getCost(1), 0);
+
+        _jumpSeconds(halfAnAuctionPeriod_ / 4);
+        assertEq(_powerToken.getCost(totalSupply_), 1_250 * (1 << 0));
+        assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 12 * (1 << 0));
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
+        assertEq(_powerToken.getCost(1), 0);
+
+        _jumpSeconds((halfAnAuctionPeriod_ / 4) - 1);
+        assertEq(_powerToken.getCost(totalSupply_), 0);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 0);
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
         assertEq(_powerToken.getCost(1), 0);
 
-        _jumpBlocks(1); // At end of auction.
+        _jumpSeconds(1); // At end of auction.
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 99));
     }
 
@@ -169,7 +181,7 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.amountToAuction(), inflation_);
 
         for (uint256 index_; index_ < 10; ++index_) {
-            _goToNextTransferEpoch();
+            _warpToNextTransferEpoch();
 
             // During transfer epochs, the next voting epoch is the current epoch + 1.
             vm.prank(_standardGovernor);
@@ -177,7 +189,7 @@ contract PowerTokenTests is TestUtils {
 
             assertEq(_powerToken.amountToAuction(), inflation_);
 
-            _goToNextVoteEpoch();
+            _warpToNextVoteEpoch();
 
             inflation_ = inflation_ + (_powerToken.INITIAL_SUPPLY() + inflation_) / 10;
 
@@ -197,7 +209,7 @@ contract PowerTokenTests is TestUtils {
     function test_buy_notInVotePeriod() external {
         _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + 1);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, 1));
         vm.prank(_account);
@@ -207,7 +219,7 @@ contract PowerTokenTests is TestUtils {
     function test_buy_transferFromFailed() external {
         _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + 1);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         _cashToken.setTransferFromFail(true);
 
@@ -218,7 +230,7 @@ contract PowerTokenTests is TestUtils {
     function test_buy() external {
         _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + _powerToken.totalSupply() / 10);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         uint256 oneBasisPointOfTotalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1) / 10_000;
 
@@ -249,7 +261,7 @@ contract PowerTokenTests is TestUtils {
 
         assertEq(_powerToken.cashToken(), address(_cashToken));
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         assertEq(_powerToken.cashToken(), address(newCashToken_));
     }
@@ -272,7 +284,7 @@ contract PowerTokenTests is TestUtils {
 
         assertEq(_powerToken.cashToken(), address(_cashToken));
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         assertEq(_powerToken.cashToken(), address(newCashToken_));
     }

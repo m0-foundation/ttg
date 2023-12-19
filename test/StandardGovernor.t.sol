@@ -349,14 +349,14 @@ contract StandardGovernorTests is TestUtils {
         bytes[] memory callDatas_ = new bytes[](1);
         callDatas_[0] = abi.encodeWithSelector(_standardGovernor.setProposalFee.selector, 1);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
 
         vm.expectRevert(IBatchGovernor.ProposalExists.selector);
         _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
 
-        _goToNextEpoch();
+        _warpToNextVoteEpoch();
 
         _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
 
@@ -451,10 +451,10 @@ contract StandardGovernorTests is TestUtils {
     }
 
     function test_votingDelay() external {
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
         assertEq(_standardGovernor.votingDelay(), 2);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
         assertEq(_standardGovernor.votingDelay(), 1);
     }
 
