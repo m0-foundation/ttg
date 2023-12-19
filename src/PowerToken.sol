@@ -171,8 +171,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return clock() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
     }
 
-    /// @dev The price is computed per basis point of the last epoch's total supply, and drops by half (it is right
-    //       shifted) every auction period, until it reaches 0. During each auction period, the price drops linearly.
     function getCost(uint256 amount_) public view returns (uint256 cost_) {
         uint256 currentEpoch_ = clock();
 
@@ -184,6 +182,16 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         uint256 leftPoint_ = 1 << (timeRemaining_ / secondsPerPeriod_);
         uint256 remainder_ = timeRemaining_ % secondsPerPeriod_;
 
+        /// @dev During every auction period (1/100th of an epoch) the price starts at some "leftPoint" and decreases
+        //       linearly, with time, to some "rightPoint" (which is half of "leftPoint"). This is done by computing the
+        //       weighted average between the "leftPoint" and "rightPoint" for the time remaining in the auction period.
+        //       Next, the "leftPoint" of each auction period is half of the previous auction period's "leftPoint"
+        //       (which is also the "rightPoint" of the previous auction period).
+        //       Combined, this results in the price decreasing by half every auction period at a macro level, but
+        //       decreasing linearly at a micro-level during each auction period, without any jumps.
+        //       Finally, the price is computed per basis point of the last epoch's total supply, to ensure that as the
+        //       absolute total supply increases, the price of some "weight" of voting power is the same after the same
+        //       amount of elapsed time into each auction.
         return
             (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
             (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
