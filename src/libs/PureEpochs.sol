@@ -15,11 +15,11 @@ library PureEpochs {
         return ((block.timestamp - _MERGE_TIMESTAMP) / _EPOCH_PERIOD) + 1; // Epoch at `_MERGE_TIMESTAMP` is 1.
     }
 
-    function getTimestampOfEpochStart(uint256 epoch) internal pure returns (uint256 blockNumber_) {
-        return (epoch - 1) * _EPOCH_PERIOD + _MERGE_TIMESTAMP;
+    function getTimestampOfEpochStart(uint256 epoch) internal pure returns (uint256 timestamp_) {
+        return _MERGE_TIMESTAMP + (epoch - 1) * _EPOCH_PERIOD;
     }
 
-    function getTimestampOfEpochEnd(uint256 epoch) internal pure returns (uint256 blockNumber_) {
+    function getTimestampOfEpochEnd(uint256 epoch) internal pure returns (uint256 timestamp_) {
         return getTimestampOfEpochStart(epoch + 1);
     }
 
@@ -28,7 +28,7 @@ library PureEpochs {
     }
 
     function timeRemainingInCurrentEpoch() internal view returns (uint256 time_) {
-        return getTimestampOfEpochStart(currentEpoch() + 1) - block.timestamp;
+        return getTimestampOfEpochEnd(currentEpoch()) - block.timestamp;
     }
 
     function getTimeUntilEpochStart(uint256 epoch) internal view returns (uint256 time_) {
