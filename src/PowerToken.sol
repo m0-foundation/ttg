@@ -174,17 +174,17 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function getCost(uint256 amount_) public view returns (uint256 cost_) {
         uint256 currentEpoch_ = clock();
 
-        uint256 blocksRemaining_ = _isVotingEpoch(currentEpoch_)
+        uint256 timeRemaining_ = _isVotingEpoch(currentEpoch_)
             ? PureEpochs._EPOCH_PERIOD
-            : PureEpochs.blocksRemainingInCurrentEpoch();
+            : PureEpochs.timeRemainingInCurrentEpoch();
 
-        uint256 blocksPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
-        uint256 leftPoint_ = 1 << (blocksRemaining_ / blocksPerPeriod_);
-        uint256 remainder_ = blocksRemaining_ % blocksPerPeriod_;
+        uint256 secondsPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
+        uint256 leftPoint_ = 1 << (timeRemaining_ / secondsPerPeriod_);
+        uint256 remainder_ = timeRemaining_ % secondsPerPeriod_;
 
         return
-            (ONE * amount_ * ((remainder_ * leftPoint_) + ((blocksPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
-            (blocksPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
+            (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
+            (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
     }
 
     function getVotes(

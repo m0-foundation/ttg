@@ -21,7 +21,7 @@ contract ResetToPowerHolders_IntegrationTest is IntegrationBaseSetup {
 
         string memory description_ = "Reset to Power holders";
 
-        _goToNextEpoch();
+        _warpToNextEpoch();
 
         uint256 voteStart_ = _currentEpoch();
         uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_zeroGovernor));

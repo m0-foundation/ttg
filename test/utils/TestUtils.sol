@@ -11,12 +11,11 @@ import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 contract TestUtils is Test {
-    uint256 internal constant EPOCH_LENGTH = 15 days;
-    uint256 internal constant START_BLOCK_NUMBER = 17_740_856;
     uint256 internal constant START_BLOCK_TIMESTAMP = 1_689_934_508;
 
     // Tests start at a voting epoch, at epoch 165
-    uint256 internal constant START_EPOCH = START_BLOCK_NUMBER / PureEpochs._EPOCH_PERIOD + 1;
+    uint256 internal constant START_EPOCH =
+        ((START_BLOCK_TIMESTAMP - PureEpochs._MERGE_TIMESTAMP) / PureEpochs._EPOCH_PERIOD) + 1;
 
     function _currentEpoch() internal view returns (uint256) {
         return PureEpochs.currentEpoch();
@@ -27,40 +26,31 @@ contract TestUtils is Test {
     }
 
     function _isTransferEpoch(uint256 epoch_) internal pure returns (bool) {
-        return epoch_ % 2 == 0;
+        return !_isVotingEpoch(epoch_);
     }
 
-    function _goToNextEpoch() internal {
-        _jumpToEpoch(PureEpochs.currentEpoch() + 1);
+    function _warpToNextEpoch() internal {
+        _jumpEpochs(1);
     }
 
-    function _goToNextVoteEpoch() internal {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
-        if (currentEpoch_ % 2 == 1) {
-            _jumpToEpoch(currentEpoch_ + 2);
-        } else {
-            _jumpToEpoch(currentEpoch_ + 1);
-        }
+    function _warpToNextVoteEpoch() internal {
+        _jumpEpochs(_isVotingEpoch(PureEpochs.currentEpoch()) ? 2 : 1);
     }
 
-    function _goToNextTransferEpoch() internal {
-        uint256 currentEpoch_ = PureEpochs.currentEpoch();
-
-        if (currentEpoch_ % 2 == 1) {
-            _jumpToEpoch(currentEpoch_ + 1);
-        } else {
-            _jumpToEpoch(currentEpoch_ + 2);
-        }
+    function _warpToNextTransferEpoch() internal {
+        _jumpEpochs(_isVotingEpoch(PureEpochs.currentEpoch()) ? 1 : 2);
     }
 
-    function _jumpToEpoch(uint256 epoch_) internal {
-        _jumpBlocks(PureEpochs.getBlocksUntilEpochStart(epoch_));
+    function _warpToEpoch(uint256 epoch_) internal {
+        vm.warp(PureEpochs.getTimestampOfEpochStart(epoch_));
     }
 
-    function _jumpBlocks(uint256 blocks_) internal {
-        vm.roll(block.number + blocks_);
-        vm.warp(block.timestamp + (blocks_ * PureEpochs._SECONDS_PER_BLOCK));
+    function _jumpEpochs(uint256 epochs_) internal {
+        vm.warp(PureEpochs.getTimestampOfEpochStart(PureEpochs.currentEpoch() + epochs_));
+    }
+
+    function _jumpSeconds(uint256 seconds_) internal {
+        vm.warp(block.timestamp + seconds_);
     }
 
     function _getInflationReward(IPowerToken powerToken_, uint256 powerWeight_) internal view returns (uint256) {

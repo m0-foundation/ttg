@@ -42,7 +42,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function test_noInflationWithoutVotingPowerInPreviousEpoch_selfDelegation() external {
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
@@ -52,7 +52,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
@@ -71,9 +71,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 500);
 
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 500);
         assertEq(_vote.getVotes(_alice), 500);
@@ -83,7 +83,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function test_noInflationWithoutVotingPowerInPreviousEpoch_delegated() external {
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
@@ -99,7 +99,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 0);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
@@ -127,9 +127,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 1_000);
 
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 500);
         assertEq(_vote.getVotes(_alice), 0);
@@ -139,14 +139,14 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function test_inflationFromVotingPowerInPreviousEpoch_selfDelegation() external {
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
 
         assertEq(_vote.balanceOf(_alice), 1_000);
         assertEq(_vote.getVotes(_alice), 1_000);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         assertEq(_vote.balanceOf(_alice), 1_000);
         assertEq(_vote.getVotes(_alice), 1_000);
@@ -156,7 +156,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 1_200);
         assertEq(_vote.getVotes(_alice), 1_200);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 1_200);
         assertEq(_vote.getVotes(_alice), 1_200);
@@ -170,9 +170,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 500);
 
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 700);
         assertEq(_vote.getVotes(_alice), 700);
@@ -182,7 +182,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function test_inflationFromVotingPowerInPreviousEpoch_delegated() external {
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
 
@@ -195,7 +195,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 1_000);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         assertEq(_vote.balanceOf(_alice), 1_000);
         assertEq(_vote.getVotes(_alice), 0);
@@ -211,7 +211,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 1_200);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 1_200);
         assertEq(_vote.getVotes(_alice), 0);
@@ -231,9 +231,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 500);
         assertEq(_vote.getVotes(_bob), 500);
 
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         assertEq(_vote.balanceOf(_alice), 700);
         assertEq(_vote.getVotes(_alice), 700);
@@ -243,46 +243,46 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function test_scenario1() external {
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
 
         vm.prank(_alice);
         _vote.delegate(_bob);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         _vote.markParticipation(_bob); // 1000 * 1.2 = 1200
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         _vote.markParticipation(_bob); // (1000 * 1.2) * 1.2 = 1440
 
-        _goToNextTransferEpoch();
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         vm.prank(_alice);
         _vote.delegate(_alice);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         _vote.markParticipation(_alice); // ((1000 * 1.2) * 1.2) * 1.2 = 1728
         _vote.markParticipation(_bob);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         _vote.markParticipation(_bob);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         vm.prank(_alice);
         _vote.delegate(_bob);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         _vote.markParticipation(_bob); // (((1000 * 1.2) * 1.2) * 1.2) * 1.2 = 2073
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         _vote.markParticipation(_bob); // ((((1000 * 1.2) * 1.2) * 1.2) * 1.2) * 1.2 = 2487
 
@@ -302,9 +302,10 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
             assertTrue(Invariants.checkInvariant1(_accounts, address(_vote)), "Invariant 1 Failed.");
             assertTrue(Invariants.checkInvariant2(_accounts, address(_vote)), "Invariant 2 Failed.");
 
-            uint256 blocks = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % PureEpochs._EPOCH_PERIOD) / 2;
-            // console2.log("advance", blocks, block.number + blocks);
-            _jumpBlocks(blocks);
+            uint256 seconds_ = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % PureEpochs._EPOCH_PERIOD) / 2;
+
+            // console2.log("advance", seconds_, block.timestamp + seconds_);
+            _jumpSeconds(seconds_);
 
             // console2.log("Epoch", PureEpochs.currentEpoch());
 

@@ -198,7 +198,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint8[] calldata supports_
     ) internal returns (uint256 weight_) {
         for (uint256 index_; index_ < proposalIds_.length; ++index_) {
-            // NOTE: This only gives an accurate "weight" if all proposals are the same type.
             // TODO: There is a more efficient way to do this since each `_castVote` call will re-query chain storage.
             (weight_, ) = _castVote(voter_, proposalIds_[index_], supports_[index_]);
         }

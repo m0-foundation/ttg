@@ -119,14 +119,14 @@ contract IntegrationTests is TestUtils {
         assertEq(_cashToken1.balanceOf(_alice), 0);
         assertEq(_cashToken1.balanceOf(address(standardGovernor_)), proposalFee_);
 
-        _goToNextVoteEpoch();
+        _warpToNextVoteEpoch();
 
         vm.prank(_alice);
         uint256 weight_ = standardGovernor_.castVote(proposalId_, 1);
 
         assertEq(weight_, 550_000_000);
 
-        _goToNextTransferEpoch();
+        _warpToNextTransferEpoch();
 
         standardGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
 
