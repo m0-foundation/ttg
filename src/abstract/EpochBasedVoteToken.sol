@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 
 import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
 
+import { ERC712 } from "../../lib/common/src/libs/ERC712.sol";
+
 import { ERC20Permit } from "../../lib/common/src/ERC20Permit.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
@@ -45,8 +47,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
         uint256 expiry_,
         bytes memory signature_
     ) external {
-        _revertIfExpired(expiry_);
-        _revertIfInvalidSignature(account_, _getDelegationDigest(delegatee_, nonce_, expiry_), signature_);
+        ERC712.revertIfExpired(expiry_);
+        ERC712.revertIfInvalidSignature(account_, _getDelegationDigest(delegatee_, nonce_, expiry_), signature_);
         _checkAndIncrementNonce(account_, nonce_);
         _delegate(account_, delegatee_);
     }

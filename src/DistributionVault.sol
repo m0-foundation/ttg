@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 
 import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
 
+import { ERC712 } from "../lib/common/src/libs/ERC712.sol";
+
 import { StatefulERC712 } from "../lib/common/src/StatefulERC712.sol";
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
@@ -56,8 +58,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 currentNonce_ = _nonces[account_];
         bytes32 digest_ = _getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
 
-        _revertIfInvalidSignature(account_, digest_, signature_);
-        _revertIfExpired(deadline_);
+        ERC712.revertIfInvalidSignature(account_, digest_, signature_);
+        ERC712.revertIfExpired(deadline_);
 
         unchecked {
             _nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
@@ -166,7 +168,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 deadline_
     ) internal view returns (bytes32 digest_) {
         return
-            _getDigest(
+            ERC712.getDigest(
+                DOMAIN_SEPARATOR(),
                 keccak256(abi.encode(CLAIM_TYPEHASH, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_))
             );
     }

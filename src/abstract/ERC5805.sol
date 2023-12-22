@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.23;
 
+import { ERC712 } from "../../lib/common/src/libs/ERC712.sol";
+
 import { StatefulERC712 } from "../../lib/common/src/StatefulERC712.sol";
 
 import { IERC5805 } from "./interfaces/IERC5805.sol";
@@ -28,9 +30,9 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
         bytes32 s_
     ) external {
         bytes32 digest_ = _getDelegationDigest(delegatee_, nonce_, expiry_);
-        address signer_ = _getSignerAndRevertIfInvalidSignature(digest_, v_, r_, s_);
+        address signer_ = ERC712.getSignerAndRevertIfInvalidSignature(digest_, v_, r_, s_);
 
-        _revertIfExpired(expiry_);
+        ERC712.revertIfExpired(expiry_);
         _checkAndIncrementNonce(signer_, nonce_);
         _delegate(signer_, delegatee_);
     }
@@ -60,6 +62,10 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
         uint256 nonce_,
         uint256 expiry_
     ) internal view returns (bytes32 digest_) {
-        return _getDigest(keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee_, nonce_, expiry_)));
+        return
+            ERC712.getDigest(
+                DOMAIN_SEPARATOR(),
+                keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee_, nonce_, expiry_))
+            );
     }
 }
