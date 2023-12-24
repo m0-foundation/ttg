@@ -2,8 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { ERC712 } from "../../lib/common/src/libs/ERC712.sol";
-import { ERC712Domain } from "../../lib/common/src/ERC712Domain.sol";
+import { ERC712 } from "../../lib/common/src/ERC712.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
@@ -11,7 +10,7 @@ import { IBatchGovernor } from "./interfaces/IBatchGovernor.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 /// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
-abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
+abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     // TODO: Ensure this is correctly compacted into one slot.
     // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
 
@@ -55,7 +54,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
         _;
     }
 
-    constructor(string memory name_, address voteToken_) ERC712Domain(name_) {
+    constructor(string memory name_, address voteToken_) ERC712(name_) {
         if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }
 
@@ -87,7 +86,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
         bytes32 s_
     ) external returns (uint256 weight_) {
         (weight_, ) = _castVote(
-            ERC712.getSignerAndRevertIfInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
+            _getSignerAndRevertIfInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
             proposalId_,
             support_
         );
@@ -99,7 +98,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
         uint8 support_,
         bytes memory signature_
     ) external returns (uint256 weight_) {
-        ERC712.revertIfInvalidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
+        _revertIfInvalidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
 
         (weight_, ) = _castVote(voter_, proposalId_, support_);
     }
@@ -113,7 +112,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
     ) external returns (uint256 weight_) {
         return
             _castVotes(
-                ERC712.getSignerAndRevertIfInvalidSignature(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_),
+                _getSignerAndRevertIfInvalidSignature(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_),
                 proposalIds_,
                 supports_
             );
@@ -125,7 +124,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
         uint8[] calldata supports_,
         bytes memory signature_
     ) external returns (uint256 weight_) {
-        ERC712.revertIfInvalidSignature(voter_, _getBallotsDigest(proposalIds_, supports_), signature_);
+        _revertIfInvalidSignature(voter_, _getBallotsDigest(proposalIds_, supports_), signature_);
 
         return _castVotes(voter_, proposalIds_, supports_);
     }
@@ -321,17 +320,14 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Domain {
     \******************************************************************************************************************/
 
     function _getBallotDigest(uint256 proposalId_, uint8 support_) internal view returns (bytes32 digest_) {
-        digest_ = ERC712.getDigest(DOMAIN_SEPARATOR(), keccak256(abi.encode(BALLOT_TYPEHASH, proposalId_, support_)));
+        digest_ = _getDigest(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId_, support_)));
     }
 
     function _getBallotsDigest(
         uint256[] calldata proposalIds_,
         uint8[] calldata supports_
     ) internal view returns (bytes32 digest_) {
-        digest_ = ERC712.getDigest(
-            DOMAIN_SEPARATOR(),
-            keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, supports_))
-        );
+        digest_ = _getDigest(keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, supports_)));
     }
 
     function _getTotalSupply(uint256 timepoint_) internal view returns (uint256 totalSupply_) {
