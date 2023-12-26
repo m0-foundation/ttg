@@ -8,9 +8,11 @@ import { IGovernor } from "./abstract/interfaces/IGovernor.sol";
 
 import { BatchGovernor } from "./abstract/BatchGovernor.sol";
 
+import { IDeployer } from "./interfaces/IDeployer.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
+import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 /// @title An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
@@ -132,6 +134,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
         _setCashToken(newCashToken_);
+
+        IPowerToken(IDeployer(IZeroGovernor(zeroGovernor).powerTokenDeployer()).lastDeploy()).setNextCashToken(
+            newCashToken_
+        );
+
         _setProposalFee(newProposalFee_);
     }
 
