@@ -115,6 +115,7 @@ contract MockERC20 {
 }
 
 contract MockPowerToken {
+    address internal _cashToken;
     uint256 internal _votePower;
     uint256 internal _totalSupplyAt;
 
@@ -134,7 +135,13 @@ contract MockPowerToken {
 
     function markParticipation(address delegatee_) external {}
 
-    function setNextCashToken(address newCashToken_) external {}
+    function setNextCashToken(address newCashToken_) external {
+        _cashToken = newCashToken_;
+    }
+
+    function cashToken() public view returns (address cashToken_) {
+        return _cashToken;
+    }
 
     function pastTotalSupply(uint256) external view returns (uint256 totalSupply_) {
         return _totalSupplyAt;
