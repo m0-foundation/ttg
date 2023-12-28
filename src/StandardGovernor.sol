@@ -11,7 +11,6 @@ import { BatchGovernor } from "./abstract/BatchGovernor.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
-import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 /// @title An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.

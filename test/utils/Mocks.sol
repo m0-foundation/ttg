@@ -115,7 +115,6 @@ contract MockERC20 {
 }
 
 contract MockPowerToken {
-    address internal _cashToken;
     uint256 internal _votePower;
     uint256 internal _totalSupplyAt;
 

@@ -7,7 +7,7 @@ import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
 
 import { StandardGovernorHarness } from "./utils/StandardGovernorHarness.sol";
-import { MockERC20, MockPowerToken, MockPowerTokenDeployer, MockRegistrar, MockZeroToken } from "./utils/Mocks.sol";
+import { MockERC20, MockPowerToken, MockRegistrar, MockZeroToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_CanVoteOnMultipleProposals
