@@ -158,11 +158,13 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint256 epoch_
     ) public view override(IEpochBasedVoteToken, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        // For epochs before the bootstrap epoch, or if no balance snaps, return the bootstrap balance.
-        return
-            (epoch_ <= bootstrapEpoch) || (_balances[account_].length == 0)
-                ? _bootstrapBalanceOfAt(account_, epoch_)
-                : super.pastBalanceOf(account_, epoch_);
+        // For epochs before the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _bootstrapBalanceOfAt(account_, epoch_);
+
+        // If no balance snaps, return the bootstrap balance at the bootstrap epoch.
+        if (_balances[account_].length == 0) return _bootstrapBalanceOfAt(account_, bootstrapEpoch);
+
+        return super.pastBalanceOf(account_, epoch_);
     }
 
     function cashToken() public view returns (address cashToken_) {
@@ -201,11 +203,13 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint256 epoch_
     ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
-        // For epochs before the bootstrap epoch, or if no voting power snaps, return the bootstrap voting power.
-        return
-            _votingPowers[account_].length == 0
-                ? _bootstrapBalanceOfAt(account_, epoch_)
-                : super.getPastVotes(account_, epoch_);
+        // For epochs before the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _bootstrapBalanceOfAt(account_, epoch_);
+
+        // If no balance snaps, return the bootstrap balance at the bootstrap epoch.
+        if (_votingPowers[account_].length == 0) return _bootstrapBalanceOfAt(account_, bootstrapEpoch);
+
+        return super.getPastVotes(account_, epoch_);
     }
 
     function targetSupply() public view returns (uint256 targetSupply_) {
