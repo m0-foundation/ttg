@@ -8,7 +8,6 @@ import { IGovernor } from "./abstract/interfaces/IGovernor.sol";
 
 import { BatchGovernor } from "./abstract/BatchGovernor.sol";
 
-import { IDeployer } from "./interfaces/IDeployer.sol";
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";

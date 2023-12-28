@@ -5,17 +5,9 @@ pragma solidity 0.8.23;
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
 import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
-import { IPowerTokenDeployer } from "../src/interfaces/IPowerTokenDeployer.sol";
 
 import { StandardGovernorHarness } from "./utils/StandardGovernorHarness.sol";
-import {
-    MockERC20,
-    MockPowerToken,
-    MockPowerTokenDeployer,
-    MockRegistrar,
-    MockZeroGovernor,
-    MockZeroToken
-} from "./utils/Mocks.sol";
+import { MockERC20, MockPowerToken, MockPowerTokenDeployer, MockRegistrar, MockZeroToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 // TODO: test_CanVoteOnMultipleProposals
@@ -28,6 +20,7 @@ contract StandardGovernorTests is TestUtils {
     address internal _bob = makeAddr("bob");
     address internal _emergencyGovernor = makeAddr("emergencyGovernor");
     address internal _vault = makeAddr("vault");
+    address internal _zeroGovernor = makeAddr("zeroGovernor");
 
     uint256 internal _maxTotalZeroRewardPerActiveEpoch = 1_000;
     uint256 internal _proposalFee = 5;
@@ -37,26 +30,19 @@ contract StandardGovernorTests is TestUtils {
 
     MockERC20 internal _cashToken;
     MockPowerToken internal _powerToken;
-    MockPowerTokenDeployer internal _powerTokenDeployer;
     MockRegistrar internal _registrar;
-    MockZeroGovernor internal _zeroGovernor;
     MockZeroToken internal _zeroToken;
 
     function setUp() external {
         _cashToken = new MockERC20();
-        _powerTokenDeployer = new MockPowerTokenDeployer();
         _powerToken = new MockPowerToken();
-        _zeroGovernor = new MockZeroGovernor();
         _zeroToken = new MockZeroToken();
         _registrar = new MockRegistrar();
-
-        _zeroGovernor.setPowerTokenDeployer(address(_powerTokenDeployer));
-        _powerTokenDeployer.setLastDeploy(address(_powerToken));
 
         _standardGovernor = new StandardGovernorHarness(
             address(_powerToken),
             _emergencyGovernor,
-            address(_zeroGovernor),
+            _zeroGovernor,
             address(_cashToken),
             address(_registrar),
             _vault,
@@ -69,7 +55,7 @@ contract StandardGovernorTests is TestUtils {
     function test_initialState() external {
         assertEq(_standardGovernor.emergencyGovernor(), address(_emergencyGovernor));
         assertEq(_standardGovernor.vault(), _vault);
-        assertEq(_standardGovernor.zeroGovernor(), address(_zeroGovernor));
+        assertEq(_standardGovernor.zeroGovernor(), _zeroGovernor);
         assertEq(_standardGovernor.zeroToken(), address(_zeroToken));
         assertEq(_standardGovernor.maxTotalZeroRewardPerActiveEpoch(), _maxTotalZeroRewardPerActiveEpoch);
         assertEq(_standardGovernor.cashToken(), address(_cashToken));
@@ -84,7 +70,7 @@ contract StandardGovernorTests is TestUtils {
         new StandardGovernorHarness(
             address(0),
             _emergencyGovernor,
-            address(_zeroGovernor),
+            _zeroGovernor,
             address(_cashToken),
             address(_registrar),
             _vault,
@@ -99,7 +85,7 @@ contract StandardGovernorTests is TestUtils {
         new StandardGovernorHarness(
             address(_powerToken),
             address(0),
-            address(_zeroGovernor),
+            _zeroGovernor,
             address(_cashToken),
             address(_registrar),
             _vault,
@@ -129,7 +115,7 @@ contract StandardGovernorTests is TestUtils {
         new StandardGovernorHarness(
             address(_powerToken),
             _emergencyGovernor,
-            address(_zeroGovernor),
+            _zeroGovernor,
             address(_cashToken),
             address(0),
             _vault,
@@ -144,7 +130,7 @@ contract StandardGovernorTests is TestUtils {
         new StandardGovernorHarness(
             address(_powerToken),
             _emergencyGovernor,
-            address(_zeroGovernor),
+            _zeroGovernor,
             address(_cashToken),
             address(_registrar),
             address(0),
@@ -159,7 +145,7 @@ contract StandardGovernorTests is TestUtils {
         new StandardGovernorHarness(
             address(_powerToken),
             _emergencyGovernor,
-            address(_zeroGovernor),
+            _zeroGovernor,
             address(_cashToken),
             address(_registrar),
             _vault,
@@ -413,7 +399,7 @@ contract StandardGovernorTests is TestUtils {
     function test_setCashToken_invalidCashTokenAddress() external {
         vm.expectRevert(IStandardGovernor.InvalidCashTokenAddress.selector);
 
-        vm.prank(address(_zeroGovernor));
+        vm.prank(_zeroGovernor);
         _standardGovernor.setCashToken(address(0), _proposalFee);
     }
 
@@ -426,10 +412,11 @@ contract StandardGovernorTests is TestUtils {
         vm.expectEmit();
         emit IStandardGovernor.ProposalFeeSet(_proposalFee * 2);
 
-        vm.prank(address(_zeroGovernor));
+        vm.expectCall(address(_powerToken), abi.encodeCall(_powerToken.setNextCashToken, (_cashToken2)));
+
+        vm.prank(_zeroGovernor);
         _standardGovernor.setCashToken(_cashToken2, _proposalFee * 2);
 
-        assertEq(_powerToken.cashToken(), _cashToken2);
         assertEq(_standardGovernor.cashToken(), _cashToken2);
         assertEq(_standardGovernor.proposalFee(), _proposalFee * 2);
     }
