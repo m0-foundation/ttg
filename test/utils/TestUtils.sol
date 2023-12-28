@@ -11,9 +11,8 @@ import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 contract TestUtils is Test {
-    uint256 internal constant START_BLOCK_TIMESTAMP = 1_689_934_508;
+    uint256 internal constant START_BLOCK_TIMESTAMP = 1_703_781_312;
 
-    // Tests start at a voting epoch, at epoch 165
     uint256 internal constant START_EPOCH =
         ((START_BLOCK_TIMESTAMP - PureEpochs._MERGE_TIMESTAMP) / PureEpochs._EPOCH_PERIOD) + 1;
 

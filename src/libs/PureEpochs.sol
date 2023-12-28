@@ -2,14 +2,14 @@
 
 pragma solidity 0.8.23;
 
-/// @notice Defines epochs as 15 days away from 'The Merge' timestamp.
+/// @notice Defines epochs as 400 seconds away from 'The Merge' timestamp.
 /// @dev    Allows for a `uint16` epoch up to timestamp 86,595,288,162 (i.e. Thu, Feb 05, Year 4714, 06:42:42 GMT).
 library PureEpochs {
     /// @notice The timestamp of The Merge block.
-    uint256 internal constant _MERGE_TIMESTAMP = 1_663_224_162;
+    uint256 internal constant _MERGE_TIMESTAMP = 1_703_700_000; // Modified for recency in Sepolia testing.
 
     /// @notice The approximate target of seconds an epoch should endure.
-    uint256 internal constant _EPOCH_PERIOD = 15 days;
+    uint256 internal constant _EPOCH_PERIOD = 400 seconds;
 
     function currentEpoch() internal view returns (uint256 currentEpoch_) {
         return ((block.timestamp - _MERGE_TIMESTAMP) / _EPOCH_PERIOD) + 1; // Epoch at `_MERGE_TIMESTAMP` is 1.

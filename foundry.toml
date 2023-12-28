@@ -13,8 +13,8 @@ solc_version = "0.8.23"
 optimizer = false
 verbosity = 3
 ignored_error_codes = []
-block_number = 4_847_639
-block_timestamp = 1_702_086_380
+block_number = 4_974_662
+block_timestamp = 1_703_781_312
 
 [profile.default.fuzz]
 runs = 256
