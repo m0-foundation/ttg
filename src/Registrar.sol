@@ -68,21 +68,21 @@ contract Registrar is IRegistrar {
 
     /// @inheritdoc IRegistrar
     function addToList(bytes32 list_, address account_) external onlyStandardOrEmergencyGovernor {
-        _valueAt[_getKeyInSet(list_, account_)] = bytes32(uint256(1));
+        _valueAt[_getIsInListKey(list_, account_)] = bytes32(uint256(1));
 
         emit AddressAddedToList(list_, account_);
     }
 
     /// @inheritdoc IRegistrar
     function removeFromList(bytes32 list_, address account_) external onlyStandardOrEmergencyGovernor {
-        delete _valueAt[_getKeyInSet(list_, account_)];
+        delete _valueAt[_getIsInListKey(list_, account_)];
 
         emit AddressRemovedFromList(list_, account_);
     }
 
     /// @inheritdoc IRegistrar
     function setKey(bytes32 key_, bytes32 value_) external onlyStandardOrEmergencyGovernor {
-        emit KeySet(key_, _valueAt[key_] = value_);
+        emit KeySet(key_, _valueAt[_getValueKey(key_)] = value_);
     }
 
     /******************************************************************************************************************\
@@ -91,7 +91,7 @@ contract Registrar is IRegistrar {
 
     /// @inheritdoc IRegistrar
     function get(bytes32 key_) external view returns (bytes32 value_) {
-        return _valueAt[key_];
+        return _valueAt[_getValueKey(key_)];
     }
 
     /// @inheritdoc IRegistrar
@@ -99,19 +99,19 @@ contract Registrar is IRegistrar {
         values_ = new bytes32[](keys_.length);
 
         for (uint256 index_; index_ < keys_.length; ++index_) {
-            values_[index_] = _valueAt[keys_[index_]];
+            values_[index_] = _valueAt[_getValueKey(keys_[index_])];
         }
     }
 
     /// @inheritdoc IRegistrar
     function listContains(bytes32 list_, address account_) external view returns (bool contains_) {
-        return _valueAt[_getKeyInSet(list_, account_)] == bytes32(uint256(1));
+        return _valueAt[_getIsInListKey(list_, account_)] == bytes32(uint256(1));
     }
 
     /// @inheritdoc IRegistrar
     function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool contains_) {
         for (uint256 index_; index_ < accounts_.length; ++index_) {
-            if (_valueAt[_getKeyInSet(list_, accounts_[index_])] != bytes32(uint256(1))) return false;
+            if (_valueAt[_getIsInListKey(list_, accounts_[index_])] != bytes32(uint256(1))) return false;
         }
 
         return true;
@@ -136,8 +136,12 @@ contract Registrar is IRegistrar {
     |                                          Internal View/Pure Functions                                            |
     \******************************************************************************************************************/
 
-    function _getKeyInSet(bytes32 list_, address account_) internal pure returns (bytes32 key_) {
-        return keccak256(abi.encodePacked(list_, account_));
+    function _getValueKey(bytes32 key_) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("VALUE", key_));
+    }
+
+    function _getIsInListKey(bytes32 list_, address account_) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("IN_LIST", list_, account_));
     }
 
     function _revertIfNotStandardOrEmergencyGovernor() internal view {
