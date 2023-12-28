@@ -2,10 +2,12 @@
 
 pragma solidity 0.8.23;
 
+import { IERC712 } from "../../../lib/common/src/interfaces/IERC712.sol";
+
 import { IERC6372 } from "./IERC6372.sol";
 
 /// @title Minimal OpenZeppelin-style, Tally-compatible governor.
-interface IGovernor is IERC6372 {
+interface IGovernor is IERC6372, IERC712 {
     /**
      * @notice Proposal state.
      * @param  Pending   The proposal has been created, but the vote has not started yet.
