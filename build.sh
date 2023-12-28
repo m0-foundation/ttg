@@ -3,22 +3,20 @@ set -e
 
 sizes=false
 
-while getopts p:s flag
-do
-    case "${flag}" in
-        p) profile=${OPTARG};;
-        s) sizes=true;;
-    esac
+while getopts p:s flag; do
+	case "${flag}" in
+	p) profile=${OPTARG} ;;
+	s) sizes=true ;;
+	esac
 done
 
 export FOUNDRY_PROFILE=$profile
 echo Using profile: $FOUNDRY_PROFILE
 
-if [ "$sizes" = false ];
-then
-    forge build --skip '*/test/**/*.t.sol' --skip '*/script/**' --skip '*/lib/forge-std/**' --extra-output-files abi;
+if [ "$sizes" = false ]; then
+	forge build --skip '*/test/**/*.t.sol' --skip '*/script/**' --skip '*/lib/forge-std/**' --extra-output-files abi
 else
-    forge build --skip '*/test/**/*.t.sol' --skip '*/script/**' --skip '*/lib/forge-std/**' --extra-output-files abi --sizes;
+	forge build --skip '*/test/**/*.t.sol' --skip '*/script/**' --skip '*/lib/forge-std/**' --extra-output-files abi --sizes
 fi
 
 mkdir -p abi
@@ -34,7 +32,7 @@ cp ./out/PowerTokenDeployer.sol/PowerTokenDeployer.abi.json ./abi/PowerTokenDepl
 cp ./out/Registrar.sol/Registrar.abi.json ./abi/Registrar.json
 cp ./out/ZeroToken.sol/ZeroToken.abi.json ./abi/ZeroToken.json
 cp ./out/DistributionVault.sol/DistributionVault.abi.json ./abi/DistributionVault.json
-cp ./out/ERC20PermitHarness.sol/ERC20PermitHarness.abi.json ./abi/ERC20PermitHarness.json
+cp ./out/ERC20ExtendedHarness.sol/ERC20ExtendedHarness.abi.json ./abi/ERC20ExtendedHarness.json
 
 mkdir -p bytecode
 
@@ -49,17 +47,17 @@ PowerTokenDeployerBytecode=$(jq '.bytecode.object' ./out/PowerTokenDeployer.sol/
 RegistrarBytecode=$(jq '.bytecode.object' ./out/Registrar.sol/Registrar.json)
 ZeroTokenBytecode=$(jq '.bytecode.object' ./out/ZeroToken.sol/ZeroToken.json)
 DistributionVaultBytecode=$(jq '.bytecode.object' ./out/DistributionVault.sol/DistributionVault.json)
-ERC20PermitHarnessBytecode=$(jq '.bytecode.object' ./out/ERC20PermitHarness.sol/ERC20PermitHarness.json)
+ERC20ExtendedHarnessBytecode=$(jq '.bytecode.object' ./out/ERC20ExtendedHarness.sol/ERC20ExtendedHarness.json)
 
-echo "{ \"bytecode\": ${EmergencyGovernorBytecode} }" > ./bytecode/EmergencyGovernor.json
-echo "{ \"bytecode\": ${EmergencyGovernorDeployerBytecode} }" > ./bytecode/EmergencyGovernorDeployer.json
-echo "{ \"bytecode\": ${StandardGovernorBytecode} }" > ./bytecode/StandardGovernor.json
-echo "{ \"bytecode\": ${StandardGovernorDeployerBytecode} }" > ./bytecode/StandardGovernorDeployer.json
-echo "{ \"bytecode\": ${ZeroGovernorBytecode} }" > ./bytecode/ZeroGovernor.json
-echo "{ \"bytecode\": ${PowerBootstrapTokenBytecode} }" > ./bytecode/PowerBootstrapToken.json
-echo "{ \"bytecode\": ${PowerTokenBytecode} }" > ./bytecode/PowerToken.json
-echo "{ \"bytecode\": ${PowerTokenDeployerBytecode} }" > ./bytecode/PowerTokenDeployer.json
-echo "{ \"bytecode\": ${RegistrarBytecode} }" > ./bytecode/Registrar.json
-echo "{ \"bytecode\": ${ZeroTokenBytecode} }" > ./bytecode/ZeroToken.json
-echo "{ \"bytecode\": ${DistributionVaultBytecode} }" > ./bytecode/DistributionVault.json
-echo "{ \"bytecode\": ${ERC20PermitHarnessBytecode} }" > ./bytecode/ERC20PermitHarness.json
+echo "{ \"bytecode\": ${EmergencyGovernorBytecode} }" >./bytecode/EmergencyGovernor.json
+echo "{ \"bytecode\": ${EmergencyGovernorDeployerBytecode} }" >./bytecode/EmergencyGovernorDeployer.json
+echo "{ \"bytecode\": ${StandardGovernorBytecode} }" >./bytecode/StandardGovernor.json
+echo "{ \"bytecode\": ${StandardGovernorDeployerBytecode} }" >./bytecode/StandardGovernorDeployer.json
+echo "{ \"bytecode\": ${ZeroGovernorBytecode} }" >./bytecode/ZeroGovernor.json
+echo "{ \"bytecode\": ${PowerBootstrapTokenBytecode} }" >./bytecode/PowerBootstrapToken.json
+echo "{ \"bytecode\": ${PowerTokenBytecode} }" >./bytecode/PowerToken.json
+echo "{ \"bytecode\": ${PowerTokenDeployerBytecode} }" >./bytecode/PowerTokenDeployer.json
+echo "{ \"bytecode\": ${RegistrarBytecode} }" >./bytecode/Registrar.json
+echo "{ \"bytecode\": ${ZeroTokenBytecode} }" >./bytecode/ZeroToken.json
+echo "{ \"bytecode\": ${DistributionVaultBytecode} }" >./bytecode/DistributionVault.json
+echo "{ \"bytecode\": ${ERC20ExtendedHarnessBytecode} }" >./bytecode/ERC20ExtendedHarness.json

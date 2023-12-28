@@ -132,6 +132,9 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
         _setCashToken(newCashToken_);
+
+        IPowerToken(voteToken).setNextCashToken(newCashToken_);
+
         _setProposalFee(newProposalFee_);
     }
 

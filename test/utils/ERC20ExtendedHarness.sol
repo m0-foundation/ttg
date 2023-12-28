@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { ERC20Permit } from "../../lib/common/src/ERC20Permit.sol";
+import { ERC20Extended } from "../../lib/common/src/ERC20Extended.sol";
 
-contract ERC20PermitHarness is ERC20Permit {
+contract ERC20ExtendedHarness is ERC20Extended {
     uint256 internal _totalSupply;
 
     mapping(address account => uint256 balance) public _balances;
@@ -13,7 +13,7 @@ contract ERC20PermitHarness is ERC20Permit {
         string memory name_,
         string memory symbol_,
         uint256 decimals_
-    ) ERC20Permit(name_, symbol_, uint8(decimals_)) {}
+    ) ERC20Extended(name_, symbol_, uint8(decimals_)) {}
 
     function mint(address recipient_, uint256 amount_) external {
         _balances[recipient_] += amount_;

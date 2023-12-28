@@ -14,7 +14,7 @@ import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGove
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 
-import { ERC20PermitHarness } from "../utils/ERC20PermitHarness.sol";
+import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
 
 /// @notice Common setup for integration tests
@@ -30,8 +30,8 @@ abstract contract IntegrationBaseSetup is TestUtils {
     IStandardGovernor _standardGovernor;
     IZeroGovernor _zeroGovernor;
 
-    ERC20PermitHarness internal _cashToken1 = new ERC20PermitHarness("Cash Token 1", "CASH1", 18);
-    ERC20PermitHarness internal _cashToken2 = new ERC20PermitHarness("Cash Token 1", "CASH2", 6);
+    ERC20ExtendedHarness internal _cashToken1 = new ERC20ExtendedHarness("Cash Token 1", "CASH1", 18);
+    ERC20ExtendedHarness internal _cashToken2 = new ERC20ExtendedHarness("Cash Token 1", "CASH2", 6);
 
     address[] internal _allowedCashTokens = [address(_cashToken1), address(_cashToken2)];
 

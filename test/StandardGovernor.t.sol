@@ -55,7 +55,7 @@ contract StandardGovernorTests is TestUtils {
     function test_initialState() external {
         assertEq(_standardGovernor.emergencyGovernor(), address(_emergencyGovernor));
         assertEq(_standardGovernor.vault(), _vault);
-        assertEq(_standardGovernor.zeroGovernor(), address(_zeroGovernor));
+        assertEq(_standardGovernor.zeroGovernor(), _zeroGovernor);
         assertEq(_standardGovernor.zeroToken(), address(_zeroToken));
         assertEq(_standardGovernor.maxTotalZeroRewardPerActiveEpoch(), _maxTotalZeroRewardPerActiveEpoch);
         assertEq(_standardGovernor.cashToken(), address(_cashToken));
@@ -411,6 +411,8 @@ contract StandardGovernorTests is TestUtils {
 
         vm.expectEmit();
         emit IStandardGovernor.ProposalFeeSet(_proposalFee * 2);
+
+        vm.expectCall(address(_powerToken), abi.encodeCall(_powerToken.setNextCashToken, (_cashToken2)));
 
         vm.prank(_zeroGovernor);
         _standardGovernor.setCashToken(_cashToken2, _proposalFee * 2);
