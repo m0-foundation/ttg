@@ -185,7 +185,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         /**
          * @dev Auction curve:
          *        - During every auction period (1/100th of an epoch) the price starts at some "leftPoint" and decreases
-         *          linearly, with time, to some "rightPoint" (which is half oof that "leftPoint"). This is done by
+         *          linearly, with time, to some "rightPoint" (which is half of that "leftPoint"). This is done by
          *          computing the weighted average between the "leftPoint" and "rightPoint" for the time remaining in
          *          the auction period.
          *        - For the next next auction period, the new "leftPoint" is half of the previous period's "leftPoint"
