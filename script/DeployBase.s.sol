@@ -19,8 +19,8 @@ import { ZeroToken } from "../src/ZeroToken.sol";
 contract DeployBase is Script {
     error DeployerNonceMismatch(uint256 expectedDeployerNonce, uint256 actualDeployerNonce);
 
-    uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 5_000; // 50%
-    uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 5_000; // 50%
+    uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 8_000; // 80%
+    uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 6_000; // 60%
 
     // NOTE: Ensure this is the current nonce (transaction count) of the deploying address.
     uint256 internal constant _DEPLOYER_NONCE = 0;
@@ -36,8 +36,9 @@ contract DeployBase is Script {
     ) public returns (address registrar_) {
         console2.log("deployer:", deployer_);
 
-        if (_DEPLOYER_NONCE != vm.getNonce(deployer_))
+        if (_DEPLOYER_NONCE != vm.getNonce(deployer_)) {
             revert DeployerNonceMismatch(_DEPLOYER_NONCE, vm.getNonce(deployer_));
+        }
 
         address emergencyGovernorDeployer_ = _deployEmergencyGovernorDeployer(
             deployer_,

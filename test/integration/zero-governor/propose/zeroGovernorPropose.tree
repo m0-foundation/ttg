@@ -1,0 +1,19 @@
+zeroGovernorPropose.t.sol
+├─ Dave calls `propose` with `resetToPowerHolders` as calldata (test_zeroGovernorPropose_totalSupplyZero)
+│  ├─ Given Dave doesn't hold any Zero Tokens and the `pastTotalSupply` of Zero Tokens is 0
+│  ├─ Then the `ProposalCreated` event is emitted
+│  ├─ Then the state of the proposal upon creation is `Active`
+│  ├─ When the voting period ends and no Zero Tokens have been minted
+│  └─ Then the state of the proposal is `Expired`
+├─ Dave calls `propose` with `resetToPowerHolders` as calldata (test_zeroGovernorPropose_proposalActiveExpired)
+│  ├─ Given no one votes on the proposal
+│  ├─ Then the `ProposalCreated` event is emitted
+│  ├─ Then the state of the proposal upon creation is `Active`
+│  ├─ When the voting period ends and the threshold ratio hasn't been met
+│  └─ Then the state of the proposal is `Expired`
+└─ Eve calls `propose` with `resetToPowerHolders` as calldata (test_zeroGovernorPropose_proposalActiveDefeated)
+   ├─ Given Eve holds a minority of Zero Tokens
+   ├─ Then the `ProposalCreated` event is emitted
+   ├─ Then the state of the proposal upon creation is `Active`
+   ├─ When Eve is the only one to vote on the proposal with her minority voting power
+   └─ Then the state of the proposal at the end of the voting period is `Defeated`

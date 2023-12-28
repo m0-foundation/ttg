@@ -62,7 +62,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_pastBalancesOf_subset() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -83,7 +83,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_pastBalancesOf_single() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -141,7 +141,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_pastDelegates_multi_subset() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -160,7 +160,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_pastDelegates_multi_single() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -219,7 +219,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_getPastVotes_multi_subset() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -240,7 +240,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_getPastVotes_multi_single() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -298,7 +298,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_pastTotalSupplies_subset() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -319,7 +319,7 @@ contract ZeroTokenTests is TestUtils {
     }
 
     function test_pastTotalSupplies_single() external {
-        _jumpToEpoch(_zeroToken.clock() + 20);
+        _warpToEpoch(_zeroToken.clock() + 20);
 
         uint256 currentEpoch_ = _zeroToken.clock();
 

@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.23;
 
-import { IERC20Permit } from "../../../lib/common/src/interfaces/IERC20Permit.sol";
+import { IERC20Extended } from "../../../lib/common/src/interfaces/IERC20Extended.sol";
 
 import { IERC5805 } from "./IERC5805.sol";
 
 /// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
-interface IEpochBasedVoteToken is IERC5805, IERC20Permit {
+interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/

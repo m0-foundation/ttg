@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 
 import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
 
-import { ERC20Permit } from "../../lib/common/src/ERC20Permit.sol";
+import { ERC20Extended } from "../../lib/common/src/ERC20Extended.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
@@ -13,7 +13,7 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { ERC5805 } from "./ERC5805.sol";
 
 /// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
-abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Permit {
+abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Extended {
     struct AccountSnap {
         uint16 startingEpoch;
         address account;
@@ -32,7 +32,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Per
 
     mapping(address delegatee => AmountSnap[] votingPowerSnaps) internal _votingPowers;
 
-    constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20Permit(name_, symbol_, decimals_) {}
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20Extended(name_, symbol_, decimals_) {}
 
     /******************************************************************************************************************\
     |                                      External/Public Interactive Functions                                       |

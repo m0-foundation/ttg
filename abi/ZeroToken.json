@@ -22,6 +22,19 @@
   },
   {
     "type": "function",
+    "name": "CANCEL_AUTHORIZATION_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "CLOCK_MODE",
     "inputs": [],
     "outputs": [
@@ -62,6 +75,32 @@
   {
     "type": "function",
     "name": "PERMIT_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "RECEIVE_WITH_AUTHORIZATION_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "TRANSFER_WITH_AUTHORIZATION_TYPEHASH",
     "inputs": [],
     "outputs": [
       {
@@ -122,6 +161,30 @@
   },
   {
     "type": "function",
+    "name": "authorizationState",
+    "inputs": [
+      {
+        "name": "authorizer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isNonceUsed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "balanceOf",
     "inputs": [
       {
@@ -138,6 +201,90 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cancelAuthorization",
+    "inputs": [
+      {
+        "name": "authorizer_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "vs_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cancelAuthorization",
+    "inputs": [
+      {
+        "name": "authorizer_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "v_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "s_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cancelAuthorization",
+    "inputs": [
+      {
+        "name": "authorizer_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "signature_",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -164,30 +311,6 @@
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "decreaseAllowance",
-    "inputs": [
-      {
-        "name": "spender_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "subtractedAmount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success_",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -366,30 +489,6 @@
   },
   {
     "type": "function",
-    "name": "increaseAllowance",
-    "inputs": [
-      {
-        "name": "spender_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "addedAmount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "success_",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "mint",
     "inputs": [
       {
@@ -424,14 +523,14 @@
     "name": "nonces",
     "inputs": [
       {
-        "name": "account_",
+        "name": "account",
         "type": "address",
         "internalType": "address"
       }
     ],
     "outputs": [
       {
-        "name": "nonce_",
+        "name": "nonce",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -665,6 +764,150 @@
   },
   {
     "type": "function",
+    "name": "receiveWithAuthorization",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "signature_",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "receiveWithAuthorization",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "vs_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "receiveWithAuthorization",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "v_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "s_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "standardGovernor",
     "inputs": [],
     "outputs": [
@@ -769,6 +1012,150 @@
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "transferWithAuthorization",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "vs_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferWithAuthorization",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "signature_",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferWithAuthorization",
+    "inputs": [
+      {
+        "name": "from_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "v_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "s_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "event",
     "name": "Approval",
     "inputs": [
@@ -789,6 +1176,44 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AuthorizationCanceled",
+    "inputs": [
+      {
+        "name": "authorizer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "nonce",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AuthorizationUsed",
+    "inputs": [
+      {
+        "name": "authorizer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "nonce",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       }
     ],
     "anonymous": false
@@ -875,6 +1300,70 @@
   },
   {
     "type": "error",
+    "name": "AuthorizationAlreadyUsed",
+    "inputs": [
+      {
+        "name": "authorizer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "AuthorizationExpired",
+    "inputs": [
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validBefore",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "AuthorizationNotYetValid",
+    "inputs": [
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "validAfter",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "CallerMustBePayee",
+    "inputs": [
+      {
+        "name": "caller",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "payee",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InvalidSignature",
     "inputs": []
   },
@@ -935,7 +1424,7 @@
         "internalType": "uint256"
       },
       {
-        "name": "currentNonce",
+        "name": "expectedNonce",
         "type": "uint256",
         "internalType": "uint256"
       }
