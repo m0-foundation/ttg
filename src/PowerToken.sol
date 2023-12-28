@@ -182,16 +182,26 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         uint256 leftPoint_ = 1 << (timeRemaining_ / secondsPerPeriod_);
         uint256 remainder_ = timeRemaining_ % secondsPerPeriod_;
 
-        /// @dev During every auction period (1/100th of an epoch) the price starts at some "leftPoint" and decreases
-        //       linearly, with time, to some "rightPoint" (which is half of "leftPoint"). This is done by computing the
-        //       weighted average between the "leftPoint" and "rightPoint" for the time remaining in the auction period.
-        //       Next, the "leftPoint" of each auction period is half of the previous auction period's "leftPoint"
-        //       (which is also the "rightPoint" of the previous auction period).
-        //       Combined, this results in the price decreasing by half every auction period at a macro level, but
-        //       decreasing linearly at a micro-level during each auction period, without any jumps.
-        //       Finally, the price is computed per basis point of the last epoch's total supply, to ensure that as the
-        //       absolute total supply increases, the price of some "weight" of voting power is the same after the same
-        //       amount of elapsed time into each auction.
+        /**
+         * @dev Auction curve:
+         *        - During every auction period (1/100th of an epoch) the price starts at some "leftPoint" and decreases
+         *          linearly, with time, to some "rightPoint" (which is half oof that "leftPoint"). This is done by
+         *          computing the weighted average between the "leftPoint" and "rightPoint" for the time remaining in
+         *          the auction period.
+         *        - For the next next auction period, the new "leftPoint" is half of the previous period's "leftPoint"
+         *          (which also equals the previous period's "rightPoint").
+         *        - Combined, this results in the price decreasing by half every auction period at a macro level, but
+         *          decreasing linearly at a micro-level during each period, without any jumps.
+         *      Relative price computation:
+         *        - Since the parameters of this auction are fixed forever (there are no mutable auction parameters and
+         *          this is not an upgradeable contract), and the token supply is expected to increase relatively
+         *          quickly and consistently, the result would be that the price Y for some Z% of the total supply would
+         *          occur earlier and earlier in the auction.
+         *        - Instead, the desired behavior is that after X seconds into the auction, there will be a price Y for
+         *          some Z% of the total supply. In other words, it will always cost 572,662,306,133 cash tokens to buy
+         *          1% of the previous epoch's total supply with 5 days left in the auction period.
+         *        - To achieve this, the price is instead computed per basis point of the last epoch's total supply.
+         */
         return
             (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
             (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
