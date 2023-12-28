@@ -8,6 +8,8 @@ import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEp
 
 import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
 
+import { PowerBootstrapToken } from "../src/PowerBootstrapToken.sol";
+
 import { MockBootstrapToken, MockCashToken } from "./utils/Mocks.sol";
 import { PowerTokenHarness } from "./utils/PowerTokenHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
@@ -287,5 +289,82 @@ contract PowerTokenTests is TestUtils {
         _warpToNextEpoch();
 
         assertEq(_powerToken.cashToken(), address(newCashToken_));
+    }
+
+    function test_notAffectedByBootstrapTokenAfterBootstrapEpoch() external {
+        PowerBootstrapToken bootstrapToken_ = new PowerBootstrapToken(_initialAccounts, _initialAmounts);
+
+        PowerTokenHarness powerToken1_ = new PowerTokenHarness(
+            address(bootstrapToken_),
+            makeAddr("standard"),
+            makeAddr("cash"),
+            makeAddr("vault")
+        );
+
+        _warpToNextTransferEpoch();
+
+        // Do some no-op transfers.
+        for (uint256 i; i < 5; ++i) {
+            vm.prank(_initialAccounts[i]);
+            powerToken1_.transfer(_initialAccounts[(i + 1) % 5], 0);
+        }
+
+        _warpToNextTransferEpoch();
+
+        PowerTokenHarness powerToken2_ = new PowerTokenHarness(
+            address(powerToken1_),
+            makeAddr("standard"),
+            makeAddr("cash"),
+            makeAddr("vault")
+        );
+
+        _warpToNextTransferEpoch();
+
+        // Sync balance from `powerToken1_` for `_initialAccounts[1]` and `_initialAccounts[1]`.
+        vm.prank(_initialAccounts[1]);
+        powerToken2_.transfer(_initialAccounts[2], 0);
+
+        _warpToNextTransferEpoch();
+
+        // Transfer all old power to first account.
+        for (uint256 i = 1; i < 5; ++i) {
+            uint256 balance = powerToken1_.balanceOf(_initialAccounts[i]);
+
+            vm.prank(_initialAccounts[i]);
+            powerToken1_.transfer(_initialAccounts[0], balance);
+        }
+
+        _warpToNextTransferEpoch();
+
+        uint256 clock_ = powerToken2_.clock();
+
+        assertEq(powerToken2_.pastTotalSupply(clock_ - 1), 1_000_000_000);
+
+        uint256 b1 = powerToken2_.pastBalanceOf(_initialAccounts[0], clock_ - 1);
+        uint256 b2 = powerToken2_.pastBalanceOf(_initialAccounts[1], clock_ - 1);
+        uint256 b3 = powerToken2_.pastBalanceOf(_initialAccounts[2], clock_ - 1);
+        uint256 b4 = powerToken2_.pastBalanceOf(_initialAccounts[3], clock_ - 1);
+        uint256 b5 = powerToken2_.pastBalanceOf(_initialAccounts[4], clock_ - 1);
+
+        uint256 v1 = powerToken2_.getPastVotes(_initialAccounts[0], clock_ - 1);
+        uint256 v2 = powerToken2_.getPastVotes(_initialAccounts[1], clock_ - 1);
+        uint256 v3 = powerToken2_.getPastVotes(_initialAccounts[2], clock_ - 1);
+        uint256 v4 = powerToken2_.getPastVotes(_initialAccounts[3], clock_ - 1);
+        uint256 v5 = powerToken2_.getPastVotes(_initialAccounts[4], clock_ - 1);
+
+        assertEq(b1, 66_666_666);
+        assertEq(b2, 133_333_333);
+        assertEq(b3, 200_000_000);
+        assertEq(b4, 266_666_666);
+        assertEq(b5, 333_333_333);
+
+        assertEq(v1, 66_666_666);
+        assertEq(v2, 133_333_333);
+        assertEq(v3, 200_000_000);
+        assertEq(v4, 266_666_666);
+        assertEq(v5, 333_333_333);
+
+        assertLe(b1 + b2 + b3 + b4 + b5, 1_000_000_000);
+        assertLe(v1 + v2 + v3 + v4 + v5, 1_000_000_000);
     }
 }
