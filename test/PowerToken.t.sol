@@ -105,73 +105,73 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 99));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 99));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 99));
-        assertEq(_powerToken.getCost(1), uint256(1 * (1 << 99)) / 100_000);
+        assertEq(_powerToken.getCost(1), uint256(1 * (1 << 99)) / 100_000 + 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), (10_000 * ((1 << 99) + (1 << 98))) / 2);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), (100 * ((1 << 99) + (1 << 98))) / 2);
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), (1 * ((1 << 99) + (1 << 98))) / 2);
-        assertEq(_powerToken.getCost(1), uint256(1 * ((1 << 99) + (1 << 98))) / 200_000);
+        assertEq(_powerToken.getCost(1), uint256(1 * ((1 << 99) + (1 << 98))) / 200_000 + 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 98));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 98));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 98));
-        assertEq(_powerToken.getCost(1), uint256(1 * (1 << 98)) / 100_000);
+        assertEq(_powerToken.getCost(1), uint256(1 * (1 << 98)) / 100_000 + 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), (10_000 * ((1 << 98) + (1 << 97))) / 2);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), (100 * ((1 << 98) + (1 << 97))) / 2);
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), (1 * ((1 << 98) + (1 << 97))) / 2);
-        assertEq(_powerToken.getCost(1), uint256(1 * ((1 << 98) + (1 << 97))) / 200_000);
+        assertEq(_powerToken.getCost(1), uint256(1 * ((1 << 98) + (1 << 97))) / 200_000 + 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 97));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 97));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 97));
-        assertEq(_powerToken.getCost(1), uint256(1 * (1 << 97)) / 100_000);
+        assertEq(_powerToken.getCost(1), uint256(1 * (1 << 97)) / 100_000 + 1);
 
         _jumpSeconds(192 * halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 1));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 1));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 1));
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), (10_000 * ((1 << 1) + (1 << 0))) / 2);
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), (100 * ((1 << 1) + (1 << 0))) / 2);
-        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1);
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 2);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 0));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 100 * (1 << 0));
         assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1 * (1 << 0));
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds(halfAnAuctionPeriod_);
         assertEq(_powerToken.getCost(totalSupply_), 5_000 * (1 << 0));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 50 * (1 << 0));
-        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds(halfAnAuctionPeriod_ / 2);
         assertEq(_powerToken.getCost(totalSupply_), 2_500 * (1 << 0));
         assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 25 * (1 << 0));
-        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds(halfAnAuctionPeriod_ / 4);
         assertEq(_powerToken.getCost(totalSupply_), 1_250 * (1 << 0));
-        assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 12 * (1 << 0));
-        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 13 * (1 << 0));
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds((halfAnAuctionPeriod_ / 4) - 1);
-        assertEq(_powerToken.getCost(totalSupply_), 0);
-        assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 0);
-        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 0);
-        assertEq(_powerToken.getCost(1), 0);
+        assertEq(_powerToken.getCost(totalSupply_), 1);
+        assertEq(_powerToken.getCost(onePercentOfTotalSupply_), 1);
+        assertEq(_powerToken.getCost(oneBasisPointOfTotalSupply_), 1);
+        assertEq(_powerToken.getCost(1), 1);
 
         _jumpSeconds(1); // At end of auction.
         assertEq(_powerToken.getCost(totalSupply_), 10_000 * (1 << 99));
