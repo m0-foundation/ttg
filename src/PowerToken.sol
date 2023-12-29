@@ -292,10 +292,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @dev    Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
      */
     function _divideUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = x + y;
+        if (y == 0) revert DivisionByZero();
+
         unchecked {
-            z -= 1;
+            z = (x + y - 1) / y;
         }
-        z /= y;
     }
 }
