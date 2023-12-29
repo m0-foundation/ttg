@@ -203,8 +203,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
          *        - To achieve this, the price is instead computed per basis point of the last epoch's total supply.
          */
         return
-            (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))) /
-            (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1));
+            _divideUp(
+                (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))),
+                (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1))
+            );
     }
 
     function getVotes(
@@ -283,5 +285,17 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         _bootstrap(sender_);
         _bootstrap(recipient_);
         super._transfer(sender_, recipient_, amount_);
+    }
+
+    /**
+     * @notice Helper function to calculate `x` / `y`, rounded up.
+     * @dev    Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
+     */
+    function _divideUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = x + y;
+        unchecked {
+            z -= 1;
+        }
+        z /= y;
     }
 }
