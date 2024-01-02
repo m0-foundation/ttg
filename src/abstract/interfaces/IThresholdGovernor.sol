@@ -10,8 +10,8 @@ interface IThresholdGovernor is IBatchGovernor {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
-    /// @notice Revert message when trying to set the threshold ratio above 100%.
-    error InvalidThresholdRatio();
+    /// @notice Revert message when trying to set the threshold ratio above 100% or below 2.71%.
+    error InvalidThresholdRatio(uint256 thresholdRatio, uint256 minThresholdRatio, uint256 maxThresholdRatio);
 
     /******************************************************************************************************************\
     |                                                      Events                                                      |

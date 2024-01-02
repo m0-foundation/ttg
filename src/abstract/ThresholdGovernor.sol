@@ -15,6 +15,9 @@ import { BatchGovernor } from "./BatchGovernor.sol";
 
 /// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
+    /// @notice The minimum allowed threshold ratio.
+    uint256 internal constant _MIN_THRESHOLD_RATIO = 271;
+
     /// @inheritdoc IThresholdGovernor
     uint16 public thresholdRatio;
 
@@ -168,7 +171,8 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     }
 
     function _setThresholdRatio(uint16 newThresholdRatio_) internal {
-        if (newThresholdRatio_ > ONE) revert InvalidThresholdRatio();
+        if (newThresholdRatio_ > ONE || newThresholdRatio_ < _MIN_THRESHOLD_RATIO)
+            revert InvalidThresholdRatio(newThresholdRatio_, _MIN_THRESHOLD_RATIO, ONE);
 
         emit ThresholdRatioSet(thresholdRatio = newThresholdRatio_);
     }
