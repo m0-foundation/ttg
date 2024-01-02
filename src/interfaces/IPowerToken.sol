@@ -38,8 +38,11 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Revert message when a token transferFrom fails.
     error TransferFromFailed();
 
-    /// @notice Revert message when auction calulations use zero as denominator.
+    /// @notice Revert message when auction calculations use zero as denominator.
     error DivisionByZero();
+
+    /// @notice Revert message when divideUp math overflows.
+    error DivideUpOverflow();
 
     /******************************************************************************************************************\
     |                                                      Events                                                      |

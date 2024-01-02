@@ -2,21 +2,19 @@
 
 pragma solidity 0.8.23;
 
-import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
-
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
-import { IERC5805 } from "./abstract/interfaces/IERC5805.sol";
 import { IEpochBasedVoteToken } from "./abstract/interfaces/IEpochBasedVoteToken.sol";
 
 import { EpochBasedInflationaryVoteToken } from "./abstract/EpochBasedInflationaryVoteToken.sol";
-import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
 
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
 // NOTE: Balances and voting powers are bootstrapped from the bootstrap token, but delegations are not.
+
+// TODO: With recent changes, it would be relatively easy to bootstrap delegations as well.
 
 /**
  * @title An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor, and enabling
@@ -139,32 +137,9 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (_isVotingEpoch(clock())) return 0; // No auction during voting epochs.
 
         uint256 targetSupply_ = targetSupply();
-        uint256 totalSupply_ = totalSupply();
+        uint256 totalSupply_ = _getTotalSupply(clock());
 
         return targetSupply_ > totalSupply_ ? targetSupply_ - totalSupply_ : 0;
-    }
-
-    function balanceOf(
-        address account_
-    ) public view override(IERC20, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        // If the account has no balance snaps, return the bootstrap balance.
-        return
-            _balances[account_].length == 0
-                ? _bootstrapBalanceOfAt(account_, bootstrapEpoch)
-                : super.balanceOf(account_);
-    }
-
-    function pastBalanceOf(
-        address account_,
-        uint256 epoch_
-    ) public view override(IEpochBasedVoteToken, EpochBasedInflationaryVoteToken) returns (uint256 balance_) {
-        // For epochs before the bootstrap epoch, return the bootstrap balance at that epoch.
-        if (epoch_ <= bootstrapEpoch) return _bootstrapBalanceOfAt(account_, epoch_);
-
-        // If no balance snaps, return the bootstrap balance at the bootstrap epoch.
-        if (_balances[account_].length == 0) return _bootstrapBalanceOfAt(account_, bootstrapEpoch);
-
-        return super.pastBalanceOf(account_, epoch_);
     }
 
     function cashToken() public view returns (address cashToken_) {
@@ -205,69 +180,38 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return
             _divideUp(
                 (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))),
-                (secondsPerPeriod_ * pastTotalSupply(currentEpoch_ - 1))
+                (secondsPerPeriod_ * _getTotalSupply(currentEpoch_ - 1))
             );
-    }
-
-    function getVotes(
-        address account_
-    ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
-        // If the account has no voting power snaps, return the bootstrap voting power.
-        return
-            _votingPowers[account_].length == 0
-                ? _bootstrapBalanceOfAt(account_, bootstrapEpoch)
-                : super.getVotes(account_);
-    }
-
-    function getPastVotes(
-        address account_,
-        uint256 epoch_
-    ) public view override(IERC5805, EpochBasedVoteToken) returns (uint256 votingPower_) {
-        // For epochs before the bootstrap epoch, return the bootstrap balance at that epoch.
-        if (epoch_ <= bootstrapEpoch) return _bootstrapBalanceOfAt(account_, epoch_);
-
-        // If no balance snaps, return the bootstrap balance at the bootstrap epoch.
-        if (_votingPowers[account_].length == 0) return _bootstrapBalanceOfAt(account_, bootstrapEpoch);
-
-        return super.getPastVotes(account_, epoch_);
     }
 
     function targetSupply() public view returns (uint256 targetSupply_) {
         return clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
-    function pastTotalSupply(
-        uint256 epoch_
-    ) public view override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 totalSupply_) {
-        // For epochs before the bootstrap epoch return the initial supply.
-        return epoch_ <= bootstrapEpoch ? INITIAL_SUPPLY : super.pastTotalSupply(epoch_);
-    }
-
     /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
+    |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
     function _bootstrap(address account_) internal {
-        if (_balances[account_].length != 0) return; // Skip if the account already has balance snaps.
+        if (_lastSyncs[account_].length != 0) return; // Skip if the account already has synced (and thus bootstrapped).
 
-        uint256 bootstrapBalance_ = _bootstrapBalanceOfAt(account_, bootstrapEpoch);
+        // NOTE: Don't need add `_getUnrealizedInflation(account_)` here since all callers of `_bootstrap` also call
+        //       `_sync`, which will handle that.
+        uint256 bootstrapBalance_ = _getBootstrapBalance(account_, bootstrapEpoch);
 
-        // TODO: Consider `_addBalance` and `_addVotingPower` anyway, to prevent a future `_bootstrapBalanceOfAt` query.
         if (bootstrapBalance_ == 0) return;
 
         _addBalance(account_, bootstrapBalance_);
         _addVotingPower(account_, bootstrapBalance_);
     }
 
-    /// @dev This is the portion of the initial supply commensurate with the account's portion of the bootstrap supply.
-    function _bootstrapBalanceOfAt(address account_, uint256 epoch_) internal view returns (uint256 balance_) {
-        return
-            (IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
-    }
-
     function _delegate(address delegator_, address newDelegatee_) internal override {
         _bootstrap(delegator_);
         _bootstrap(newDelegatee_);
+
+        // NOTE: Need to sync `newDelegatee_` to ensure `_markParticipation` does not overwrite its voting power.
+        _sync(newDelegatee_);
+
         super._delegate(delegator_, newDelegatee_);
     }
 
@@ -287,15 +231,78 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         super._transfer(sender_, recipient_, amount_);
     }
 
+    /******************************************************************************************************************\
+    |                                           Internal View/Pure Functions                                           |
+    \******************************************************************************************************************/
+
+    function _getBalance(address account_, uint256 epoch_) internal view override returns (uint256 balance_) {
+        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
+
+        // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
+        if (_balances[account_].length == 0) {
+            return _getBootstrapBalance(account_, bootstrapEpoch) + _getUnrealizedInflation(account_, epoch_);
+        }
+
+        return super._getBalance(account_, epoch_);
+    }
+
+    function _getBalanceWithoutUnrealizedInflation(
+        address account_,
+        uint256 epoch_
+    ) internal view override returns (uint256 balance_) {
+        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
+
+        // If no snaps, return the bootstrap balance at the bootstrap epoch.
+        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
+
+        return super._getBalanceWithoutUnrealizedInflation(account_, epoch_);
+    }
+
+    /// @dev This is the portion of the initial supply commensurate with the account's portion of the bootstrap supply.
+    function _getBootstrapBalance(address account_, uint256 epoch_) internal view returns (uint256 balance_) {
+        return
+            (IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
+    }
+
+    function _getTotalSupply(uint256 epoch_) internal view override returns (uint256 totalSupply_) {
+        // For epochs before the bootstrap epoch return the initial supply.
+        return epoch_ <= bootstrapEpoch ? INITIAL_SUPPLY : super._getTotalSupply(epoch_);
+    }
+
+    function _getVotes(address account_, uint256 epoch_) internal view override returns (uint256 votingPower_) {
+        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
+        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
+
+        // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
+        if (_votingPowers[account_].length == 0) {
+            return _getBootstrapBalance(account_, bootstrapEpoch) + _getUnrealizedInflation(account_, epoch_);
+        }
+
+        return super._getVotes(account_, epoch_);
+    }
+
+    function _getLastSync(address account_, uint256 epoch_) internal view override returns (uint256 latestSync_) {
+        // If there are no LastSync snaps, return the bootstrap epoch.
+        return (_lastSyncs[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
+    }
+
     /**
-     * @notice Helper function to calculate `x` / `y`, rounded up.
-     * @dev    Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
+     * @dev Helper function to calculate `x` / `y`, rounded up.
+     * @dev Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
      */
     function _divideUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (y == 0) revert DivisionByZero();
 
         unchecked {
-            z = (x + y - 1) / y;
+            z = x + y;
+        }
+
+        if (z < x) revert DivideUpOverflow();
+
+        unchecked {
+            z = (z - 1) / y;
         }
     }
 }

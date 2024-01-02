@@ -255,6 +255,123 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         assertEq(uint256(executedState_), 7);
     }
 
+    function test_standardGovernorPropose_proposalLifecycle() external {
+        uint256 aliceBalance_ = (55 * _powerToken.INITIAL_SUPPLY()) / 100;
+        uint256 aliceVotingPower_ = aliceBalance_;
+
+        uint256 bobBalance_ = (25 * _powerToken.INITIAL_SUPPLY()) / 100;
+        uint256 bobVotingPower_ = bobBalance_;
+
+        uint256 carolBalance_ = (20 * _powerToken.INITIAL_SUPPLY()) / 100;
+        uint256 carolVotingPower_ = carolBalance_;
+
+        // Starting POWER balances and voting powers of actors
+        assertEq(_powerToken.balanceOf(_alice), aliceBalance_);
+        assertEq(_powerToken.getVotes(_alice), aliceVotingPower_);
+
+        assertEq(_powerToken.balanceOf(_bob), bobBalance_);
+        assertEq(_powerToken.getVotes(_bob), bobVotingPower_);
+
+        assertEq(_powerToken.balanceOf(_carol), carolBalance_);
+        assertEq(_powerToken.getVotes(_carol), carolVotingPower_);
+
+        // 2 epochs delay if proposal is created during a voting epoch.
+        _warpToNextVoteEpoch();
+
+        assertTrue(_isVotingEpoch(_currentEpoch()));
+        assertEq(_standardGovernor.votingDelay(), 2);
+
+        // 1 epoch delay if proposal is created during a transfer epoch.
+        _warpToNextTransferEpoch();
+
+        assertTrue(_isTransferEpoch(_currentEpoch()));
+        assertEq(_standardGovernor.votingDelay(), 1);
+
+        (address[] memory targets_, , bytes[] memory callDatas_, ) = _getProposeParams();
+
+        vm.prank(_dave);
+        uint256 proposalId_ = _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        uint256 proposalSnapshot_ = _standardGovernor.proposalSnapshot(proposalId_);
+
+        assertEq(proposalSnapshot_, _currentEpoch());
+        assertEq(_standardGovernor.proposalDeadline(proposalId_), _currentEpoch() + 1);
+        assertEq(uint256(_standardGovernor.state(proposalId_)), 0);
+        assertEq(_standardGovernor.proposalProposer(proposalId_), _dave);
+
+        // Alice delegates her voting power to Bob.
+        vm.prank(_alice);
+        _powerToken.delegate(_bob);
+
+        bobVotingPower_ += aliceVotingPower_;
+        aliceVotingPower_ = 0;
+
+        _warpToNextVoteEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        assertEq(_powerToken.getPastVotes(_alice, proposalSnapshot_), aliceVotingPower_);
+        assertEq(_powerToken.getPastVotes(_bob, proposalSnapshot_), bobVotingPower_);
+        assertEq(_powerToken.getPastVotes(_carol, proposalSnapshot_), carolVotingPower_);
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes)), aliceVotingPower_);
+
+        // Alice's POWER balance and voting power are not inflated since Alice has no voting power.
+        assertEq(_powerToken.balanceOf(_alice), aliceBalance_);
+        assertEq(_powerToken.getVotes(_alice), aliceVotingPower_);
+
+        // Alice received no ZERO rewards
+        assertEq(_zeroToken.balanceOf(_alice), (1_000e6 * aliceVotingPower_) / 100);
+
+        vm.prank(_bob);
+        assertEq(_standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes)), bobVotingPower_);
+
+        // Alice and Bob's POWER balance are inflated since Bob has voting power.
+        assertEq(_powerToken.balanceOf(_alice), _getInflatedAmount(aliceBalance_));
+        assertEq(_powerToken.balanceOf(_bob), _getInflatedAmount(bobBalance_));
+
+        // Bob's POWER voting power is inflated.
+        assertEq(_powerToken.getVotes(_bob), _getInflatedAmount(bobVotingPower_));
+
+        // Bob received ZERO rewards since he has 80% voting power as a delegatee of alice and self-delegatee.
+        assertEq(_zeroToken.balanceOf(_bob), (1_000e6 * 80) / 100);
+
+        vm.prank(_carol);
+        assertEq(_standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.No)), carolVotingPower_);
+
+        // Carol's POWER balance and voting power are inflated since Carol has voting power.
+        assertEq(_powerToken.balanceOf(_carol), _getInflatedAmount(carolBalance_));
+        assertEq(_powerToken.getVotes(_carol), _getInflatedAmount(carolVotingPower_));
+
+        // Carol received ZERO rewards since he has 20% voting power as self-delegatee.
+        assertEq(_zeroToken.balanceOf(_carol), (1_000e6 * 20) / 100);
+
+        assertTrue(_standardGovernor.hasVotedOnAllProposals(_alice, _currentEpoch()));
+        assertTrue(_standardGovernor.hasVotedOnAllProposals(_bob, _currentEpoch()));
+        assertTrue(_standardGovernor.hasVotedOnAllProposals(_carol, _currentEpoch()));
+
+        (, , , , uint256 noVotes_, uint256 yesVotes_, ) = _standardGovernor.getProposal(proposalId_);
+        assertEq(yesVotes_, aliceVotingPower_ + bobVotingPower_);
+        assertEq(noVotes_, carolVotingPower_);
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        _warpToNextEpoch();
+
+        assertTrue(_isTransferEpoch(_currentEpoch()));
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Succeeded));
+
+        assertEq(
+            _powerToken.getVotes(_alice) + _powerToken.getVotes(_bob) + _powerToken.getVotes(_carol),
+            _powerToken.balanceOf(_alice) + _powerToken.balanceOf(_bob) + _powerToken.balanceOf(_carol)
+        );
+    }
+
+    function _getInflatedAmount(uint256 amount_) internal view returns (uint256 inflatedAmount_) {
+        return amount_ + (amount_ * _powerToken.participationInflation()) / 10_000;
+    }
+
     function _getProposeParams()
         internal
         view

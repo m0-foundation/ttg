@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
-
 import { ERC20Extended } from "../../lib/common/src/ERC20Extended.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
@@ -11,6 +9,8 @@ import { PureEpochs } from "../libs/PureEpochs.sol";
 import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
+
+// TODO: Math bounds.
 
 /// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Extended {
@@ -59,48 +59,48 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         return "mode=epoch";
     }
 
-    function balanceOf(address account_) public view virtual override returns (uint256 balance_) {
-        return _getLatestValue(_balances[account_]);
+    function balanceOf(address account_) external view returns (uint256 balance_) {
+        return _getBalance(account_, clock());
     }
 
-    function pastBalanceOf(address account_, uint256 epoch_) public view virtual returns (uint256 balance_) {
+    function pastBalanceOf(address account_, uint256 epoch_) external view returns (uint256 balance_) {
         _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
-        return _getValueAt(_balances[account_], epoch_);
+        return _getBalance(account_, epoch_);
     }
 
     function clock() public view returns (uint48 clock_) {
         return uint48(PureEpochs.currentEpoch());
     }
 
-    function delegates(address account_) public view returns (address delegatee_) {
-        return _getDelegateeAt(account_, clock());
+    function delegates(address account_) external view returns (address delegatee_) {
+        return _getDelegatee(account_, clock());
     }
 
     function pastDelegates(address account_, uint256 epoch_) external view returns (address delegatee_) {
         _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
-        return _getDelegateeAt(account_, epoch_);
+        return _getDelegatee(account_, epoch_);
     }
 
-    function getVotes(address account_) public view virtual returns (uint256 votingPower_) {
-        return _getLatestValue(_votingPowers[account_]);
+    function getVotes(address account_) external view returns (uint256 votingPower_) {
+        return _getVotes(account_, clock());
     }
 
-    function getPastVotes(address account_, uint256 epoch_) public view virtual returns (uint256 votingPower_) {
+    function getPastVotes(address account_, uint256 epoch_) external view returns (uint256 votingPower_) {
         _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
-        return _getValueAt(_votingPowers[account_], epoch_);
+        return _getVotes(account_, epoch_);
     }
 
-    function totalSupply() public view virtual override returns (uint256 totalSupply_) {
-        return _getLatestValue(_totalSupplies);
+    function totalSupply() external view override returns (uint256 totalSupply_) {
+        return _getTotalSupply(clock());
     }
 
-    function pastTotalSupply(uint256 epoch_) public view virtual returns (uint256 totalSupply_) {
+    function pastTotalSupply(uint256 epoch_) external view returns (uint256 totalSupply_) {
         _revertIfNotPastTimepoint(epoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
-        return _getValueAt(_totalSupplies, epoch_);
+        return _getTotalSupply(epoch_);
     }
 
     /******************************************************************************************************************\
@@ -121,7 +121,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual override {
         address oldDelegatee_ = _setDelegatee(delegator_, newDelegatee_);
-        uint256 votingPower_ = balanceOf(delegator_);
+        uint256 votingPower_ = _getBalance(delegator_, clock());
 
         if (votingPower_ == 0) return;
 
@@ -137,7 +137,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
         _addBalance(recipient_, amount_);
         _addTotalSupply(amount_);
-        _addVotingPower(delegates(recipient_), amount_);
+        _addVotingPower(_getDelegatee(recipient_, clock()), amount_);
     }
 
     function _removeBalance(address account_, uint256 amount_) internal returns (uint256 old_, uint256 new_) {
@@ -188,13 +188,15 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         //       to get the old new values to determine the actual increases to apply afterwards.
         (uint256 oldAmount_, uint256 newAmount_) = _removeBalance(sender_, amount_);
 
+        uint256 clock_ = clock();
+
         (uint256 oldVotingPower_, uint256 newVotingPower_) = _removeVotingPower(
-            delegates(sender_),
+            _getDelegatee(sender_, clock_),
             oldAmount_ - newAmount_
         );
 
         _addBalance(recipient_, oldAmount_ - newAmount_);
-        _addVotingPower(delegates(recipient_), oldVotingPower_ - newVotingPower_);
+        _addVotingPower(_getDelegatee(recipient_, clock_), oldVotingPower_ - newVotingPower_);
     }
 
     function _update(
@@ -252,12 +254,16 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         return a_ + b_;
     }
 
+    function _getBalance(address account_, uint256 epoch_) internal view virtual returns (uint256 balance_) {
+        return _getValueAt(_balances[account_], epoch_);
+    }
+
     function _getDefaultIfZero(address input_, address default_) internal pure returns (address output_) {
         return input_ == address(0) ? default_ : input_;
     }
 
     /// @dev The delegatee is the account itself (the default) if the retrieved delegatee is address(0).
-    function _getDelegateeAt(address account_, uint256 epoch_) internal view returns (address delegatee_) {
+    function _getDelegatee(address account_, uint256 epoch_) internal view virtual returns (address delegatee_) {
         AccountSnap[] storage delegateeSnaps_ = _delegatees[account_];
 
         uint256 index_ = delegateeSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
@@ -273,8 +279,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         return account_;
     }
 
-    function _getLatestValue(AmountSnap[] storage snaps_) internal view returns (uint256 value_) {
-        return _getValueAt(snaps_, clock());
+    function _getTotalSupply(uint256 epoch_) internal view virtual returns (uint256 totalSupply_) {
+        return _getValueAt(_totalSupplies, epoch_);
     }
 
     function _getValueAt(AmountSnap[] storage snaps_, uint256 epoch_) internal view returns (uint256 value_) {
@@ -287,6 +293,10 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
             if (amountSnap_.startingEpoch <= epoch_) return amountSnap_.amount;
         }
+    }
+
+    function _getVotes(address account_, uint256 epoch_) internal view virtual returns (uint256 votingPower_) {
+        return _getValueAt(_votingPowers[account_], epoch_);
     }
 
     function _getZeroIfDefault(address input_, address default_) internal pure returns (address output_) {

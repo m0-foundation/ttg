@@ -1522,6 +1522,16 @@
   },
   {
     "type": "error",
+    "name": "DivideUpOverflow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DivisionByZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InsufficientAuctionSupply",
     "inputs": [
       {
