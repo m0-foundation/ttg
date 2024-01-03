@@ -51,7 +51,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     \******************************************************************************************************************/
 
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool) {
-        return _getParticipation(delegatee_, epoch_);
+        return _hasParticipated(delegatee_, epoch_);
     }
 
     /******************************************************************************************************************\
@@ -139,7 +139,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
-    function _getParticipation(address delegatee_, uint256 epoch_) internal view returns (bool participated_) {
+    function _hasParticipated(address delegatee_, uint256 epoch_) internal view returns (bool) {
         VoidSnap[] storage voidSnaps_ = _participations[delegatee_];
 
         uint256 index_ = voidSnaps_.length;
@@ -173,7 +173,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         //       account, such as the epoch when the contract was deployed, some bootstrap epoch, etc.
         for (uint256 epoch_ = _getLastSync(account_, lastEpoch_) + 1; epoch_ <= lastEpoch_; ++epoch_) {
             // Skip non-voting epochs and epochs when the delegatee did not participate.
-            if (!_isVotingEpoch(epoch_) || !_getParticipation(delegatee_, epoch_)) continue;
+            if (!_isVotingEpoch(epoch_) || !_hasParticipated(delegatee_, epoch_)) continue;
 
             inflation_ += _getInflation(balance_ + inflation_); // Accumulate compounded inflation.
         }
