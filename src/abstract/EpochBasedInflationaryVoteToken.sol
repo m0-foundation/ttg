@@ -2,12 +2,11 @@
 
 pragma solidity 0.8.23;
 
-import { IERC20 } from "../../lib/common/src/interfaces/IERC20.sol";
-
-import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
+
+// TODO: Test sync before or after actions.
 
 // NOTE: There is no feasible way to emit `Transfer` events for inflationary minting such that external client can
 //       index them and track balances and total supply correctly. Specifically,a nd only for total supply indexing, one
@@ -51,23 +50,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function balanceOf(
-        address account_
-    ) public view virtual override(IERC20, EpochBasedVoteToken) returns (uint256 balance_) {
-        // NOTE: `super.balanceOf` already includes realized inflation before the account's last sync.
-        return super.balanceOf(account_) + _getUnrealizedInflationOf(account_);
-    }
-
-    function pastBalanceOf(
-        address account_,
-        uint256 epoch_
-    ) public view virtual override(IEpochBasedVoteToken, EpochBasedVoteToken) returns (uint256 balance_) {
-        // NOTE: `super.pastBalanceOf` already includes realized inflation before the account's last sync at that epoch.
-        return super.pastBalanceOf(account_, epoch_) + _getUnrealizedInflationOfAt(account_, epoch_);
-    }
-
-    function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool participated_) {
-        return _getParticipationAt(delegatee_, epoch_);
+    function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool) {
+        return _hasParticipatedAt(delegatee_, epoch_);
     }
 
     /******************************************************************************************************************\
@@ -83,8 +67,10 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
         if (!_update(_participations[delegatee_])) revert AlreadyParticipated(); // Revert if could not update.
 
-        uint256 inflation_ = _getInflation(getVotes(delegatee_));
+        uint256 inflation_ = _getInflation(_getVotes(delegatee_, clock()));
 
+        // NOTE: Cannot sync here because it would prevent `delegatee_` from getting inflation if their delegatee votes.
+        // NOTE: Don't need to sync here because participating has no effect on the balance of `delegatee_`.
         _addTotalSupply(inflation_);
         _addVotingPower(delegatee_, inflation_);
     }
@@ -96,7 +82,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
     function _sync(address account_) internal {
         // Realized the account's unrealized inflation since the its last sync, and update its last sync.
-        _addBalance(account_, _getUnrealizedInflationOf(account_));
+        _addBalance(account_, _getUnrealizedInflation(account_, clock()));
         _update(_lastSyncs[account_]);
     }
 
@@ -124,54 +110,36 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    function _getInflation(uint256 amount_) internal view returns (uint256 inflation_) {
+    function _getBalance(address account_, uint256 epoch_) internal view virtual override returns (uint256) {
+        return super._getBalance(account_, epoch_) + _getUnrealizedInflation(account_, epoch_);
+    }
+
+    function _getBalanceWithoutUnrealizedInflation(
+        address account_,
+        uint256 epoch_
+    ) internal view virtual returns (uint256) {
+        return super._getBalance(account_, epoch_);
+    }
+
+    function _getInflation(uint256 amount_) internal view returns (uint256) {
         return (amount_ * participationInflation) / ONE;
     }
 
-    function _getUnrealizedInflationOf(address account_) internal view returns (uint256 inflation_) {
-        return _getUnrealizedInflationOfAt(account_, clock());
-    }
-
-    function _getUnrealizedInflationOfAt(
-        address account_,
-        uint256 lastEpoch_
-    ) internal view returns (uint256 inflation_) {
-        if (_lastSyncs[account_].length == 0) return 0;
-
-        // The balance and delegatee the account had at the epoch are the same since the last sync (by definition).
-        uint256 balance_ = _getValueAt(_balances[account_], lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
-
-        if (balance_ == 0) return 0; // No inflation if the account had no balance.
-
-        address delegatee_ = _getDelegateeAt(account_, lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
-
-        // NOTE: Starting from the epoch after the latest sync, before `lastEpoch_`.
-        for (uint256 epoch_ = _getLatestEpochAt(_lastSyncs[account_], lastEpoch_) + 1; epoch_ <= lastEpoch_; ++epoch_) {
-            // Skip non-voting epochs and epochs when the delegatee did not participate.
-            if (!_isVotingEpoch(epoch_) || !_getParticipationAt(delegatee_, epoch_)) continue;
-
-            inflation_ += _getInflation(balance_ + inflation_); // Accumulate compounded inflation.
-        }
-    }
-
-    /// @dev While confusing, this function retrieves the startingEpoch of the VoidSnap most recent to `epoch_`.
-    function _getLatestEpochAt(
-        VoidSnap[] storage voidSnaps_,
-        uint256 epoch_
-    ) internal view returns (uint256 latestEpoch_) {
-        uint256 index_ = voidSnaps_.length;
+    /// @dev Override this function in order to return the "default"/starting epoch if the account has never synced.
+    function _getLastSync(address account_, uint256 epoch_) internal view virtual returns (uint256) {
+        uint256 index_ = _lastSyncs[account_].length;
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
         // is the most recent to `epoch_`, so return its startingEpoch. If we exhaust the array, then it's 0.
         while (index_ > 0) {
-            VoidSnap storage voidSnap_ = _unsafeAccess(voidSnaps_, --index_);
+            VoidSnap storage voidSnap_ = _unsafeAccess(_lastSyncs[account_], --index_);
             uint256 snapStartingEpoch_ = voidSnap_.startingEpoch;
 
             if (snapStartingEpoch_ <= epoch_) return snapStartingEpoch_;
         }
     }
 
-    function _getParticipationAt(address delegatee_, uint256 epoch_) internal view returns (bool participated_) {
+    function _hasParticipatedAt(address delegatee_, uint256 epoch_) internal view returns (bool) {
         VoidSnap[] storage voidSnaps_ = _participations[delegatee_];
 
         uint256 index_ = voidSnaps_.length;
@@ -190,7 +158,28 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
-    function _isVotingEpoch(uint256 epoch_) internal pure returns (bool isVotingEpoch_) {
+    function _getUnrealizedInflation(address account_, uint256 lastEpoch_) internal view returns (uint256 inflation_) {
+        // The balance and delegatee the account had at the epoch are the same since the last sync (by definition).
+        uint256 balance_ = _getBalanceWithoutUnrealizedInflation(account_, lastEpoch_);
+
+        if (balance_ == 0) return 0; // No inflation if the account had no balance.
+
+        address delegatee_ = _getDelegatee(account_, lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
+
+        // NOTE: Starting from the epoch after the latest sync, before `lastEpoch_`.
+        // NOTE: If account never synced (i.e. it never interacted with the contract nor received tokens or voting
+        //       power), then `epoch_` will start at 0, which can result in a longer loop than needed. Inheriting
+        //       contracts should override `_getLastSync` to return the most recent appropriate epoch for such an
+        //       account, such as the epoch when the contract was deployed, some bootstrap epoch, etc.
+        for (uint256 epoch_ = _getLastSync(account_, lastEpoch_) + 1; epoch_ <= lastEpoch_; ++epoch_) {
+            // Skip non-voting epochs and epochs when the delegatee did not participate.
+            if (!_isVotingEpoch(epoch_) || !_hasParticipatedAt(delegatee_, epoch_)) continue;
+
+            inflation_ += _getInflation(balance_ + inflation_); // Accumulate compounded inflation.
+        }
+    }
+
+    function _isVotingEpoch(uint256 epoch_) internal pure returns (bool) {
         return epoch_ % 2 == 1; // Voting epochs are odd numbered.
     }
 
