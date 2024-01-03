@@ -245,10 +245,17 @@ contract ZeroGovernorTests is TestUtils {
         _zeroGovernor.setZeroProposalThresholdRatio(_zeroProposalThresholdRatio);
     }
 
-    function test_setZeroProposalThresholdRatio_invalidThresholdRatio() external {
+    function test_setZeroProposalThresholdRatio_invalidThresholdRatioAboveOne() external {
         vm.prank(address(_zeroGovernor));
 
-        vm.expectRevert(IThresholdGovernor.InvalidThresholdRatio.selector);
+        vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidThresholdRatio.selector, 10_001, 271, 10_000));
         _zeroGovernor.setZeroProposalThresholdRatio(10_001);
+    }
+
+    function test_setZeroProposalThresholdRatio_invalidThresholdRatioBelowMin() external {
+        vm.prank(address(_zeroGovernor));
+
+        vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidThresholdRatio.selector, 1, 271, 10_000));
+        _zeroGovernor.setZeroProposalThresholdRatio(1);
     }
 }
