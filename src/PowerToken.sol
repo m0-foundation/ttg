@@ -250,7 +250,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function _getBalanceWithoutUnrealizedInflation(
         address account_,
         uint256 epoch_
-    ) internal view override returns (uint256 balance_) {
+    ) internal view override returns (uint256) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
@@ -261,17 +261,17 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /// @dev This is the portion of the initial supply commensurate with the account's portion of the bootstrap supply.
-    function _getBootstrapBalance(address account_, uint256 epoch_) internal view returns (uint256 balance_) {
+    function _getBootstrapBalance(address account_, uint256 epoch_) internal view returns (uint256) {
         return
             (IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
     }
 
-    function _getTotalSupply(uint256 epoch_) internal view override returns (uint256 totalSupply_) {
+    function _getTotalSupply(uint256 epoch_) internal view override returns (uint256) {
         // For epochs before the bootstrap epoch return the initial supply.
         return epoch_ <= bootstrapEpoch ? INITIAL_SUPPLY : super._getTotalSupply(epoch_);
     }
 
-    function _getVotes(address account_, uint256 epoch_) internal view override returns (uint256 votingPower_) {
+    function _getVotes(address account_, uint256 epoch_) internal view override returns (uint256) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
@@ -283,7 +283,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return super._getVotes(account_, epoch_);
     }
 
-    function _getLastSync(address account_, uint256 epoch_) internal view override returns (uint256 latestSync_) {
+    function _getLastSync(address account_, uint256 epoch_) internal view override returns (uint256) {
         // If there are no LastSync snaps, return the bootstrap epoch.
         return (_lastSyncs[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
     }
