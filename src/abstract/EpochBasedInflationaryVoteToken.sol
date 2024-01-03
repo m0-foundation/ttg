@@ -158,7 +158,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
-    function _getUnrealizedInflation(address account_, uint256 lastEpoch_) internal view returns (uint256) {
+    function _getUnrealizedInflation(address account_, uint256 lastEpoch_) internal view returns (uint256 inflation_) {
         // The balance and delegatee the account had at the epoch are the same since the last sync (by definition).
         uint256 balance_ = _getBalanceWithoutUnrealizedInflation(account_, lastEpoch_);
 
