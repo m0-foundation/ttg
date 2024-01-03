@@ -235,7 +235,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    function _getBalance(address account_, uint256 epoch_) internal view override returns (uint256 balance_) {
+    function _getBalance(address account_, uint256 epoch_) internal view override returns (uint256) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
