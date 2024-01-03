@@ -33,7 +33,7 @@ contract EmergencyGovernorDeployerTests is Test {
         address nextDeploy_ = _deployer.nextDeploy();
 
         vm.prank(_zeroGovernor);
-        address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), 1);
+        address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), 8000);
 
         assertEq(deployed_, nextDeploy_);
     }
