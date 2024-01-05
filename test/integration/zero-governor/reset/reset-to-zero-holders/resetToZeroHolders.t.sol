@@ -2,14 +2,23 @@
 
 pragma solidity 0.8.23;
 
-import { IPowerToken } from "../../../../src/interfaces/IPowerToken.sol";
-import { IPowerTokenDeployer } from "../../../../src/interfaces/IPowerTokenDeployer.sol";
-import { IStandardGovernorDeployer } from "../../../../src/interfaces/IStandardGovernorDeployer.sol";
-import { IEmergencyGovernorDeployer } from "../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
+import { IERC20 } from "../../../../../lib/common/src/interfaces/IERC20.sol";
 
-import { IntegrationBaseSetup, IBatchGovernor, IGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IPowerToken } from "../../../../../src/interfaces/IPowerToken.sol";
+import { IPowerTokenDeployer } from "../../../../../src/interfaces/IPowerTokenDeployer.sol";
+import { IStandardGovernorDeployer } from "../../../../../src/interfaces/IStandardGovernorDeployer.sol";
+import { IEmergencyGovernorDeployer } from "../../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
 
-contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
+import {
+    ResetIntegrationBaseSetup,
+    IBatchGovernor,
+    IGovernor,
+    IZeroGovernor,
+    IEmergencyGovernor,
+    IStandardGovernor
+} from "../ResetIntegrationBaseSetup.t.sol";
+
+contract ResetToZeroHolders_IntegrationTest is ResetIntegrationBaseSetup {
     function test_resetToZeroHolders() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_zeroGovernor);
@@ -48,11 +57,13 @@ contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
 
         uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
 
+        uint256 daveZeroWeight_ = _zeroToken.getVotes(_dave);
+
         vm.expectEmit();
-        emit IGovernor.VoteCast(_dave, proposalId_, yesSupport_, _daveZeroWeight, "");
+        emit IGovernor.VoteCast(_dave, proposalId_, yesSupport_, daveZeroWeight_, "");
 
         vm.prank(_dave);
-        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), _daveZeroWeight);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
 
         (, , IGovernor.ProposalState succeededState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
@@ -90,5 +101,16 @@ contract ResetToZeroHolders_IntegrationTest is IntegrationBaseSetup {
 
         (, , IGovernor.ProposalState executedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(executedState_), 7);
+
+        address[] memory powerUsers_ = new address[](3);
+        powerUsers_[0] = _dave;
+        powerUsers_[1] = _dave;
+        powerUsers_[2] = _eve;
+
+        _revertIfGovernorsAreNotFunctional(
+            IStandardGovernor(nextStandardGovernor_),
+            IEmergencyGovernor(nextEmergencyGovernor_),
+            powerUsers_
+        );
     }
 }

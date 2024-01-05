@@ -13,6 +13,7 @@ import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
 import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
+import { IDistributionVault } from "../../src/interfaces/IDistributionVault.sol";
 
 import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
@@ -30,6 +31,8 @@ abstract contract IntegrationBaseSetup is TestUtils {
     IStandardGovernor _standardGovernor;
     IZeroGovernor _zeroGovernor;
 
+    IDistributionVault internal _vault;
+
     ERC20ExtendedHarness internal _cashToken1 = new ERC20ExtendedHarness("Cash Token 1", "CASH1", 18);
     ERC20ExtendedHarness internal _cashToken2 = new ERC20ExtendedHarness("Cash Token 1", "CASH2", 6);
 
@@ -43,30 +46,13 @@ abstract contract IntegrationBaseSetup is TestUtils {
     address internal _frank = makeAddr("frank");
 
     address[] internal _initialPowerAccounts = [_alice, _bob, _carol];
-
-    uint256 _aliceInitialPowerBalance = 55;
-    uint256 _bobInitialPowerBalance = 25;
-    uint256 _carolInitialPowerBalance = 20;
-
-    uint256 _alicePowerWeight = _aliceInitialPowerBalance * 1e7;
-    uint256 _bobPowerWeight = _bobInitialPowerBalance * 1e7;
-    uint256 _carolPowerWeight = _carolInitialPowerBalance * 1e7;
-
-    uint256[] internal _initialPowerBalances = [
-        _aliceInitialPowerBalance,
-        _bobInitialPowerBalance,
-        _carolInitialPowerBalance
-    ];
+    uint256[] internal _initialPowerBalances = [55, 25, 20];
 
     address[] internal _initialZeroAccounts = [_dave, _eve, _frank];
-    uint256 _initialZeroAccountsLength = _initialZeroAccounts.length;
-    uint256 _cashToken1MaxAmount = type(uint256).max / _initialZeroAccountsLength;
+    uint256[] internal _initialZeroBalances = [60_000_000e6, 30_000_000e6, 10_000_000e6];
 
-    uint256 _daveZeroWeight = 60_000_000e6;
-    uint256 _eveZeroWeight = 30_000_000e6;
-    uint256 _frankZeroWeight = 10_000_000e6;
-
-    uint256[] internal _initialZeroBalances = [_daveZeroWeight, _eveZeroWeight, _frankZeroWeight];
+    uint256 internal _initialZeroAccountsLength = _initialZeroAccounts.length;
+    uint256 internal _cashToken1MaxAmount = type(uint256).max / _initialZeroAccountsLength;
 
     uint256 internal _standardProposalFee = 1e18;
 
@@ -94,12 +80,17 @@ abstract contract IntegrationBaseSetup is TestUtils {
         _standardGovernor = IStandardGovernor(_registrar.standardGovernor());
         _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
 
+        _vault = IDistributionVault(_standardGovernor.vault());
+
         for (uint256 i; i < _initialZeroAccounts.length; i++) {
             address account_ = _initialZeroAccounts[i];
             _cashToken1.mint(account_, _cashToken1MaxAmount);
 
             vm.prank(account_);
             _cashToken1.approve(address(_standardGovernor), _cashToken1MaxAmount);
+
+            vm.prank(account_);
+            _cashToken1.approve(address(_powerToken), _cashToken1MaxAmount);
         }
     }
 }

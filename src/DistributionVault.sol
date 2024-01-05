@@ -54,7 +54,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         bytes memory signature_
     ) external returns (uint256 claimed) {
         uint256 currentNonce_ = nonces[account_];
-        bytes32 digest_ = _getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
+        bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
 
         _revertIfInvalidSignature(account_, digest_, signature_);
         _revertIfExpired(deadline_);
@@ -82,6 +82,24 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     /******************************************************************************************************************\
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
+
+    function name() external view returns (string memory name_) {
+        return _name;
+    }
+
+    function getClaimDigest(
+        address token_,
+        uint256 startEpoch_,
+        uint256 endEpoch_,
+        address destination_,
+        uint256 nonce_,
+        uint256 deadline_
+    ) public view returns (bytes32 digest_) {
+        return
+            _getDigest(
+                keccak256(abi.encode(CLAIM_TYPEHASH, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_))
+            );
+    }
 
     function CLOCK_MODE() external pure returns (string memory clockMode_) {
         return "mode=epoch";
@@ -115,10 +133,6 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         }
     }
 
-    function name() external view returns (string memory name_) {
-        return _name;
-    }
-
     /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
@@ -143,23 +157,5 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         emit Claim(token_, account_, startEpoch_, endEpoch_, claimed_);
 
         if (!ERC20Helper.transfer(token_, destination_, claimed_)) revert TransferFailed();
-    }
-
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
-
-    function _getClaimDigest(
-        address token_,
-        uint256 startEpoch_,
-        uint256 endEpoch_,
-        address destination_,
-        uint256 nonce_,
-        uint256 deadline_
-    ) internal view returns (bytes32 digest_) {
-        return
-            _getDigest(
-                keccak256(abi.encode(CLAIM_TYPEHASH, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_))
-            );
     }
 }

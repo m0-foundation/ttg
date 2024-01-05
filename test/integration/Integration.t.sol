@@ -2,26 +2,23 @@
 
 pragma solidity 0.8.23;
 
-import { IEmergencyGovernor } from "../src/interfaces/IEmergencyGovernor.sol";
-import { IEmergencyGovernorDeployer } from "../src/interfaces/IEmergencyGovernorDeployer.sol";
-import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
-import { IPowerTokenDeployer } from "../src/interfaces/IPowerTokenDeployer.sol";
-import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
-import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
-import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
-import { IStandardGovernorDeployer } from "../src/interfaces/IStandardGovernorDeployer.sol";
-import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
-import { IZeroToken } from "../src/interfaces/IZeroToken.sol";
+import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
+import { IEmergencyGovernorDeployer } from "../../src/interfaces/IEmergencyGovernorDeployer.sol";
+import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
+import { IPowerTokenDeployer } from "../../src/interfaces/IPowerTokenDeployer.sol";
+import { IRegistrar } from "../../src/interfaces/IRegistrar.sol";
+import { IGovernor } from "../../src/abstract/interfaces/IGovernor.sol";
+import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
+import { IStandardGovernorDeployer } from "../../src/interfaces/IStandardGovernorDeployer.sol";
+import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
+import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 
-import { DeployBase } from "../script/DeployBase.s.sol";
+import { DeployBase } from "../../script/DeployBase.s.sol";
 
-import { PureEpochs } from "../src/libs/PureEpochs.sol";
+import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
-import { ERC20ExtendedHarness } from "./utils/ERC20ExtendedHarness.sol";
-import { TestUtils } from "./utils/TestUtils.sol";
-
-// TODO: test_UserVoteInflationAfterVotingOnAllProposals
-// TODO: test_DelegateValueRewardsAfterVotingOnAllProposals
+import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
+import { TestUtils } from "../utils/TestUtils.sol";
 
 contract IntegrationTests is TestUtils {
     address internal _deployer = makeAddr("deployer");

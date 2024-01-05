@@ -190,6 +190,50 @@
   },
   {
     "type": "function",
+    "name": "getClaimDigest",
+    "inputs": [
+      {
+        "name": "token_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "startEpoch_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "endEpoch_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "destination_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "digest_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getClaimable",
     "inputs": [
       {

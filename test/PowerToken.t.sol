@@ -251,6 +251,12 @@ contract PowerTokenTests is TestUtils {
         _powerToken.setNextCashToken(address(0));
     }
 
+    function test_setNextCashToken_invalidCashTokenAddress() external {
+        vm.expectRevert(IPowerToken.InvalidCashTokenAddress.selector);
+        vm.prank(_standardGovernor);
+        _powerToken.setNextCashToken(address(0));
+    }
+
     function test_setNextCashToken_afterNextCashTokenStartingEpoch() external {
         address newCashToken_ = makeAddr("newCashToken");
 

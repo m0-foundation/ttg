@@ -45,6 +45,10 @@ contract TestUtils is Test {
         vm.warp(PureEpochs.getTimestampOfEpochStart(epoch_));
     }
 
+    function _warpToTheEndOfTheEpoch(uint256 epoch_) internal {
+        vm.warp(PureEpochs.getTimestampOfEpochStart(epoch_ + 1) - 1);
+    }
+
     function _jumpEpochs(uint256 epochs_) internal {
         vm.warp(PureEpochs.getTimestampOfEpochStart(PureEpochs.currentEpoch() + epochs_));
     }
@@ -79,5 +83,15 @@ contract TestUtils is Test {
         address governor_
     ) internal pure returns (uint256) {
         return uint256(keccak256(abi.encode(callData_, voteStart_, governor_)));
+    }
+
+    function _getSignature(bytes32 digest_, uint256 privateKey_) internal pure returns (bytes memory) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey_, digest_);
+
+        return abi.encodePacked(r, s, v);
+    }
+
+    function _makeKey(string memory name) internal returns (uint256 privateKey) {
+        (, privateKey) = makeAddrAndKey(name);
     }
 }

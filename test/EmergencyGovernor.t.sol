@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
 import { IEmergencyGovernor } from "../src/interfaces/IEmergencyGovernor.sol";
+import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
+import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 
 import { EmergencyGovernor } from "../src/EmergencyGovernor.sol";
 import { ZeroGovernor } from "../src/ZeroGovernor.sol";
@@ -23,6 +25,8 @@ import { TestUtils } from "./utils/TestUtils.sol";
 contract EmergencyGovernorTests is TestUtils {
     address internal _cashToken1 = makeAddr("cashToken1");
     address internal _cashToken2 = makeAddr("cashToken2");
+
+    address internal _account1 = makeAddr("account1");
 
     uint16 internal _emergencyProposalThresholdRatio = 9_000; // 90%
     uint16 internal _zeroProposalThresholdRatio = 6_000; // 60%
@@ -133,24 +137,55 @@ contract EmergencyGovernorTests is TestUtils {
     }
 
     /* ============ setThresholdRatio ============ */
+    function test_setThresholdRatio() external {
+        vm.expectEmit();
+        emit IThresholdGovernor.ThresholdRatioSet(8000);
+
+        vm.prank(address(_zeroGovernor));
+        _emergencyGovernor.setThresholdRatio(8000);
+    }
+
     function test_setThresholdRatio_notZeroGovernor() external {
         vm.expectRevert(IEmergencyGovernor.NotZeroGovernor.selector);
         _emergencyGovernor.setThresholdRatio(_emergencyProposalThresholdRatio);
     }
 
     /* ============ addToList ============ */
+    function test_addToList_callRegistrar() external {
+        vm.expectCall(address(_registrar), abi.encodeCall(_registrar.addToList, ("someList", _account1)));
+
+        vm.prank(address(_emergencyGovernor));
+        _emergencyGovernor.addToList("someList", _account1);
+    }
+
     function test_addToList_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _emergencyGovernor.addToList(bytes32(0), address(0));
     }
 
     /* ============ removeFromList ============ */
+    function test_removeFromList_callRegistrar() external {
+        vm.expectCall(address(_registrar), abi.encodeCall(_registrar.removeFromList, ("someList", _account1)));
+
+        vm.prank(address(_emergencyGovernor));
+        _emergencyGovernor.removeFromList("someList", _account1);
+    }
+
     function test_removeFromList_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _emergencyGovernor.removeFromList(bytes32(0), address(0));
     }
 
     /* ============ removeFromAndAddToList ============ */
+    function test_removeFromAndAddToList_callRegistrar() external {
+        vm.expectCall(address(_registrar), abi.encodeCall(_registrar.removeFromList, ("someList", _account1)));
+
+        vm.expectCall(address(_registrar), abi.encodeCall(_registrar.addToList, ("someList", _account1)));
+
+        vm.prank(address(_emergencyGovernor));
+        _emergencyGovernor.removeFromAndAddToList("someList", _account1, _account1);
+    }
+
     function test_removeFromAndAddToList_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _emergencyGovernor.removeFromAndAddToList(bytes32(0), address(0), address(0));
@@ -163,6 +198,13 @@ contract EmergencyGovernorTests is TestUtils {
     }
 
     /* ============ setStandardProposalFee ============ */
+    function test_setStandardProposalFee_callStandardGovernor() external {
+        vm.expectCall(address(_standardGovernor), abi.encodeCall(_standardGovernor.setProposalFee, (0)));
+
+        vm.prank(address(_emergencyGovernor));
+        _emergencyGovernor.setStandardProposalFee(0);
+    }
+
     function test_setStandardProposalFee_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _emergencyGovernor.setStandardProposalFee(0);
