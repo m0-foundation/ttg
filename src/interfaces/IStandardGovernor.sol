@@ -112,7 +112,6 @@ interface IStandardGovernor is IBatchGovernor {
      * @param  proposalId The unique identifier of the proposal.
      * @return voteStart  The first clock value when voting on the proposal is allowed.
      * @return voteEnd    The last clock value when voting on the proposal is allowed.
-     * @return executed   Whether the proposal has been executed.
      * @return state      The state of the proposal.
      * @return noVotes    The amount of votes cast against the proposal.
      * @return yesVotes   The amount of votes cast for the proposal.
@@ -126,7 +125,6 @@ interface IStandardGovernor is IBatchGovernor {
         returns (
             uint48 voteStart,
             uint48 voteEnd,
-            bool executed,
             ProposalState state,
             uint256 noVotes,
             uint256 yesVotes,

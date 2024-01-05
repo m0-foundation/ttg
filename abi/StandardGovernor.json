@@ -464,11 +464,6 @@
         "internalType": "uint48"
       },
       {
-        "name": "executed_",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
         "name": "state_",
         "type": "uint8",
         "internalType": "enum IGovernor.ProposalState"

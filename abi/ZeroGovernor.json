@@ -446,11 +446,6 @@
         "internalType": "uint48"
       },
       {
-        "name": "executed_",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
         "name": "state_",
         "type": "uint8",
         "internalType": "enum IGovernor.ProposalState"
@@ -1149,7 +1144,23 @@
   {
     "type": "error",
     "name": "InvalidThresholdRatio",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "thresholdRatio",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minThresholdRatio",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxThresholdRatio",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",

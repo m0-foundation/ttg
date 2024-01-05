@@ -171,7 +171,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         returns (
             uint48 voteStart_,
             uint48 voteEnd_,
-            bool executed_,
             ProposalState state_,
             uint256 noVotes_,
             uint256 yesVotes_,
@@ -182,7 +181,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         voteStart_ = proposal_.voteStart;
         voteEnd_ = _getVoteEnd(voteStart_);
-        executed_ = proposal_.executed;
         state_ = state(proposalId_);
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
