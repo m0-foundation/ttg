@@ -10,7 +10,7 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
 
-// TODO: Math bounds.
+// TODO: More unchecked and math bounds.
 
 /// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Extended {
@@ -293,6 +293,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
             if (amountSnap_.startingEpoch <= epoch_) return amountSnap_.amount;
         }
+
+        return 0;
     }
 
     function _getVotes(address account_, uint256 epoch_) internal view virtual returns (uint256) {
