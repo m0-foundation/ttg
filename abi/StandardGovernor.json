@@ -996,7 +996,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "",
+        "name": "votingDelay_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -1009,12 +1009,12 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "",
+        "name": "votingPeriod_",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",

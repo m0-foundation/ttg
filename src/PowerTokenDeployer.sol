@@ -49,13 +49,17 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
         address standardGovernor_,
         address cashToken_
     ) external onlyZeroGovernor returns (address) {
-        ++nonce;
+        unchecked {
+            ++nonce;
+        }
 
         return lastDeploy = address(new PowerToken(bootstrapToken_, standardGovernor_, cashToken_, vault));
     }
 
     /// @inheritdoc IDeployer
     function nextDeploy() external view returns (address) {
-        return ContractHelper.getContractFrom(address(this), nonce + 1);
+        unchecked {
+            return ContractHelper.getContractFrom(address(this), nonce + 1);
+        }
     }
 }

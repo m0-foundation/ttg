@@ -10,7 +10,7 @@ contract EpochBasedInflationaryVoteTokenHarness is EpochBasedInflationaryVoteTok
         string memory symbol_,
         uint256 decimals_,
         uint256 participationInflation_
-    ) EpochBasedInflationaryVoteToken(name_, symbol_, uint8(decimals_), participationInflation_) {}
+    ) EpochBasedInflationaryVoteToken(name_, symbol_, uint8(decimals_), uint16(participationInflation_)) {}
 
     function markParticipation(address delegatee_) external {
         _markParticipation(delegatee_);

@@ -50,7 +50,7 @@ contract StandardGovernorHarness is StandardGovernor {
         uint256 yesWeight_
     ) public {
         _proposals[proposalId_] = Proposal({
-            voteStart: uint48(voteStart_),
+            voteStart: uint16(voteStart_),
             executed: executed_,
             proposer: proposer_,
             thresholdRatio: 0,

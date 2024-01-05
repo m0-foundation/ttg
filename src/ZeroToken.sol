@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.23;
 
+import { UIntMath } from "../lib/common/src/libs/UIntMath.sol";
+
 import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
 
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
@@ -55,9 +57,11 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view returns (uint256[] memory votingPowers_) {
-        _revertIfNotPastTimepoint(endEpoch_);
+        uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
-        return _getValuesBetween(_votingPowers[account_], startEpoch_, endEpoch_);
+        _revertIfNotPastTimepoint(safeEndEpoch_);
+
+        return _getValuesBetween(_votingPowers[account_], UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
     function pastBalancesOf(
@@ -65,9 +69,11 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view returns (uint256[] memory balances_) {
-        _revertIfNotPastTimepoint(endEpoch_);
+        uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
-        return _getValuesBetween(_balances[account_], startEpoch_, endEpoch_);
+        _revertIfNotPastTimepoint(safeEndEpoch_);
+
+        return _getValuesBetween(_balances[account_], UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
     function pastDelegates(
@@ -75,18 +81,22 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view returns (address[] memory delegatees_) {
-        _revertIfNotPastTimepoint(endEpoch_);
+        uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
-        return _getDelegateesBetween(account_, startEpoch_, endEpoch_);
+        _revertIfNotPastTimepoint(safeEndEpoch_);
+
+        return _getDelegateesBetween(account_, UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
     function pastTotalSupplies(
         uint256 startEpoch_,
         uint256 endEpoch_
     ) external view returns (uint256[] memory totalSupplies_) {
-        _revertIfNotPastTimepoint(endEpoch_);
+        uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
-        return _getValuesBetween(_totalSupplies, startEpoch_, endEpoch_);
+        _revertIfNotPastTimepoint(safeEndEpoch_);
+
+        return _getValuesBetween(_totalSupplies, UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
     function standardGovernor() public view returns (address standardGovernor_) {
@@ -99,12 +109,12 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
 
     function _getDelegateesBetween(
         address account_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
+        uint16 startEpoch_,
+        uint16 endEpoch_
     ) internal view returns (address[] memory delegatees_) {
         if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch();
 
-        uint256 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
+        uint16 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
 
         delegatees_ = new address[](epochsIndex_);
 
@@ -114,34 +124,45 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
 
         // Keep going back as long as the epoch is greater or equal to the previous AccountSnap's startingEpoch.
         while (snapIndex_ > 0) {
-            AccountSnap storage accountSnap_ = _unsafeAccess(accountSnaps_, --snapIndex_);
+            unchecked {
+                --snapIndex_;
+            }
 
-            uint256 snapStartingEpoch_ = accountSnap_.startingEpoch;
+            AccountSnap storage accountSnap_ = _unsafeAccess(accountSnaps_, snapIndex_);
+            uint16 snapStartingEpoch_ = accountSnap_.startingEpoch;
 
             // Keep checking if the AccountSnap's startingEpoch is applicable to the current and decrementing epoch.
             while (snapStartingEpoch_ <= endEpoch_) {
-                delegatees_[--epochsIndex_] = _getDefaultIfZero(accountSnap_.account, account_);
+                unchecked {
+                    --epochsIndex_;
+                }
+
+                delegatees_[epochsIndex_] = _getDefaultIfZero(accountSnap_.account, account_);
 
                 if (epochsIndex_ == 0) return delegatees_;
 
-                --endEpoch_;
+                unchecked {
+                    --endEpoch_;
+                }
             }
         }
 
         // Set the remaining delegatee values (from before any accountSnaps existed) to the account itself.
         while (epochsIndex_ > 0) {
-            delegatees_[--epochsIndex_] = account_;
+            unchecked {
+                delegatees_[--epochsIndex_] = account_;
+            }
         }
     }
 
     function _getValuesBetween(
         AmountSnap[] storage amountSnaps_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
+        uint16 startEpoch_,
+        uint16 endEpoch_
     ) internal view returns (uint256[] memory values_) {
         if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch();
 
-        uint256 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
+        uint16 epochsIndex_ = endEpoch_ - startEpoch_ + 1;
 
         values_ = new uint256[](epochsIndex_);
 
@@ -149,17 +170,27 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
 
         // Keep going back as long as the epoch is greater or equal to the previous AmountSnap's startingEpoch.
         while (snapIndex_ > 0) {
-            AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, --snapIndex_);
+            unchecked {
+                --snapIndex_;
+            }
+
+            AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, snapIndex_);
 
             uint256 snapStartingEpoch_ = amountSnap_.startingEpoch;
 
             // Keep checking if the AmountSnap's startingEpoch is applicable to the current and decrementing epoch.
             while (snapStartingEpoch_ <= endEpoch_) {
-                values_[--epochsIndex_] = amountSnap_.amount;
+                unchecked {
+                    --epochsIndex_;
+                }
+
+                values_[epochsIndex_] = amountSnap_.amount;
 
                 if (epochsIndex_ == 0) return values_;
 
-                --endEpoch_;
+                unchecked {
+                    --endEpoch_;
+                }
             }
         }
     }

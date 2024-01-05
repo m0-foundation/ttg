@@ -18,7 +18,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
      * @param  timepoint The timepoint being queried.
      * @param  clock     The current timepoint.
      */
-    error NotPastTimepoint(uint256 timepoint, uint256 clock);
+    error NotPastTimepoint(uint48 timepoint, uint48 clock);
 
     /******************************************************************************************************************\
     |                                                      Events                                                      |

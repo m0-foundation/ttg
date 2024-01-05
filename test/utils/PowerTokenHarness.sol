@@ -13,7 +13,7 @@ contract PowerTokenHarness is PowerToken {
     ) PowerToken(bootstrapToken_, standardGovernor_, cashToken_, vault_) {}
 
     function setNextCashTokenStartingEpoch(uint256 nextCashTokenStartingEpoch_) external {
-        _nextCashTokenStartingEpoch = nextCashTokenStartingEpoch_;
+        _nextCashTokenStartingEpoch = uint16(nextCashTokenStartingEpoch_);
     }
 
     function setInternalCashToken(address cashToken_) external {
@@ -25,15 +25,15 @@ contract PowerTokenHarness is PowerToken {
     }
 
     function setNextTargetSupplyStartingEpoch(uint256 nextTargetSupplyStartingEpoch_) external {
-        _nextTargetSupplyStartingEpoch = nextTargetSupplyStartingEpoch_;
+        _nextTargetSupplyStartingEpoch = uint16(nextTargetSupplyStartingEpoch_);
     }
 
     function setInternalTargetSupply(uint256 targetSupply_) external {
-        _targetSupply = targetSupply_;
+        _targetSupply = uint240(targetSupply_);
     }
 
     function setInternalNextTargetSupply(uint256 nextTargetSupply_) external {
-        _nextTargetSupply = nextTargetSupply_;
+        _nextTargetSupply = uint240(nextTargetSupply_);
     }
 
     function nextCashTokenStartingEpoch() external view returns (uint256 epoch_) {

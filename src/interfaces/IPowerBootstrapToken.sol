@@ -15,6 +15,10 @@ interface IPowerBootstrapToken {
      */
     error LengthMismatch(uint256 accountsLength, uint256 balancesLength);
 
+    /// @notice Revert message when the total supply is larger than `type(uint240).max`, rendering the contract
+    ///         incompatible as a bootstrap token for the PowerToken.
+    error TotalSupplyTooLarge();
+
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/

@@ -3,6 +3,7 @@
 pragma solidity 0.8.23;
 
 import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
+import { UIntMath } from "../lib/common/src/libs/UIntMath.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
@@ -13,33 +14,34 @@ import { EpochBasedInflationaryVoteToken } from "./abstract/EpochBasedInflationa
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
 // NOTE: Balances and voting powers are bootstrapped from the bootstrap token, but delegations are not.
+// NOTE: Bootstrapping only works with a bootstrap token aht supports the same PureEpochs as the clock mode.
 
 /**
  * @title An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor, and enabling
  *        auctioning of the unowned inflated supply.
  */
 contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
-    uint256 internal constant _AUCTION_PERIODS = 100;
+    uint40 internal constant _AUCTION_PERIODS = 100;
 
-    uint256 public constant INITIAL_SUPPLY = 1_000_000_000;
+    uint240 public constant INITIAL_SUPPLY = 10_000;
 
     address public immutable bootstrapToken;
     address public immutable standardGovernor;
     address public immutable vault;
 
-    uint256 public immutable bootstrapEpoch;
+    uint16 public immutable bootstrapEpoch;
 
-    uint256 internal immutable _bootstrapSupply;
+    uint240 internal immutable _bootstrapSupply;
 
-    uint256 internal _nextCashTokenStartingEpoch;
+    uint16 internal _nextCashTokenStartingEpoch;
 
     address internal _cashToken;
     address internal _nextCashToken;
 
-    uint256 internal _nextTargetSupplyStartingEpoch;
+    uint16 internal _nextTargetSupplyStartingEpoch;
 
-    uint256 internal _targetSupply;
-    uint256 internal _nextTargetSupply = INITIAL_SUPPLY;
+    uint240 internal _targetSupply;
+    uint240 internal _nextTargetSupply = INITIAL_SUPPLY;
 
     modifier onlyStandardGovernor() {
         if (msg.sender != standardGovernor) revert NotStandardGovernor();
@@ -57,8 +59,12 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if ((_nextCashToken = cashToken_) == address(0)) revert InvalidCashTokenAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
 
-        uint256 bootstrapEpoch_ = bootstrapEpoch = (clock() - 1);
-        _bootstrapSupply = IEpochBasedVoteToken(bootstrapToken_).pastTotalSupply(bootstrapEpoch_);
+        uint16 bootstrapEpoch_ = bootstrapEpoch = (_clock() - 1);
+        uint256 bootstrapSupply_ = IEpochBasedVoteToken(bootstrapToken_).pastTotalSupply(bootstrapEpoch_);
+
+        if (bootstrapSupply_ > type(uint240).max) revert BootstrapSupplyTooLarge();
+
+        _bootstrapSupply = uint240(bootstrapSupply_);
 
         _addTotalSupply(INITIAL_SUPPLY);
     }
@@ -71,12 +77,14 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         uint256 minAmount_,
         uint256 maxAmount_,
         address destination_
-    ) external returns (uint256 amount_, uint256 cost_) {
-        uint256 amountToAuction_ = amountToAuction();
+    ) external returns (uint240 amount_, uint256 cost_) {
+        uint240 amountToAuction_ = amountToAuction();
+        uint240 safeMinAmount_ = UIntMath.safe240(minAmount_);
+        uint240 safeMaxAmount_ = UIntMath.safe240(maxAmount_);
 
-        amount_ = amountToAuction_ > maxAmount_ ? maxAmount_ : amountToAuction_;
+        amount_ = amountToAuction_ > safeMaxAmount_ ? safeMaxAmount_ : amountToAuction_;
 
-        if (amount_ < minAmount_) revert InsufficientAuctionSupply(amountToAuction_, minAmount_);
+        if (amount_ < safeMinAmount_) revert InsufficientAuctionSupply(amountToAuction_, safeMinAmount_);
 
         emit Buy(msg.sender, amount_, cost_ = getCost(amount_));
 
@@ -89,8 +97,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     function markNextVotingEpochAsActive() external onlyStandardGovernor {
         // The next voting epoch is the targetEpoch.
-        uint256 currentEpoch_ = clock();
-        uint256 targetEpoch_ = currentEpoch_ + (_isVotingEpoch(currentEpoch_) ? 2 : 1);
+        uint16 currentEpoch_ = _clock();
+        uint16 targetEpoch_ = currentEpoch_ + (_isVotingEpoch(currentEpoch_) ? 2 : 1);
 
         // If the current epoch is already on or after the `_nextTargetSupplyStartingEpoch`, then rotate the variables
         // and track the next `_nextTargetSupplyStartingEpoch`, else just overwrite `nextTargetSupply_` only.
@@ -99,7 +107,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
             _nextTargetSupplyStartingEpoch = targetEpoch_;
         }
 
-        uint256 nextTargetSupply_ = _nextTargetSupply = _targetSupply + (_targetSupply * participationInflation) / ONE;
+        // NOTE: Cap the next target supply at `type(uint240).max`.
+        uint240 nextTargetSupply_ = _nextTargetSupply = UIntMath.bound240(
+            uint256(_targetSupply) + (_targetSupply * participationInflation) / ONE
+        );
 
         emit TargetSupplyInflated(targetEpoch_, nextTargetSupply_);
     }
@@ -112,8 +123,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (nextCashToken_ == address(0)) revert InvalidCashTokenAddress();
 
         // The next epoch is the targetEpoch.
-        uint256 currentEpoch_ = clock();
-        uint256 targetEpoch_ = currentEpoch_ + 1;
+        uint16 currentEpoch_ = _clock();
+        uint16 targetEpoch_ = currentEpoch_ + 1;
 
         // If the current epoch is already on or after the `_nextCashTokenStartingEpoch`, then rotate the variables
         // and track the next `_nextCashTokenStartingEpoch`, else just overwrite `_nextCashToken` only.
@@ -131,29 +142,31 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function amountToAuction() public view returns (uint256 amountToAuction_) {
-        if (_isVotingEpoch(clock())) return 0; // No auction during voting epochs.
+    function amountToAuction() public view returns (uint240 amountToAuction_) {
+        if (_isVotingEpoch(_clock())) return 0; // No auction during voting epochs.
 
-        uint256 targetSupply_ = targetSupply();
-        uint256 totalSupply_ = _getTotalSupply(clock());
+        uint240 targetSupply_ = _getTargetSupply();
+        uint240 totalSupply_ = _getTotalSupply(_clock());
 
-        return targetSupply_ > totalSupply_ ? targetSupply_ - totalSupply_ : 0;
+        unchecked {
+            return targetSupply_ > totalSupply_ ? targetSupply_ - totalSupply_ : 0;
+        }
     }
 
     function cashToken() public view returns (address cashToken_) {
-        return clock() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
+        return _clock() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
     }
 
     function getCost(uint256 amount_) public view returns (uint256 cost_) {
-        uint256 currentEpoch_ = clock();
+        uint16 currentEpoch_ = _clock();
 
-        uint256 timeRemaining_ = _isVotingEpoch(currentEpoch_)
+        uint40 timeRemaining_ = _isVotingEpoch(currentEpoch_)
             ? PureEpochs._EPOCH_PERIOD
             : PureEpochs.timeRemainingInCurrentEpoch();
 
-        uint256 secondsPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
-        uint256 leftPoint_ = 1 << (timeRemaining_ / secondsPerPeriod_);
-        uint256 remainder_ = timeRemaining_ % secondsPerPeriod_;
+        uint40 secondsPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
+        uint256 leftPoint_ = uint256(1) << (timeRemaining_ / secondsPerPeriod_); // Max is 1 << 100.
+        uint40 remainder_ = timeRemaining_ % secondsPerPeriod_;
 
         /**
          * @dev Auction curve:
@@ -175,15 +188,17 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
          *          1% of the previous epoch's total supply with 5 days left in the auction period.
          *        - To achieve this, the price is instead computed per basis point of the last epoch's total supply.
          */
+        // NOTE: A good amount of this can be done unchecked, but not every step, so it would look messy.
         return
             _divideUp(
-                (ONE * amount_ * ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1)))),
-                (secondsPerPeriod_ * _getTotalSupply(currentEpoch_ - 1))
+                UIntMath.safe240(amount_) *
+                    ((remainder_ * leftPoint_) + ((secondsPerPeriod_ - remainder_) * (leftPoint_ >> 1))),
+                uint256(secondsPerPeriod_) * _getTotalSupply(currentEpoch_ - 1)
             );
     }
 
     function targetSupply() public view returns (uint256 targetSupply_) {
-        return clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
+        return _getTargetSupply();
     }
 
     /******************************************************************************************************************\
@@ -195,7 +210,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         // NOTE: Don't need add `_getUnrealizedInflation(account_)` here since all callers of `_bootstrap` also call
         //       `_sync`, which will handle that.
-        uint256 bootstrapBalance_ = _getBootstrapBalance(account_, bootstrapEpoch);
+        uint240 bootstrapBalance_ = _getBootstrapBalance(account_, bootstrapEpoch);
 
         if (bootstrapBalance_ == 0) return;
 
@@ -233,13 +248,19 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    function _getBalance(address account_, uint256 epoch_) internal view override returns (uint256) {
+    function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
         if (_balances[account_].length == 0) {
-            return _getBootstrapBalance(account_, bootstrapEpoch) + _getUnrealizedInflation(account_, epoch_);
+            unchecked {
+                return
+                    UIntMath.bound240(
+                        uint256(_getBootstrapBalance(account_, bootstrapEpoch)) +
+                            _getUnrealizedInflation(account_, epoch_)
+                    );
+            }
         }
 
         return super._getBalance(account_, epoch_);
@@ -247,8 +268,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     function _getBalanceWithoutUnrealizedInflation(
         address account_,
-        uint256 epoch_
-    ) internal view override returns (uint256) {
+        uint16 epoch_
+    ) internal view override returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
@@ -259,31 +280,47 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /// @dev This is the portion of the initial supply commensurate with the account's portion of the bootstrap supply.
-    function _getBootstrapBalance(address account_, uint256 epoch_) internal view returns (uint256) {
-        return
-            (IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_) * INITIAL_SUPPLY) / _bootstrapSupply;
+    function _getBootstrapBalance(address account_, uint16 epoch_) internal view returns (uint240) {
+        unchecked {
+            // NOTE: Can safely cast `pastBalanceOf` since the constructor already establishes that the total supply of
+            //       the bootstrap token is less than `type(uint240).max`. Can do math unchecked since
+            //       `pastBalanceOf * INITIAL_SUPPLY <= type(uint256).max`.
+            return
+                (uint240(IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_)) * INITIAL_SUPPLY) /
+                _bootstrapSupply;
+        }
     }
 
-    function _getTotalSupply(uint256 epoch_) internal view override returns (uint256) {
+    function _getTotalSupply(uint16 epoch_) internal view override returns (uint240) {
         // For epochs before the bootstrap epoch return the initial supply.
         return epoch_ <= bootstrapEpoch ? INITIAL_SUPPLY : super._getTotalSupply(epoch_);
     }
 
-    function _getVotes(address account_, uint256 epoch_) internal view override returns (uint256) {
+    function _getVotes(address account_, uint16 epoch_) internal view override returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
         if (_votingPowers[account_].length == 0) {
-            return _getBootstrapBalance(account_, bootstrapEpoch) + _getUnrealizedInflation(account_, epoch_);
+            unchecked {
+                return
+                    UIntMath.bound240(
+                        uint256(_getBootstrapBalance(account_, bootstrapEpoch)) +
+                            _getUnrealizedInflation(account_, epoch_)
+                    );
+            }
         }
 
         return super._getVotes(account_, epoch_);
     }
 
-    function _getLastSync(address account_, uint256 epoch_) internal view override returns (uint256) {
+    function _getLastSync(address account_, uint16 epoch_) internal view override returns (uint16) {
         // If there are no LastSync snaps, return the bootstrap epoch.
         return (_lastSyncs[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
+    }
+
+    function _getTargetSupply() internal view returns (uint240 targetSupply_) {
+        return _clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
     /**
@@ -293,9 +330,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function _divideUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (y == 0) revert DivisionByZero();
 
-        unchecked {
-            z = x + y;
-        }
+        z = (x * ONE) + y;
 
         if (z < x) revert DivideUpOverflow();
 

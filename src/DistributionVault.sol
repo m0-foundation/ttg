@@ -127,9 +127,9 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             uint256 balance_ = balances_[index_];
             uint256 totalSupply_ = totalSupplies_[index_];
 
-            claimable_ += hasClaimed[token_][startEpoch_ + index_][account_]
-                ? 0
-                : (distributionOfAt[token_][startEpoch_ + index_] * balance_) / totalSupply_;
+            if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
+
+            claimable_ += (distributionOfAt[token_][startEpoch_ + index_] * balance_) / totalSupply_;
         }
     }
 
@@ -147,6 +147,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         claimed_ = getClaimable(token_, account_, startEpoch_, endEpoch_);
 
         // NOTE: `getClaimable` skips epochs the account already claimed, so we can safely mark all epochs as claimed.
+        // NOTE: This effectively iterates over the range again (is done in `getClaimable`), but the alternative is
+        //       a lot of code duplication.
         for (uint256 epoch_ = startEpoch_; epoch_ < endEpoch_ + 1; ++epoch_) {
             hasClaimed[token_][epoch_][account_] = true;
         }

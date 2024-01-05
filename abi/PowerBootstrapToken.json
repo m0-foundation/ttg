@@ -73,5 +73,10 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "TotalSupplyTooLarge",
+    "inputs": []
   }
 ]

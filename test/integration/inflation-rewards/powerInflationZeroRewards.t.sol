@@ -145,10 +145,10 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
 
         // New proposal
         uint256 proposalId3_ = _createStandardProposal("key3", "value3");
-        uint256 transferAmountToDave_ = 105e6;
+        uint256 transferAmountToDave_ = 1_050;
 
         vm.prank(_alice);
-        _powerToken.transfer(_dave, 105e6);
+        _powerToken.transfer(_dave, 1_050);
 
         assertEq(_powerToken.getVotes(_alice), _getInflatedAmount(aliceBalance_) - transferAmountToDave_);
         assertEq(_powerToken.balanceOf(_alice), _getInflatedAmount(aliceBalance_) - transferAmountToDave_);
@@ -165,7 +165,7 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.getVotes(_eve), _getInflatedAmount(aliceBalance_) - transferAmountToDave_);
         assertEq(_powerToken.balanceOf(_eve), 0);
 
-        uint256 transferAmountToEve_ = 25e6;
+        uint256 transferAmountToEve_ = 250;
 
         vm.prank(_bob);
         _powerToken.transfer(_eve, transferAmountToEve_);
@@ -210,25 +210,25 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         _standardGovernor.castVote(proposalId1_, uint8(IBatchGovernor.VoteType.Yes));
 
         // Voting power of Eve is inflated
-        assertEq(_powerToken.getVotes(_eve), 110e7);
+        assertEq(_powerToken.getVotes(_eve), 11_000);
 
         // Alice, Bob and Carol do not yet have balances inflation
-        assertEq(_powerToken.balanceOf(_alice), 550e6);
-        assertEq(_powerToken.balanceOf(_bob), 250e6);
-        assertEq(_powerToken.balanceOf(_carol), 20e7);
+        assertEq(_powerToken.balanceOf(_alice), 5_500);
+        assertEq(_powerToken.balanceOf(_bob), 2_500);
+        assertEq(_powerToken.balanceOf(_carol), 2_000);
 
         _warpToNextTransferEpoch();
 
         // Alice, Bob and Carol have balances inflation
-        assertEq(_powerToken.balanceOf(_alice), 605e6);
-        assertEq(_powerToken.balanceOf(_bob), 275e6);
-        assertEq(_powerToken.balanceOf(_carol), 22e7);
+        assertEq(_powerToken.balanceOf(_alice), 6_050);
+        assertEq(_powerToken.balanceOf(_bob), 2_750);
+        assertEq(_powerToken.balanceOf(_carol), 2_200);
 
         vm.prank(_alice);
-        _powerToken.transfer(_dave, 105e6);
+        _powerToken.transfer(_dave, 1_050);
 
-        assertEq(_powerToken.getVotes(_eve), 995e6);
-        assertEq(_powerToken.getVotes(_dave), 105e6);
+        assertEq(_powerToken.getVotes(_eve), 9_950);
+        assertEq(_powerToken.getVotes(_dave), 1_050);
 
         uint256 proposalId2_ = _createStandardProposal("key2", "value2");
 
@@ -239,22 +239,22 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         _standardGovernor.castVote(proposalId2_, uint8(IBatchGovernor.VoteType.Yes));
 
         // Voting power of Eve is inflated
-        assertEq(_powerToken.getVotes(_eve), 10_945e5);
+        assertEq(_powerToken.getVotes(_eve), 10_945);
 
         // Alice, Bob and Carol do not yet have balances inflation
-        assertEq(_powerToken.balanceOf(_alice), 500e6);
-        assertEq(_powerToken.balanceOf(_bob), 275e6);
-        assertEq(_powerToken.balanceOf(_carol), 22e7);
+        assertEq(_powerToken.balanceOf(_alice), 5_000);
+        assertEq(_powerToken.balanceOf(_bob), 2_750);
+        assertEq(_powerToken.balanceOf(_carol), 2_200);
 
         _warpToNextVoteEpoch();
 
         // Alice, Bob and Carol have balances inflation
-        assertEq(_powerToken.balanceOf(_alice), 550e6);
-        assertEq(_powerToken.balanceOf(_bob), 3025e5);
-        assertEq(_powerToken.balanceOf(_carol), 242e6);
+        assertEq(_powerToken.balanceOf(_alice), 5_500);
+        assertEq(_powerToken.balanceOf(_bob), 3_025);
+        assertEq(_powerToken.balanceOf(_carol), 2_420);
 
-        assertEq(_powerToken.getVotes(_dave), 105e6);
-        assertEq(_powerToken.balanceOf(_dave), 105e6);
+        assertEq(_powerToken.getVotes(_dave), 1_050);
+        assertEq(_powerToken.balanceOf(_dave), 1_050);
     }
 
     function test_zeroRewards_multiplDelegatesTransfersAndRedelegations() external {
@@ -275,10 +275,10 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
 
         vm.prank(_eve);
         uint256 eveWeight_ = _standardGovernor.castVote(proposalId1_, uint8(IBatchGovernor.VoteType.Yes));
-        assertEq(eveWeight_, 800e6);
+        assertEq(eveWeight_, 8_000);
 
         // Voting power of Eve is inflated
-        assertEq(_powerToken.getVotes(_eve), 880e6);
+        assertEq(_powerToken.getVotes(_eve), 8_800);
         assertEq(_zeroToken.balanceOf(_eve) - eveZeroBalance_, (5_000_000e6 * 800) / 1000);
 
         eveZeroBalance_ = _zeroToken.balanceOf(_eve);
@@ -293,16 +293,16 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
 
         vm.prank(_eve);
         eveWeight_ = _standardGovernor.castVote(proposalId2_, uint8(IBatchGovernor.VoteType.Yes));
-        assertEq(eveWeight_, 880e6);
+        assertEq(eveWeight_, 8_800);
 
-        assertEq(_powerToken.getVotes(_eve), 968e6);
+        assertEq(_powerToken.getVotes(_eve), 9_680);
         assertEq(_zeroToken.balanceOf(_eve) - eveZeroBalance_, 4074074074074); // (5_000_000e6 * 880) / 1080
 
         vm.prank(_carol);
         uint256 carolWeight_ = _standardGovernor.castVote(proposalId2_, uint8(IBatchGovernor.VoteType.Yes));
-        assertEq(carolWeight_, 200e6);
+        assertEq(carolWeight_, 2_000);
 
-        assertEq(_powerToken.getVotes(_carol), 220e6);
+        assertEq(_powerToken.getVotes(_carol), 2_200);
         assertEq(_zeroToken.balanceOf(_carol), 925925925925); // (5_000_000e6 * 200) / 1080
     }
 
