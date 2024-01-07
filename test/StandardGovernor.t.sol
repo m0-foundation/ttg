@@ -10,9 +10,6 @@ import { StandardGovernorHarness } from "./utils/StandardGovernorHarness.sol";
 import { MockERC20, MockPowerToken, MockRegistrar, MockZeroToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
-// TODO: test_CanVoteOnMultipleProposals
-// TODO: test_state matrix.
-
 contract StandardGovernorTests is TestUtils {
     uint256 internal constant _ONE = 10_000;
 
@@ -32,6 +29,8 @@ contract StandardGovernorTests is TestUtils {
     MockPowerToken internal _powerToken;
     MockRegistrar internal _registrar;
     MockZeroToken internal _zeroToken;
+
+    address internal _account1 = makeAddr("account1");
 
     function setUp() external {
         _cashToken = new MockERC20();
@@ -233,7 +232,7 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.numberOfProposalsVotedOnAt(_alice, currentEpoch), 1);
     }
 
-    function test_castVote_votedOnAllProposals() external {
+    function test_castVote_votedOnAllProposalsOnlyOneProposalExists() external {
         uint256 proposalId_ = 1;
         uint256 currentEpoch = _standardGovernor.clock();
 
@@ -252,7 +251,49 @@ contract StandardGovernorTests is TestUtils {
         vm.prank(_alice);
         assertEq(_standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes)), _votePower);
 
+        assertEq(_standardGovernor.hasVotedOnAllProposals(_alice, currentEpoch), true);
+
         assertEq(_standardGovernor.numberOfProposalsVotedOnAt(_alice, currentEpoch), 1);
+    }
+
+    function test_castVote_votedOnAllProposalsMultipleProposalExists() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 thirdProposalId_ = 3;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch);
+        _standardGovernor.setProposal(thirdProposalId_, currentEpoch);
+        _standardGovernor.setNumberOfProposals(currentEpoch, 3);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, firstProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVote(firstProposalId_, uint8(IBatchGovernor.VoteType.Yes)), _votePower);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, secondProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVote(secondProposalId_, uint8(IBatchGovernor.VoteType.Yes)), _votePower);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, thirdProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch);
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVote(thirdProposalId_, uint8(IBatchGovernor.VoteType.Yes)), _votePower);
+
+        assertEq(_standardGovernor.hasVotedOnAllProposals(_alice, currentEpoch), true);
+
+        assertEq(_standardGovernor.numberOfProposalsVotedOnAt(_alice, currentEpoch), 3);
     }
 
     /* ============ castVotes ============ */
@@ -263,6 +304,7 @@ contract StandardGovernorTests is TestUtils {
 
         _standardGovernor.setProposal(firstProposalId_, currentEpoch);
         _standardGovernor.setProposal(secondProposalId_, currentEpoch);
+        _standardGovernor.setNumberOfProposals(currentEpoch, 2);
 
         _powerToken.setVotePower(_votePower);
         _powerToken.setPastTotalSupply(1);
@@ -281,8 +323,52 @@ contract StandardGovernorTests is TestUtils {
         vm.expectEmit();
         emit IGovernor.VoteCast(_alice, secondProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
 
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch);
+
         vm.prank(_alice);
         assertEq(_standardGovernor.castVotes(proposalIds_, supports_), _votePower);
+    }
+
+    function test_castVotes_multipleTimes() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 thirdProposalId_ = 3;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch);
+        _standardGovernor.setProposal(thirdProposalId_, currentEpoch);
+        _standardGovernor.setNumberOfProposals(currentEpoch, 3);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory firstBatchOfProposalIds_ = new uint256[](2);
+        firstBatchOfProposalIds_[0] = firstProposalId_;
+        firstBatchOfProposalIds_[1] = secondProposalId_;
+
+        uint8[] memory firstBatchOfSupports_ = new uint8[](2);
+        firstBatchOfSupports_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        firstBatchOfSupports_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVotes(firstBatchOfProposalIds_, firstBatchOfSupports_), _votePower);
+
+        uint256[] memory secondBatchOfProposalIds_ = new uint256[](1);
+        secondBatchOfProposalIds_[0] = thirdProposalId_;
+
+        uint8[] memory secondBatchOfSupports_ = new uint8[](1);
+        secondBatchOfSupports_[0] = uint8(IBatchGovernor.VoteType.No);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, thirdProposalId_, uint8(IBatchGovernor.VoteType.No), _votePower, "");
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch);
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVotes(secondBatchOfProposalIds_, secondBatchOfSupports_), _votePower);
     }
 
     /* ============ propose ============ */
@@ -364,6 +450,33 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
     }
 
+    function test_propose_uniqueProposalIds() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_standardGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_standardGovernor.setProposalFee.selector, 1);
+
+        _warpToNextTransferEpoch();
+
+        uint256 proposalId1_ = _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
+
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        uint256 expectedProposalId1_ = uint256(
+            keccak256(abi.encode(callDatas_[0], currentEpoch_ + 1, address(_standardGovernor)))
+        );
+        assertEq(proposalId1_, expectedProposalId1_);
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "description 2");
+
+        _warpToNextVoteEpoch();
+
+        uint256 proposalId2_ = _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
+        assertNotEq(proposalId1_, proposalId2_);
+    }
+
     // TODO: This can be duplicated into a `BatchGovernor.t.sol -> test_propose_invalidCallData`.
     function test_propose_invalidCallData() external {
         address[] memory targets_ = new address[](1);
@@ -371,6 +484,105 @@ contract StandardGovernorTests is TestUtils {
 
         vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
         _standardGovernor.propose(targets_, new uint256[](1), new bytes[](1), "");
+    }
+
+    /* ============ state ============ */
+    function test_state_pendingThenActive() external {
+        uint256 proposalId_ = 1;
+        uint256 nextEpoch = _standardGovernor.clock() + 1;
+
+        _standardGovernor.setProposal(proposalId_, nextEpoch);
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Pending));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+    }
+
+    function test_state_activeThenDefeatedNobodyVoted() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(proposalId_, currentEpoch);
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Defeated));
+    }
+
+    function test_state_activeThenDefeatedMajorityVotedNo() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(proposalId_, currentEpoch);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        vm.prank(_alice);
+        _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.No));
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Defeated));
+    }
+
+    function test_state_activeThenSucceededMajorityVotedYes() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(proposalId_, currentEpoch);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        vm.prank(_alice);
+        _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Succeeded));
+    }
+
+    function test_state_succeededThenExpired() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(proposalId_, currentEpoch, false, _alice, 0, 1);
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Succeeded));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Succeeded));
+
+        _warpToNextEpoch();
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Expired));
+    }
+
+    function test_state_executed() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(proposalId_, currentEpoch, true, _alice, 0, 1);
+
+        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Executed));
     }
 
     /* ============ execute ============ */
@@ -433,6 +645,19 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.sendProposalFeeToVault(proposalId_);
     }
 
+    function test_sendProposalFeeToVault_noFeeToSend() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposalFeeInfo(proposalId_, address(_cashToken), 0);
+        _standardGovernor.setProposal(proposalId_, currentEpoch_);
+
+        _warpToNextVoteEpoch();
+
+        vm.expectRevert(IStandardGovernor.NoFeeToSend.selector);
+        _standardGovernor.sendProposalFeeToVault(proposalId_);
+    }
+
     function test_sendProposalFeeToVault() external {
         uint256 proposalId_ = 1;
 
@@ -467,12 +692,27 @@ contract StandardGovernorTests is TestUtils {
     /* ============ Proposal Functions ============ */
 
     /* ============ addToList ============ */
+
+    function test_addToList_callRegistrar() external {
+        vm.expectCall(address(_registrar), abi.encodeCall(_registrar.addToList, ("someList", _account1)));
+
+        vm.prank(address(_standardGovernor));
+        _standardGovernor.addToList("someList", _account1);
+    }
+
     function test_addToList_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _standardGovernor.addToList("SOME_LIST", _alice);
     }
 
     /* ============ removeFromList ============ */
+    function test_removeFromList_callRegistrar() external {
+        vm.expectCall(address(_registrar), abi.encodeCall(_registrar.removeFromList, ("someList", _account1)));
+
+        vm.prank(address(_standardGovernor));
+        _standardGovernor.removeFromList("someList", _account1);
+    }
+
     function test_removeFromList_notSelf() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
         _standardGovernor.removeFromList("SOME_LIST", _alice);

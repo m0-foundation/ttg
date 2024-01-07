@@ -22,10 +22,10 @@ interface IGovernor is IERC6372, IERC712 {
     enum ProposalState {
         Pending,
         Active,
-        Canceled,
+        Canceled, // never used by TTG
         Defeated,
         Succeeded,
-        Queued,
+        Queued, // never used by TTG
         Expired,
         Executed
     }

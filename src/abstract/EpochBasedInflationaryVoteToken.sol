@@ -67,6 +67,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
         if (!_update(_participations[delegatee_])) revert AlreadyParticipated(); // Revert if could not update.
 
+        _sync(delegatee_);
+
         uint256 inflation_ = _getInflation(_getVotes(delegatee_, clock()));
 
         // NOTE: Cannot sync here because it would prevent `delegatee_` from getting inflation if their delegatee votes.
@@ -171,7 +173,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         //       power), then `epoch_` will start at 0, which can result in a longer loop than needed. Inheriting
         //       contracts should override `_getLastSync` to return the most recent appropriate epoch for such an
         //       account, such as the epoch when the contract was deployed, some bootstrap epoch, etc.
-        for (uint256 epoch_ = _getLastSync(account_, lastEpoch_) + 1; epoch_ <= lastEpoch_; ++epoch_) {
+        for (uint256 epoch_ = _getLastSync(account_, lastEpoch_); epoch_ < lastEpoch_; ++epoch_) {
             // Skip non-voting epochs and epochs when the delegatee did not participate.
             if (!_isVotingEpoch(epoch_) || !_hasParticipatedAt(delegatee_, epoch_)) continue;
 

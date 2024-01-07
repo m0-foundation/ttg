@@ -2,12 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { IPowerToken } from "../../../../src/interfaces/IPowerToken.sol";
-import { IPowerTokenDeployer } from "../../../../src/interfaces/IPowerTokenDeployer.sol";
-import { IStandardGovernorDeployer } from "../../../../src/interfaces/IStandardGovernorDeployer.sol";
-import { IEmergencyGovernorDeployer } from "../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
-
-import { IntegrationBaseSetup, IGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IntegrationBaseSetup, IGovernor, IBatchGovernor } from "../../IntegrationBaseSetup.t.sol";
 
 contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     function test_zeroGovernorPropose_totalSupplyZero() external {
@@ -130,13 +125,98 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         (, , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
+        uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
+
         vm.prank(_eve);
-        assertEq(_zeroGovernor.castVote(proposalId_, 1), _eveZeroWeight);
+        assertEq(_zeroGovernor.castVote(proposalId_, 1), eveZeroWeight_);
 
         _jumpEpochs(3);
 
         (, , IGovernor.ProposalState defeatedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(defeatedState_), 3);
+    }
+
+    function test_zeroGovernorPropose_proposalActiveSucceededExecuted() external {
+        _warpToNextEpoch(); // TODO: verify it is needed
+
+        (
+            address[] memory targets_,
+            uint256[] memory values_,
+            bytes[] memory callDatas_,
+            string memory description_
+        ) = _getProposeParams();
+
+        vm.prank(_eve);
+        uint256 proposalId_ = _zeroGovernor.propose(targets_, values_, callDatas_, description_);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 1); // Active immediately
+
+        uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
+
+        uint256 daveZeroWeight_ = _zeroToken.getVotes(_dave);
+
+        vm.prank(_dave);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
+
+        (, , , uint256 noVotes_, uint256 yesVotes_, , uint256 thresholdRatio_) = _zeroGovernor.getProposal(proposalId_);
+        assertEq(noVotes_, 0);
+        assertEq(yesVotes_, daveZeroWeight_);
+        assertEq(thresholdRatio_, 6000);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 4); // proposal has Succeeded
+
+        vm.prank(_eve);
+        _zeroGovernor.execute(targets_, values_, callDatas_, keccak256(bytes(description_)));
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 7); // proposal was Executed
+    }
+
+    function test_zeroGovernorPropose_proposalActiveSucceededExpired() external {
+        _warpToNextEpoch(); // TODO: verify it is needed
+
+        (
+            address[] memory targets_,
+            uint256[] memory values_,
+            bytes[] memory callDatas_,
+            string memory description_
+        ) = _getProposeParams();
+
+        vm.prank(_eve);
+        uint256 proposalId_ = _zeroGovernor.propose(targets_, values_, callDatas_, description_);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 1); // Active immediately
+
+        uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
+
+        uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
+
+        vm.prank(_eve);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), eveZeroWeight_);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 1); // proposal is Active
+
+        uint256 frankZeroWeight_ = _zeroToken.getVotes(_frank);
+
+        vm.prank(_frank);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), frankZeroWeight_);
+
+        // Still not enough votes to meet 60% threshold
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 1); // proposal is Active
+
+        uint256 daveZeroWeight_ = _zeroToken.getVotes(_dave);
+
+        vm.prank(_dave);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 4); // proposal has Succeeded
+
+        _jumpEpochs(1);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 4); // proposal has Succeeded
+
+        _jumpEpochs(1);
+
+        assertEq(uint256(_zeroGovernor.state(proposalId_)), 6); // proposal has Expired
     }
 
     function _getProposeParams()
