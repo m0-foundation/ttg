@@ -140,7 +140,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, yesSupport_);
 
-        _warpToNextVoteEpoch();
+        _warpToNextEpoch();
 
         (, , IGovernor.ProposalState succeededState_, , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);

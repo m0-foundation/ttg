@@ -218,7 +218,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         if (proposal_.yesWeight <= proposal_.noWeight) return ProposalState.Defeated;
 
         unchecked {
-            return (currentEpoch_ <= voteEnd_ + 2) ? ProposalState.Succeeded : ProposalState.Expired;
+            return (currentEpoch_ <= voteEnd_ + 1) ? ProposalState.Succeeded : ProposalState.Expired;
         }
     }
 
