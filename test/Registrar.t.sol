@@ -58,6 +58,7 @@ contract RegistrarTests is Test {
         assertEq(_registrar.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_registrar.standardGovernor(), address(_standardGovernor));
         assertEq(_registrar.emergencyGovernor(), address(_emergencyGovernor));
+        assertEq(_registrar.zeroGovernor(), address(_zeroGovernor));
     }
 
     /* ============ constructor ============ */
