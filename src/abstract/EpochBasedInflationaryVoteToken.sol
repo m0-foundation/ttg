@@ -8,8 +8,6 @@ import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflat
 
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
-// TODO: Test sync before or after actions.
-
 // NOTE: There is no feasible way to emit `Transfer` events for inflationary minting such that external client can
 //       index them and track balances and total supply correctly. Specifically,a nd only for total supply indexing, one
 //       can assume that total supply is the sum of all voting powers, thus tracking the deltas of the
@@ -62,12 +60,20 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @dev   Delegate voting power from `delegator_` to `newDelegatee_`.
+     * @param delegator_    The address of the account delegating voting power.
+     * @param newDelegatee_ The address of the account receiving voting power.
+     */
     function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVoteEpoch {
         _sync(delegator_);
         super._delegate(delegator_, newDelegatee_);
     }
 
-    /// @dev Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
+    /**
+     * @dev   Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
+     * @param delegatee_ The address of the account being marked as having participated.
+     */
     function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
         if (!_update(_participations[delegatee_])) revert AlreadyParticipated(); // Revert if could not update.
 

@@ -72,7 +72,7 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @param  startEpoch  The starting epoch number as a clock value.
      * @param  endEpoch    The ending epoch number as a clock value.
      * @param  destination The address of the account where the claimed token will be sent.
-     * @param  deadline    The last block number where the signature is still valid.
+     * @param  deadline    The last timestamp at which the signature is still valid.
      * @param  signature   A byte array signature.
      * @return claimed     The total amount of token claimed by `account`.
      */
@@ -122,6 +122,25 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
         uint256 startEpoch,
         uint256 endEpoch
     ) external view returns (uint256 claimable);
+
+    /**
+     * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  token       The address of the token being claimed.
+     * @param  startEpoch  The starting epoch number as a clock value.
+     * @param  endEpoch    The ending epoch number as a clock value.
+     * @param  destination The address the account where the claimed token will be sent.
+     * @param  nonce       The nonce of the account claiming the token.
+     * @param  deadline    The last timestamp at which the signature is still valid.
+     * @return The digest to be signed.
+     */
+    function getClaimDigest(
+        address token,
+        uint256 startEpoch,
+        uint256 endEpoch,
+        address destination,
+        uint256 nonce,
+        uint256 deadline
+    ) external view returns (bytes32);
 
     /**
      * @notice Returns whether `account` has already claimed their `token` distribution for `epoch`.

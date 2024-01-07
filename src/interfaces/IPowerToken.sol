@@ -122,7 +122,6 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     function amountToAuction() external view returns (uint240);
 
-    /// @notice Returns the epoch from which token balances and voting powers are bootstrapped.
     /**
      * @notice Returns the epoch from which token balances and voting powers are bootstrapped.
      * @return The bootstrap epoch number.

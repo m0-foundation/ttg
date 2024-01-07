@@ -112,24 +112,30 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IZeroGovernor
     function resetToPowerHolders() external onlySelf {
         _resetContracts(IStandardGovernor(standardGovernor()).voteToken());
     }
 
+    /// @inheritdoc IZeroGovernor
     function resetToZeroHolders() external onlySelf {
         _resetContracts(voteToken);
     }
 
+    /// @inheritdoc IZeroGovernor
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlySelf {
+        // TODO: Issue here where Zero holders can set the proposal fee by abusing this proposal.
         if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
 
         IStandardGovernor(standardGovernor()).setCashToken(newCashToken_, newProposalFee_);
     }
 
+    /// @inheritdoc IZeroGovernor
     function setEmergencyProposalThresholdRatio(uint16 newThresholdRatio_) external onlySelf {
         IEmergencyGovernor(emergencyGovernor()).setThresholdRatio(newThresholdRatio_);
     }
 
+    /// @inheritdoc IZeroGovernor
     function setZeroProposalThresholdRatio(uint16 newThresholdRatio_) external onlySelf {
         _setThresholdRatio(newThresholdRatio_);
     }
@@ -138,6 +144,16 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @notice Deploys the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts.
+     * @param emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
+     * @param powerTokenDeployer_              The address of the Power Token Deployer contract.
+     * @param standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
+     * @param bootstrapToken_                  The address of token (Zero Token or old Power Token), that bootstraps the reset.
+     * @param cashToken_                       The address of the Cash Token contract.
+     * @param emergencyProposalThresholdRatio_ The threshold ratio for the Emergency Governor.
+     * @param proposalFee_                     The proposal fee for the Standard Governor.
+     */
     function _deployEphemeralContracts(
         address emergencyGovernorDeployer_,
         address powerTokenDeployer_,
@@ -204,7 +220,10 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
+    /**
+     * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
+     * @param callData_ The calldata to check.
+     */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
 

@@ -36,18 +36,23 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint256 yesWeight;
     }
 
+    /// @inheritdoc IBatchGovernor
     uint256 public constant ONE = 10_000;
 
     // keccak256("Ballot(uint256 proposalId,uint8 support)")
+    /// @inheritdoc IGovernor
     bytes32 public constant BALLOT_TYPEHASH = 0x150214d74d59b7d1e90c73fc22ef3d991dd0a76b046543d4d80ab92d2a50328f;
 
     // keccak256("Ballots(uint256[] proposalIds,uint8[] support)")
+    /// @inheritdoc IBatchGovernor
     bytes32 public constant BALLOTS_TYPEHASH = 0x17b363a9cc71c97648659dc006723bbea6565fe35148add65f6887abf5158d39;
 
+    /// @inheritdoc IBatchGovernor
     address public immutable voteToken;
 
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
 
+    /// @inheritdoc IGovernor
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public hasVoted;
 
     modifier onlySelf() {
@@ -55,6 +60,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         _;
     }
 
+    /**
+     * @notice Construct a new BatchGovernor contract.
+     * @param  name_      The name of the contract. Used to compute EIP712 domain separator.
+     * @param  voteToken_ The address of the token used to vote.
+     */
     constructor(string memory name_, address voteToken_) ERC712(name_) {
         if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }
@@ -63,14 +73,17 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IGovernor
     function castVote(uint256 proposalId_, uint8 support_) external returns (uint256 weight_) {
         return _castVote(msg.sender, proposalId_, support_);
     }
 
+    /// @inheritdoc IBatchGovernor
     function castVotes(uint256[] calldata proposalIds_, uint8[] calldata supports_) external returns (uint256 weight_) {
         return _castVotes(msg.sender, proposalIds_, supports_);
     }
 
+    /// @inheritdoc IGovernor
     function castVoteWithReason(
         uint256 proposalId_,
         uint8 support_,
@@ -79,6 +92,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return _castVote(msg.sender, proposalId_, support_);
     }
 
+    /// @inheritdoc IGovernor
     function castVoteBySig(
         uint256 proposalId_,
         uint8 support_,
@@ -94,6 +108,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             );
     }
 
+    /// @inheritdoc IGovernor
     function castVoteBySig(
         address voter_,
         uint256 proposalId_,
@@ -373,7 +388,15 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         if (msg.sender != address(this)) revert NotSelf();
     }
 
-    function _votingDelay() internal view virtual returns (uint16 votingDelay_);
+    /**
+     * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.
+     * @return The voting delay.
+     */
+    function _votingDelay() internal view virtual returns (uint16);
 
-    function _votingPeriod() internal view virtual returns (uint16 votingPeriod_);
+    /**
+     * @dev    Returns the number of clock values between the vote start and vote end.
+     * @return The voting period.
+     */
+    function _votingPeriod() internal view virtual returns (uint16);
 }

@@ -29,8 +29,8 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
 
     /**
      * @notice Constructs a new PowerTokenDeployer contract.
-     * @param zeroGovernor_ The address of the ZeroGovernor contract.
-     * @param vault_        The address of the Vault contract.
+     * @param  zeroGovernor_ The address of the ZeroGovernor contract.
+     * @param  vault_        The address of the Vault contract.
      */
     constructor(address zeroGovernor_, address vault_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
@@ -39,9 +39,9 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
 
     /**
      * @notice Deploys a new PowerToken contract.
-     * @param bootstrapToken_   The address of the BootstrapToken contract.
-     * @param standardGovernor_ The address of the StandardGovernor contract.
-     * @param cashToken_        The address of the CashToken contract.
+     * @param  bootstrapToken_   The address of the BootstrapToken contract.
+     * @param  standardGovernor_ The address of the StandardGovernor contract.
+     * @param  cashToken_        The address of the CashToken contract.
      * @return The address of the deployed PowerToken contract.
      */
     function deploy(

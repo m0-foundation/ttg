@@ -39,7 +39,7 @@ contract Registrar is IRegistrar {
 
     /**
      * @notice Constructs a new Registrar contract.
-     * @param zeroGovernor_ The address of the ZeroGovernor contract.
+     * @param  zeroGovernor_ The address of the ZeroGovernor contract.
      */
     constructor(address zeroGovernor_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
@@ -136,14 +136,26 @@ contract Registrar is IRegistrar {
     |                                          Internal View/Pure Functions                                            |
     \******************************************************************************************************************/
 
+    /**
+     * @dev    Returns the key used to store the value of `key_`.
+     * @param  key_ The key of the value.
+     * @return The key used to store the value of `key_`.
+     */
     function _getValueKey(bytes32 key_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("VALUE", key_));
     }
 
+    /**
+     * @dev    Returns the key used to store whether `account_` is in `list_`.
+     * @param  list_    The list of addresses.
+     * @param  account_ The address of the account.
+     * @return The key used to store whether `account_` is in `list_`.
+     */
     function _getIsInListKey(bytes32 list_, address account_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("IN_LIST", list_, account_));
     }
 
+    /// @dev Reverts if the caller is not the Standard Governor nor the Emergency Governor.
     function _revertIfNotStandardOrEmergencyGovernor() internal view {
         if (msg.sender != standardGovernor() && msg.sender != emergencyGovernor()) {
             revert NotStandardOrEmergencyGovernor();

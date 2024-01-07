@@ -10,23 +10,31 @@ import { ERC20Helper } from "../lib/erc20-helper/src/ERC20Helper.sol";
 
 import { PureEpochs } from "./libs/PureEpochs.sol";
 
-import { IZeroToken } from "./interfaces/IZeroToken.sol";
+import { IERC6372 } from "./abstract/interfaces/IERC6372.sol";
 
+import { IZeroToken } from "./interfaces/IZeroToken.sol";
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
-/// @title A contract enabling pro rate distribution of arbitrary tokens to holders of the Zero Token.
+/// @title A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
 contract DistributionVault is IDistributionVault, StatefulERC712 {
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
     bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
 
+    /// @inheritdoc IDistributionVault
     address public immutable zeroToken;
 
     mapping(address token => uint256 balance) internal _lastTokenBalances;
 
+    /// @inheritdoc IDistributionVault
     mapping(address token => mapping(uint256 epoch => uint256 amount)) public distributionOfAt;
 
+    /// @inheritdoc IDistributionVault
     mapping(address token => mapping(uint256 epoch => mapping(address account => bool claimed))) public hasClaimed;
 
+    /**
+     * @notice Constructs a new DistributionVault contract.
+     * @param  zeroToken_ The address of the Zero Token contract.
+     */
     constructor(address zeroToken_) StatefulERC712("DistributionVault") {
         if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
     }
@@ -35,6 +43,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IDistributionVault
     function claim(
         address token_,
         uint256 startEpoch_,
@@ -44,6 +53,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         return _claim(msg.sender, token_, startEpoch_, endEpoch_, destination_);
     }
 
+    /// @inheritdoc IDistributionVault
     function claimBySig(
         address account_,
         address token_,
@@ -66,11 +76,12 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         return _claim(account_, token_, startEpoch_, endEpoch_, destination_);
     }
 
+    /// @inheritdoc IDistributionVault
     function distribute(address token_) external returns (uint256 amount_) {
         uint256 currentEpoch_ = clock();
         uint256 lastTokenBalance_ = _lastTokenBalances[token_];
 
-        // Determine the additional balance of `token_` tha is not accounted for in `lastTokenBalance_`.
+        // Determine the additional balance of `token_` that is not accounted for in `lastTokenBalance_`.
         amount_ = IERC20(token_).balanceOf(address(this)) - lastTokenBalance_;
 
         emit Distribution(token_, currentEpoch_, amount_);
@@ -83,10 +94,12 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IDistributionVault
     function name() external view returns (string memory name_) {
         return _name;
     }
 
+    /// @inheritdoc IDistributionVault
     function getClaimDigest(
         address token_,
         uint256 startEpoch_,
@@ -101,14 +114,17 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             );
     }
 
+    /// @inheritdoc IERC6372
     function CLOCK_MODE() external pure returns (string memory clockMode_) {
         return "mode=epoch";
     }
 
+    /// @inheritdoc IERC6372
     function clock() public view returns (uint48 clock_) {
         return uint48(PureEpochs.currentEpoch());
     }
 
+    /// @inheritdoc IDistributionVault
     function getClaimable(
         address token_,
         address account_,
@@ -137,6 +153,15 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @notice Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.
+     * @param  account_    The address of the account claiming the token.
+     * @param  token_       The address of the token being claimed.
+     * @param  startEpoch_  The starting epoch number as a clock value.
+     * @param  endEpoch_    The ending epoch number as a clock value.
+     * @param  destination_ The address the account where the claimed token will be sent.
+     * @return claimed_     The total amount of token claimed by `account_`.
+     */
     function _claim(
         address account_,
         address token_,
