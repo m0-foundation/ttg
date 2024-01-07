@@ -17,7 +17,7 @@ contract TestUtils is Test {
     uint256 internal constant START_EPOCH =
         ((START_BLOCK_TIMESTAMP - PureEpochs._MERGE_TIMESTAMP) / PureEpochs._EPOCH_PERIOD) + 1;
 
-    function _currentEpoch() internal view returns (uint256) {
+    function _currentEpoch() internal view returns (uint16) {
         return PureEpochs.currentEpoch();
     }
 
@@ -42,15 +42,15 @@ contract TestUtils is Test {
     }
 
     function _warpToEpoch(uint256 epoch_) internal {
-        vm.warp(PureEpochs.getTimestampOfEpochStart(epoch_));
+        vm.warp(PureEpochs.getTimestampOfEpochStart(uint16(epoch_)));
     }
 
     function _warpToTheEndOfTheEpoch(uint256 epoch_) internal {
-        vm.warp(PureEpochs.getTimestampOfEpochStart(epoch_ + 1) - 1);
+        vm.warp(PureEpochs.getTimestampOfEpochStart(uint16(epoch_) + 1) - 1);
     }
 
     function _jumpEpochs(uint256 epochs_) internal {
-        vm.warp(PureEpochs.getTimestampOfEpochStart(PureEpochs.currentEpoch() + epochs_));
+        vm.warp(PureEpochs.getTimestampOfEpochStart(PureEpochs.currentEpoch() + uint16(epochs_)));
     }
 
     function _jumpSeconds(uint256 seconds_) internal {
@@ -61,9 +61,9 @@ contract TestUtils is Test {
         return (powerWeight_ * powerToken_.participationInflation()) / powerToken_.ONE();
     }
 
-    function _getNextTargetSupply(IPowerToken powerToken_) internal view returns (uint256) {
+    function _getNextTargetSupply(IPowerToken powerToken_) internal view returns (uint240) {
         uint256 _targetSupply = powerToken_.targetSupply();
-        return _targetSupply + (_targetSupply * powerToken_.participationInflation()) / powerToken_.ONE();
+        return uint240(_targetSupply + (_targetSupply * powerToken_.participationInflation()) / powerToken_.ONE());
     }
 
     function _getZeroTokenReward(

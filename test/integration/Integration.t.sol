@@ -121,7 +121,7 @@ contract IntegrationTests is TestUtils {
         vm.prank(_alice);
         uint256 weight_ = standardGovernor_.castVote(proposalId_, 1);
 
-        assertEq(weight_, 550_000_000);
+        assertEq(weight_, 5_500);
 
         _warpToNextTransferEpoch();
 
@@ -153,10 +153,10 @@ contract IntegrationTests is TestUtils {
         uint256 proposalId_ = emergencyGovernor_.propose(targets_, values_, callDatas_, description_);
 
         vm.prank(_alice);
-        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 550_000_000);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 5_500);
 
         vm.prank(_bob);
-        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 250_000_000);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 2_500);
 
         emergencyGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
 

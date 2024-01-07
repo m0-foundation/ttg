@@ -24,7 +24,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             string memory description_
         ) = _getRemoveFromAndAddToListProposeParams();
 
-        uint256 voteStart_ = _currentEpoch() + _standardGovernor.votingDelay();
+        uint16 voteStart_ = _currentEpoch() + uint16(_standardGovernor.votingDelay());
         uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_standardGovernor));
 
         vm.expectEmit();
@@ -77,7 +77,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             string memory description_
         ) = _getRemoveFromAndAddToListProposeParams();
 
-        uint256 voteStart_ = _currentEpoch() + _standardGovernor.votingDelay();
+        uint16 voteStart_ = _currentEpoch() + uint16(_standardGovernor.votingDelay());
         uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_standardGovernor));
 
         vm.expectEmit();
@@ -166,7 +166,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             string memory description_
         ) = _getRemoveFromAndAddToListProposeParams();
 
-        uint256 voteStart_ = _currentEpoch() + _standardGovernor.votingDelay();
+        uint16 voteStart_ = _currentEpoch() + uint16(_standardGovernor.votingDelay());
         uint256 proposalId_ = _hashProposal(callDatas_[0], voteStart_, address(_standardGovernor));
 
         vm.expectEmit();

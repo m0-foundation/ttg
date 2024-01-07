@@ -13,6 +13,9 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
     /// @notice Revert message when trying to mark an account as participated in an epoch where it already participated.
     error AlreadyParticipated();
 
+    /// @notice Revert message when trying to construct contact with inflation above 100%.
+    error InflationTooHigh();
+
     /// @notice Revert message when trying to perform an action not allowed outside of designated voting epochs.
     error NotVoteEpoch();
 
@@ -27,7 +30,7 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
      * @notice Returns 100% in basis point, to be used to correctly ascertain the participation inflation rate.
      * @return 100% in basis point.
      */
-    function ONE() external pure returns (uint256);
+    function ONE() external pure returns (uint16);
 
     /**
      * @notice Returns whether `delegatee` has participated in voting during clock value `epoch`.
@@ -41,5 +44,5 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
      * @notice Returns the participation inflation rate used to inflate tokens for participation.
      * @return Participation inflation rate.
      */
-    function participationInflation() external view returns (uint256);
+    function participationInflation() external view returns (uint16);
 }

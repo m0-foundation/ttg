@@ -76,7 +76,7 @@ abstract contract ResetIntegrationBaseSetup is IntegrationBaseSetup {
         // ZERO rewards still works
         assertEq(
             _zeroToken.balanceOf(powerUsers_[1]),
-            userZeroBalanceBeforeVoting_ + (5_000_000e6 * userPowerBalanceBeforeVoting_) / 1_000e6
+            userZeroBalanceBeforeVoting_ + (5_000_000e6 * userPowerBalanceBeforeVoting_) / 10_000
         );
 
         emergencyGovernor_.execute(targets1_, values_, callDatas1_, bytes32(0));

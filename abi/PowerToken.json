@@ -84,8 +84,8 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint240",
+        "internalType": "uint240"
       }
     ],
     "stateMutability": "view"
@@ -97,8 +97,8 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "stateMutability": "view"
@@ -173,8 +173,8 @@
     "outputs": [
       {
         "name": "amountToAuction_",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint240",
+        "internalType": "uint240"
       }
     ],
     "stateMutability": "view"
@@ -253,8 +253,8 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "stateMutability": "view"
@@ -295,8 +295,8 @@
     "outputs": [
       {
         "name": "amount_",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint240",
+        "internalType": "uint240"
       },
       {
         "name": "cost_",
@@ -677,8 +677,8 @@
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "stateMutability": "view"
@@ -1320,9 +1320,9 @@
       },
       {
         "name": "amount",
-        "type": "uint256",
+        "type": "uint240",
         "indexed": false,
-        "internalType": "uint256"
+        "internalType": "uint240"
       },
       {
         "name": "cost",
@@ -1389,9 +1389,9 @@
     "inputs": [
       {
         "name": "startingEpoch",
-        "type": "uint256",
+        "type": "uint16",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint16"
       },
       {
         "name": "nextCashToken",
@@ -1408,15 +1408,15 @@
     "inputs": [
       {
         "name": "targetEpoch",
-        "type": "uint256",
+        "type": "uint16",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint16"
       },
       {
         "name": "targetSupply",
-        "type": "uint256",
+        "type": "uint240",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint240"
       }
     ],
     "anonymous": false
@@ -1506,6 +1506,11 @@
   },
   {
     "type": "error",
+    "name": "BootstrapSupplyTooLarge",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "CallerMustBePayee",
     "inputs": [
       {
@@ -1532,17 +1537,22 @@
   },
   {
     "type": "error",
+    "name": "InflationTooHigh",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InsufficientAuctionSupply",
     "inputs": [
       {
         "name": "amountToAuction",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint240",
+        "internalType": "uint240"
       },
       {
         "name": "minAmountRequested",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint240",
+        "internalType": "uint240"
       }
     ]
   },
@@ -1573,6 +1583,16 @@
   },
   {
     "type": "error",
+    "name": "InvalidUInt16",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidUInt240",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidVaultAddress",
     "inputs": []
   },
@@ -1582,13 +1602,13 @@
     "inputs": [
       {
         "name": "timepoint",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint48",
+        "internalType": "uint48"
       },
       {
         "name": "clock",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint48",
+        "internalType": "uint48"
       }
     ]
   },

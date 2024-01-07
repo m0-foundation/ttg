@@ -50,7 +50,9 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
         address standardGovernor_,
         uint16 thresholdRatio_
     ) external onlyZeroGovernor returns (address) {
-        ++nonce;
+        unchecked {
+            ++nonce;
+        }
 
         return
             lastDeploy = address(
@@ -60,6 +62,8 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
 
     /// @inheritdoc IDeployer
     function nextDeploy() external view returns (address) {
-        return ContractHelper.getContractFrom(address(this), nonce + 1);
+        unchecked {
+            return ContractHelper.getContractFrom(address(this), nonce + 1);
+        }
     }
 }

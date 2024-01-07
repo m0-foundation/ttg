@@ -1379,6 +1379,16 @@
   },
   {
     "type": "error",
+    "name": "InvalidUInt16",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidUInt240",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "LengthMismatch",
     "inputs": [
       {
@@ -1399,13 +1409,13 @@
     "inputs": [
       {
         "name": "timepoint",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint48",
+        "internalType": "uint48"
       },
       {
         "name": "clock",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint48",
+        "internalType": "uint48"
       }
     ]
   },

@@ -55,7 +55,9 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
     ) external onlyZeroGovernor returns (address) {
-        ++nonce;
+        unchecked {
+            ++nonce;
+        }
 
         return
             lastDeploy = address(
@@ -75,6 +77,8 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
 
     /// @inheritdoc IDeployer
     function nextDeploy() external view returns (address) {
-        return ContractHelper.getContractFrom(address(this), nonce + 1);
+        unchecked {
+            return ContractHelper.getContractFrom(address(this), nonce + 1);
+        }
     }
 }
