@@ -78,7 +78,7 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 99_999);
         assertEq(_vault.getClaimable(address(_token1), _accounts[1], startEpoch_, endEpoch_), 499_999);
 
-        // Sets account balances this epoch (Account 0 transfers half their balance to Account 4).
+        // Sets account balances this epoch (Account 0 transfers half their balance to Account 1).
         _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 500_000); // 1_000_000 - 500_000
         _baseToken.setPastBalanceOf(_accounts[1], PureEpochs.currentEpoch(), 5_500_000); // 5_000_000 + 500_000
         _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
