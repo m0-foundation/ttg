@@ -569,10 +569,6 @@ contract StandardGovernorTests is TestUtils {
 
         _warpToNextEpoch();
 
-        assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Succeeded));
-
-        _warpToNextEpoch();
-
         assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Expired));
     }
 
