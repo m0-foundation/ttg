@@ -11,17 +11,8 @@ interface IRegistrar {
     /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
     error InvalidEmergencyGovernorDeployerAddress();
 
-    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
-    error InvalidPowerTokenDeployerAddress();
-
     /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
     error InvalidStandardGovernorDeployerAddress();
-
-    /// @notice Revert message when the Vault retrieved in the constructor is address(0).
-    error InvalidVaultAddress();
-
-    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
-    error InvalidVoteTokenAddress();
 
     /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
     error InvalidZeroGovernorAddress();
@@ -126,18 +117,6 @@ interface IRegistrar {
     function emergencyGovernorDeployer() external view returns (address);
 
     /**
-     * @notice Returns the address of the Power Token.
-     * @return The Power Token address.
-     */
-    function powerToken() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Power Token Deployer.
-     * @return The Power Token Deployer address.
-     */
-    function powerTokenDeployer() external view returns (address);
-
-    /**
      * @notice Returns the address of the Standard Governor.
      * @return The Standard Governor address.
      */
@@ -150,20 +129,8 @@ interface IRegistrar {
     function standardGovernorDeployer() external view returns (address);
 
     /**
-     * @notice Returns the address of the Vault.
-     * @return The Vault address.
-     */
-    function vault() external view returns (address);
-
-    /**
      * @notice Returns the address of the Zero Governor.
      * @return The Zero Governor address.
      */
     function zeroGovernor() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Zero Token.
-     * @return The Zero Token address.
-     */
-    function zeroToken() external view returns (address);
 }

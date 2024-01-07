@@ -56,13 +56,8 @@ contract RegistrarTests is Test {
     function test_initialState() external {
         assertEq(_registrar.standardGovernorDeployer(), address(_standardGovernorDeployer));
         assertEq(_registrar.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
-        assertEq(_registrar.powerTokenDeployer(), address(_powerTokenDeployer));
-        assertEq(_registrar.zeroGovernor(), address(_zeroGovernor));
-        assertEq(_registrar.zeroToken(), _zeroToken);
-        assertEq(_registrar.vault(), _vault);
         assertEq(_registrar.standardGovernor(), address(_standardGovernor));
         assertEq(_registrar.emergencyGovernor(), address(_emergencyGovernor));
-        assertEq(_registrar.powerToken(), _powerToken);
     }
 
     /* ============ constructor ============ */
@@ -78,31 +73,10 @@ contract RegistrarTests is Test {
         new Registrar(address(_zeroGovernor));
     }
 
-    function test_constructor_invalidPowerTokenDeployerAddress() external {
-        _zeroGovernor.setPowerTokenDeployer(address(0));
-
-        vm.expectRevert(IRegistrar.InvalidPowerTokenDeployerAddress.selector);
-        new Registrar(address(_zeroGovernor));
-    }
-
     function test_constructor_invalidStandardGovernorDeployerAddress() external {
         _zeroGovernor.setStandardGovernorDeployer(address(0));
 
         vm.expectRevert(IRegistrar.InvalidStandardGovernorDeployerAddress.selector);
-        new Registrar(address(_zeroGovernor));
-    }
-
-    function test_constructor_invalidVoteTokenAddress() external {
-        _zeroGovernor.setVoteToken(address(0));
-
-        vm.expectRevert(IRegistrar.InvalidVoteTokenAddress.selector);
-        new Registrar(address(_zeroGovernor));
-    }
-
-    function test_constructor_invalidVaultAddress() external {
-        _standardGovernorDeployer.setVault(address(0));
-
-        vm.expectRevert(IRegistrar.InvalidVaultAddress.selector);
         new Registrar(address(_zeroGovernor));
     }
 

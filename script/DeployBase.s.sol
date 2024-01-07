@@ -6,6 +6,7 @@ import { Script, console2 } from "../lib/forge-std/src/Script.sol";
 import { ContractHelper } from "../lib/common/src/ContractHelper.sol";
 
 import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
+import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 
 import { DistributionVault } from "../src/DistributionVault.sol";
 import { EmergencyGovernorDeployer } from "../src/EmergencyGovernorDeployer.sol";
@@ -88,7 +89,7 @@ contract DeployBase is Script {
         registrar_ = _deployRegistrar(deployer_, zeroGovernor_);
 
         console2.log("Registrar Address:", registrar_);
-        console2.log("Power Token Address:", IRegistrar(registrar_).powerToken());
+        console2.log("Power Token Address:", IStandardGovernor(IRegistrar(registrar_).standardGovernor()).voteToken());
         console2.log("Zero Token Address:", zeroToken_);
         console2.log("Standard Governor Address:", IRegistrar(registrar_).standardGovernor());
         console2.log("Emergency Governor Address:", IRegistrar(registrar_).emergencyGovernor());

@@ -114,20 +114,16 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         (proposalId_, voteStart_) = _propose(targets_, values_, callDatas_, description_);
 
-        uint256 proposalFee_ = proposalFee;
-
-        if (proposalFee_ == 0) return proposalId_;
-
-        address cashToken_ = cashToken;
-
-        _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken_, fee: proposalFee_ });
-
         // If this is the first proposal for the `voteStart_` epoch, inflate its target total supply of `PowerToken`.
         if (++numberOfProposalsAt[voteStart_] == 1) {
             IPowerToken(voteToken).markNextVotingEpochAsActive();
         }
 
-        if (!ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_)) revert TransferFromFailed();
+        if (proposalFee == 0) return proposalId_;
+
+        _proposalFees[proposalId_] = ProposalFeeInfo({ cashToken: cashToken, fee: proposalFee });
+
+        if (!ERC20Helper.transferFrom(cashToken, msg.sender, address(this), proposalFee)) revert TransferFromFailed();
     }
 
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {

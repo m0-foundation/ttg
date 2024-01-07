@@ -14,19 +14,10 @@ contract Registrar is IRegistrar {
     address public immutable emergencyGovernorDeployer;
 
     /// @inheritdoc IRegistrar
-    address public immutable powerTokenDeployer;
-
-    /// @inheritdoc IRegistrar
     address public immutable standardGovernorDeployer;
 
     /// @inheritdoc IRegistrar
-    address public immutable vault;
-
-    /// @inheritdoc IRegistrar
     address public immutable zeroGovernor;
-
-    /// @inheritdoc IRegistrar
-    address public immutable zeroToken;
 
     /// @notice A mapping of keys to values.
     mapping(bytes32 key => bytes32 value) internal _valueAt;
@@ -49,17 +40,8 @@ contract Registrar is IRegistrar {
         if ((emergencyGovernorDeployer = zeroGovernorInstance_.emergencyGovernorDeployer()) == address(0))
             revert InvalidEmergencyGovernorDeployerAddress();
 
-        if ((powerTokenDeployer = zeroGovernorInstance_.powerTokenDeployer()) == address(0))
-            revert InvalidPowerTokenDeployerAddress();
-
-        address standardGovernorDeployer_ = standardGovernorDeployer = zeroGovernorInstance_.standardGovernorDeployer();
-
-        if (standardGovernorDeployer_ == address(0)) revert InvalidStandardGovernorDeployerAddress();
-
-        if ((zeroToken = zeroGovernorInstance_.voteToken()) == address(0)) revert InvalidVoteTokenAddress();
-
-        if ((vault = IStandardGovernorDeployer(standardGovernorDeployer_).vault()) == address(0))
-            revert InvalidVaultAddress();
+        if ((standardGovernorDeployer = zeroGovernorInstance_.standardGovernorDeployer()) == address(0))
+            revert InvalidStandardGovernorDeployerAddress();
     }
 
     /******************************************************************************************************************\
@@ -120,11 +102,6 @@ contract Registrar is IRegistrar {
     /// @inheritdoc IRegistrar
     function emergencyGovernor() public view returns (address emergencyGovernor_) {
         return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
-    }
-
-    /// @inheritdoc IRegistrar
-    function powerToken() external view returns (address powerToken_) {
-        return IPowerTokenDeployer(powerTokenDeployer).lastDeploy();
     }
 
     /// @inheritdoc IRegistrar

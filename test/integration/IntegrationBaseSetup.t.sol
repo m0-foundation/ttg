@@ -73,8 +73,8 @@ abstract contract IntegrationBaseSetup is TestUtils {
 
         _registrar = IRegistrar(registrar_);
 
-        _powerToken = IPowerToken(_registrar.powerToken());
-        _zeroToken = IZeroToken(_registrar.zeroToken());
+        _powerToken = IPowerToken(IStandardGovernor(_registrar.standardGovernor()).voteToken());
+        _zeroToken = IZeroToken(IZeroGovernor(_registrar.zeroGovernor()).voteToken());
 
         _emergencyGovernor = IEmergencyGovernor(_registrar.emergencyGovernor());
         _standardGovernor = IStandardGovernor(_registrar.standardGovernor());

@@ -68,7 +68,9 @@ contract ResetToPowerHolders_IntegrationTest is ResetIntegrationBaseSetup {
         (, , IGovernor.ProposalState succeededState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 
-        IPowerToken nextPowerToken_ = IPowerToken(IPowerTokenDeployer(_registrar.powerTokenDeployer()).nextDeploy());
+        IPowerToken nextPowerToken_ = IPowerToken(
+            IPowerTokenDeployer(IZeroGovernor(_registrar.zeroGovernor()).powerTokenDeployer()).nextDeploy()
+        );
 
         address nextStandardGovernor_ = IStandardGovernorDeployer(_registrar.standardGovernorDeployer()).nextDeploy();
 
@@ -90,7 +92,7 @@ contract ResetToPowerHolders_IntegrationTest is ResetIntegrationBaseSetup {
 
         assertEq(nextPowerToken_.bootstrapEpoch(), _currentEpoch() - 1);
 
-        assertEq(_registrar.powerToken(), address(nextPowerToken_));
+        assertEq(IStandardGovernor(_registrar.standardGovernor()).voteToken(), address(nextPowerToken_));
         assertEq(_registrar.standardGovernor(), nextStandardGovernor_);
         assertEq(_registrar.emergencyGovernor(), nextEmergencyGovernor_);
 

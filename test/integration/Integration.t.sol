@@ -66,7 +66,7 @@ contract IntegrationTests is TestUtils {
     }
 
     function test_initialState() external {
-        IPowerToken powerToken_ = IPowerToken(_registrar.powerToken());
+        IPowerToken powerToken_ = IPowerToken(IStandardGovernor(_registrar.standardGovernor()).voteToken());
         uint256 initialPowerTotalSupply_;
 
         for (uint256 index_; index_ < _initialPowerBalances.length; ++index_) {
@@ -80,7 +80,7 @@ contract IntegrationTests is TestUtils {
             );
         }
 
-        IZeroToken zeroToken_ = IZeroToken(_registrar.zeroToken());
+        IZeroToken zeroToken_ = IZeroToken(IZeroGovernor(_registrar.zeroGovernor()).voteToken());
 
         for (uint256 index_; index_ < _initialZeroAccounts.length; ++index_) {
             assertEq(zeroToken_.balanceOf(_initialZeroAccounts[index_]), _initialZeroBalances[index_]);
