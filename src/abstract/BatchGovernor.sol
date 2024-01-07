@@ -11,9 +11,6 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 /// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
 abstract contract BatchGovernor is IBatchGovernor, ERC712 {
-    // TODO: Ensure this is correctly compacted into one slot.
-    // TODO: Consider popping proposer out of this struct and into its own mapping as its mostly useless.
-
     /**
      * @notice Proposal struct for storing all relevant proposal informations.
      * @param voteStart      The inclusive epoch, at which voting begins.
@@ -26,12 +23,15 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @param yesWeight      The total number of votes for the proposal.
      */
     struct Proposal {
+        // 1st slot
         uint48 voteStart;
         bool executed;
         address proposer;
         uint16 thresholdRatio;
         uint16 quorumRatio;
+        // 2nd slot
         uint256 noWeight;
+        // 3rd slot
         uint256 yesWeight;
     }
 
@@ -63,7 +63,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     \******************************************************************************************************************/
 
     function castVote(uint256 proposalId_, uint8 support_) external returns (uint256 weight_) {
-        (weight_, ) = _castVote(msg.sender, proposalId_, support_);
+        return _castVote(msg.sender, proposalId_, support_);
     }
 
     function castVotes(uint256[] calldata proposalIds_, uint8[] calldata supports_) external returns (uint256 weight_) {
@@ -75,7 +75,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint8 support_,
         string calldata
     ) external returns (uint256 weight_) {
-        (weight_, ) = _castVote(msg.sender, proposalId_, support_);
+        return _castVote(msg.sender, proposalId_, support_);
     }
 
     function castVoteBySig(
@@ -85,11 +85,12 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         bytes32 r_,
         bytes32 s_
     ) external returns (uint256 weight_) {
-        (weight_, ) = _castVote(
-            _getSignerAndRevertIfInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
-            proposalId_,
-            support_
-        );
+        return
+            _castVote(
+                _getSignerAndRevertIfInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
+                proposalId_,
+                support_
+            );
     }
 
     function castVoteBySig(
@@ -100,7 +101,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     ) external returns (uint256 weight_) {
         _revertIfInvalidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
 
-        (weight_, ) = _castVote(voter_, proposalId_, support_);
+        return _castVote(voter_, proposalId_, support_);
     }
 
     function castVotesBySig(
@@ -196,20 +197,19 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         address voter_,
         uint256[] calldata proposalIds_,
         uint8[] calldata supports_
-    ) internal returns (uint256 weight_) {
+    ) internal virtual returns (uint256 weight_) {
         for (uint256 index_; index_ < proposalIds_.length; ++index_) {
-            // TODO: There is a more efficient way to do this since each `_castVote` call will re-query chain storage.
-            (weight_, ) = _castVote(voter_, proposalIds_[index_], supports_[index_]);
+            weight_ = _castVote(voter_, proposalIds_[index_], supports_[index_]);
         }
     }
 
-    function _castVote(
-        address voter_,
-        uint256 proposalId_,
-        uint8 support_
-    ) internal virtual returns (uint256 weight_, uint256 snapshot_) {
-        Proposal storage proposal_ = _proposals[proposalId_];
+    function _castVote(address voter_, uint256 proposalId_, uint8 support_) internal returns (uint256 weight_) {
+        weight_ = getVotes(voter_, _proposals[proposalId_].voteStart - 1);
 
+        _castVote(voter_, weight_, proposalId_, support_);
+    }
+
+    function _castVote(address voter_, uint256 weight_, uint256 proposalId_, uint8 support_) internal virtual {
         ProposalState state_ = state(proposalId_);
 
         if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
@@ -218,14 +218,10 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
         hasVoted[proposalId_][voter_] = true;
 
-        snapshot_ = proposal_.voteStart - 1;
-
-        weight_ = getVotes(voter_, snapshot_);
-
         if (VoteType(support_) == VoteType.No) {
-            proposal_.noWeight += weight_;
+            _proposals[proposalId_].noWeight += weight_;
         } else {
-            proposal_.yesWeight += weight_;
+            _proposals[proposalId_].yesWeight += weight_;
         }
 
         // TODO: Check if ignoring the voter's reason breaks community compatibility of this event.

@@ -120,7 +120,6 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         _resetContracts(voteToken);
     }
 
-    // TODO: Issue here where Zero holders can set the proposal fee by abusing this proposal.
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlySelf {
         if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
 

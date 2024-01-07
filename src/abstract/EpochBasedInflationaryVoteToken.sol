@@ -139,6 +139,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
             if (snapStartingEpoch_ <= epoch_) return snapStartingEpoch_;
         }
+
+        return 0;
     }
 
     function _hasParticipatedAt(address delegatee_, uint256 epoch_) internal view returns (bool) {
@@ -158,6 +160,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
             return snapStartingEpoch_ == epoch_;
         }
+
+        return false;
     }
 
     function _getUnrealizedInflation(address account_, uint256 lastEpoch_) internal view returns (uint256 inflation_) {

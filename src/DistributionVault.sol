@@ -151,7 +151,6 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             hasClaimed[token_][epoch_][account_] = true;
         }
 
-        // TODO: Consider replacing with a balance check and optional `distribute`.
         _lastTokenBalances[token_] -= claimed_; // Track this contract's latest balance of `token_`.
 
         emit Claim(token_, account_, startEpoch_, endEpoch_, claimed_);

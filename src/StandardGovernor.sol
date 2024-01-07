@@ -257,28 +257,41 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    function _castVotes(
+        address voter_,
+        uint256[] calldata proposalIds_,
+        uint8[] calldata supports_
+    ) internal override returns (uint256 weight_) {
+        // In this governor, since the votingPeriod is 0, the snapshot for all active proposals is the previous epoch.
+        weight_ = getVotes(voter_, clock() - 1);
+
+        for (uint256 index_; index_ < proposalIds_.length; ++index_) {
+            _castVote(voter_, weight_, proposalIds_[index_], supports_[index_]);
+        }
+    }
+
     function _addToList(bytes32 list_, address account_) internal {
         IRegistrar(registrar).addToList(list_, account_);
     }
 
-    function _castVote(
-        address voter_,
-        uint256 proposalId_,
-        uint8 support_
-    ) internal override returns (uint256 weight_, uint256 snapshot_) {
-        (weight_, snapshot_) = super._castVote(voter_, proposalId_, support_);
+    function _castVote(address voter_, uint256 weight_, uint256 proposalId_, uint8 support_) internal override {
+        super._castVote(voter_, weight_, proposalId_, support_);
 
         uint256 currentEpoch_ = clock();
         uint256 numberOfProposalsVotedOn_ = ++numberOfProposalsVotedOnAt[voter_][currentEpoch_];
 
         // NOTE: Will only get beyond this statement once per epoch as there is no way to vote on more proposals than
         //       exist in this epoch.
-        if (numberOfProposalsVotedOn_ != numberOfProposalsAt[currentEpoch_]) return (weight_, snapshot_);
+        if (numberOfProposalsVotedOn_ != numberOfProposalsAt[currentEpoch_]) return;
 
         emit HasVotedOnAllProposals(voter_, currentEpoch_);
 
         IPowerToken(voteToken).markParticipation(voter_);
-        IZeroToken(zeroToken).mint(voter_, (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(snapshot_));
+
+        IZeroToken(zeroToken).mint(
+            voter_,
+            (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(currentEpoch_ - 1)
+        );
     }
 
     function _createProposal(uint256 proposalId_, uint256 voteStart_) internal override {

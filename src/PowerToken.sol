@@ -14,8 +14,6 @@ import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
 // NOTE: Balances and voting powers are bootstrapped from the bootstrap token, but delegations are not.
 
-// TODO: With recent changes, it would be relatively easy to bootstrap delegations as well.
-
 /**
  * @title An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor, and enabling
  *        auctioning of the unowned inflated supply.
