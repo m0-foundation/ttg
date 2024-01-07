@@ -113,8 +113,8 @@ contract IntegrationTests is TestUtils {
         vm.prank(_alice);
         uint256 proposalId_ = standardGovernor_.propose(targets_, values_, callDatas_, description_);
 
-        assertEq(_cashToken1.balanceOf(_alice), 0, "A");
-        assertEq(_cashToken1.balanceOf(address(standardGovernor_)), proposalFee_, "B");
+        assertEq(_cashToken1.balanceOf(_alice), 0);
+        assertEq(_cashToken1.balanceOf(address(standardGovernor_)), proposalFee_);
 
         _warpToNextVoteEpoch();
 
@@ -129,8 +129,8 @@ contract IntegrationTests is TestUtils {
 
         assertEq(_registrar.get(key_), value_);
 
-        assertEq(_cashToken1.balanceOf(_alice), proposalFee_, "a");
-        assertEq(_cashToken1.balanceOf(address(standardGovernor_)), 0, "b");
+        assertEq(_cashToken1.balanceOf(_alice), proposalFee_);
+        assertEq(_cashToken1.balanceOf(address(standardGovernor_)), 0);
     }
 
     function test_emergencySetKey() external {
