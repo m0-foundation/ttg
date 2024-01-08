@@ -390,7 +390,6 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.propose(targets_, new uint256[](2), new bytes[](0), "");
     }
 
-    // TODO: This is really a test for `BatchGovernor.t.sol`.
     function test_propose_invalidValue() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
@@ -402,7 +401,6 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.propose(targets_, values_, new bytes[](0), "");
     }
 
-    // TODO: This is really a test for `BatchGovernor.t.sol`.
     function test_propose_invalidCallDatasLength() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
@@ -411,7 +409,6 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.propose(targets_, new uint256[](1), new bytes[](2), "");
     }
 
-    // TODO: This is really a test for `BatchGovernor.t.sol`.
     function test_propose_proposalExists_withHarness() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
@@ -427,7 +424,6 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "");
     }
 
-    // TODO: This is really a test for `BatchGovernor.t.sol`.
     function test_propose_proposalExists() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
@@ -477,7 +473,6 @@ contract StandardGovernorTests is TestUtils {
         assertNotEq(proposalId1_, proposalId2_);
     }
 
-    // TODO: This can be duplicated into a `BatchGovernor.t.sol -> test_propose_invalidCallData`.
     function test_propose_invalidCallData() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
@@ -582,7 +577,6 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ execute ============ */
-    // TODO: This can be duplicated into a `BatchGovernor.t.sol -> test_propose_invalidCallData`.
     function test_execute_proposalCannotBeExecuted() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);

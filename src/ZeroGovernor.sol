@@ -105,7 +105,6 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
 
     /// @inheritdoc IZeroGovernor
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlySelf {
-        // TODO: Issue here where Zero holders can set the proposal fee by abusing this proposal.
         if (!_allowedCashTokens[newCashToken_]) revert InvalidCashToken();
 
         IStandardGovernor(standardGovernor()).setCashToken(newCashToken_, newProposalFee_);
