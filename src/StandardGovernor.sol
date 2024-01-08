@@ -55,13 +55,13 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /// @dev Revert if the caller is not the Zero Governor.
     modifier onlyZeroGovernor() {
-        _revertIfNotZeroGovernor();
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
 
     /// @dev Revert if the caller is not the Standard Governor nor the Emergency Governor.
     modifier onlySelfOrEmergencyGovernor() {
-        _revertIfNotSelfOrEmergencyGovernor();
+        if (msg.sender != address(this) && msg.sender != emergencyGovernor) revert NotSelfOrEmergencyGovernor();
         _;
     }
 
@@ -222,22 +222,22 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     /// @inheritdoc IStandardGovernor
-    function hasVotedOnAllProposals(address voter_, uint256 epoch_) external view returns (bool hasVoted_) {
+    function hasVotedOnAllProposals(address voter_, uint256 epoch_) external view returns (bool) {
         return numberOfProposalsVotedOnAt[voter_][epoch_] == numberOfProposalsAt[epoch_];
     }
 
     /// @inheritdoc IGovernor
-    function quorum() external pure returns (uint256 quorum_) {
+    function quorum() external pure returns (uint256) {
         return 0;
     }
 
     /// @inheritdoc IGovernor
-    function quorum(uint256) external pure returns (uint256 quorum_) {
+    function quorum(uint256) external pure returns (uint256) {
         return 0;
     }
 
     /// @inheritdoc IGovernor
-    function state(uint256 proposalId_) public view override(BatchGovernor, IGovernor) returns (ProposalState state_) {
+    function state(uint256 proposalId_) public view override(BatchGovernor, IGovernor) returns (ProposalState) {
         Proposal storage proposal_ = _proposals[proposalId_];
 
         if (proposal_.executed) return ProposalState.Executed;
@@ -298,7 +298,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
      * @dev    Cast votes on several proposals for `voter_`.
      * @param  voter_       The address of the voter.
      * @param  proposalIds_ The unique identifiers of the proposals.
-     * @param  supports_    The type of support to cast for each proposals.
+     * @param  supports_    The type of support to cast for each proposal.
      * @return weight_      The number of votes the voter cast on each proposal.
      */
     function _castVotes(
@@ -410,7 +410,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /**
      * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
-     * @param callData_ The calldata to check.
+     * @param callData_ The call data to check.
      */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
@@ -422,16 +422,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
             func_ != this.setKey.selector &&
             func_ != this.setProposalFee.selector
         ) revert InvalidCallData();
-    }
-
-    /// @dev Reverts if the caller is not the Standard Governor nor the Emergency Governor.
-    function _revertIfNotSelfOrEmergencyGovernor() internal view {
-        if (msg.sender != address(this) && msg.sender != emergencyGovernor) revert NotSelfOrEmergencyGovernor();
-    }
-
-    /// @dev Reverts if the caller is not the Zero Governor.
-    function _revertIfNotZeroGovernor() internal view {
-        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
     }
 
     /**

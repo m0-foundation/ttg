@@ -34,7 +34,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "emergencyGovernor_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -66,7 +66,7 @@
     ],
     "outputs": [
       {
-        "name": "value_",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -109,7 +109,7 @@
     ],
     "outputs": [
       {
-        "name": "contains_",
+        "name": "",
         "type": "bool",
         "internalType": "bool"
       }
@@ -133,7 +133,7 @@
     ],
     "outputs": [
       {
-        "name": "contains_",
+        "name": "",
         "type": "bool",
         "internalType": "bool"
       }
@@ -146,7 +146,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "powerToken_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -208,7 +208,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "standardGovernor_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }

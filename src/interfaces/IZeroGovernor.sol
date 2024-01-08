@@ -71,34 +71,19 @@ interface IZeroGovernor is IThresholdGovernor {
      */
     function isAllowedCashToken(address token) external view returns (bool);
 
-    /**
-     * @notice Returns the address of the Emergency Governor.
-     * @return The Emergency Governor address.
-     */
+    /// @notice Returns the address of the Emergency Governor.
     function emergencyGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Emergency Governor Deployer.
-     * @return The Emergency Governor Deployer address.
-     */
+    /// @notice Returns the address of the Emergency Governor Deployer.
     function emergencyGovernorDeployer() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Power Token Deployer.
-     * @return The Power Token Deployer address.
-     */
+    /// @notice Returns the address of the Power Token Deployer.
     function powerTokenDeployer() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
+    /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Standard Governor Deployer.
-     * @return The Standard Governor Deployer address.
-     */
+    /// @notice Returns the address of the Standard Governor Deployer.
     function standardGovernorDeployer() external view returns (address);
 
     /******************************************************************************************************************\

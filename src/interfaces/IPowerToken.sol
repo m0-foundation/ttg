@@ -110,34 +110,19 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the initial supply of the token.
-     * @return Initial supply of the token.
-     */
+    /// @notice Returns the initial supply of the token.
     function INITIAL_SUPPLY() external pure returns (uint240);
 
-    /**
-     * @notice Returns the amount of tokens that can be bought in the auction.
-     * @return Amount of tokens auctioned off.
-     */
+    /// @notice Returns the amount of tokens that can be bought in the auction.
     function amountToAuction() external view returns (uint240);
 
-    /**
-     * @notice Returns the epoch from which token balances and voting powers are bootstrapped.
-     * @return The bootstrap epoch number.
-     */
+    /// @notice Returns the epoch from which token balances and voting powers are bootstrapped.
     function bootstrapEpoch() external view returns (uint16);
 
-    /**
-     * @notice Returns the address of the token in which token balances and voting powers are bootstrapped.
-     * @return The bootstrap token address.
-     */
+    /// @notice Returns the address of the token in which token balances and voting powers are bootstrapped.
     function bootstrapToken() external view returns (address);
 
-    /**
-     * @notice Returns the address of the cash token required to buy from the token auction.
-     * @return The cash token address.
-     */
+    /// @notice Returns the address of the cash token required to buy from the token auction.
     function cashToken() external view returns (address);
 
     /**
@@ -147,21 +132,12 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     function getCost(uint256 amount) external view returns (uint256);
 
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
+    /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the target supply, which helps determine the amount of tokens up for auction.
-     * @return The target supply.
-     */
+    //// @notice Returns the target supply, which helps determine the amount of tokens up for auction.
     function targetSupply() external view returns (uint256);
 
-    /**
-     * @notice Returns the address of the Vault.
-     * @return The Vault address.
-     */
+    /// @notice Returns the address of the Vault.
     function vault() external view returns (address);
 }

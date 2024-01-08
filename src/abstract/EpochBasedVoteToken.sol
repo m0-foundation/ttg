@@ -17,11 +17,13 @@ import { ERC5805 } from "./ERC5805.sol";
 
 /// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Extended {
+    /// @dev A 32-byte struct containing a starting epoch and an address that is valid until the next AccountSnap.
     struct AccountSnap {
         uint16 startingEpoch;
         address account;
     }
 
+    /// @dev A 32-byte struct containing a starting epoch and an amount that is valid until the next AmountSnap.
     struct AmountSnap {
         uint16 startingEpoch;
         uint240 amount;
@@ -275,25 +277,25 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /**
-     * @dev    Update a storage Snap array given by `amount_` given `operation_`.
-     * @param  snaps_     The storage pointer to a Snap array to update.
-     * @param  operation_ The operation to perform on the old and new amounts.
-     * @param  amount_    The amount to update the Snap by.
-     * @return oldAmount_ The previous latest amount of the Snap array.
-     * @return newAmount_ The new latest amount of the Snap array.
+     * @dev    Update a storage AmountSnap array of given by `amount_` given `operation_`.
+     * @param  amountSnaps_ The storage pointer to an AmountSnap array to update.
+     * @param  operation_   The operation to perform on the old and new amounts.
+     * @param  amount_      The amount to update the Snap by.
+     * @return oldAmount_   The previous latest amount of the Snap array.
+     * @return newAmount_   The new latest amount of the Snap array.
      */
     function _update(
-        AmountSnap[] storage snaps_,
+        AmountSnap[] storage amountSnaps_,
         function(uint240, uint240) returns (uint240) operation_,
         uint240 amount_
     ) internal returns (uint240 oldAmount_, uint240 newAmount_) {
         uint16 currentEpoch_ = _clock();
-        uint256 length_ = snaps_.length;
+        uint256 length_ = amountSnaps_.length;
 
         // If this will be the first AmountSnap, we can just push it onto the empty array.
         if (length_ == 0) {
             // NOTE: `operation_(0, amount_)` is necessary for almost all operations other than setting or adding.
-            snaps_.push(AmountSnap(currentEpoch_, operation_(0, amount_)));
+            amountSnaps_.push(AmountSnap(currentEpoch_, operation_(0, amount_)));
 
             return (0, amount_); // In this case, the old amount was 0.
         }
@@ -302,13 +304,13 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
             --length_;
         }
 
-        AmountSnap storage lastAmountSnap_ = _unsafeAccess(snaps_, length_);
+        AmountSnap storage lastAmountSnap_ = _unsafeAccess(amountSnaps_, length_);
         newAmount_ = operation_(oldAmount_ = lastAmountSnap_.amount, amount_);
 
         // If the current epoch is greater than the last AmountSnap's startingEpoch, we can push a new
         // AmountSnap onto the array, else we can just update the last AmountSnap's amount.
         if (currentEpoch_ > lastAmountSnap_.startingEpoch) {
-            snaps_.push(AmountSnap(currentEpoch_, newAmount_));
+            amountSnaps_.push(AmountSnap(currentEpoch_, newAmount_));
         } else {
             lastAmountSnap_.amount = newAmount_;
         }
@@ -413,7 +415,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @dev    The delegatee is the account itself (the default) if the retrieved delegatee is address(0).
      * @param  account_ The address of the account to get the delegatee of.
      * @param  epoch_   The epoch to get the delegatee at.
-     * @return delegatee_ The delegatee of `account_` at `epoch_`.
+     * @return The delegatee of `account_` at `epoch_`.
      */
     function _getDelegatee(address account_, uint256 epoch_) internal view virtual returns (address) {
         AccountSnap[] storage delegateeSnaps_ = _delegatees[account_];
@@ -442,17 +444,17 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
     /**
      * @dev    Get the value of an AmountSnap array at a given epoch.
-     * @param  snaps_  The array of AmountSnaps to get the value of.
-     * @param  epoch_  The epoch to get the value at.
-     * @return amount_ The value of the AmountSnap array at `epoch_`.
+     * @param  amountSnaps_ The array of AmountSnaps to get the value of.
+     * @param  epoch_       The epoch to get the value at.
+     * @return The value of the AmountSnap array at `epoch_`.
      */
-    function _getValueAt(AmountSnap[] storage snaps_, uint16 epoch_) internal view returns (uint240) {
-        uint256 index_ = snaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
+    function _getValueAt(AmountSnap[] storage amountSnaps_, uint16 epoch_) internal view returns (uint240) {
+        uint256 index_ = amountSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
         // has the amount applicable to `epoch_`. If we exhaust the array, then the amount is 0.
         while (index_ > 0) {
-            AmountSnap storage amountSnap_ = _unsafeAccess(snaps_, --index_);
+            AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, --index_);
 
             if (amountSnap_.startingEpoch <= epoch_) return amountSnap_.amount;
         }
@@ -504,33 +506,33 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
     /**
      * @dev    Returns the AmountSnap in an array at a given index without doing bounds checking.
-     * @param  snaps_  The array of AmountSnaps to parse.
-     * @param  index_  The index of the AmountSnap to return.
-     * @return snap_  The AmountSnap at `index_`.
+     * @param  amountSnaps_ The array of AmountSnaps to parse.
+     * @param  index_       The index of the AmountSnap to return.
+     * @return amountSnap_  The AmountSnap at `index_`.
      */
     function _unsafeAccess(
-        AmountSnap[] storage snaps_,
+        AmountSnap[] storage amountSnaps_,
         uint256 index_
-    ) internal pure returns (AmountSnap storage snap_) {
+    ) internal pure returns (AmountSnap storage amountSnap_) {
         assembly {
-            mstore(0, snaps_.slot)
-            snap_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, amountSnaps_.slot)
+            amountSnap_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 
     /**
      * @dev    Returns the AccountSnap in an array at a given index without doing bounds checking.
-     * @param  snaps_  The array of AccountSnaps to parse.
-     * @param  index_  The index of the AccountSnap to return.
-     * @return snap_  The AccountSnap at `index_`.
+     * @param  accountSnaps_ The array of AccountSnaps to parse.
+     * @param  index_        The index of the AccountSnap to return.
+     * @return accountSnap_  The AccountSnap at `index_`.
      */
     function _unsafeAccess(
-        AccountSnap[] storage snaps_,
+        AccountSnap[] storage accountSnaps_,
         uint256 index_
-    ) internal pure returns (AccountSnap storage snap_) {
+    ) internal pure returns (AccountSnap storage accountSnap_) {
         assembly {
-            mstore(0, snaps_.slot)
-            snap_.slot := add(keccak256(0, 0x20), index_)
+            mstore(0, accountSnaps_.slot)
+            accountSnap_.slot := add(keccak256(0, 0x20), index_)
         }
     }
 }

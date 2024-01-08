@@ -46,63 +46,54 @@ interface IZeroToken is IEpochBasedVoteToken {
 
     /**
      * @notice Returns an array of voting powers of `account` between `startEpoch` and `endEpoch` past inclusive clocks.
-     * @param  account      The address of some account.
-     * @param  startEpoch   The starting epoch number as a clock value.
-     * @param  endEpoch     The ending epoch number as a clock value.
-     * @return votingPowers An array of voting powers, each relating to an epoch in the inclusive range.
+     * @param  account    The address of some account.
+     * @param  startEpoch The starting epoch number as a clock value.
+     * @param  endEpoch   The ending epoch number as a clock value.
+     * @return An array of voting powers, each relating to an epoch in the inclusive range.
      */
     function getPastVotes(
         address account,
         uint256 startEpoch,
         uint256 endEpoch
-    ) external view returns (uint256[] memory votingPowers);
+    ) external view returns (uint256[] memory);
 
     /**
      * @notice Returns an array of token balances of `account` between `startEpoch` and `endEpoch` past inclusive clocks.
      * @param  account    The address of some account.
      * @param  startEpoch The starting epoch number as a clock value.
      * @param  endEpoch   The ending epoch number as a clock value.
-     * @return balances   An array of token balances, each relating to an epoch in the inclusive range.
+     * @return An array of token balances, each relating to an epoch in the inclusive range.
      */
     function pastBalancesOf(
         address account,
         uint256 startEpoch,
         uint256 endEpoch
-    ) external view returns (uint256[] memory balances);
+    ) external view returns (uint256[] memory);
 
     /**
      * @notice Returns the delegatee of `account` between `startEpoch` and `endEpoch` past inclusive clocks.
      * @param  account    The address of some account.
      * @param  startEpoch The starting epoch number as a clock value.
      * @param  endEpoch   The ending epoch number as a clock value.
-     * @return delegatees An array of delegatees, each relating to an epoch in the inclusive range.
+     * @return An array of delegatees, each relating to an epoch in the inclusive range.
      */
     function pastDelegates(
         address account,
         uint256 startEpoch,
         uint256 endEpoch
-    ) external view returns (address[] memory delegatees);
+    ) external view returns (address[] memory);
 
     /**
      * @notice Returns an array of total token supplies between `startEpoch` and `endEpoch` clocks inclusively.
-     * @param  startEpoch    The starting epoch number as a clock value.
-     * @param  endEpoch      The ending epoch number as a clock value.
-     * @return totalSupplies An array of total supplies, each relating to an epoch in the inclusive range.
+     * @param  startEpoch The starting epoch number as a clock value.
+     * @param  endEpoch   The ending epoch number as a clock value.
+     * @return An array of total supplies, each relating to an epoch in the inclusive range.
      */
-    function pastTotalSupplies(
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (uint256[] memory totalSupplies);
+    function pastTotalSupplies(uint256 startEpoch, uint256 endEpoch) external view returns (uint256[] memory);
 
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
+    /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Standard Governor Deployer.
-     * @return The Standard Governor Deployer address.
-     */
+    /// @notice Returns the address of the Standard Governor Deployer.
     function standardGovernorDeployer() external view returns (address);
 }

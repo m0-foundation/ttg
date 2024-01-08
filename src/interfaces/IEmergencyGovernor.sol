@@ -36,22 +36,13 @@ interface IEmergencyGovernor is IThresholdGovernor {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the address of the Registrar.
-     * @return The Registrar address.
-     */
+    /// @notice Returns the address of the Registrar.
     function registrar() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
+    /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Governor.
-     * @return The Zero Governor address.
-     */
+    /// @notice Returns the address of the Zero Governor.
     function zeroGovernor() external view returns (address);
 
     /******************************************************************************************************************\

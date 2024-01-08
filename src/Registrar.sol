@@ -90,7 +90,7 @@ contract Registrar is IRegistrar {
     \******************************************************************************************************************/
 
     /// @inheritdoc IRegistrar
-    function get(bytes32 key_) external view returns (bytes32 value_) {
+    function get(bytes32 key_) external view returns (bytes32) {
         return _valueAt[_getValueKey(key_)];
     }
 
@@ -104,12 +104,12 @@ contract Registrar is IRegistrar {
     }
 
     /// @inheritdoc IRegistrar
-    function listContains(bytes32 list_, address account_) external view returns (bool contains_) {
+    function listContains(bytes32 list_, address account_) external view returns (bool) {
         return _valueAt[_getIsInListKey(list_, account_)] == bytes32(uint256(1));
     }
 
     /// @inheritdoc IRegistrar
-    function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool contains_) {
+    function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool) {
         for (uint256 index_; index_ < accounts_.length; ++index_) {
             if (_valueAt[_getIsInListKey(list_, accounts_[index_])] != bytes32(uint256(1))) return false;
         }
@@ -118,17 +118,17 @@ contract Registrar is IRegistrar {
     }
 
     /// @inheritdoc IRegistrar
-    function emergencyGovernor() public view returns (address emergencyGovernor_) {
+    function emergencyGovernor() public view returns (address) {
         return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
     }
 
     /// @inheritdoc IRegistrar
-    function powerToken() external view returns (address powerToken_) {
+    function powerToken() external view returns (address) {
         return IPowerTokenDeployer(powerTokenDeployer).lastDeploy();
     }
 
     /// @inheritdoc IRegistrar
-    function standardGovernor() public view returns (address standardGovernor_) {
+    function standardGovernor() public view returns (address) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 

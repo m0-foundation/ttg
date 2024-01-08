@@ -66,7 +66,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view returns (uint256[] memory votingPowers_) {
+    ) external view returns (uint256[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -79,7 +79,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view returns (uint256[] memory balances_) {
+    ) external view returns (uint256[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -92,7 +92,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view returns (address[] memory delegatees_) {
+    ) external view returns (address[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -101,10 +101,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     }
 
     /// @inheritdoc IZeroToken
-    function pastTotalSupplies(
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) external view returns (uint256[] memory totalSupplies_) {
+    function pastTotalSupplies(uint256 startEpoch_, uint256 endEpoch_) external view returns (uint256[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -113,7 +110,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     }
 
     /// @inheritdoc IZeroToken
-    function standardGovernor() public view returns (address standardGovernor_) {
+    function standardGovernor() public view returns (address) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 

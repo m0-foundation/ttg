@@ -15,10 +15,12 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IERC5805
     function delegate(address delegatee_) external {
         _delegate(msg.sender, delegatee_);
     }
 
+    /// @inheritdoc IERC5805
     function delegateBySig(
         address delegatee_,
         uint256 nonce_,
@@ -39,6 +41,11 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @dev   Reverts if a given nonce is reused for `account`, then increments the nonce in storage.
+     * @param account The address of the account the nonce is being verifier for.
+     * @param nonce_  The nonce being used by the account.
+     */
     function _checkAndIncrementNonce(address account, uint256 nonce_) internal {
         uint256 currentNonce_ = nonces[account];
 
@@ -49,12 +56,18 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
         }
     }
 
+    /**
+     * @dev   Delegate voting power from `delegator_` to `newDelegatee_`.
+     * @param delegator_    The address of the account delegating voting power.
+     * @param newDelegatee_ The address of the account receiving voting power.
+     */
     function _delegate(address delegator_, address newDelegatee_) internal virtual;
 
     /******************************************************************************************************************\
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
+    // TODO: Expose
     function _getDelegationDigest(
         address delegatee_,
         uint256 nonce_,

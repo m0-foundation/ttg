@@ -16,7 +16,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
 
     /// @notice Throws if called by any account other than the Zero Governor.
     modifier onlyZeroGovernor() {
-        _revertIfNotZeroGovernor();
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
 
@@ -107,7 +107,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
 
     /**
      * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
-     * @param callData_ The calldata to check.
+     * @param callData_ The call data to check.
      */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
@@ -119,10 +119,5 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
             func_ != this.setKey.selector &&
             func_ != this.setStandardProposalFee.selector
         ) revert InvalidCallData();
-    }
-
-    /// @dev Reverts if the caller is not the Zero Governor.
-    function _revertIfNotZeroGovernor() internal view {
-        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
     }
 }

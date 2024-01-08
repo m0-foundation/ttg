@@ -101,10 +101,7 @@ interface IStandardGovernor is IBatchGovernor {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the required amount of cashToken it costs an account to create a proposal.
-     * @return Proposal fee amount.
-     */
+    /// @notice Returns the required amount of cashToken it costs an account to create a proposal.
     function proposalFee() external view returns (uint256);
 
     /**
@@ -131,69 +128,48 @@ interface IStandardGovernor is IBatchGovernor {
             address proposer
         );
 
-    /**
-     * @notice Returns the maximum amount of Zero Token that can be rewarded to all vote casters per active epoch.
-     * @return reward Maximum amount of Zero Token rewards.
-     */
+    /// @notice Returns the maximum amount of Zero Token that can be rewarded to all vote casters per active epoch.
     function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
 
     /**
      * @notice Returns the number of proposals at epoch `epoch`.
      * @param  epoch The epoch as a clock value.
-     * @return count The number of proposals at epoch `epoch`.
+     * @return The number of proposals at epoch `epoch`.
      */
-    function numberOfProposalsAt(uint256 epoch) external view returns (uint256 count);
+    function numberOfProposalsAt(uint256 epoch) external view returns (uint256);
 
     /**
      * @notice Returns the number of proposals that were voted on at `epoch`.
      * @param  voter The address of some account.
      * @param  epoch The epoch as a clock value.
-     * @return count The number of proposals at `epoch`.
+     * @return The number of proposals at `epoch`.
      */
-    function numberOfProposalsVotedOnAt(address voter, uint256 epoch) external view returns (uint256 count);
+    function numberOfProposalsVotedOnAt(address voter, uint256 epoch) external view returns (uint256);
 
     /**
      * @notice Returns whether `voter` has voted on all proposals in `epoch`.
-     * @param  voter    The address of some account.
-     * @param  epoch    The epoch as a clock value.
+     * @param  voter The address of some account.
+     * @param  epoch The epoch as a clock value.
      * @return Whether `voter` has voted on all proposals in `epoch`.
      */
     function hasVotedOnAllProposals(address voter, uint256 epoch) external view returns (bool);
 
-    /**
-     * @notice Returns the address of the Cash Token.
-     * @return Address of the Cash Token.
-     */
+    /// @notice Returns the address of the Cash Token.
     function cashToken() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Emergency Governor.
-     * @return Address of the Emergency Governor.
-     */
+    /// @notice Returns the address of the Emergency Governor.
     function emergencyGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Registrar.
-     * @return Address of the Registrar.
-     */
+    /// @notice Returns the address of the Registrar.
     function registrar() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Vault.
-     * @return Address of the Vault.
-     */
+    /// @notice Returns the address of the Vault.
     function vault() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Governor.
-     * @return Address of the Zero Governor.
-     */
+    /// @notice Returns the address of the Zero Governor.
     function zeroGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Token.
-     * @return Address of the Zero Token.
-     */
+    /// @notice Returns the address of the Zero Token.
     function zeroToken() external view returns (address);
 
     /******************************************************************************************************************\

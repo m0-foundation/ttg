@@ -38,12 +38,12 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
     }
 
     /// @inheritdoc IPowerBootstrapToken
-    function pastBalanceOf(address account_, uint256) external view returns (uint256 balance_) {
+    function pastBalanceOf(address account_, uint256) external view returns (uint256) {
         return _balances[account_];
     }
 
     /// @inheritdoc IPowerBootstrapToken
-    function pastTotalSupply(uint256) external view returns (uint256 totalSupply_) {
+    function pastTotalSupply(uint256) external view returns (uint256) {
         return _totalSupply;
     }
 }

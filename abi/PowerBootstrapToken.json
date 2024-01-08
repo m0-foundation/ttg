@@ -32,7 +32,7 @@
     ],
     "outputs": [
       {
-        "name": "balance_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -51,7 +51,7 @@
     ],
     "outputs": [
       {
-        "name": "totalSupply_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }

@@ -118,17 +118,17 @@ interface IBatchGovernor is IGovernor {
     \******************************************************************************************************************/
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVotesBySig function.
-    function BALLOTS_TYPEHASH() external pure returns (bytes32 typehash);
+    function BALLOTS_TYPEHASH() external pure returns (bytes32);
 
     /// @notice Returns the value used as 100%, to be used to correctly ascertain the threshold ratio.
-    function ONE() external pure returns (uint256 one);
+    function ONE() external pure returns (uint256);
 
     /**
      * @notice Returns the unique identifier for the proposal if it were created at this exact moment.
-     * @param  callData   The single call data used to call this governor upon execution of a proposal.
-     * @return proposalId The unique identifier for the proposal.
+     * @param  callData The single call data used to call this governor upon execution of a proposal.
+     * @return The unique identifier for the proposal.
      */
-    function hashProposal(bytes memory callData) external view returns (uint256 proposalId);
+    function hashProposal(bytes memory callData) external view returns (uint256);
 
     /// @notice Returns the EIP-5805 token contact used for determine voting power and total supplies.
     function voteToken() external view returns (address);

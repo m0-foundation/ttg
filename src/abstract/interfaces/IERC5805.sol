@@ -65,27 +65,27 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
     \******************************************************************************************************************/
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the delegateBySig function.
-    function DELEGATION_TYPEHASH() external view returns (bytes32 typehash);
+    function DELEGATION_TYPEHASH() external view returns (bytes32);
 
     /**
      * @notice Returns the delegatee the voting power of `account` is delegated to.
-     * @param  account   The address of the account that can delegate its voting power.
-     * @return delegatee The address of the account the voting power of `account` will be delegated to.
+     * @param  account The address of the account that can delegate its voting power.
+     * @return The address of the account the voting power of `account` will be delegated to.
      */
-    function delegates(address account) external view returns (address delegatee);
+    function delegates(address account) external view returns (address);
 
     /**
      * @notice Returns the total voting power of `account` at a past clock value `timepoint`.
      * @param  account   The address of some account.
      * @param  timepoint The point in time, according to the clock mode the contract is operating on.
-     * @return votePower The total voting power of `account` at clock value `timepoint`.
+     * @return The total voting power of `account` at clock value `timepoint`.
      */
-    function getPastVotes(address account, uint256 timepoint) external view returns (uint256 votePower);
+    function getPastVotes(address account, uint256 timepoint) external view returns (uint256);
 
     /**
      * @notice Returns the total voting power of `account`.
-     * @param  account   The address of some account.
-     * @return votePower The total voting power of `account`.
+     * @param  account The address of some account.
+     * @return The total voting power of `account`.
      */
-    function getVotes(address account) external view returns (uint256 votePower);
+    function getVotes(address account) external view returns (uint256);
 }

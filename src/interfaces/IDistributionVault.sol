@@ -98,15 +98,15 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     \******************************************************************************************************************/
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the claimBySig function.
-    function CLAIM_TYPEHASH() external view returns (bytes32 typehash);
+    function CLAIM_TYPEHASH() external view returns (bytes32);
 
     /**
      * @notice Returns the total amount of `token` eligible for distribution to holder at the end of epoch `epoch`.
-     * @param  token  The address of some token.
-     * @param  epoch  The epoch number as a clock value.
-     * @return amount The total amount of token eligible for distribution to holder at the end of the epoch.
+     * @param  token The address of some token.
+     * @param  epoch The epoch number as a clock value.
+     * @return The total amount of token eligible for distribution to holder at the end of the epoch.
      */
-    function distributionOfAt(address token, uint256 epoch) external view returns (uint256 amount);
+    function distributionOfAt(address token, uint256 epoch) external view returns (uint256);
 
     /**
      * @notice Returns the amount of `token` `account` can claim between inclusive epochs `startEpoch` and `endEpoch`.
@@ -114,14 +114,14 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @param  account    The address of some account.
      * @param  startEpoch The starting epoch number as a clock value.
      * @param  endEpoch   The ending epoch number as a clock value.
-     * @return claimable  The amount of token that `account` has yet to claim for these epochs, if any.
+     * @return The amount of token that `account` has yet to claim for these epochs, if any.
      */
     function getClaimable(
         address token,
         address account,
         uint256 startEpoch,
         uint256 endEpoch
-    ) external view returns (uint256 claimable);
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
@@ -151,15 +151,9 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      */
     function hasClaimed(address token, uint256 epoch, address account) external view returns (bool);
 
-    /**
-     * @notice Returns the name of the contract.
-     * @return The contract name.
-     */
+    /// @notice Returns the name of the contract.
     function name() external view returns (string memory);
 
-    /**
-     * @notice Returns the address of the Zero Token holders must have in order to be eligible for distributions.
-     * @return The Zero Token address.
-     */
+    /// @notice Returns the address of the Zero Token holders must have in order to be eligible for distributions.
     function zeroToken() external view returns (address);
 }

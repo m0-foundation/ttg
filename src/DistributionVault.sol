@@ -18,6 +18,7 @@ import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 /// @title A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
 contract DistributionVault is IDistributionVault, StatefulERC712 {
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
+    /// @inheritdoc IDistributionVault
     bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
 
     /// @inheritdoc IDistributionVault
@@ -49,7 +50,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 startEpoch_,
         uint256 endEpoch_,
         address destination_
-    ) external returns (uint256 claimed_) {
+    ) external returns (uint256) {
         return _claim(msg.sender, token_, startEpoch_, endEpoch_, destination_);
     }
 
@@ -62,7 +63,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         address destination_,
         uint256 deadline_,
         bytes memory signature_
-    ) external returns (uint256 claimed) {
+    ) external returns (uint256) {
         uint256 currentNonce_ = nonces[account_];
         bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
 
@@ -95,7 +96,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     \******************************************************************************************************************/
 
     /// @inheritdoc IDistributionVault
-    function name() external view returns (string memory name_) {
+    function name() external view returns (string memory) {
         return _name;
     }
 
@@ -107,7 +108,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         address destination_,
         uint256 nonce_,
         uint256 deadline_
-    ) public view returns (bytes32 digest_) {
+    ) public view returns (bytes32) {
         return
             _getDigest(
                 keccak256(abi.encode(CLAIM_TYPEHASH, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_))
@@ -115,12 +116,12 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     }
 
     /// @inheritdoc IERC6372
-    function CLOCK_MODE() external pure returns (string memory clockMode_) {
+    function CLOCK_MODE() external pure returns (string memory) {
         return "mode=epoch";
     }
 
     /// @inheritdoc IERC6372
-    function clock() public view returns (uint48 clock_) {
+    function clock() public view returns (uint48) {
         return uint48(PureEpochs.currentEpoch());
     }
 

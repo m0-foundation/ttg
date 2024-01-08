@@ -62,7 +62,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     /// @notice Reverts if the caller is not the Standard Governor.
     modifier onlyStandardGovernor() {
-        if (msg.sender != standardGovernor) revert NotStandardGovernor();
+        _revertIfNotStandardGovernor();
         _;
     }
 
@@ -172,7 +172,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     /// @inheritdoc IPowerToken
-    function amountToAuction() public view returns (uint240 amountToAuction_) {
+    function amountToAuction() public view returns (uint240) {
         if (_isVotingEpoch(_clock())) return 0; // No auction during voting epochs.
 
         uint240 targetSupply_ = _getTargetSupply();
@@ -184,12 +184,12 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /// @inheritdoc IPowerToken
-    function cashToken() public view returns (address cashToken_) {
+    function cashToken() public view returns (address) {
         return _clock() >= _nextCashTokenStartingEpoch ? _nextCashToken : _cashToken;
     }
 
     /// @inheritdoc IPowerToken
-    function getCost(uint256 amount_) public view returns (uint256 cost_) {
+    function getCost(uint256 amount_) public view returns (uint256) {
         uint16 currentEpoch_ = _clock();
 
         uint40 timeRemaining_ = _isVotingEpoch(currentEpoch_)
@@ -230,7 +230,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /// @inheritdoc IPowerToken
-    function targetSupply() public view returns (uint256 targetSupply_) {
+    function targetSupply() public view returns (uint256) {
         return _getTargetSupply();
     }
 
@@ -290,7 +290,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /**
-     * @dev Transfers `amount_` tokens from `sender_` to `recipient_`.
+     * @dev   Transfers `amount_` tokens from `sender_` to `recipient_`.
      * @param sender_    The address of the account to transfer tokens from.
      * @param recipient_ The address of the account to transfer tokens to.
      * @param amount_    The amount of tokens to transfer.
@@ -306,10 +306,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     /**
-     * @dev    Returns the balance of `account_` plus any inflation that should be realized at `epoch_`.
+     * @dev    Returns the balance of `account_` plus any inflation that in unrealized before `epoch_`.
      * @param  account_ The account to get the balance for.
      * @param  epoch_   The epoch to get the balance at.
-     * @return The balance of `account_` plus any inflation that should be realized at `epoch_`.
+     * @return The balance of `account_` plus any inflation that in unrealized before `epoch_`.
      */
     function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
@@ -400,16 +400,17 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /**
-     * @dev    Returns the epoch of the last snap of `account_` at or before `epoch_`.
-     * @param  account_ The account to get the last snap for.
-     * @param  epoch_   The epoch to get the last snap at or before.
-     * @return The epoch of the last snap of `account_` at or before `epoch_`.
+     * @dev    Returns the epoch of the last sync of `account_` at or before `epoch_`.
+     * @param  account_ The account to get the last sync for.
+     * @param  epoch_   The epoch to get the last sync at or before.
+     * @return The epoch of the last sync of `account_` at or before `epoch_`.
      */
     function _getLastSync(address account_, uint16 epoch_) internal view override returns (uint16) {
         // If there are no LastSync snaps, return the bootstrap epoch.
         return (_lastSyncs[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
     }
 
+    /// @dev Returns the target supply of the token at the current epoch.
     function _getTargetSupply() internal view returns (uint240 targetSupply_) {
         return _clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
@@ -428,5 +429,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         unchecked {
             z = (z - 1) / y;
         }
+    }
+
+    /// @dev Reverts if the caller is not the Standard Governor.
+    function _revertIfNotStandardGovernor() internal view {
+        if (msg.sender != standardGovernor) revert NotStandardGovernor();
     }
 }

@@ -94,17 +94,17 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     /// @inheritdoc IZeroGovernor
-    function isAllowedCashToken(address token_) external view returns (bool isAllowed_) {
+    function isAllowedCashToken(address token_) external view returns (bool) {
         return _allowedCashTokens[token_];
     }
 
     /// @inheritdoc IZeroGovernor
-    function emergencyGovernor() public view returns (address emergencyGovernor_) {
+    function emergencyGovernor() public view returns (address) {
         return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
     }
 
     /// @inheritdoc IZeroGovernor
-    function standardGovernor() public view returns (address standardGovernor_) {
+    function standardGovernor() public view returns (address) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
@@ -149,7 +149,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
      * @param emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
      * @param powerTokenDeployer_              The address of the Power Token Deployer contract.
      * @param standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
-     * @param bootstrapToken_                  The address of token (Zero Token or old Power Token), that bootstraps the reset.
+     * @param bootstrapToken_                  The address of a token to bootstrap the new Power Token.
      * @param cashToken_                       The address of the Cash Token contract.
      * @param emergencyProposalThresholdRatio_ The threshold ratio for the Emergency Governor.
      * @param proposalFee_                     The proposal fee for the Standard Governor.
@@ -222,7 +222,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
 
     /**
      * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
-     * @param callData_ The calldata to check.
+     * @param callData_ The call data to check.
      */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
