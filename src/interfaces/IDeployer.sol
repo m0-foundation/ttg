@@ -8,21 +8,12 @@ interface IDeployer {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the nonce used to pre deterministically compute the address of the next deployed contract.
-     * @return The nonce value.
-     */
+    /// @notice Returns the nonce used to pre deterministically compute the address of the next deployed contract.
     function nonce() external view returns (uint256);
 
-    /**
-     * @notice Returns the address of the last Standard Governor deployed by this contract.
-     * @return Last deployed Standard Governor address.
-     */
+    /// @notice Returns the address of the last contract deployed by this contract.
     function lastDeploy() external view returns (address);
 
-    /**
-     * @notice Returns the address of the new Standard Governor this contract will deploy
-     * @return Next deployed Standard Governor address.
-     */
+    /// @notice Returns the address of the next contract this contract will deploy.
     function nextDeploy() external view returns (address);
 }

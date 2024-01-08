@@ -148,6 +148,11 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @dev   Creates a new proposal with the given parameters.
+     * @param proposalId_ The unique identifier of the proposal.
+     * @param voteStart_  The epoch at which the proposal will start collecting votes.
+     */
     function _createProposal(uint256 proposalId_, uint16 voteStart_) internal override {
         _proposals[proposalId_] = Proposal({
             voteStart: voteStart_,
@@ -160,6 +165,10 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         });
     }
 
+    /**
+     * @dev   Set the threshold ratio to be applied to determine the threshold/quorum for a proposal.
+     * @param newThresholdRatio_ The new threshold ratio.
+     */
     function _setThresholdRatio(uint16 newThresholdRatio_) internal {
         if (newThresholdRatio_ > ONE || newThresholdRatio_ < _MIN_THRESHOLD_RATIO)
             revert InvalidThresholdRatio(newThresholdRatio_, _MIN_THRESHOLD_RATIO, ONE);
@@ -171,10 +180,18 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
+    /**
+     * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.
+     * @return The voting delay.
+     */
     function _votingDelay() internal pure override returns (uint16) {
         return 0;
     }
 
+    /**
+     * @dev    Returns the number of clock values between the vote start and vote end.
+     * @return The voting period.
+     */
     function _votingPeriod() internal pure override returns (uint16) {
         return 1;
     }

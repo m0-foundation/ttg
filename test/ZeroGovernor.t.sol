@@ -276,7 +276,7 @@ contract ZeroGovernorTests is TestUtils {
         vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidThresholdRatio.selector, 1, 271, 10_000));
         _zeroGovernor.setZeroProposalThresholdRatio(1);
     }
-    
+
     /* ============ revertIfInvalidCalldata ============ */
     function test_revertIfInvalidCalldata() external {
         vm.expectRevert(IBatchGovernor.InvalidCallData.selector);

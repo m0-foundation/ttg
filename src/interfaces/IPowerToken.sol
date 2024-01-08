@@ -10,6 +10,32 @@ import { IEpochBasedInflationaryVoteToken } from "../abstract/interfaces/IEpochB
  */
 interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Emitted when `buyer` has bought `amount` tokens from the auction, as a total cash token value of `cost`.
+     * @param  buyer  The address of account that bought tokens from the auction.
+     * @param  amount The amount of tokens bought.
+     * @param  cost   The total cash token cost of the purchase.
+     */
+    event Buy(address indexed buyer, uint240 amount, uint256 cost);
+
+    /**
+     * @notice Emitted when the cash token is queued to become `nextCashToken` at the start of epoch `startingEpoch`.
+     * @param  startingEpoch The epoch number as a clock value in which the new cash token takes effect.
+     * @param  nextCashToken The address of the cash token taking effect at `startingEpoch`.
+     */
+    event NextCashTokenSet(uint16 indexed startingEpoch, address indexed nextCashToken);
+
+    /**
+     * @notice Emitted when the target supply is queued to become `targetSupply` at the start of epoch `targetEpoch`.
+     * @param  targetEpoch  The epoch number as a clock value in which the new target supply takes effect.
+     * @param  targetSupply The target supply taking effect at `startingEpoch`.
+     */
+    event TargetSupplyInflated(uint16 indexed targetEpoch, uint240 indexed targetSupply);
+
+    /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
@@ -48,32 +74,6 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     error DivideUpOverflow();
 
     /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Emitted when `buyer` has bought `amount` tokens from the auction, as a total cash token value of `cost`.
-     * @param  buyer  The address of account that bought tokens from the auction.
-     * @param  amount The amount of tokens bought.
-     * @param  cost   The total cash token cost of the purchase.
-     */
-    event Buy(address indexed buyer, uint240 amount, uint256 cost);
-
-    /**
-     * @notice Emitted when the cash token is queued to become `nextCashToken` at the start of epoch `startingEpoch`.
-     * @param  startingEpoch The epoch number as a clock value in which the new cash token takes effect.
-     * @param  nextCashToken The address of the cash token taking effect at `startingEpoch`.
-     */
-    event NextCashTokenSet(uint16 indexed startingEpoch, address indexed nextCashToken);
-
-    /**
-     * @notice Emitted when the target supply is queued to become `targetSupply` at the start of epoch `targetEpoch`.
-     * @param  targetEpoch  The epoch number as a clock value in which the new target supply takes effect.
-     * @param  targetSupply The target supply taking effect at `startingEpoch`.
-     */
-    event TargetSupplyInflated(uint16 indexed targetEpoch, uint240 indexed targetSupply);
-
-    /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
 
@@ -110,35 +110,16 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the initial supply of the token.
-     * @return Initial supply of the token.
-     */
-    function INITIAL_SUPPLY() external pure returns (uint240);
-
-    /**
-     * @notice Returns the amount of tokens that can be bought in the auction.
-     * @return Amount of tokens auctioned off.
-     */
+    /// @notice Returns the amount of tokens that can be bought in the auction.
     function amountToAuction() external view returns (uint240);
 
     /// @notice Returns the epoch from which token balances and voting powers are bootstrapped.
-    /**
-     * @notice Returns the epoch from which token balances and voting powers are bootstrapped.
-     * @return The bootstrap epoch number.
-     */
     function bootstrapEpoch() external view returns (uint16);
 
-    /**
-     * @notice Returns the address of the token in which token balances and voting powers are bootstrapped.
-     * @return The bootstrap token address.
-     */
+    /// @notice Returns the address of the token in which token balances and voting powers are bootstrapped.
     function bootstrapToken() external view returns (address);
 
-    /**
-     * @notice Returns the address of the cash token required to buy from the token auction.
-     * @return The cash token address.
-     */
+    /// @notice Returns the address of the cash token required to buy from the token auction.
     function cashToken() external view returns (address);
 
     /**
@@ -148,21 +129,15 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     function getCost(uint256 amount) external view returns (uint256);
 
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
+    /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the target supply, which helps determine the amount of tokens up for auction.
-     * @return The target supply.
-     */
+    //// @notice Returns the target supply, which helps determine the amount of tokens up for auction.
     function targetSupply() external view returns (uint256);
 
-    /**
-     * @notice Returns the address of the Vault.
-     * @return The Vault address.
-     */
+    /// @notice Returns the address of the Vault.
     function vault() external view returns (address);
+
+    /// @notice Returns the initial supply of the token.
+    function INITIAL_SUPPLY() external pure returns (uint240);
 }

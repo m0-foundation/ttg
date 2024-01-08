@@ -267,7 +267,6 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         _powerToken.delegate(_eve);
 
         uint256 eveZeroBalance_ = _zeroToken.balanceOf(_eve);
-        uint256 carolZeroBalance_ = _zeroToken.balanceOf(_carol);
 
         uint256 proposalId1_ = _createStandardProposal("key1", "value1");
 

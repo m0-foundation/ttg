@@ -40,25 +40,34 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
     \******************************************************************************************************************/
 
     /**
+     * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  delegatee The address of the delegatee to delegate to.
+     * @param  nonce     The nonce of the account delegating.
+     * @param  expiry    The last timestamp at which the signature is still valid.
+     * @return The digest to be signed.
+     */
+    function getDelegationDigest(address delegatee, uint256 nonce, uint256 expiry) external view returns (bytes32);
+
+    /**
      * @notice Returns the token balance of `account` at a past clock value `epoch`.
      * @param  account The address of some account.
      * @param  epoch   The epoch number as a clock value.
-     * @return balance The token balance `account` at `epoch`.
+     * @return The token balance `account` at `epoch`.
      */
-    function pastBalanceOf(address account, uint256 epoch) external view returns (uint256 balance);
+    function pastBalanceOf(address account, uint256 epoch) external view returns (uint256);
 
     /**
      * @notice Returns the delegatee of `account` at a past clock value `epoch`.
-     * @param  account   The address of some account.
-     * @param  epoch     The epoch number as a clock value.
-     * @return delegatee The delegatee of the voting power of `account` at `epoch`.
+     * @param  account The address of some account.
+     * @param  epoch   The epoch number as a clock value.
+     * @return The delegatee of the voting power of `account` at `epoch`.
      */
-    function pastDelegates(address account, uint256 epoch) external view returns (address delegatee);
+    function pastDelegates(address account, uint256 epoch) external view returns (address);
 
     /**
      * @notice Returns the total token supply at a past clock value `epoch`.
-     * @param  epoch       The epoch number as a clock value.
-     * @return totalSupply The total token supply at `epoch`.
+     * @param  epoch The epoch number as a clock value.
+     * @return The total token supply at `epoch`.
      */
-    function pastTotalSupply(uint256 epoch) external view returns (uint256 totalSupply);
+    function pastTotalSupply(uint256 epoch) external view returns (uint256);
 }

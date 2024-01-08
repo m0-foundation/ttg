@@ -27,14 +27,14 @@ interface IPowerBootstrapToken {
      * @notice Returns the token balance of `account` at a past clock value `epoch`.
      * @param  account The address of some account.
      * @param  epoch   The epoch number as a clock value.
-     * @return balance The token balance `account` at `epoch`.
+     * @return The token balance `account` at `epoch`.
      */
-    function pastBalanceOf(address account, uint256 epoch) external view returns (uint256 balance);
+    function pastBalanceOf(address account, uint256 epoch) external view returns (uint256);
 
     /**
      * @notice Returns the total token supply at a past clock value `epoch`.
-     * @param  epoch       The epoch number as a clock value.
-     * @return totalSupply The total token supply at `epoch`.
+     * @param  epoch The epoch number as a clock value.
+     * @return The total token supply at `epoch`.
      */
-    function pastTotalSupply(uint256 epoch) external view returns (uint256 totalSupply);
+    function pastTotalSupply(uint256 epoch) external view returns (uint256);
 }

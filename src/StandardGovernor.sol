@@ -20,34 +20,63 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint256 fee;
     }
 
+    /// @inheritdoc IStandardGovernor
     address public immutable emergencyGovernor;
+
+    /// @inheritdoc IStandardGovernor
     address public immutable registrar;
+
+    /// @inheritdoc IStandardGovernor
     address public immutable vault;
+
+    /// @inheritdoc IStandardGovernor
     address public immutable zeroGovernor;
+
+    /// @inheritdoc IStandardGovernor
     address public immutable zeroToken;
 
+    /// @inheritdoc IStandardGovernor
     uint256 public immutable maxTotalZeroRewardPerActiveEpoch;
 
+    /// @inheritdoc IStandardGovernor
     address public cashToken;
 
+    /// @inheritdoc IStandardGovernor
     uint256 public proposalFee;
 
+    /// @dev The proposal fee info per proposal ID.
     mapping(uint256 proposalId => ProposalFeeInfo proposalFee) internal _proposalFees;
 
+    /// @dev The amount of proposals per epoch.
     mapping(uint256 epoch => uint256 count) public numberOfProposalsAt;
 
+    /// @dev The amount of proposals a voter has voted on per epoch.
     mapping(address voter => mapping(uint256 epoch => uint256 count)) public numberOfProposalsVotedOnAt;
 
+    /// @dev Revert if the caller is not the Zero Governor.
     modifier onlyZeroGovernor() {
-        _revertIfNotZeroGovernor();
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
 
+    /// @dev Revert if the caller is not the Standard Governor nor the Emergency Governor.
     modifier onlySelfOrEmergencyGovernor() {
-        _revertIfNotSelfOrEmergencyGovernor();
+        if (msg.sender != address(this) && msg.sender != emergencyGovernor) revert NotSelfOrEmergencyGovernor();
         _;
     }
 
+    /**
+     * @notice Constructs a new StandardGovernor contract.
+     * @param  voteToken_                        The address of the Vote Token contract.
+     * @param  emergencyGovernor_                The address of the Emergency Governor contract.
+     * @param  zeroGovernor_                     The address of the Zero Governor contract.
+     * @param  cashToken_                        The address of the Cash Token contract.
+     * @param  registrar_                        The address of the Registrar contract.
+     * @param  vault_                            The address of the Vault contract.
+     * @param  zeroToken_                        The address of the Zero Token contract.
+     * @param  proposalFee_                      The proposal fee.
+     * @param  maxTotalZeroRewardPerActiveEpoch_ The maximum amount of zero tokens to reward per active epoch.
+     */
     constructor(
         address voteToken_,
         address emergencyGovernor_,
@@ -75,6 +104,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IGovernor
     function execute(
         address[] memory,
         uint256[] memory,
@@ -104,6 +134,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         }
     }
 
+    /// @inheritdoc IGovernor
     function propose(
         address[] memory targets_,
         uint256[] memory values_,
@@ -130,6 +161,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         if (!ERC20Helper.transferFrom(cashToken_, msg.sender, address(this), proposalFee_)) revert TransferFromFailed();
     }
 
+    /// @inheritdoc IStandardGovernor
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
         _setCashToken(newCashToken_);
 
@@ -138,6 +170,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         _setProposalFee(newProposalFee_);
     }
 
+    /// @inheritdoc IStandardGovernor
     function sendProposalFeeToVault(uint256 proposalId_) external {
         ProposalState state_ = state(proposalId_);
 
@@ -160,9 +193,40 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     /******************************************************************************************************************\
+    |                                                Proposal Functions                                                |
+    \******************************************************************************************************************/
+
+    /// @inheritdoc IStandardGovernor
+    function addToList(bytes32 list_, address account_) external onlySelf {
+        _addToList(list_, account_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function removeFromList(bytes32 list_, address account_) external onlySelf {
+        _removeFromList(list_, account_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function removeFromAndAddToList(bytes32 list_, address accountToRemove_, address accountToAdd_) external onlySelf {
+        _removeFromList(list_, accountToRemove_);
+        _addToList(list_, accountToAdd_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function setKey(bytes32 key_, bytes32 value_) external onlySelf {
+        IRegistrar(registrar).setKey(key_, value_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function setProposalFee(uint256 newProposalFee_) external onlySelfOrEmergencyGovernor {
+        _setProposalFee(newProposalFee_);
+    }
+
+    /******************************************************************************************************************\
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IStandardGovernor
     function getProposal(
         uint256 proposalId_
     )
@@ -187,19 +251,23 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         proposer_ = proposal_.proposer;
     }
 
-    function hasVotedOnAllProposals(address voter_, uint256 epoch_) external view returns (bool hasVoted_) {
+    /// @inheritdoc IStandardGovernor
+    function hasVotedOnAllProposals(address voter_, uint256 epoch_) external view returns (bool) {
         return numberOfProposalsVotedOnAt[voter_][epoch_] == numberOfProposalsAt[epoch_];
     }
 
-    function quorum() external pure returns (uint256 quorum_) {
+    /// @inheritdoc IGovernor
+    function quorum() external pure returns (uint256) {
         return 0;
     }
 
-    function quorum(uint256) external pure returns (uint256 quorum_) {
+    /// @inheritdoc IGovernor
+    function quorum(uint256) external pure returns (uint256) {
         return 0;
     }
 
-    function state(uint256 proposalId_) public view override(BatchGovernor, IGovernor) returns (ProposalState state_) {
+    /// @inheritdoc IGovernor
+    function state(uint256 proposalId_) public view override(BatchGovernor, IGovernor) returns (ProposalState) {
         Proposal storage proposal_ = _proposals[proposalId_];
 
         if (proposal_.executed) return ProposalState.Executed;
@@ -223,51 +291,45 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
-
-    function addToList(bytes32 list_, address account_) external onlySelf {
-        _addToList(list_, account_);
-    }
-
-    function removeFromList(bytes32 list_, address account_) external onlySelf {
-        _removeFromList(list_, account_);
-    }
-
-    function removeFromAndAddToList(bytes32 list_, address accountToRemove_, address accountToAdd_) external onlySelf {
-        _removeFromList(list_, accountToRemove_);
-        _addToList(list_, accountToAdd_);
-    }
-
-    function setKey(bytes32 key_, bytes32 value_) external onlySelf {
-        IRegistrar(registrar).setKey(key_, value_);
-    }
-
-    function setProposalFee(uint256 newProposalFee_) external onlySelfOrEmergencyGovernor {
-        _setProposalFee(newProposalFee_);
-    }
-
-    /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @dev    Cast votes on several proposals for `voter_`.
+     * @param  voter_       The address of the voter.
+     * @param  proposalIds_ The unique identifiers of the proposals.
+     * @param  support_     The type of support to cast for each proposal.
+     * @return weight_      The number of votes the voter cast on each proposal.
+     */
     function _castVotes(
         address voter_,
         uint256[] calldata proposalIds_,
-        uint8[] calldata supports_
+        uint8[] calldata support_
     ) internal override returns (uint256 weight_) {
         // In this governor, since the votingPeriod is 0, the snapshot for all active proposals is the previous epoch.
         weight_ = getVotes(voter_, _clock() - 1);
 
         for (uint256 index_; index_ < proposalIds_.length; ++index_) {
-            _castVote(voter_, weight_, proposalIds_[index_], supports_[index_]);
+            _castVote(voter_, weight_, proposalIds_[index_], support_[index_]);
         }
     }
 
+    /**
+     * @dev   Adds `account` to `list` at the Registrar.
+     * @param list_    The key for some list.
+     * @param account_ The address of some account to be added.
+     */
     function _addToList(bytes32 list_, address account_) internal {
         IRegistrar(registrar).addToList(list_, account_);
     }
 
+    /**
+     * @dev   Cast `weight_` votes on a proposal with id `proposalId_` for `voter_`.
+     * @param voter_      The address of the voter.
+     * @param weight_     The number of votes the voter is casting.
+     * @param proposalId_ The unique identifier of the proposal.
+     * @param support_    The type of support to cast for the proposal.
+     */
     function _castVote(address voter_, uint256 weight_, uint256 proposalId_, uint8 support_) internal override {
         super._castVote(voter_, weight_, proposalId_, support_);
 
@@ -288,6 +350,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         );
     }
 
+    /**
+     * @dev   Creates a new proposal with the given parameters.
+     * @param proposalId_ The unique identifier of the proposal.
+     * @param voteStart_  The epoch at which the proposal will start collecting votes.
+     */
     function _createProposal(uint256 proposalId_, uint16 voteStart_) internal override {
         _proposals[proposalId_] = Proposal({
             voteStart: voteStart_,
@@ -300,20 +367,39 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         });
     }
 
+    /**
+     * @dev   Removes `account_` from `list_` at the Registrar.
+     * @param list_    The key for some list.
+     * @param account_ The address of some account to be removed.
+     */
     function _removeFromList(bytes32 list_, address account_) internal {
         IRegistrar(registrar).removeFromList(list_, account_);
     }
 
+    /**
+     * @dev   Set cash token to `newCashToken_`.
+     * @param newCashToken_ The address of the new cash token.
+     */
     function _setCashToken(address newCashToken_) internal {
         if (newCashToken_ == address(0)) revert InvalidCashTokenAddress();
 
         emit CashTokenSet(cashToken = newCashToken_);
     }
 
+    /**
+     * @dev   Set proposal fee to `newProposalFee_`.
+     * @param newProposalFee_ The new proposal fee.
+     */
     function _setProposalFee(uint256 newProposalFee_) internal {
         emit ProposalFeeSet(proposalFee = newProposalFee_);
     }
 
+    /**
+     * @dev   Transfer `amount_` of `token_` to `to_`.
+     * @param token_  The address of the token to transfer.
+     * @param to_     The address of the recipient.
+     * @param amount_ The amount of tokens to transfer.
+     */
     function _transfer(address token_, address to_, uint256 amount_) internal {
         if (!ERC20Helper.transfer(token_, to_, amount_)) revert TransferFailed();
     }
@@ -322,7 +408,18 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
+    /**
+     * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.
+     * @return The voting delay.
+     */
+    function _votingDelay() internal view override returns (uint16) {
+        return clock() % 2 == 1 ? 2 : 1; // Voting epochs are odd numbered
+    }
+
+    /**
+     * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
+     * @param callData_ The call data to check.
+     */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
 
@@ -335,18 +432,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         ) revert InvalidCallData();
     }
 
-    function _revertIfNotSelfOrEmergencyGovernor() internal view {
-        if (msg.sender != address(this) && msg.sender != emergencyGovernor) revert NotSelfOrEmergencyGovernor();
-    }
-
-    function _revertIfNotZeroGovernor() internal view {
-        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
-    }
-
-    function _votingDelay() internal view override returns (uint16) {
-        return clock() % 2 == 1 ? 2 : 1; // Voting epochs are odd numbered
-    }
-
+    /**
+     * @dev    Returns the number of clock values between the vote start and vote end.
+     * @return The voting period.
+     */
     function _votingPeriod() internal pure override returns (uint16) {
         return 0;
     }

@@ -14,13 +14,21 @@ import { IZeroToken } from "./interfaces/IZeroToken.sol";
  *        range queries for past balances, voting powers, delegations, and  total supplies.
  */
 contract ZeroToken is IZeroToken, EpochBasedVoteToken {
+    /// @inheritdoc IZeroToken
     address public immutable standardGovernorDeployer;
 
+    /// @dev Revert if the caller is not the Standard Governor.
     modifier onlyStandardGovernor() {
         if (msg.sender != standardGovernor()) revert NotStandardGovernor();
         _;
     }
 
+    /**
+     * @notice Constructs a new ZeroToken contract.
+     * @param  standardGovernorDeployer_ The address of the StandardGovernorDeployer contract.
+     * @param  initialAccounts_          The addresses of the accounts to mint tokens to.
+     * @param  initialBalances_          The amounts of tokens to mint to the accounts.
+     */
     constructor(
         address standardGovernorDeployer_,
         address[] memory initialAccounts_,
@@ -44,6 +52,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IZeroToken
     function mint(address recipient_, uint256 amount_) external onlyStandardGovernor {
         _mint(recipient_, amount_);
     }
@@ -52,11 +61,12 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IZeroToken
     function getPastVotes(
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view returns (uint256[] memory votingPowers_) {
+    ) external view returns (uint256[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -64,11 +74,12 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         return _getValuesBetween(_votingPowers[account_], UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
+    /// @inheritdoc IZeroToken
     function pastBalancesOf(
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view returns (uint256[] memory balances_) {
+    ) external view returns (uint256[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -76,11 +87,12 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         return _getValuesBetween(_balances[account_], UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
+    /// @inheritdoc IZeroToken
     function pastDelegates(
         address account_,
         uint256 startEpoch_,
         uint256 endEpoch_
-    ) external view returns (address[] memory delegatees_) {
+    ) external view returns (address[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -88,10 +100,8 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         return _getDelegateesBetween(account_, UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
-    function pastTotalSupplies(
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) external view returns (uint256[] memory totalSupplies_) {
+    /// @inheritdoc IZeroToken
+    function pastTotalSupplies(uint256 startEpoch_, uint256 endEpoch_) external view returns (uint256[] memory) {
         uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
 
         _revertIfNotPastTimepoint(safeEndEpoch_);
@@ -99,7 +109,8 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         return _getValuesBetween(_totalSupplies, UIntMath.safe16(startEpoch_), safeEndEpoch_);
     }
 
-    function standardGovernor() public view returns (address standardGovernor_) {
+    /// @inheritdoc IZeroToken
+    function standardGovernor() public view returns (address) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
@@ -107,6 +118,13 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
+    /**
+     * @notice Returns the delegatees of `account_` between `startEpoch_` and `endEpoch_`.
+     * @param  account_    The address of the account whose delegatees are being queried.
+     * @param  startEpoch_ The epoch from which to start querying.
+     * @param  endEpoch_   The epoch at which to stop querying.
+     * @return delegatees_ The delegatees of `account_` between `startEpoch_` and `endEpoch_`.
+     */
     function _getDelegateesBetween(
         address account_,
         uint16 startEpoch_,
@@ -155,6 +173,13 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         }
     }
 
+    /**
+     * @notice Returns the values of `amountSnaps_` between `startEpoch_` and `endEpoch_`.
+     * @param  amountSnaps_ The array of AmountSnaps to query.
+     * @param  startEpoch_  The epoch from which to start querying.
+     * @param  endEpoch_    The epoch at which to stop querying.
+     * @return values_      The values of `amountSnaps_` between `startEpoch_` and `endEpoch_`.
+     */
     function _getValuesBetween(
         AmountSnap[] storage amountSnaps_,
         uint16 startEpoch_,

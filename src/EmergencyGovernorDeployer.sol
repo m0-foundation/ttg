@@ -30,21 +30,15 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
 
     /**
      * @notice Constructs a new EmergencyGovernorDeployer contract.
-     * @param zeroGovernor_ The address of the ZeroGovernor contract.
-     * @param registrar_ The address of the Registrar contract.
+     * @param  zeroGovernor_ The address of the ZeroGovernor contract.
+     * @param  registrar_    The address of the Registrar contract.
      */
     constructor(address zeroGovernor_, address registrar_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
     }
 
-    /**
-     * @notice Deploys a new EmergencyGovernor contract.
-     * @param powerToken_ The address of some Power Token that will be used by voters.
-     * @param standardGovernor_ The address of some Standard Governor.
-     * @param thresholdRatio_ The threshold ratio to use for proposals.
-     * @return The address of the deployed EmergencyGovernor contract.
-     */
+    /// @inheritdoc IEmergencyGovernorDeployer
     function deploy(
         address powerToken_,
         address standardGovernor_,

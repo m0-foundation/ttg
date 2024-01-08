@@ -82,7 +82,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "clockMode_",
+        "name": "",
         "type": "string",
         "internalType": "string"
       }
@@ -95,7 +95,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "countingMode_",
+        "name": "",
         "type": "string",
         "internalType": "string"
       }
@@ -264,7 +264,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "supports_",
+        "name": "support_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       }
@@ -293,7 +293,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "supports_",
+        "name": "support_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -322,7 +322,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "supports_",
+        "name": "support_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -357,7 +357,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "clock_",
+        "name": "",
         "type": "uint48",
         "internalType": "uint48"
       }
@@ -370,7 +370,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "emergencyGovernor_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -423,6 +423,54 @@
       }
     ],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "getBallotDigest",
+    "inputs": [
+      {
+        "name": "proposalId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "support_",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBallotsDigest",
+    "inputs": [
+      {
+        "name": "proposalIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "support_",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -490,7 +538,7 @@
     ],
     "outputs": [
       {
-        "name": "weight_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -533,7 +581,7 @@
     ],
     "outputs": [
       {
-        "name": "proposalId_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -567,7 +615,7 @@
     ],
     "outputs": [
       {
-        "name": "proposalId_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -586,7 +634,7 @@
     ],
     "outputs": [
       {
-        "name": "isAllowed_",
+        "name": "",
         "type": "bool",
         "internalType": "bool"
       }
@@ -599,7 +647,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "name_",
+        "name": "",
         "type": "string",
         "internalType": "string"
       }
@@ -631,7 +679,7 @@
     ],
     "outputs": [
       {
-        "name": "deadline_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -650,7 +698,7 @@
     ],
     "outputs": [
       {
-        "name": "proposer_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -669,7 +717,7 @@
     ],
     "outputs": [
       {
-        "name": "snapshot_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -682,7 +730,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "threshold_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -819,7 +867,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "standardGovernor_",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
@@ -890,7 +938,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "votingDelay_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -903,7 +951,7 @@
     "inputs": [],
     "outputs": [
       {
-        "name": "votingPeriod_",
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }

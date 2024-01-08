@@ -22,10 +22,10 @@ interface IGovernor is IERC6372, IERC712 {
     enum ProposalState {
         Pending,
         Active,
-        Canceled, // never used by TTG
+        Canceled, // never used by TTG.
         Defeated,
         Succeeded,
-        Queued, // never used by TTG
+        Queued, // never used by TTG.
         Expired,
         Executed
     }
@@ -89,7 +89,7 @@ interface IGovernor is IERC6372, IERC712 {
     /**
      * @notice Allows a signer to cast a vote on a proposal with id `proposalId` via an ECDSA secp256k1 signature.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @param  v          An ECDSA secp256k1 signature parameter.
      * @param  r          An ECDSA secp256k1 signature parameter.
      * @param  s          An ECDSA secp256k1 signature parameter.
@@ -107,7 +107,7 @@ interface IGovernor is IERC6372, IERC712 {
      * @notice Allows `voter` to cast a vote on a proposal with id `proposalId` via an arbitrary signature.
      * @param  voter      The address of the account that casting their vote, and purported the have signed.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @param  signature  An arbitrary signature.
      * @return weight     The number of votes cast.
      */
@@ -121,7 +121,7 @@ interface IGovernor is IERC6372, IERC712 {
     /**
      * @notice Allows the caller to cast a vote on a proposal with id `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @param  reason     The string of the reason the caller has cast their vote, if any.
      * @return weight     The number of votes cast.
      */
@@ -165,9 +165,6 @@ interface IGovernor is IERC6372, IERC712 {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVoteBySig function.
-    function BALLOT_TYPEHASH() external pure returns (bytes32 typehash);
-
     /**
      * @notice module:voting
      * @dev    A description of the possible "support" values for castVote and the way these votes are counted, meant to
@@ -175,15 +172,15 @@ interface IGovernor is IERC6372, IERC712 {
      *         sequence of key-value pairs that each describe one aspect, for example `support=for,against&quorum=for`.
      *         The string can be decoded by the standard URLSearchParams JavaScript class.
      */
-    function COUNTING_MODE() external view returns (string memory countingMode);
+    function COUNTING_MODE() external view returns (string memory);
 
     /**
      * @notice Returns the voting power of `account` at clock value `timepoint`.
      * @param  account   The address of the account with voting power.
      * @param  timepoint The point in time, according to the clock mode the contract is operating on.
-     * @return weight    The voting power of `account` at `timepoint`.
+     * @return The voting power of `account` at `timepoint`.
      */
-    function getVotes(address account, uint256 timepoint) external view returns (uint256 weight);
+    function getVotes(address account, uint256 timepoint) external view returns (uint256);
 
     /**
      * @notice Returns the unique identifier for the proposal if it were created at this exact moment.
@@ -191,14 +188,14 @@ interface IGovernor is IERC6372, IERC712 {
      * @param  values          An array of ETH amounts that will be sent to each respective target upon execution.
      * @param  callDatas       An array of call data used to call each respective target upon execution.
      * @param  descriptionHash The hash of the string of the description of the proposal.
-     * @return proposalId      The unique identifier for the proposal.
+     * @return The unique identifier for the proposal.
      */
     function hashProposal(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory callDatas,
         bytes32 descriptionHash
-    ) external view returns (uint256 proposalId);
+    ) external view returns (uint256);
 
     /**
      * @notice Returns whether `account` has voted on the proposal with identifier `proposalId`.
@@ -208,43 +205,34 @@ interface IGovernor is IERC6372, IERC712 {
      */
     function hasVoted(uint256 proposalId, address account) external view returns (bool);
 
-    /**
-     * @notice Returns the name of the contract.
-     * @return Contract name.
-     */
+    /// @notice Returns the name of the contract.
     function name() external view returns (string memory);
 
     /**
      * @notice Returns the last clock value when voting on the proposal with identifier `proposalId` is allowed.
      * @param  proposalId The unique identifier for the proposal.
-     * @return deadline   The last clock value when voting on the proposal is allowed.
+     * @return The last clock value when voting on the proposal is allowed.
      */
-    function proposalDeadline(uint256 proposalId) external view returns (uint256 deadline);
+    function proposalDeadline(uint256 proposalId) external view returns (uint256);
 
     /**
      * @notice Returns the account that created the proposal with identifier `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
-     * @return proposer   The address of the account that created the proposal.
+     * @return The address of the account that created the proposal.
      */
-    function proposalProposer(uint256 proposalId) external view returns (address proposer);
+    function proposalProposer(uint256 proposalId) external view returns (address);
 
     /**
      * @notice Returns the clock value used to retrieve voting power to vote on proposal with identifier `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
-     * @return snapshot   The clock value used to retrieve voting power.
+     * @return The clock value used to retrieve voting power.
      */
-    function proposalSnapshot(uint256 proposalId) external view returns (uint256 snapshot);
+    function proposalSnapshot(uint256 proposalId) external view returns (uint256);
 
-    /**
-     * @notice Returns the required voting power an account needs to create a proposal.
-     * @return threshold The proposal threshold.
-     */
-    function proposalThreshold() external view returns (uint256 threshold);
+    /// @notice Returns the required voting power an account needs to create a proposal.
+    function proposalThreshold() external view returns (uint256);
 
-    /**
-     * @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed.
-     * @return The quorum value.
-     */
+    /// @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed.
     function quorum() external view returns (uint256);
 
     /**
@@ -261,15 +249,12 @@ interface IGovernor is IERC6372, IERC712 {
      */
     function state(uint256 proposalId) external view returns (ProposalState);
 
-    /**
-     * @notice Returns the number of clock values that must elapse before voting begins for a newly created proposal.
-     * @return The voting delay.
-     */
+    /// @notice Returns the number of clock values that must elapse before voting begins for a newly created proposal.
     function votingDelay() external view returns (uint256);
 
-    /**
-     * @notice Returns the number of clock values between the vote start and vote end.
-     * @return The voting period.
-     */
+    /// @notice Returns the number of clock values between the vote start and vote end.
     function votingPeriod() external view returns (uint256);
+
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVoteBySig function.
+    function BALLOT_TYPEHASH() external pure returns (bytes32);
 }

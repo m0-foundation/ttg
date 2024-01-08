@@ -33,28 +33,6 @@ interface IEmergencyGovernor is IThresholdGovernor {
     function setThresholdRatio(uint16 newThresholdRatio) external;
 
     /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Returns the address of the Registrar.
-     * @return The Registrar address.
-     */
-    function registrar() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
-    function standardGovernor() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Zero Governor.
-     * @return The Zero Governor address.
-     */
-    function zeroGovernor() external view returns (address);
-
-    /******************************************************************************************************************\
     |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
@@ -92,4 +70,17 @@ interface IEmergencyGovernor is IThresholdGovernor {
      * @param  newProposalFee The new proposal fee.
      */
     function setStandardProposalFee(uint256 newProposalFee) external;
+
+    /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
+
+    /// @notice Returns the address of the Registrar.
+    function registrar() external view returns (address);
+
+    /// @notice Returns the address of the Standard Governor.
+    function standardGovernor() external view returns (address);
+
+    /// @notice Returns the address of the Zero Governor.
+    function zeroGovernor() external view returns (address);
 }

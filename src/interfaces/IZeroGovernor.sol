@@ -7,6 +7,24 @@ import { IThresholdGovernor } from "../abstract/interfaces/IThresholdGovernor.so
 /// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 interface IZeroGovernor is IThresholdGovernor {
     /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Emitted upon a Reset, resulting in a new Standard Governor, Emergency Governor, and Power Token.
+     * @param  bootstrapToken    The address of token (Zero Token or old Power Token), that bootstraps the reset.
+     * @param  standardGovernor  The address of the new Standard Governor.
+     * @param  emergencyGovernor The address of the new Emergency Governor.
+     * @param  powerToken        The address of the new Power Token.
+     */
+    event ResetExecuted(
+        address indexed bootstrapToken,
+        address standardGovernor,
+        address emergencyGovernor,
+        address powerToken
+    );
+
+    /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
@@ -41,65 +59,6 @@ interface IZeroGovernor is IThresholdGovernor {
      * @param  deployed The actual address of the deployed Standard Governor.
      */
     error UnexpectedStandardGovernorDeployed(address expected, address deployed);
-
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Emitted upon a Reset, resulting in a new Standard Governor, Emergency Governor, and Power Token.
-     * @param  bootstrapToken    The address of token (Zero Token or old Power Token), that bootstraps the reset.
-     * @param  standardGovernor  The address of the new Standard Governor.
-     * @param  emergencyGovernor The address of the new Emergency Governor.
-     * @param  powerToken        The address of the new Power Token.
-     */
-    event ResetExecuted(
-        address indexed bootstrapToken,
-        address standardGovernor,
-        address emergencyGovernor,
-        address powerToken
-    );
-
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Returns whether `token` is an allowed Cash Token of the system, as a parameter in setCashToken proposal.
-     * @param  token The address of some token.
-     * @return Whether `token` is an allowed Cash Token.
-     */
-    function isAllowedCashToken(address token) external view returns (bool);
-
-    /**
-     * @notice Returns the address of the Emergency Governor.
-     * @return The Emergency Governor address.
-     */
-    function emergencyGovernor() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Emergency Governor Deployer.
-     * @return The Emergency Governor Deployer address.
-     */
-    function emergencyGovernorDeployer() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Power Token Deployer.
-     * @return The Power Token Deployer address.
-     */
-    function powerTokenDeployer() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
-    function standardGovernor() external view returns (address);
-
-    /**
-     * @notice Returns the address of the Standard Governor Deployer.
-     * @return The Standard Governor Deployer address.
-     */
-    function standardGovernorDeployer() external view returns (address);
 
     /******************************************************************************************************************\
     |                                                Proposal Functions                                                |
@@ -138,4 +97,30 @@ interface IZeroGovernor is IThresholdGovernor {
      * @param  newThresholdRatio The new threshold ratio.
      */
     function setZeroProposalThresholdRatio(uint16 newThresholdRatio) external;
+
+    /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Returns whether `token` is an allowed Cash Token of the system, as a parameter in setCashToken proposal.
+     * @param  token The address of some token.
+     * @return Whether `token` is an allowed Cash Token.
+     */
+    function isAllowedCashToken(address token) external view returns (bool);
+
+    /// @notice Returns the address of the Emergency Governor.
+    function emergencyGovernor() external view returns (address);
+
+    /// @notice Returns the address of the Emergency Governor Deployer.
+    function emergencyGovernorDeployer() external view returns (address);
+
+    /// @notice Returns the address of the Power Token Deployer.
+    function powerTokenDeployer() external view returns (address);
+
+    /// @notice Returns the address of the Standard Governor.
+    function standardGovernor() external view returns (address);
+
+    /// @notice Returns the address of the Standard Governor Deployer.
+    function standardGovernorDeployer() external view returns (address);
 }

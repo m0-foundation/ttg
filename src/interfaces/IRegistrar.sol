@@ -5,31 +5,6 @@ pragma solidity 0.8.23;
 /// @title A book of record of SPOG-specific contracts and arbitrary key-value pairs and lists.
 interface IRegistrar {
     /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
-
-    /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
-    error InvalidEmergencyGovernorDeployerAddress();
-
-    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
-    error InvalidPowerTokenDeployerAddress();
-
-    /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
-    error InvalidStandardGovernorDeployerAddress();
-
-    /// @notice Revert message when the Vault retrieved in the constructor is address(0).
-    error InvalidVaultAddress();
-
-    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
-    error InvalidVoteTokenAddress();
-
-    /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
-    error InvalidZeroGovernorAddress();
-
-    /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
-    error NotStandardOrEmergencyGovernor();
-
-    /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
@@ -53,6 +28,31 @@ interface IRegistrar {
      * @param  value The value.
      */
     event KeySet(bytes32 indexed key, bytes32 indexed value);
+
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
+    error InvalidEmergencyGovernorDeployerAddress();
+
+    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
+    error InvalidPowerTokenDeployerAddress();
+
+    /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
+    error InvalidStandardGovernorDeployerAddress();
+
+    /// @notice Revert message when the Vault retrieved in the constructor is address(0).
+    error InvalidVaultAddress();
+
+    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
+    error InvalidVoteTokenAddress();
+
+    /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
+    error InvalidZeroGovernorAddress();
+
+    /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
+    error NotStandardOrEmergencyGovernor();
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
@@ -85,22 +85,22 @@ interface IRegistrar {
 
     /**
      * @notice Returns the value of `key`.
-     * @param  key   Some key.
-     * @return  value Some value.
+     * @param  key Some key.
+     * @return Some value.
      */
-    function get(bytes32 key) external view returns (bytes32 value);
+    function get(bytes32 key) external view returns (bytes32);
 
     /**
      * @notice Returns the values of `keys` respectively.
-     * @param  keys   Some keys.
-     * @return values Some values.
+     * @param  keys Some keys.
+     * @return Some values.
      */
-    function get(bytes32[] calldata keys) external view returns (bytes32[] memory values);
+    function get(bytes32[] calldata keys) external view returns (bytes32[] memory);
 
     /**
      * @notice Returns whether `list` contains `account`.
-     * @param  list     The key for some list.
-     * @param  account  The address of some account.
+     * @param  list    The key for some list.
+     * @param  account The address of some account.
      * @return Whether `list` contains `account`.
      */
     function listContains(bytes32 list, address account) external view returns (bool);
@@ -113,57 +113,30 @@ interface IRegistrar {
      */
     function listContains(bytes32 list, address[] calldata accounts) external view returns (bool);
 
-    /**
-     * @notice Returns the address of the Emergency Governor.
-     * @return The Emergency Governor address.
-     */
+    /// @notice Returns the address of the Emergency Governor.
     function emergencyGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Emergency Governor Deployer.
-     * @return The Emergency Governor Deployer address.
-     */
+    /// @notice Returns the address of the Emergency Governor Deployer.
     function emergencyGovernorDeployer() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Power Token.
-     * @return The Power Token address.
-     */
+    /// @notice Returns the address of the Power Token.
     function powerToken() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Power Token Deployer.
-     * @return The Power Token Deployer address.
-     */
+    /// @notice Returns the address of the Power Token Deployer.
     function powerTokenDeployer() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Standard Governor.
-     * @return The Standard Governor address.
-     */
+    /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Standard Governor Deployer.
-     * @return The Standard Governor Deployer address.
-     */
+    /// @notice Returns the address of the Standard Governor Deployer.
     function standardGovernorDeployer() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Vault.
-     * @return The Vault address.
-     */
+    /// @notice Returns the address of the Vault.
     function vault() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Governor.
-     * @return The Zero Governor address.
-     */
+    /// @notice Returns the address of the Zero Governor.
     function zeroGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Token.
-     * @return The Zero Token address.
-     */
+    /// @notice Returns the address of the Zero Token.
     function zeroToken() external view returns (address);
 }

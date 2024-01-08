@@ -39,7 +39,7 @@ contract Registrar is IRegistrar {
 
     /**
      * @notice Constructs a new Registrar contract.
-     * @param zeroGovernor_ The address of the ZeroGovernor contract.
+     * @param  zeroGovernor_ The address of the ZeroGovernor contract.
      */
     constructor(address zeroGovernor_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
@@ -90,7 +90,7 @@ contract Registrar is IRegistrar {
     \******************************************************************************************************************/
 
     /// @inheritdoc IRegistrar
-    function get(bytes32 key_) external view returns (bytes32 value_) {
+    function get(bytes32 key_) external view returns (bytes32) {
         return _valueAt[_getValueKey(key_)];
     }
 
@@ -104,12 +104,12 @@ contract Registrar is IRegistrar {
     }
 
     /// @inheritdoc IRegistrar
-    function listContains(bytes32 list_, address account_) external view returns (bool contains_) {
+    function listContains(bytes32 list_, address account_) external view returns (bool) {
         return _valueAt[_getIsInListKey(list_, account_)] == bytes32(uint256(1));
     }
 
     /// @inheritdoc IRegistrar
-    function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool contains_) {
+    function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool) {
         for (uint256 index_; index_ < accounts_.length; ++index_) {
             if (_valueAt[_getIsInListKey(list_, accounts_[index_])] != bytes32(uint256(1))) return false;
         }
@@ -118,17 +118,17 @@ contract Registrar is IRegistrar {
     }
 
     /// @inheritdoc IRegistrar
-    function emergencyGovernor() public view returns (address emergencyGovernor_) {
-        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
-    }
-
-    /// @inheritdoc IRegistrar
-    function powerToken() external view returns (address powerToken_) {
+    function powerToken() external view returns (address) {
         return IPowerTokenDeployer(powerTokenDeployer).lastDeploy();
     }
 
     /// @inheritdoc IRegistrar
-    function standardGovernor() public view returns (address standardGovernor_) {
+    function emergencyGovernor() public view returns (address) {
+        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
+    }
+
+    /// @inheritdoc IRegistrar
+    function standardGovernor() public view returns (address) {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
@@ -136,17 +136,29 @@ contract Registrar is IRegistrar {
     |                                          Internal View/Pure Functions                                            |
     \******************************************************************************************************************/
 
-    function _getValueKey(bytes32 key_) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("VALUE", key_));
-    }
-
-    function _getIsInListKey(bytes32 list_, address account_) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("IN_LIST", list_, account_));
-    }
-
+    /// @dev Reverts if the caller is not the Standard Governor nor the Emergency Governor.
     function _revertIfNotStandardOrEmergencyGovernor() internal view {
         if (msg.sender != standardGovernor() && msg.sender != emergencyGovernor()) {
             revert NotStandardOrEmergencyGovernor();
         }
+    }
+
+    /**
+     * @dev    Returns the key used to store the value of `key_`.
+     * @param  key_ The key of the value.
+     * @return The key used to store the value of `key_`.
+     */
+    function _getValueKey(bytes32 key_) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("VALUE", key_));
+    }
+
+    /**
+     * @dev    Returns the key used to store whether `account_` is in `list_`.
+     * @param  list_    The list of addresses.
+     * @param  account_ The address of the account.
+     * @return The key used to store whether `account_` is in `list_`.
+     */
+    function _getIsInListKey(bytes32 list_, address account_) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("IN_LIST", list_, account_));
     }
 }

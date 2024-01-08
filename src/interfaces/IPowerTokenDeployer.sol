@@ -36,15 +36,9 @@ interface IPowerTokenDeployer is IDeployer {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the address of the Vault.
-     * @return The Vault address.
-     */
+    /// @notice Returns the address of the Vault.
     function vault() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Governor.
-     * @return The Zero Governor address.
-     */
+    /// @notice Returns the address of the Zero Governor.
     function zeroGovernor() external view returns (address);
 }

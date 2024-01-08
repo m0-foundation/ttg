@@ -8,8 +8,6 @@ import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflat
 
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
-// TODO: Test sync before or after actions.
-
 // NOTE: There is no feasible way to emit `Transfer` events for inflationary minting such that external client can
 //       index them and track balances and total supply correctly. Specifically,a nd only for total supply indexing, one
 //       can assume that total supply is the sum of all voting powers, thus tracking the deltas of the
@@ -17,12 +15,15 @@ import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
 /// @title Extension for an EpochBasedVoteToken token that allows for inflating tokens and voting power.
 abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
+    /// @dev A 32-byte struct containing a starting epoch that merely marks that something occurred in this epoch.
     struct VoidSnap {
         uint16 startingEpoch;
     }
 
+    /// @inheritdoc IEpochBasedInflationaryVoteToken
     uint16 public constant ONE = 10_000; // 100% in basis points.
 
+    /// @inheritdoc IEpochBasedInflationaryVoteToken
     uint16 public immutable participationInflation; // In basis points.
 
     mapping(address delegatee => VoidSnap[] participationSnaps) internal _participations;
@@ -39,6 +40,13 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         _;
     }
 
+    /**
+     * @notice Constructs a new EpochBasedInflationaryVoteToken contract.
+     * @param  name_                   The name of the token.
+     * @param  symbol_                 The symbol of the token.
+     * @param  decimals_               The decimals of the token.
+     * @param  participationInflation_ The participation inflation rate used to inflate tokens for participation.
+     */
     constructor(
         string memory name_,
         string memory symbol_,
@@ -54,6 +62,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IEpochBasedInflationaryVoteToken
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool) {
         return _hasParticipatedAt(delegatee_, UIntMath.safe16(epoch_));
     }
@@ -62,12 +71,20 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @dev   Delegate voting power from `delegator_` to `newDelegatee_`.
+     * @param delegator_    The address of the account delegating voting power.
+     * @param newDelegatee_ The address of the account receiving voting power.
+     */
     function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVoteEpoch {
         _sync(delegator_);
         super._delegate(delegator_, newDelegatee_);
     }
 
-    /// @dev Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
+    /**
+     * @dev   Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
+     * @param delegatee_ The address of the account being marked as having participated.
+     */
     function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
         if (!_update(_participations[delegatee_])) revert AlreadyParticipated(); // Revert if could not update.
 
@@ -81,17 +98,32 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         _addVotingPower(delegatee_, inflation_);
     }
 
+    /**
+     * @dev   Mint `amount_` tokens to `recipient_`.
+     * @param recipient_ The address of the account to mint tokens to.
+     * @param amount_    The amount of tokens to mint.
+     */
     function _mint(address recipient_, uint256 amount_) internal virtual override notDuringVoteEpoch {
         _sync(recipient_);
         super._mint(recipient_, amount_);
     }
 
+    /**
+     * @dev   Syncs `account_` so that it balance Snap array in storage, reflects their unrealized inflation.
+     * @param account_ The address of the account to sync.
+     */
     function _sync(address account_) internal {
         // Realized the account's unrealized inflation since the its last sync, and update its last sync.
         _addBalance(account_, _getUnrealizedInflation(account_, _clock()));
         _update(_lastSyncs[account_]);
     }
 
+    /**
+     * @dev Transfers `amount_` tokens from `sender_` to `recipient_`.
+     * @param sender_    The address of the account to transfer tokens from.
+     * @param recipient_ The address of the account to transfer tokens to.
+     * @param amount_    The amount of tokens to transfer.
+     */
     function _transfer(
         address sender_,
         address recipient_,
@@ -102,6 +134,11 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         super._transfer(sender_, recipient_, amount_);
     }
 
+    /**
+     * @dev    Update a storage VoidSnap array to contain the current epoch as the latest snap.
+     * @param  voidSnaps_ The storage pointer to a VoidSnap array to update.
+     * @return updated_   Whether the VoidSnap array was updated, and thus did not already contain the current epoch.
+     */
     function _update(VoidSnap[] storage voidSnaps_) internal returns (bool updated_) {
         uint16 currentEpoch_ = _clock();
         uint256 length_ = voidSnaps_.length;
@@ -118,6 +155,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
+    /**
+     * @dev    Returns the balance of `account_` plus any inflation that in unrealized before `epoch_`.
+     * @param  account_ The account to get the balance for.
+     * @param  epoch_   The epoch to get the balance at.
+     * @return The balance of `account_` plus any inflation that in unrealized before `epoch_`.
+     */
     function _getBalance(address account_, uint16 epoch_) internal view virtual override returns (uint240) {
         unchecked {
             return
@@ -127,6 +170,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
+    /**
+     * @dev    Returns the balance of `account_` at `epoch_` without any unrealized inflation.
+     * @param  account_ The account to get the balance for.
+     * @param  epoch_   The epoch to get the balance at.
+     * @return The balance of `account_` at `epoch` without any unrealized inflation.
+     */
     function _getBalanceWithoutUnrealizedInflation(
         address account_,
         uint16 epoch_
@@ -134,13 +183,24 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         return super._getBalance(account_, epoch_);
     }
 
+    /**
+     * @dev    Returns the inflation of `amount` due to participation inflation.
+     * @param  amount_ The amount to determine inflation for.
+     * @return The inflation of `amount` due to participation inflation.
+     */
     function _getInflation(uint240 amount_) internal view returns (uint240) {
         unchecked {
             return uint240((uint256(amount_) * participationInflation) / ONE); // Cannot overflow.
         }
     }
 
-    /// @dev Override this function in order to return the "default"/starting epoch if the account has never synced.
+    /**
+     * @dev    Returns the epoch of the last sync of `account_` at or before `epoch_`.
+     *         Override this function in order to return the "default"/starting epoch if the account has never synced.
+     * @param  account_ The account to get the last sync for.
+     * @param  epoch_   The epoch to get the last sync at or before.
+     * @return The epoch of the last sync of `account_` at or before `epoch_`.
+     */
     function _getLastSync(address account_, uint16 epoch_) internal view virtual returns (uint16) {
         uint256 index_ = _lastSyncs[account_].length;
 
@@ -159,6 +219,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         return 0;
     }
 
+    /**
+     * @dev    Returns whether `delegatee_` has participated during the clock value `epoch_`.
+     * @param  delegatee_ The account whose participation is being queried.
+     * @param  epoch_     The epoch at which to determine participation.
+     * @return Whether `delegatee_` has participated during the clock value `epoch_`.
+     */
     function _hasParticipatedAt(address delegatee_, uint16 epoch_) internal view returns (bool) {
         VoidSnap[] storage voidSnaps_ = _participations[delegatee_];
 
@@ -183,6 +249,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         return false;
     }
 
+    /**
+     * @dev    Returns the unrealized inflation for `account_` from their last sync to the epoch before `lastEpoch_`.
+     * @param  account_   The account being queried.
+     * @param  lastEpoch_ The last epoch at which to determine unrealized inflation, not inclusive.
+     * @return inflation_ The total unrealized inflation that has yet to be synced.
+     */
     function _getUnrealizedInflation(address account_, uint16 lastEpoch_) internal view returns (uint240 inflation_) {
         // The balance and delegatee the account had at the epoch are the same since the last sync (by definition).
         uint240 balance_ = _getBalanceWithoutUnrealizedInflation(account_, lastEpoch_);
@@ -216,18 +288,31 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
-    function _isVotingEpoch(uint16 epoch_) internal pure returns (bool) {
-        return epoch_ % 2 == 1; // Voting epochs are odd numbered.
-    }
-
+    /// @dev Reverts if the current epoch is a voting epoch.
     function _revertIfInVoteEpoch() internal view {
         if (_isVotingEpoch(_clock())) revert VoteEpoch();
     }
 
+    /// @dev Reverts if the current epoch is not a voting epoch.
     function _revertIfNotInVoteEpoch() internal view {
         if (!_isVotingEpoch(_clock())) revert NotVoteEpoch();
     }
 
+    /**
+     * @dev    Returns whether the clock value `epoch_` is a voting epoch or not.
+     * @param  epoch_ Some clock value.
+     * @return Whether the epoch is a voting epoch.
+     */
+    function _isVotingEpoch(uint16 epoch_) internal pure returns (bool) {
+        return epoch_ % 2 == 1; // Voting epochs are odd numbered.
+    }
+
+    /**
+     * @dev    Returns the VoidSnap in an array at a given index without doing bounds checking.
+     * @param  voidSnaps_ The array of VoidSnaps to parse.
+     * @param  index_     The index of the VoidSnap to return.
+     * @return voidSnap_  The VoidSnap at `index_`.
+     */
     function _unsafeAccess(
         VoidSnap[] storage voidSnaps_,
         uint256 index_

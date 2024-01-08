@@ -50,27 +50,15 @@ interface IStandardGovernorDeployer is IDeployer {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /**
-     * @notice Returns the address of the Registrar.
-     * @return Registrar address.
-     */
+    /// @notice Returns the address of the Registrar.
     function registrar() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Vault.
-     * @return Vault address.
-     */
+    /// @notice Returns the address of the Vault.
     function vault() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Governor.
-     * @return Zero Governor address.
-     */
+    /// @notice Returns the address of the Zero Governor.
     function zeroGovernor() external view returns (address);
 
-    /**
-     * @notice Returns the address of the Zero Token.
-     * @return Zero Token address.
-     */
+    /// @notice Returns the address of the Zero Token.
     function zeroToken() external view returns (address);
 }

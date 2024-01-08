@@ -14,11 +14,20 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     address public immutable standardGovernor;
     address public immutable zeroGovernor;
 
+    /// @notice Throws if called by any account other than the Zero Governor.
     modifier onlyZeroGovernor() {
-        _revertIfNotZeroGovernor();
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
 
+    /**
+     * @notice Constructs a new Emergency Governor contract.
+     * @param  voteToken_        The address of the Vote Token contract.
+     * @param  zeroGovernor_     The address of the Zero Governor contract.
+     * @param  registrar_        The address of the Registrar contract.
+     * @param  standardGovernor_ The address of the StandardGovernor contract.
+     * @param  thresholdRatio_   The initial threshold ratio.
+     */
     constructor(
         address voteToken_,
         address zeroGovernor_,
@@ -35,6 +44,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     |                                      External/Public Interactive Functions                                       |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IEmergencyGovernor
     function setThresholdRatio(uint16 newThresholdRatio_) external onlyZeroGovernor {
         _setThresholdRatio(newThresholdRatio_);
     }
@@ -43,23 +53,28 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
+    /// @inheritdoc IEmergencyGovernor
     function addToList(bytes32 list_, address account_) external onlySelf {
         _addToList(list_, account_);
     }
 
+    /// @inheritdoc IEmergencyGovernor
     function removeFromList(bytes32 list_, address account_) external onlySelf {
         _removeFromList(list_, account_);
     }
 
+    /// @inheritdoc IEmergencyGovernor
     function removeFromAndAddToList(bytes32 list_, address accountToRemove_, address accountToAdd_) external onlySelf {
         _removeFromList(list_, accountToRemove_);
         _addToList(list_, accountToAdd_);
     }
 
+    /// @inheritdoc IEmergencyGovernor
     function setKey(bytes32 key_, bytes32 value_) external onlySelf {
         IRegistrar(registrar).setKey(key_, value_);
     }
 
+    /// @inheritdoc IEmergencyGovernor
     function setStandardProposalFee(uint256 newProposalFee_) external onlySelf {
         IStandardGovernor(standardGovernor).setProposalFee(newProposalFee_);
     }
@@ -68,10 +83,20 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
+    /**
+     * @dev   Adds `account_` to `list_` at the Registrar.
+     * @param list_    The key for some list.
+     * @param account_ The address of some account to be added.
+     */
     function _addToList(bytes32 list_, address account_) internal {
         IRegistrar(registrar).addToList(list_, account_);
     }
 
+    /**
+     * @dev   Removes `account_` from `list_` at the Registrar.
+     * @param list_    The key for some list.
+     * @param account_ The address of some account to be removed.
+     */
     function _removeFromList(bytes32 list_, address account_) internal {
         IRegistrar(registrar).removeFromList(list_, account_);
     }
@@ -80,7 +105,10 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    /// @dev All proposals target this contract itself, and must call one of the listed functions to be valid.
+    /**
+     * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
+     * @param callData_ The call data to check.
+     */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
 
@@ -91,9 +119,5 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
             func_ != this.setKey.selector &&
             func_ != this.setStandardProposalFee.selector
         ) revert InvalidCallData();
-    }
-
-    function _revertIfNotZeroGovernor() internal view {
-        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
     }
 }
