@@ -14,8 +14,6 @@ import { MockBootstrapToken, MockCashToken } from "./utils/Mocks.sol";
 import { PowerTokenHarness } from "./utils/PowerTokenHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
-// TODO: Create and use a harness functions instead of calling functions unrelated to each test.
-
 contract PowerTokenTests is TestUtils {
     address internal _account = makeAddr("account");
     address internal _standardGovernor = makeAddr("standardGovernor");

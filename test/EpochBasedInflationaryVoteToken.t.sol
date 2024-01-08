@@ -12,8 +12,6 @@ import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBas
 import { Invariants } from "./utils/Invariants.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
-// TODO: test_UserDoesNotGetDelayedRewardWhileRedelegating ?
-
 contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     address internal _alice = makeAddr("alice");
     address internal _bob = makeAddr("bob");

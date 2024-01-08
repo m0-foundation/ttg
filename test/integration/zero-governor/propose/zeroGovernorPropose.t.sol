@@ -137,7 +137,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     }
 
     function test_zeroGovernorPropose_proposalActiveSucceededExecuted() external {
-        _warpToNextEpoch(); // TODO: verify it is needed
+        _warpToNextEpoch();
 
         (
             address[] memory targets_,
@@ -172,7 +172,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     }
 
     function test_zeroGovernorPropose_proposalActiveSucceededExpired() external {
-        _warpToNextEpoch(); // TODO: verify it is needed
+        _warpToNextEpoch();
 
         (
             address[] memory targets_,
