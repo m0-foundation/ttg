@@ -79,8 +79,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     }
 
     /// @inheritdoc IBatchGovernor
-    function castVotes(uint256[] calldata proposalIds_, uint8[] calldata supports_) external returns (uint256 weight_) {
-        return _castVotes(msg.sender, proposalIds_, supports_);
+    function castVotes(uint256[] calldata proposalIds_, uint8[] calldata support_) external returns (uint256 weight_) {
+        return _castVotes(msg.sender, proposalIds_, support_);
     }
 
     /// @inheritdoc IGovernor
@@ -102,7 +102,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     ) external returns (uint256 weight_) {
         return
             _castVote(
-                _getSignerAndRevertIfInvalidSignature(_getBallotDigest(proposalId_, support_), v_, r_, s_),
+                _getSignerAndRevertIfInvalidSignature(getBallotDigest(proposalId_, support_), v_, r_, s_),
                 proposalId_,
                 support_
             );
@@ -115,7 +115,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint8 support_,
         bytes memory signature_
     ) external returns (uint256 weight_) {
-        _revertIfInvalidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
+        _revertIfInvalidSignature(voter_, getBallotDigest(proposalId_, support_), signature_);
 
         return _castVote(voter_, proposalId_, support_);
     }
@@ -123,16 +123,16 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     /// @inheritdoc IBatchGovernor
     function castVotesBySig(
         uint256[] calldata proposalIds_,
-        uint8[] calldata supports_,
+        uint8[] calldata support_,
         uint8 v_,
         bytes32 r_,
         bytes32 s_
     ) external returns (uint256 weight_) {
         return
             _castVotes(
-                _getSignerAndRevertIfInvalidSignature(_getBallotsDigest(proposalIds_, supports_), v_, r_, s_),
+                _getSignerAndRevertIfInvalidSignature(getBallotsDigest(proposalIds_, support_), v_, r_, s_),
                 proposalIds_,
-                supports_
+                support_
             );
     }
 
@@ -140,12 +140,12 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     function castVotesBySig(
         address voter_,
         uint256[] calldata proposalIds_,
-        uint8[] calldata supports_,
+        uint8[] calldata support_,
         bytes memory signature_
     ) external returns (uint256 weight_) {
-        _revertIfInvalidSignature(voter_, _getBallotsDigest(proposalIds_, supports_), signature_);
+        _revertIfInvalidSignature(voter_, getBallotsDigest(proposalIds_, support_), signature_);
 
-        return _castVotes(voter_, proposalIds_, supports_);
+        return _castVotes(voter_, proposalIds_, support_);
     }
 
     /******************************************************************************************************************\
@@ -165,6 +165,19 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     /// @inheritdoc IERC6372
     function clock() public view returns (uint48) {
         return _clock();
+    }
+
+    /// @inheritdoc IBatchGovernor
+    function getBallotDigest(uint256 proposalId_, uint8 support_) public view returns (bytes32) {
+        return _getDigest(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId_, support_)));
+    }
+
+    /// @inheritdoc IBatchGovernor
+    function getBallotsDigest(
+        uint256[] calldata proposalIds_,
+        uint8[] calldata support_
+    ) public view returns (bytes32) {
+        return _getDigest(keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, support_)));
     }
 
     /// @inheritdoc IGovernor
@@ -233,16 +246,16 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @dev    Cast votes on several proposals for `voter_`.
      * @param  voter_       The address of the voter.
      * @param  proposalIds_ The unique identifiers of the proposals.
-     * @param  supports_    The type of support to cast for each proposal.
+     * @param  support_     The type of support to cast for each proposal.
      * @return weight_      The number of votes the voter cast on each proposal.
      */
     function _castVotes(
         address voter_,
         uint256[] calldata proposalIds_,
-        uint8[] calldata supports_
+        uint8[] calldata support_
     ) internal virtual returns (uint256 weight_) {
         for (uint256 index_; index_ < proposalIds_.length; ++index_) {
-            weight_ = _castVote(voter_, proposalIds_[index_], supports_[index_]);
+            weight_ = _castVote(voter_, proposalIds_[index_], support_[index_]);
         }
     }
 
@@ -405,19 +418,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     /// @dev Returns the current timepoint according to the mode the contract is operating on.
     function _clock() internal view returns (uint16) {
         return PureEpochs.currentEpoch();
-    }
-
-    // TODO: make public
-    function _getBallotDigest(uint256 proposalId_, uint8 support_) internal view returns (bytes32) {
-        return _getDigest(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId_, support_)));
-    }
-
-    // TODO: make public
-    function _getBallotsDigest(
-        uint256[] calldata proposalIds_,
-        uint8[] calldata supports_
-    ) internal view returns (bytes32 digest_) {
-        digest_ = _getDigest(keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, supports_)));
     }
 
     /**

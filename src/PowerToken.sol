@@ -14,7 +14,7 @@ import { EpochBasedInflationaryVoteToken } from "./abstract/EpochBasedInflationa
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
 // NOTE: Balances and voting powers are bootstrapped from the bootstrap token, but delegations are not.
-// NOTE: Bootstrapping only works with a bootstrap token aht supports the same PureEpochs as the clock mode.
+// NOTE: Bootstrapping only works with a bootstrap token that supports the same PureEpochs as the clock mode.
 
 /**
  * @title An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor, and enabling

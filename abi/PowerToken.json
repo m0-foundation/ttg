@@ -553,6 +553,35 @@
   },
   {
     "type": "function",
+    "name": "getDelegationDigest",
+    "inputs": [
+      {
+        "name": "delegatee_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "nonce_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "expiry_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getPastVotes",
     "inputs": [
       {

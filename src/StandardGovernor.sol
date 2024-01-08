@@ -298,19 +298,19 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
      * @dev    Cast votes on several proposals for `voter_`.
      * @param  voter_       The address of the voter.
      * @param  proposalIds_ The unique identifiers of the proposals.
-     * @param  supports_    The type of support to cast for each proposal.
+     * @param  support_     The type of support to cast for each proposal.
      * @return weight_      The number of votes the voter cast on each proposal.
      */
     function _castVotes(
         address voter_,
         uint256[] calldata proposalIds_,
-        uint8[] calldata supports_
+        uint8[] calldata support_
     ) internal override returns (uint256 weight_) {
         // In this governor, since the votingPeriod is 0, the snapshot for all active proposals is the previous epoch.
         weight_ = getVotes(voter_, _clock() - 1);
 
         for (uint256 index_; index_ < proposalIds_.length; ++index_) {
-            _castVote(voter_, weight_, proposalIds_[index_], supports_[index_]);
+            _castVote(voter_, weight_, proposalIds_[index_], support_[index_]);
         }
     }
 

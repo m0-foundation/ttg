@@ -82,6 +82,11 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IEpochBasedVoteToken
+    function getDelegationDigest(address delegatee_, uint256 nonce_, uint256 expiry_) external view returns (bytes32) {
+        return _getDelegationDigest(delegatee_, nonce_, expiry_);
+    }
+
+    /// @inheritdoc IEpochBasedVoteToken
     function pastBalanceOf(address account_, uint256 epoch_) external view returns (uint256) {
         uint16 safeEpoch_ = UIntMath.safe16(epoch_);
 

@@ -67,12 +67,14 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
     |                                           Internal View/Pure Functions                                           |
     \******************************************************************************************************************/
 
-    // TODO: Expose
-    function _getDelegationDigest(
-        address delegatee_,
-        uint256 nonce_,
-        uint256 expiry_
-    ) internal view returns (bytes32 digest_) {
+    /**
+     * @dev    Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  delegatee_ The address of the delegatee to delegate to.
+     * @param  nonce_     The nonce of the account delegating.
+     * @param  expiry_    The last timestamp at which the signature is still valid.
+     * @return The digest to be signed.
+     */
+    function _getDelegationDigest(address delegatee_, uint256 nonce_, uint256 expiry_) internal view returns (bytes32) {
         return _getDigest(keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee_, nonce_, expiry_)));
     }
 }

@@ -124,6 +124,22 @@ interface IBatchGovernor is IGovernor {
     function ONE() external pure returns (uint256);
 
     /**
+     * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  proposalId The unique identifier of a proposal being voted on.
+     * @param  support    The type of support to cast for the proposal.
+     * @return The digest to be signed.
+     */
+    function getBallotDigest(uint256 proposalId, uint8 support) external view returns (bytes32);
+
+    /**
+     * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  proposalIds The unique identifiers of an array of proposals being voted on.
+     * @param  support     The type of support to cast for each proposal.
+     * @return The digest to be signed.
+     */
+    function getBallotsDigest(uint256[] calldata proposalIds, uint8[] calldata support) external view returns (bytes32);
+
+    /**
      * @notice Returns the unique identifier for the proposal if it were created at this exact moment.
      * @param  callData The single call data used to call this governor upon execution of a proposal.
      * @return The unique identifier for the proposal.

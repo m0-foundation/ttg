@@ -264,7 +264,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "supports_",
+        "name": "support_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       }
@@ -293,7 +293,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "supports_",
+        "name": "support_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -322,7 +322,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "supports_",
+        "name": "support_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -423,6 +423,54 @@
       }
     ],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "getBallotDigest",
+    "inputs": [
+      {
+        "name": "proposalId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "support_",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBallotsDigest",
+    "inputs": [
+      {
+        "name": "proposalIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "support_",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",

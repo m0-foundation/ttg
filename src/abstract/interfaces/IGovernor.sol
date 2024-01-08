@@ -89,7 +89,7 @@ interface IGovernor is IERC6372, IERC712 {
     /**
      * @notice Allows a signer to cast a vote on a proposal with id `proposalId` via an ECDSA secp256k1 signature.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @param  v          An ECDSA secp256k1 signature parameter.
      * @param  r          An ECDSA secp256k1 signature parameter.
      * @param  s          An ECDSA secp256k1 signature parameter.
@@ -107,7 +107,7 @@ interface IGovernor is IERC6372, IERC712 {
      * @notice Allows `voter` to cast a vote on a proposal with id `proposalId` via an arbitrary signature.
      * @param  voter      The address of the account that casting their vote, and purported the have signed.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @param  signature  An arbitrary signature.
      * @return weight     The number of votes cast.
      */
@@ -121,7 +121,7 @@ interface IGovernor is IERC6372, IERC712 {
     /**
      * @notice Allows the caller to cast a vote on a proposal with id `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
-     * @param  support    The type of support that to cast for the proposal.
+     * @param  support    The type of support to cast for the proposal.
      * @param  reason     The string of the reason the caller has cast their vote, if any.
      * @return weight     The number of votes cast.
      */
