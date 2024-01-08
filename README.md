@@ -1,9 +1,6 @@
-# Simple Participation Optimized Governance (SPOG)
+# TTG (Two Token Governance)
 
 A SPOG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A SPOG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
-
-## SPOG Smart Contract Architecture [TODO]
-
 
 ## Dev Setup
 
@@ -47,28 +44,8 @@ Test a specific test case
  forge test --mt <test-case-name>
 ```
 
-To view test coverage
 
-Note: On Linux, install genhtml. On MacOS, `brew install lcov`
+## TTG Smart Contract Architecture 
 
-```bash
- make -B coverage
-```
+<img width="1098" alt="ttg" src="https://github.com/MZero-Labs/ttg/assets/1220854/58866111-26f6-495d-8949-9cef00783f7c">
 
-You can then view the file coverage/index.html to view the report. This can also be integrated into vs code with various extensions
-
-## Local dApp Development using Anvil
-
-Start the local anvil node
-
-```bash
-anvil
-```
-
-In another terminal, run the deployment script for Anvil
-
-```bash
-make deploy-spog-local
-```
-
-You can now do local development and testing against the RPC endpoint http://localhost:8545
