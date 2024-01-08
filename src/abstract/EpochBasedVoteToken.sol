@@ -71,11 +71,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    /// @inheritdoc IERC6372
-    function CLOCK_MODE() external pure returns (string memory clockMode_) {
-        return "mode=epoch";
-    }
-
     /// @inheritdoc IERC20
     function balanceOf(address account_) external view returns (uint256) {
         return _getBalance(account_, _clock());
@@ -140,6 +135,11 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         _revertIfNotPastTimepoint(safeEpoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
 
         return _getTotalSupply(safeEpoch_);
+    }
+
+    /// @inheritdoc IERC6372
+    function CLOCK_MODE() external pure returns (string memory clockMode_) {
+        return "mode=epoch";
     }
 
     /******************************************************************************************************************\
@@ -356,28 +356,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     \******************************************************************************************************************/
 
     /**
-     * @dev    Add `b_` to `a_`, using checked math.
-     * @param  a_ The amount to add to.
-     * @param  b_ The amount to add.
-     * @return The sum of `a_` and `b_`.
-     */
-    function _add(uint240 a_, uint240 b_) internal pure returns (uint240) {
-        return a_ + b_;
-    }
-
-    /**
-     * @dev    Add `b_` to `a_`, using unchecked math.
-     * @param  a_ The amount to add to.
-     * @param  b_ The amount to add.
-     * @return The sum of `a_` and `b_`.
-     */
-    function _addUnchecked(uint240 a_, uint240 b_) internal pure returns (uint240) {
-        unchecked {
-            return a_ + b_;
-        }
-    }
-
-    /**
      * @notice Returns the current timepoint according to the mode the contract is operating on.
      * @return Current timepoint.
      */
@@ -393,26 +371,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     function _getBalance(address account_, uint16 epoch_) internal view virtual returns (uint240) {
         return _getValueAt(_balances[account_], epoch_);
-    }
-
-    /**
-     * @dev    Return `default_` if `input_` is equal to address(0), else return `input_`.
-     * @param  input_   The input address.
-     * @param  default_ The default address.
-     * @return The input address if not equal to the zero address, else the default address.
-     */
-    function _getDefaultIfZero(address input_, address default_) internal pure returns (address) {
-        return input_ == address(0) ? default_ : input_;
-    }
-
-    /**
-     * @dev Return address(0) if `input_` is `default_`, else return `input_`.
-     * @param  input_   The input address.
-     * @param  default_ The default address.
-     * @return The input address if it is not the default address, else address(0).
-     */
-    function _getZeroIfDefault(address input_, address default_) internal pure returns (address) {
-        return input_ == default_ ? address(0) : input_;
     }
 
     /**
@@ -485,6 +443,48 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         uint16 currentEpoch_ = _clock();
 
         if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_);
+    }
+
+    /**
+     * @dev    Add `b_` to `a_`, using checked math.
+     * @param  a_ The amount to add to.
+     * @param  b_ The amount to add.
+     * @return The sum of `a_` and `b_`.
+     */
+    function _add(uint240 a_, uint240 b_) internal pure returns (uint240) {
+        return a_ + b_;
+    }
+
+    /**
+     * @dev    Add `b_` to `a_`, using unchecked math.
+     * @param  a_ The amount to add to.
+     * @param  b_ The amount to add.
+     * @return The sum of `a_` and `b_`.
+     */
+    function _addUnchecked(uint240 a_, uint240 b_) internal pure returns (uint240) {
+        unchecked {
+            return a_ + b_;
+        }
+    }
+
+    /**
+     * @dev    Return `default_` if `input_` is equal to address(0), else return `input_`.
+     * @param  input_   The input address.
+     * @param  default_ The default address.
+     * @return The input address if not equal to the zero address, else the default address.
+     */
+    function _getDefaultIfZero(address input_, address default_) internal pure returns (address) {
+        return input_ == address(0) ? default_ : input_;
+    }
+
+    /**
+     * @dev Return address(0) if `input_` is `default_`, else return `input_`.
+     * @param  input_   The input address.
+     * @param  default_ The default address.
+     * @return The input address if it is not the default address, else address(0).
+     */
+    function _getZeroIfDefault(address input_, address default_) internal pure returns (address) {
+        return input_ == default_ ? address(0) : input_;
     }
 
     /**

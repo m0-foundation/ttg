@@ -288,15 +288,6 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
-    /**
-     * @dev    Returns wether the clock value `epoch_` is a voting epoch.
-     * @param  epoch_ Some clock value.
-     * @return Wether the epoch is a voting epoch.
-     */
-    function _isVotingEpoch(uint16 epoch_) internal pure returns (bool) {
-        return epoch_ % 2 == 1; // Voting epochs are odd numbered.
-    }
-
     /// @dev Reverts if the current epoch is a voting epoch.
     function _revertIfInVoteEpoch() internal view {
         if (_isVotingEpoch(_clock())) revert VoteEpoch();
@@ -305,6 +296,15 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     /// @dev Reverts if the current epoch is not a voting epoch.
     function _revertIfNotInVoteEpoch() internal view {
         if (!_isVotingEpoch(_clock())) revert NotVoteEpoch();
+    }
+
+    /**
+     * @dev    Returns whether the clock value `epoch_` is a voting epoch or not.
+     * @param  epoch_ Some clock value.
+     * @return Whether the epoch is a voting epoch.
+     */
+    function _isVotingEpoch(uint16 epoch_) internal pure returns (bool) {
+        return epoch_ % 2 == 1; // Voting epochs are odd numbered.
     }
 
     /**

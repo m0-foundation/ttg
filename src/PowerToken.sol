@@ -415,6 +415,11 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return _clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
+    /// @dev Reverts if the caller is not the Standard Governor.
+    function _revertIfNotStandardGovernor() internal view {
+        if (msg.sender != standardGovernor) revert NotStandardGovernor();
+    }
+
     /**
      * @dev Helper function to calculate `x` / `y`, rounded up.
      * @dev Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
@@ -429,10 +434,5 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         unchecked {
             z = (z - 1) / y;
         }
-    }
-
-    /// @dev Reverts if the caller is not the Standard Governor.
-    function _revertIfNotStandardGovernor() internal view {
-        if (msg.sender != standardGovernor) revert NotStandardGovernor();
     }
 }

@@ -7,6 +7,37 @@ import { IBatchGovernor } from "../abstract/interfaces/IBatchGovernor.sol";
 /// @title An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
 interface IStandardGovernor is IBatchGovernor {
     /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Emitted when the cash token is set to `cashToken`.
+     * @param  cashToken The address of the cash token taking effect.
+     */
+    event CashTokenSet(address indexed cashToken);
+
+    /**
+     * @notice Emitted when `voter` has voted on all the proposals in the current epoch `currentEpoch`.
+     * @param  voter        The address of the account voting.
+     * @param  currentEpoch The current epoch number as a clock value.
+     */
+    event HasVotedOnAllProposals(address indexed voter, uint256 indexed currentEpoch);
+
+    /**
+     * @notice Emitted when the proposal fee is set to `proposalFee`.
+     * @param  proposalFee The amount of cash token required onwards to create proposals.
+     */
+    event ProposalFeeSet(uint256 proposalFee);
+
+    /**
+     * @notice Emitted when the proposal fee for the proposal, with identifier `proposalFee`, is sent to the vault.
+     * @param  proposalId The unique identifier of the proposal.
+     * @param  cashToken  The address of the cash token for this particular proposal fee.
+     * @param  amount     The amount of cash token of the proposal fee.
+     */
+    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 amount);
+
+    /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
@@ -50,37 +81,6 @@ interface IStandardGovernor is IBatchGovernor {
     error TransferFromFailed();
 
     /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Emitted when the cash token is set to `cashToken`.
-     * @param  cashToken The address of the cash token taking effect.
-     */
-    event CashTokenSet(address indexed cashToken);
-
-    /**
-     * @notice Emitted when `voter` has voted on all the proposals in the current epoch `currentEpoch`.
-     * @param  voter        The address of the account voting.
-     * @param  currentEpoch The current epoch number as a clock value.
-     */
-    event HasVotedOnAllProposals(address indexed voter, uint256 indexed currentEpoch);
-
-    /**
-     * @notice Emitted when the proposal fee is set to `proposalFee`.
-     * @param  proposalFee The amount of cash token required onwards to create proposals.
-     */
-    event ProposalFeeSet(uint256 proposalFee);
-
-    /**
-     * @notice Emitted when the proposal fee for the proposal, with identifier `proposalFee`, is sent to the vault.
-     * @param  proposalId The unique identifier of the proposal.
-     * @param  cashToken  The address of the cash token for this particular proposal fee.
-     * @param  amount     The amount of cash token of the proposal fee.
-     */
-    event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 amount);
-
-    /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
 
@@ -96,6 +96,45 @@ interface IStandardGovernor is IBatchGovernor {
      * @param  newProposalFee The amount of cash token required onwards to create proposals.
      */
     function setCashToken(address newCashToken, uint256 newProposalFee) external;
+
+    /******************************************************************************************************************\
+    |                                                Proposal Functions                                                |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice One of the valid proposals. Adds `account` to `list` at the Registrar.
+     * @param  list    The key for some list.
+     * @param  account The address of some account to be added.
+     */
+    function addToList(bytes32 list, address account) external;
+
+    /**
+     * @notice One of the valid proposals. Removes `account` to `list` at the Registrar.
+     * @param  list    The key for some list.
+     * @param  account The address of some account to be removed.
+     */
+    function removeFromList(bytes32 list, address account) external;
+
+    /**
+     * @notice One of the valid proposals. Removes `accountToRemove` and adds `accountToAdd` to `list` at the Registrar.
+     * @param  list            The key for some list.
+     * @param  accountToRemove The address of some account to be removed.
+     * @param  accountToAdd    The address of some account to be added.
+     */
+    function removeFromAndAddToList(bytes32 list, address accountToRemove, address accountToAdd) external;
+
+    /**
+     * @notice One of the valid proposals. Sets `key` to `value` at the Registrar.
+     * @param  key   Some key.
+     * @param  value Some value.
+     */
+    function setKey(bytes32 key, bytes32 value) external;
+
+    /**
+     * @notice One of the valid proposals. Sets the proposal fee of the Standard Governor.
+     * @param  newProposalFee The new proposal fee.
+     */
+    function setProposalFee(uint256 newProposalFee) external;
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
@@ -171,43 +210,4 @@ interface IStandardGovernor is IBatchGovernor {
 
     /// @notice Returns the address of the Zero Token.
     function zeroToken() external view returns (address);
-
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice One of the valid proposals. Adds `account` to `list` at the Registrar.
-     * @param  list    The key for some list.
-     * @param  account The address of some account to be added.
-     */
-    function addToList(bytes32 list, address account) external;
-
-    /**
-     * @notice One of the valid proposals. Removes `account` to `list` at the Registrar.
-     * @param  list    The key for some list.
-     * @param  account The address of some account to be removed.
-     */
-    function removeFromList(bytes32 list, address account) external;
-
-    /**
-     * @notice One of the valid proposals. Removes `accountToRemove` and adds `accountToAdd` to `list` at the Registrar.
-     * @param  list            The key for some list.
-     * @param  accountToRemove The address of some account to be removed.
-     * @param  accountToAdd    The address of some account to be added.
-     */
-    function removeFromAndAddToList(bytes32 list, address accountToRemove, address accountToAdd) external;
-
-    /**
-     * @notice One of the valid proposals. Sets `key` to `value` at the Registrar.
-     * @param  key   Some key.
-     * @param  value Some value.
-     */
-    function setKey(bytes32 key, bytes32 value) external;
-
-    /**
-     * @notice One of the valid proposals. Sets the proposal fee of the Standard Governor.
-     * @param  newProposalFee The new proposal fee.
-     */
-    function setProposalFee(uint256 newProposalFee) external;
 }

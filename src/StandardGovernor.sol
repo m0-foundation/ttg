@@ -193,6 +193,36 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     }
 
     /******************************************************************************************************************\
+    |                                                Proposal Functions                                                |
+    \******************************************************************************************************************/
+
+    /// @inheritdoc IStandardGovernor
+    function addToList(bytes32 list_, address account_) external onlySelf {
+        _addToList(list_, account_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function removeFromList(bytes32 list_, address account_) external onlySelf {
+        _removeFromList(list_, account_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function removeFromAndAddToList(bytes32 list_, address accountToRemove_, address accountToAdd_) external onlySelf {
+        _removeFromList(list_, accountToRemove_);
+        _addToList(list_, accountToAdd_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function setKey(bytes32 key_, bytes32 value_) external onlySelf {
+        IRegistrar(registrar).setKey(key_, value_);
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function setProposalFee(uint256 newProposalFee_) external onlySelfOrEmergencyGovernor {
+        _setProposalFee(newProposalFee_);
+    }
+
+    /******************************************************************************************************************\
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
@@ -258,36 +288,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         unchecked {
             return (currentEpoch_ <= voteEnd_ + 1) ? ProposalState.Succeeded : ProposalState.Expired;
         }
-    }
-
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
-
-    /// @inheritdoc IStandardGovernor
-    function addToList(bytes32 list_, address account_) external onlySelf {
-        _addToList(list_, account_);
-    }
-
-    /// @inheritdoc IStandardGovernor
-    function removeFromList(bytes32 list_, address account_) external onlySelf {
-        _removeFromList(list_, account_);
-    }
-
-    /// @inheritdoc IStandardGovernor
-    function removeFromAndAddToList(bytes32 list_, address accountToRemove_, address accountToAdd_) external onlySelf {
-        _removeFromList(list_, accountToRemove_);
-        _addToList(list_, accountToAdd_);
-    }
-
-    /// @inheritdoc IStandardGovernor
-    function setKey(bytes32 key_, bytes32 value_) external onlySelf {
-        IRegistrar(registrar).setKey(key_, value_);
-    }
-
-    /// @inheritdoc IStandardGovernor
-    function setProposalFee(uint256 newProposalFee_) external onlySelfOrEmergencyGovernor {
-        _setProposalFee(newProposalFee_);
     }
 
     /******************************************************************************************************************\
@@ -409,6 +409,14 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     \******************************************************************************************************************/
 
     /**
+     * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.
+     * @return The voting delay.
+     */
+    function _votingDelay() internal view override returns (uint16) {
+        return clock() % 2 == 1 ? 2 : 1; // Voting epochs are odd numbered
+    }
+
+    /**
      * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
      * @param callData_ The call data to check.
      */
@@ -422,14 +430,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
             func_ != this.setKey.selector &&
             func_ != this.setProposalFee.selector
         ) revert InvalidCallData();
-    }
-
-    /**
-     * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.
-     * @return The voting delay.
-     */
-    function _votingDelay() internal view override returns (uint16) {
-        return clock() % 2 == 1 ? 2 : 1; // Voting epochs are odd numbered
     }
 
     /**

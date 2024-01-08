@@ -5,31 +5,6 @@ pragma solidity 0.8.23;
 /// @title A book of record of SPOG-specific contracts and arbitrary key-value pairs and lists.
 interface IRegistrar {
     /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
-
-    /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
-    error InvalidEmergencyGovernorDeployerAddress();
-
-    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
-    error InvalidPowerTokenDeployerAddress();
-
-    /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
-    error InvalidStandardGovernorDeployerAddress();
-
-    /// @notice Revert message when the Vault retrieved in the constructor is address(0).
-    error InvalidVaultAddress();
-
-    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
-    error InvalidVoteTokenAddress();
-
-    /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
-    error InvalidZeroGovernorAddress();
-
-    /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
-    error NotStandardOrEmergencyGovernor();
-
-    /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
@@ -53,6 +28,31 @@ interface IRegistrar {
      * @param  value The value.
      */
     event KeySet(bytes32 indexed key, bytes32 indexed value);
+
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
+    error InvalidEmergencyGovernorDeployerAddress();
+
+    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
+    error InvalidPowerTokenDeployerAddress();
+
+    /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
+    error InvalidStandardGovernorDeployerAddress();
+
+    /// @notice Revert message when the Vault retrieved in the constructor is address(0).
+    error InvalidVaultAddress();
+
+    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
+    error InvalidVoteTokenAddress();
+
+    /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
+    error InvalidZeroGovernorAddress();
+
+    /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
+    error NotStandardOrEmergencyGovernor();
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

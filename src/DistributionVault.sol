@@ -100,6 +100,11 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         return _name;
     }
 
+    /// @inheritdoc IERC6372
+    function CLOCK_MODE() external pure returns (string memory) {
+        return "mode=epoch";
+    }
+
     /// @inheritdoc IDistributionVault
     function getClaimDigest(
         address token_,
@@ -113,11 +118,6 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             _getDigest(
                 keccak256(abi.encode(CLAIM_TYPEHASH, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_))
             );
-    }
-
-    /// @inheritdoc IERC6372
-    function CLOCK_MODE() external pure returns (string memory) {
-        return "mode=epoch";
     }
 
     /// @inheritdoc IERC6372

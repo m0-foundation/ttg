@@ -34,7 +34,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
      * @param  emergencyGovernorDeployer_           The address of the Emergency Governor Deployer contract.
      * @param  powerTokenDeployer_                  The address of the Power Token Deployer contract.
      * @param  standardGovernorDeployer_            The address of the Standard Governor Deployer contract.
-     * @param  bootstrapToken_                      The address of token (Zero Token or old Power Token), that bootstraps the reset.
+     * @param  bootstrapToken_                      The address of the token that bootstraps the reset.
      * @param  standardProposalFee_                 The proposal fee for the Standard Governor.
      * @param  emergencyProposalThresholdRatio_     The threshold ratio for the Emergency Governor.
      * @param  zeroProposalThresholdRatio_          The threshold ratio for the Zero Governor.
@@ -90,25 +90,6 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     }
 
     /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
-
-    /// @inheritdoc IZeroGovernor
-    function isAllowedCashToken(address token_) external view returns (bool) {
-        return _allowedCashTokens[token_];
-    }
-
-    /// @inheritdoc IZeroGovernor
-    function emergencyGovernor() public view returns (address) {
-        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
-    }
-
-    /// @inheritdoc IZeroGovernor
-    function standardGovernor() public view returns (address) {
-        return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
-    }
-
-    /******************************************************************************************************************\
     |                                                Proposal Functions                                                |
     \******************************************************************************************************************/
 
@@ -138,6 +119,25 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     /// @inheritdoc IZeroGovernor
     function setZeroProposalThresholdRatio(uint16 newThresholdRatio_) external onlySelf {
         _setThresholdRatio(newThresholdRatio_);
+    }
+
+    /******************************************************************************************************************\
+    |                                       External/Public View/Pure Functions                                        |
+    \******************************************************************************************************************/
+
+    /// @inheritdoc IZeroGovernor
+    function isAllowedCashToken(address token_) external view returns (bool) {
+        return _allowedCashTokens[token_];
+    }
+
+    /// @inheritdoc IZeroGovernor
+    function emergencyGovernor() public view returns (address) {
+        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
+    }
+
+    /// @inheritdoc IZeroGovernor
+    function standardGovernor() public view returns (address) {
+        return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
     /******************************************************************************************************************\

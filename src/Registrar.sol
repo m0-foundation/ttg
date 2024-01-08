@@ -118,13 +118,13 @@ contract Registrar is IRegistrar {
     }
 
     /// @inheritdoc IRegistrar
-    function emergencyGovernor() public view returns (address) {
-        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
+    function powerToken() external view returns (address) {
+        return IPowerTokenDeployer(powerTokenDeployer).lastDeploy();
     }
 
     /// @inheritdoc IRegistrar
-    function powerToken() external view returns (address) {
-        return IPowerTokenDeployer(powerTokenDeployer).lastDeploy();
+    function emergencyGovernor() public view returns (address) {
+        return IEmergencyGovernorDeployer(emergencyGovernorDeployer).lastDeploy();
     }
 
     /// @inheritdoc IRegistrar
@@ -135,6 +135,13 @@ contract Registrar is IRegistrar {
     /******************************************************************************************************************\
     |                                          Internal View/Pure Functions                                            |
     \******************************************************************************************************************/
+
+    /// @dev Reverts if the caller is not the Standard Governor nor the Emergency Governor.
+    function _revertIfNotStandardOrEmergencyGovernor() internal view {
+        if (msg.sender != standardGovernor() && msg.sender != emergencyGovernor()) {
+            revert NotStandardOrEmergencyGovernor();
+        }
+    }
 
     /**
      * @dev    Returns the key used to store the value of `key_`.
@@ -153,12 +160,5 @@ contract Registrar is IRegistrar {
      */
     function _getIsInListKey(bytes32 list_, address account_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("IN_LIST", list_, account_));
-    }
-
-    /// @dev Reverts if the caller is not the Standard Governor nor the Emergency Governor.
-    function _revertIfNotStandardOrEmergencyGovernor() internal view {
-        if (msg.sender != standardGovernor() && msg.sender != emergencyGovernor()) {
-            revert NotStandardOrEmergencyGovernor();
-        }
     }
 }

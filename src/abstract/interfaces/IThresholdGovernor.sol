@@ -7,13 +7,6 @@ import { IBatchGovernor } from "./IBatchGovernor.sol";
 /// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
 interface IThresholdGovernor is IBatchGovernor {
     /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
-
-    /// @notice Revert message when trying to set the threshold ratio above 100% or below 2.71%.
-    error InvalidThresholdRatio(uint256 thresholdRatio, uint256 minThresholdRatio, uint256 maxThresholdRatio);
-
-    /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
@@ -22,6 +15,13 @@ interface IThresholdGovernor is IBatchGovernor {
      * @param  thresholdRatio The new threshold ratio.
      */
     event ThresholdRatioSet(uint16 thresholdRatio);
+
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    /// @notice Revert message when trying to set the threshold ratio above 100% or below 2.71%.
+    error InvalidThresholdRatio(uint256 thresholdRatio, uint256 minThresholdRatio, uint256 maxThresholdRatio);
 
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |

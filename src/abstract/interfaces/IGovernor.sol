@@ -165,9 +165,6 @@ interface IGovernor is IERC6372, IERC712 {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVoteBySig function.
-    function BALLOT_TYPEHASH() external pure returns (bytes32);
-
     /**
      * @notice module:voting
      * @dev    A description of the possible "support" values for castVote and the way these votes are counted, meant to
@@ -257,4 +254,7 @@ interface IGovernor is IERC6372, IERC712 {
 
     /// @notice Returns the number of clock values between the vote start and vote end.
     function votingPeriod() external view returns (uint256);
+
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVoteBySig function.
+    function BALLOT_TYPEHASH() external pure returns (bytes32);
 }

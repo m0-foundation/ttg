@@ -152,39 +152,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    /// @inheritdoc IERC6372
-    function CLOCK_MODE() external pure returns (string memory) {
-        return "mode=epoch";
-    }
-
-    /// @inheritdoc IGovernor
-    function COUNTING_MODE() external pure returns (string memory) {
-        return "support=for,against&quorum=for";
-    }
-
-    /// @inheritdoc IERC6372
-    function clock() public view returns (uint48) {
-        return _clock();
-    }
-
-    /// @inheritdoc IBatchGovernor
-    function getBallotDigest(uint256 proposalId_, uint8 support_) public view returns (bytes32) {
-        return _getDigest(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId_, support_)));
-    }
-
-    /// @inheritdoc IBatchGovernor
-    function getBallotsDigest(
-        uint256[] calldata proposalIds_,
-        uint8[] calldata support_
-    ) public view returns (bytes32) {
-        return _getDigest(keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, support_)));
-    }
-
-    /// @inheritdoc IGovernor
-    function getVotes(address account_, uint256 timepoint_) public view returns (uint256) {
-        return IEpochBasedVoteToken(voteToken).getPastVotes(account_, timepoint_);
-    }
-
     /// @inheritdoc IGovernor
     function hashProposal(
         address[] memory,
@@ -220,9 +187,42 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return _proposals[proposalId_].voteStart - 1;
     }
 
+    /// @inheritdoc IERC6372
+    function CLOCK_MODE() external pure returns (string memory) {
+        return "mode=epoch";
+    }
+
+    /// @inheritdoc IGovernor
+    function COUNTING_MODE() external pure returns (string memory) {
+        return "support=for,against&quorum=for";
+    }
+
     /// @inheritdoc IGovernor
     function proposalThreshold() external pure returns (uint256) {
         return 0;
+    }
+
+    /// @inheritdoc IERC6372
+    function clock() public view returns (uint48) {
+        return _clock();
+    }
+
+    /// @inheritdoc IBatchGovernor
+    function getBallotDigest(uint256 proposalId_, uint8 support_) public view returns (bytes32) {
+        return _getDigest(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId_, support_)));
+    }
+
+    /// @inheritdoc IBatchGovernor
+    function getBallotsDigest(
+        uint256[] calldata proposalIds_,
+        uint8[] calldata support_
+    ) public view returns (bytes32) {
+        return _getDigest(keccak256(abi.encode(BALLOTS_TYPEHASH, proposalIds_, support_)));
+    }
+
+    /// @inheritdoc IGovernor
+    function getVotes(address account_, uint256 timepoint_) public view returns (uint256) {
+        return IEpochBasedVoteToken(voteToken).getPastVotes(account_, timepoint_);
     }
 
     /// @inheritdoc IGovernor
@@ -384,8 +384,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @dev    This function tries to execute a proposal based on the call data and a range of possible vote starts.
      *         This is needed due to the fact that proposalId's are generated based on the call data and vote start
      *         time, and so an executed function will need this in order to attempt to find and execute a proposal given
-     *         a known range of possible vote start times which depends on the how the inheriting implementation handles
-     *         determine the vote start time and expiry of proposals based on the time of the proposal creation.
+     *         a known range of possible vote start times which depends on how the inheriting implementation
+     *         determines the vote start time and expiry of proposals based on the time of the proposal creation.
      * @param  callData_          An array of call data used to call each respective target upon execution.
      * @param  latestVoteStart_   The most recent vote start to use in attempting to search for the proposal.
      * @param  earliestVoteStart_ The least recent vote start to use in attempting to search for the proposal.
@@ -466,12 +466,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         return uint256(keccak256(abi.encode(callData_, voteStart_, address(this))));
     }
 
-    /**
-     * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
-     * @param callData_ The call data to check.
-     */
-    function _revertIfInvalidCalldata(bytes memory callData_) internal pure virtual;
-
     /// @dev Reverts if the caller is not the contract itself.
     function _revertIfNotSelf() internal view {
         if (msg.sender != address(this)) revert NotSelf();
@@ -482,4 +476,10 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
     /// @dev Returns the number of clock values between the vote start and vote end.
     function _votingPeriod() internal view virtual returns (uint16);
+
+    /**
+     * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.
+     * @param callData_ The call data to check.
+     */
+    function _revertIfInvalidCalldata(bytes memory callData_) internal pure virtual;
 }

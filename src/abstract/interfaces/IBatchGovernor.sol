@@ -117,12 +117,6 @@ interface IBatchGovernor is IGovernor {
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVotesBySig function.
-    function BALLOTS_TYPEHASH() external pure returns (bytes32);
-
-    /// @notice Returns the value used as 100%, to be used to correctly ascertain the threshold ratio.
-    function ONE() external pure returns (uint256);
-
     /**
      * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
      * @param  proposalId The unique identifier of a proposal being voted on.
@@ -148,4 +142,10 @@ interface IBatchGovernor is IGovernor {
 
     /// @notice Returns the EIP-5805 token contact used for determine voting power and total supplies.
     function voteToken() external view returns (address);
+
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVotesBySig function.
+    function BALLOTS_TYPEHASH() external pure returns (bytes32);
+
+    /// @notice Returns the value used as 100%, to be used to correctly ascertain the threshold ratio.
+    function ONE() external pure returns (uint256);
 }

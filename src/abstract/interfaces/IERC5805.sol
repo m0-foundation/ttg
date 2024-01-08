@@ -10,17 +10,6 @@ import { IERC6372 } from "./IERC6372.sol";
 /// @dev   The interface as defined by EIP-5805: https://eips.ethereum.org/EIPS/eip-5805
 interface IERC5805 is IStatefulERC712, IERC6372 {
     /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
-     * @param  timepoint The timepoint being queried.
-     * @param  clock     The current timepoint.
-     */
-    error NotPastTimepoint(uint48 timepoint, uint48 clock);
-
-    /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
@@ -39,6 +28,17 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
      * @param  newBalance      The new voting power of `delegatee`.
      */
     event DelegateVotesChanged(address indexed delegatee, uint256 previousBalance, uint256 newBalance);
+
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
+     * @param  timepoint The timepoint being queried.
+     * @param  clock     The current timepoint.
+     */
+    error NotPastTimepoint(uint48 timepoint, uint48 clock);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

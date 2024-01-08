@@ -8,23 +8,6 @@ import { IERC6372 } from "../abstract/interfaces/IERC6372.sol";
 /// @title A contract enabling pro rate distribution of arbitrary tokens to holders of the Zero Token.
 interface IDistributionVault is IERC6372, IStatefulERC712 {
     /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
-
-    /// @notice Revert message when the Zero Token address set at deployment is address(0).
-    error InvalidZeroTokenAddress();
-
-    /**
-     * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
-     * @param  timepoint The timepoint being queried.
-     * @param  clock     The current timepoint.
-     */
-    error NotPastTimepoint(uint256 timepoint, uint256 clock);
-
-    /// @notice Revert message when a token transfer, from this contract, fails.
-    error TransferFailed();
-
-    /******************************************************************************************************************\
     |                                                      Events                                                      |
     \******************************************************************************************************************/
 
@@ -45,6 +28,23 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @param  amount The total amount of token being distributed.
      */
     event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
+
+    /******************************************************************************************************************\
+    |                                                      Errors                                                      |
+    \******************************************************************************************************************/
+
+    /// @notice Revert message when the Zero Token address set at deployment is address(0).
+    error InvalidZeroTokenAddress();
+
+    /**
+     * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
+     * @param  timepoint The timepoint being queried.
+     * @param  clock     The current timepoint.
+     */
+    error NotPastTimepoint(uint256 timepoint, uint256 clock);
+
+    /// @notice Revert message when a token transfer, from this contract, fails.
+    error TransferFailed();
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
