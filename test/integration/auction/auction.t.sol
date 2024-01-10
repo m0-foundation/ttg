@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.23;
 
+import { PureEpochs } from "../../../src/libs/PureEpochs.sol";
+
 import { IntegrationBaseSetup, IBatchGovernor } from "../IntegrationBaseSetup.t.sol";
 
 contract Auction_IntegrationTest is IntegrationBaseSetup {
@@ -62,7 +64,10 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
         // Last second of epoch
         _warpToTheEndOfTheEpoch(_currentEpoch());
 
-        assertEq(_powerToken.getCost(totalSupply_), 1);
+        assertEq(
+            _powerToken.getCost(totalSupply_),
+            _divideUp(totalSupply_, (PureEpochs._EPOCH_PERIOD / 100) * totalSupply_)
+        );
 
         vm.prank(_dave);
         uint256 proposalId2_ = _standardGovernor.propose(targets_, values_, callDatas_, description_);
@@ -100,5 +105,9 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
         );
 
         description_ = "Set TEST_KEY to TEST_VALUE";
+    }
+
+    function _divideUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        return ((x * 10_000) + y - 1) / y;
     }
 }
