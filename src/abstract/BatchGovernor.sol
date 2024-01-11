@@ -404,7 +404,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @param  callData_          An array of call data used to call each respective target upon execution.
      * @param  latestVoteStart_   The most recent vote start to use in attempting to search for the proposal.
      * @param  earliestVoteStart_ The least recent vote start to use in attempting to search for the proposal.
-     * @return proposalId_       The unique identifier of the most recent proposal that matched the criteria.
+     * @return proposalId_        The unique identifier of the most recent proposal that matched the criteria.
      */
     function _tryExecute(
         bytes memory callData_,
@@ -413,17 +413,19 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     ) internal returns (uint256 proposalId_) {
         if (msg.value != 0) revert InvalidValue();
 
+        if (earliestVoteStart_ == 0) revert InvalidValue(); // Non-existent proposals have a default vote start of 0.
+
         while (latestVoteStart_ >= earliestVoteStart_) {
-            proposalId_ = _execute(callData_, latestVoteStart_);
+            // `proposalId_` will be 0 if no proposal exists for `callData_` and `latestVoteStart_`, or if the proposal
+            // is not in  a `Succeeded` state. It will be executed otherwise. (see `_execute`)
+            proposalId_ = _execute(callData_, latestVoteStart_--);
 
-            if (latestVoteStart_ == 0) break;
-
-            --latestVoteStart_;
-
+            // If the `proposalId_` is not 0, then a proposal matching `callData_` and `latestVoteStart_` was found, in
+            // a Succeeded state, and was executed, so return it.
             if (proposalId_ != 0) return proposalId_;
         }
 
-        revert ProposalCannotBeExecuted();
+        revert ProposalCannotBeExecuted(); // No proposal was found matching the criteria was executed.
     }
 
     /******************************************************************************************************************\

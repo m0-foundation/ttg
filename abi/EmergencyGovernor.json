@@ -262,7 +262,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       }
@@ -291,7 +291,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -320,7 +320,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -430,7 +430,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       }
@@ -1110,6 +1110,16 @@
   },
   {
     "type": "error",
+    "name": "InvalidSignatureS",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureV",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidStandardGovernorAddress",
     "inputs": []
   },
@@ -1157,6 +1167,11 @@
   {
     "type": "error",
     "name": "InvalidValuesLength",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidVoteStart",
     "inputs": []
   },
   {
