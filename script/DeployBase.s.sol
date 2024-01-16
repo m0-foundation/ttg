@@ -22,9 +22,6 @@ contract DeployBase is Script {
     uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 8_000; // 80%
     uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 6_000; // 60%
 
-    // NOTE: Ensure this is the current nonce (transaction count) of the deploying address.
-    uint256 internal constant _DEPLOYER_NONCE = 0;
-
     function deploy(
         address deployer_,
         address[] memory initialPowerAccounts_,
@@ -35,6 +32,9 @@ contract DeployBase is Script {
         address[] memory allowedCashTokens_
     ) public returns (address registrar_) {
         console2.log("deployer:", deployer_);
+
+        // NOTE: Ensure this is the current nonce (transaction count) of the deploying address.
+        uint256 _DEPLOYER_NONCE = vm.envUint("DEPLOYER_NONCE");
 
         if (_DEPLOYER_NONCE != vm.getNonce(deployer_)) {
             revert DeployerNonceMismatch(_DEPLOYER_NONCE, vm.getNonce(deployer_));
@@ -73,27 +73,23 @@ contract DeployBase is Script {
             allowedCashTokens_
         );
 
-        address zeroToken_ = _deployZeroToken(
+        _deployZeroToken(
             deployer_,
             _DEPLOYER_NONCE + 2, // StandardGovernorDeployer deployment nonce
             initialZeroAccounts_,
             initialZeroBalances_
         );
 
-        address vault_ = _deployVault(
+        _deployVault(
             deployer_,
             _DEPLOYER_NONCE + 5 // ZeroToken deployment nonce
         );
 
         registrar_ = _deployRegistrar(deployer_, zeroGovernor_);
 
-        console2.log("Registrar Address:", registrar_);
         console2.log("Power Token Address:", IRegistrar(registrar_).powerToken());
-        console2.log("Zero Token Address:", zeroToken_);
         console2.log("Standard Governor Address:", IRegistrar(registrar_).standardGovernor());
         console2.log("Emergency Governor Address:", IRegistrar(registrar_).emergencyGovernor());
-        console2.log("Zero Governor Address:", zeroGovernor_);
-        console2.log("Distribution Vault Address:", vault_);
     }
 
     function _deployEmergencyGovernorDeployer(
@@ -179,6 +175,7 @@ contract DeployBase is Script {
                 allowedCashTokens_
             )
         );
+        console2.log("Zero Governor Address:", zeroGovernor_);
         vm.stopBroadcast();
     }
 
@@ -196,18 +193,21 @@ contract DeployBase is Script {
                 initialZeroBalances_
             )
         );
+        console2.log("Zero Token Address:", zeroToken_);
         vm.stopBroadcast();
     }
 
     function _deployVault(address deployer_, uint256 zeroTokenDeploymentNonce_) internal returns (address vault_) {
         vm.startBroadcast(deployer_);
         vault_ = address(new DistributionVault(ContractHelper.getContractFrom(deployer_, zeroTokenDeploymentNonce_)));
+        console2.log("Distribution Vault Address:", vault_);
         vm.stopBroadcast();
     }
 
     function _deployRegistrar(address deployer_, address zeroGovernor_) internal returns (address registrar_) {
         vm.startBroadcast(deployer_);
         registrar_ = address(new Registrar(zeroGovernor_));
+        console2.log("Registrar Address:", registrar_);
         vm.stopBroadcast();
     }
 }

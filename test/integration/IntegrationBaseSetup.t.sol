@@ -59,6 +59,8 @@ abstract contract IntegrationBaseSetup is TestUtils {
     DeployBase internal _deploy;
 
     function setUp() external {
+        vm.setEnv("DEPLOYER_NONCE", "0");
+
         _deploy = new DeployBase();
 
         address registrar_ = _deploy.deploy(
