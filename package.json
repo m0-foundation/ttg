@@ -1,12 +1,14 @@
 {
-  "name": "@mzero-labs/spog",
+  "name": "@mzero-labs/ttg",
   "version": "1.0.0",
-  "description": "SPOG contract ABIs",
+  "description": "TTG (Two Token Governance) contracts",
   "main": "index.js",
-  "author": "mZero Labs <contact@m0.xyz>",
+  "author": "M^0 Labs <contact@m0.xyz>",
   "license": "GPL-3.0",
   "scripts": {
     "coverage": "forge coverage --report lcov && lcov --extract lcov.info -o lcov.info 'src/*' && genhtml lcov.info -o coverage",
+    "gen:local": "ts-node ./script/utils/generateLocalList.ts",
+    "gen:testnet": "ts-node ./script/utils/generateTestnetList.ts",
     "prettier": "prettier --write 'script/**/*.sol' 'src/**/*.sol' 'test/**/*.sol'",
     "slither": "forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --config-file slither.config.json --fail-high .",
     "solhint": "solhint -f stylish 'src/**/*.sol'",
@@ -15,9 +17,14 @@
   "devDependencies": {
     "prettier": "^3.0.0",
     "prettier-plugin-solidity": "^1.1.3",
-    "solhint": "^3.4.1"
+    "solhint": "^3.4.1",
+    "ts-node": "10.9.2"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@types/node": "20.11.5",
+    "typescript": "5.3.3"
   }
 }
