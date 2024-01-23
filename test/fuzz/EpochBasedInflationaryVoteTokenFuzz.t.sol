@@ -457,7 +457,7 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.balanceOf(_carol), amountToTransferToCarol);
 
-        // // attempt to transfer fails
+        // attempt to transfer fails
         vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector);
 
         vm.prank(_alice);
@@ -465,39 +465,39 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
 
         _warpToNextTransferEpoch();
 
-        // // Balances inflate upon the end of the epoch
-        assertEq(_vote.balanceOf(_alice), votesBob);
+        // Balances inflate upon the end of the epoch
+        assertEq(_vote.balanceOf(_alice), votesInflatedBob);
         assertEq(_vote.balanceOf(_bob), 0);
-        assertEq(_vote.balanceOf(_carol), amountToTransferToCarol);
+        assertEq(_vote.balanceOf(_carol), votesInflatedCarol);
 
         vm.prank(_alice);
-        _vote.transfer(_bob, votesBob);
+        _vote.transfer(_bob, votesInflatedBob);
 
         vm.prank(_carol);
-        _vote.transfer(_bob, amountToTransferToCarol);
+        _vote.transfer(_bob, votesInflatedCarol);
 
         assertEq(_vote.getVotes(_alice), 0);
-        assertEq(_vote.getVotes(_bob), amountToTransferToCarol + votesBob);
+        assertEq(_vote.getVotes(_bob), votesInflatedBob + votesInflatedCarol);
         assertEq(_vote.getVotes(_carol), 0);
 
         assertEq(_vote.balanceOf(_alice), 0);
-        assertEq(_vote.balanceOf(_bob), amountToTransferToCarol + votesBob);
+        assertEq(_vote.balanceOf(_bob), votesInflatedBob + votesInflatedCarol);
         assertEq(_vote.balanceOf(_carol), 0);
 
         _warpToNextVoteEpoch();
 
         _vote.markParticipation(_bob);
 
-        // // Balances do not inflate until the end of the epoch
+        // Balances do not inflate until the end of the epoch
         assertEq(_vote.balanceOf(_alice), 0);
-        assertEq(_vote.balanceOf(_bob), amountToTransferToCarol + votesBob);
+        assertEq(_vote.balanceOf(_bob), votesInflatedBob + votesInflatedCarol);
         assertEq(_vote.balanceOf(_carol), 0);
 
         _warpToNextTransferEpoch();
 
         // Balances inflate upon the end of the epoch
         assertEq(_vote.balanceOf(_alice), 0);
-        uint240 votesInflatedBob2 = amountToTransferToCarol + votesBob + ((amountToTransferToCarol + votesBob) * _participationInflation / ONE);
+        uint240 votesInflatedBob2 = votesInflatedCarol + votesInflatedBob + ((votesInflatedCarol + votesInflatedBob) * _participationInflation / ONE);
         assertEq(_vote.balanceOf(_bob), votesInflatedBob2);
         assertEq(_vote.balanceOf(_carol), 0);
     }        
