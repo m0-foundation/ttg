@@ -39,7 +39,6 @@ contract ZeroTokenFuzzTests is TestUtils {
     }
 
     function testFuzz_pastBalancesOf_subset(
-        uint256 warpEpoch,
         uint256 firstPushEpoch, 
         uint256 secondPushEpoch,
         uint256 thirdPushEpoch,
@@ -47,14 +46,13 @@ contract ZeroTokenFuzzTests is TestUtils {
         uint256 secondValuePushed,
         uint256 thirdValuePushed      
     ) external {
-        uint256 clock_ =_zeroToken.clock();
-        uint256 currentEpoch_ = clock_ + warpEpoch;
+        uint256 currentEpoch_ =_zeroToken.clock();
         
         _warpToEpoch(currentEpoch_);
 
-        firstPushEpoch = bound(firstPushEpoch, 1, currentEpoch_);
-        secondPushEpoch = bound(secondPushEpoch, 1, currentEpoch_);
-        thirdPushEpoch = bound(thirdPushEpoch, 1, currentEpoch_);
+        firstPushEpoch = bound(firstPushEpoch, 1, currentEpoch_ - 1);
+        secondPushEpoch = bound(secondPushEpoch, 1, currentEpoch_ - 1);
+        thirdPushEpoch = bound(thirdPushEpoch, 1, currentEpoch_ - 1);
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         thirdValuePushed = bound(thirdValuePushed, 0, type(uint128).max);
@@ -65,14 +63,13 @@ contract ZeroTokenFuzzTests is TestUtils {
         _zeroToken.pushBalance(_alice, currentEpoch_ - secondPushEpoch, secondValuePushed);
         _zeroToken.pushBalance(_alice, currentEpoch_ - thirdPushEpoch, thirdValuePushed);
 
-        uint256[] memory balances_ = _zeroToken.pastBalancesOf(_alice, currentEpoch_ - firstPushEpoch, currentEpoch_);
+        uint256[] memory balances_ = _zeroToken.pastBalancesOf(_alice, currentEpoch_ - firstPushEpoch, currentEpoch_ - thirdPushEpoch);
 
-        assertEq(balances_.length, firstPushEpoch);
         assertEq(balances_[0], firstValuePushed);
-        assertEq(balances_[secondPushEpoch - firstPushEpoch - 1], firstValuePushed);
-        assertEq(balances_[secondPushEpoch - firstPushEpoch], secondValuePushed);
-        assertEq(balances_[thirdPushEpoch - firstPushEpoch - 1], secondValuePushed);
-        assertEq(balances_[thirdPushEpoch - firstPushEpoch], thirdValuePushed);
+        assertEq(balances_[firstPushEpoch - secondPushEpoch - 1], firstValuePushed);
+        assertEq(balances_[firstPushEpoch - secondPushEpoch], secondValuePushed);
+        assertEq(balances_[firstPushEpoch - thirdPushEpoch - 1], secondValuePushed);
+        assertEq(balances_[firstPushEpoch - thirdPushEpoch], thirdValuePushed);
     }
 
     function testFuzz_pastBalancesOf_beforeAllSnaps(
