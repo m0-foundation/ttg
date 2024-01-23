@@ -413,7 +413,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
     ) internal returns (uint256 proposalId_) {
         if (msg.value != 0) revert InvalidValue();
 
-        if (earliestVoteStart_ == 0) revert InvalidValue(); // Non-existent proposals have a default vote start of 0.
+        if (earliestVoteStart_ == 0) revert InvalidVoteStart(); // Non-existent proposals have a default vote start of 0.
 
         while (latestVoteStart_ >= earliestVoteStart_) {
             // `proposalId_` will be 0 if no proposal exists for `callData_` and `latestVoteStart_`, or if the proposal
@@ -425,7 +425,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
             if (proposalId_ != 0) return proposalId_;
         }
 
-        revert ProposalCannotBeExecuted(); // No proposal was found matching the criteria was executed.
+        revert ProposalCannotBeExecuted(); // No proposal matching the criteria was found/executed.
     }
 
     /******************************************************************************************************************\
