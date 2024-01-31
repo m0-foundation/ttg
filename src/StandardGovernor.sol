@@ -115,14 +115,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         if (currentEpoch_ == 0) revert InvalidEpoch();
 
-        // Proposals have voteStart=N and voteEnd=N, and can be executed only during epochs N+1 and N+2.
+        // Proposals have voteStart=N and voteEnd=N, and can be executed only during epoch N+1.
         uint16 latestPossibleVoteStart_ = currentEpoch_ - 1;
 
-        proposalId_ = _tryExecute(
-            callDatas_[0],
-            latestPossibleVoteStart_,
-            latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0 // earliestPossibleVoteStart
-        );
+        proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, latestPossibleVoteStart_);
 
         ProposalFeeInfo storage proposalFeeInfo_ = _proposalFees[proposalId_];
         uint256 proposalFee_ = proposalFeeInfo_.fee;
