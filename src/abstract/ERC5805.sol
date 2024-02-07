@@ -42,14 +42,14 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
     \******************************************************************************************************************/
 
     /**
-     * @dev   Reverts if a given nonce is reused for `account_`, then increments the nonce in storage.
-     * @param account_ The address of the account the nonce is being verifier for.
+     * @dev   Reverts if a given `nonce_` is reused for `account_`, then increments the nonce in storage.
+     * @param account_ The address of the account the nonce is being verified for.
      * @param nonce_   The nonce being used by the account.
      */
     function _checkAndIncrementNonce(address account_, uint256 nonce_) internal {
         uint256 currentNonce_ = nonces[account_];
 
-        if (nonce_ != currentNonce_) revert ReusedNonce(nonce_, currentNonce_);
+        if (nonce_ != currentNonce_) revert InvalidAccountNonce(nonce_, currentNonce_);
 
         unchecked {
             nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
