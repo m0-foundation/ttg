@@ -20,6 +20,13 @@ echo Higher verbosity: $verbose
 echo Gas report: $gas
 echo Test Match pattern: $test
 
+if [ "$FOUNDRY_PROFILE" = "sepolia" ]; then
+	timestamp=$(date +%s)
+	timestamp=$(expr $timestamp - 86400)
+	sed -i '' "s/.*constant _MERGE_TIMESTAMP.*/    uint40 internal constant _MERGE_TIMESTAMP = $timestamp;/" src/libs/PureEpochs.sol
+	sed -i '' "s/.*constant _EPOCH_PERIOD.*/    uint40 internal constant _EPOCH_PERIOD = 400 seconds;/" src/libs/PureEpochs.sol
+fi
+
 if [ "$verbose" = false ];
 then
     verbosity="-vv"
@@ -40,3 +47,6 @@ then
 else
     forge test --match-test "$test" $gasReport $verbosity;
 fi
+
+sed -i '' "s/.*constant _MERGE_TIMESTAMP.*/    uint40 internal constant _MERGE_TIMESTAMP = 1_663_224_162;/" src/libs/PureEpochs.sol
+sed -i '' "s/.*constant _EPOCH_PERIOD.*/    uint40 internal constant _EPOCH_PERIOD = 15 days;/" src/libs/PureEpochs.sol

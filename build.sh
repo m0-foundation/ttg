@@ -12,12 +12,23 @@ done
 
 export FOUNDRY_PROFILE=$profile
 echo Using profile: $FOUNDRY_PROFILE
+echo Sizes: $sizes
+
+if [ "$FOUNDRY_PROFILE" = "sepolia" ]; then
+	timestamp=$(date +%s)
+	timestamp=$(expr $timestamp - 86400)
+	sed -i '' "s/.*constant _MERGE_TIMESTAMP.*/    uint40 internal constant _MERGE_TIMESTAMP = $timestamp;/" src/libs/PureEpochs.sol
+	sed -i '' "s/.*constant _EPOCH_PERIOD.*/    uint40 internal constant _EPOCH_PERIOD = 400 seconds;/" src/libs/PureEpochs.sol
+fi
 
 if [ "$sizes" = false ]; then
 	forge build --skip '*/test/**/*.t.sol' --skip '*/script/**' --skip '*/lib/forge-std/**' --extra-output-files abi
 else
 	forge build --skip '*/test/**/*.t.sol' --skip '*/script/**' --skip '*/lib/forge-std/**' --extra-output-files abi --sizes
 fi
+
+sed -i '' "s/.*constant _MERGE_TIMESTAMP.*/    uint40 internal constant _MERGE_TIMESTAMP = 1_663_224_162;/" src/libs/PureEpochs.sol
+sed -i '' "s/.*constant _EPOCH_PERIOD.*/    uint40 internal constant _EPOCH_PERIOD = 15 days;/" src/libs/PureEpochs.sol
 
 mkdir -p abi
 

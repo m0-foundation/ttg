@@ -33,3 +33,4 @@ sizes = true
 [rpc_endpoints]
 localhost = "http://127.0.0.1:8545"
 sepolia = "https://rpc.sepolia.org"
+mainnet = "https://eth.meowrpc.com"
