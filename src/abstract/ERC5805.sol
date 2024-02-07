@@ -7,8 +7,11 @@ import { StatefulERC712 } from "../../lib/common/src/StatefulERC712.sol";
 import { IERC5805 } from "./interfaces/IERC5805.sol";
 
 abstract contract ERC5805 is IERC5805, StatefulERC712 {
-    // NOTE: Keeping this constant, despite `delegateBySig` parameter name differences, to ensure max EIP-5805 compatibility.
-    // keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
+    /**
+     * @inheritdoc IERC5805
+     * @dev Keeping this constant, despite `delegateBySig` parameter name differences, to ensure max EIP-5805 compatibility.
+     *      keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
+     */
     bytes32 public constant DELEGATION_TYPEHASH = 0xe48329057bfd03d55e49b547132e39cffd9c1820ad7b9d4c5307691425d15adf;
 
     /******************************************************************************************************************\
@@ -36,6 +39,19 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
         _checkAndIncrementNonce(signer_, nonce_);
         _delegate(signer_, delegatee_);
     }
+
+    /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
+
+    /// @inheritdoc IERC5805
+    function delegates(address account) external view virtual returns (address);
+
+    /// @inheritdoc IERC5805
+    function getPastVotes(address account, uint256 timepoint) external view virtual returns (uint256);
+
+    /// @inheritdoc IERC5805
+    function getVotes(address account) external view virtual returns (uint256);
 
     /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
