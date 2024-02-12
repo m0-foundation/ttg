@@ -264,7 +264,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       }
@@ -293,7 +293,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -322,7 +322,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       },
@@ -458,7 +458,7 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "support_",
+        "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
       }
@@ -1172,6 +1172,16 @@
   {
     "type": "error",
     "name": "InvalidSignatureLength",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureS",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureV",
     "inputs": []
   },
   {

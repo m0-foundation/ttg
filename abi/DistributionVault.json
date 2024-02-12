@@ -404,12 +404,38 @@
   },
   {
     "type": "error",
+    "name": "InvalidAccountNonce",
+    "inputs": [
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "expectedNonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InvalidSignature",
     "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidSignatureLength",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureS",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureV",
     "inputs": []
   },
   {
@@ -428,22 +454,6 @@
       },
       {
         "name": "clock",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ReusedNonce",
-    "inputs": [
-      {
-        "name": "nonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "expectedNonce",
         "type": "uint256",
         "internalType": "uint256"
       }

@@ -148,4 +148,140 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.pastTotalSupply(currentEpoch_ - 4), 5);
         assertEq(_vote.pastTotalSupply(currentEpoch_ - 5), 0);
     }
+
+    function test_delegatingToAddressZeroIsEquivalentToDelegatingToSelf() external {
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, 1_000);
+
+        assertEq(_vote.delegates(_alice), _alice);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 800);
+        assertEq(_vote.balanceOf(_carol), 200);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 800);
+        assertEq(_vote.getVotes(_carol), 200);
+
+        vm.prank(_alice);
+        _vote.delegate(address(0));
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 800);
+        assertEq(_vote.balanceOf(_carol), 200);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 800);
+        assertEq(_vote.getVotes(_carol), 200);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_carol), 400);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 600);
+        assertEq(_vote.getVotes(_carol), 400);
+
+        vm.prank(_alice);
+        _vote.delegate(_alice);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_carol), 400);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 600);
+        assertEq(_vote.getVotes(_carol), 400);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _bob);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 400);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 600);
+        assertEq(_vote.getVotes(_carol), 400);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _bob);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 400);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 600);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 400);
+        assertEq(_vote.getVotes(_carol), 600);
+
+        vm.prank(_alice);
+        _vote.delegate(address(0));
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 400);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 600);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 400);
+        assertEq(_vote.getVotes(_bob), 0);
+        assertEq(_vote.getVotes(_carol), 600);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 200);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 800);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 200);
+        assertEq(_vote.getVotes(_bob), 0);
+        assertEq(_vote.getVotes(_carol), 800);
+    }
 }

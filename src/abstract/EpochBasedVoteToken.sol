@@ -187,7 +187,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         if (votingPower_ == 0) return;
 
         _removeVotingPower(oldDelegatee_, votingPower_);
-        _addVotingPower(newDelegatee_, votingPower_);
+        _addVotingPower(_getDefaultIfZero(newDelegatee_, delegator_), votingPower_);
     }
 
     /**
@@ -233,15 +233,13 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         // `delegatee_` will be `delegator_` (the default) if `delegatee_` was passed in as `address(0)`.
         delegatee_ = _getDefaultIfZero(delegatee_, delegator_);
 
-        // The delegatee to write to storage will be `address(0)` if `delegatee_` is `delegator_` (the default).
-        address delegateeToWrite_ = _getZeroIfDefault(delegatee_, delegator_);
         uint16 currentEpoch_ = _clock();
         AccountSnap[] storage delegateeSnaps_ = _delegatees[delegator_];
         uint256 length_ = delegateeSnaps_.length;
 
         // If this will be the first AccountSnap, we can just push it onto the empty array.
         if (length_ == 0) {
-            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegateeToWrite_));
+            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegatee_));
 
             return delegator_; // In this case, delegatee has always been the `delegator_` itself.
         }
@@ -260,9 +258,9 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         // If the current epoch is greater than the last AccountSnap's startingEpoch, we can push a new
         // AccountSnap onto the array, else we can just update the last AccountSnap's account.
         if (currentEpoch_ > latestDelegateeSnap_.startingEpoch) {
-            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegateeToWrite_));
+            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegatee_));
         } else {
-            latestDelegateeSnap_.account = delegateeToWrite_;
+            latestDelegateeSnap_.account = delegatee_;
         }
     }
 
