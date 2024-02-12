@@ -83,8 +83,8 @@ contract EpochBasedVoteTokenTests is TestUtils {
 
         assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 1), _bob);
         assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 2), _bob);
-        assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 3), _alice);
-        assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 4), _alice);
+        assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 3), address(0));
+        assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 4), address(0));
         assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 5), _carol);
         assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 6), _carol);
         assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 7), _carol);

@@ -154,8 +154,8 @@ contract ZeroTokenTests is TestUtils {
         assertEq(delegatees_.length, 5);
         assertEq(delegatees_[0], _carol);
         assertEq(delegatees_[1], _carol);
-        assertEq(delegatees_[2], _alice);
-        assertEq(delegatees_[3], _alice);
+        assertEq(delegatees_[2], address(0));
+        assertEq(delegatees_[3], address(0));
         assertEq(delegatees_[4], _bob);
     }
 
@@ -171,7 +171,7 @@ contract ZeroTokenTests is TestUtils {
         address[] memory delegatees_ = _zeroToken.pastDelegates(_alice, currentEpoch_ - 4, currentEpoch_ - 4);
 
         assertEq(delegatees_.length, 1);
-        assertEq(delegatees_[0], _alice);
+        assertEq(delegatees_[0], address(0));
     }
 
     function test_pastDelegates_multi_beforeAllSnaps() external {
@@ -198,7 +198,7 @@ contract ZeroTokenTests is TestUtils {
         address[] memory delegatees_ = _zeroToken.pastDelegates(_alice, currentEpoch_ - 3, currentEpoch_ - 1);
 
         assertEq(delegatees_.length, 3);
-        assertEq(delegatees_[0], _alice);
+        assertEq(delegatees_[0], address(0));
         assertEq(delegatees_[1], _bob);
         assertEq(delegatees_[2], _bob);
     }

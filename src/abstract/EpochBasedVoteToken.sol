@@ -227,18 +227,13 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @return oldDelegatee_ The address of the previous delegatee of `delegator_`.
      */
     function _setDelegatee(address delegator_, address delegatee_) internal returns (address oldDelegatee_) {
-        // `delegatee_` will be `delegator_` (the default) if `delegatee_` was passed in as `address(0)`.
-        delegatee_ = _getDefaultIfZero(delegatee_, delegator_);
-
-        // The delegatee to write to storage will be `address(0)` if `delegatee_` is `delegator_` (the default).
-        address delegateeToWrite_ = _getZeroIfDefault(delegatee_, delegator_);
         uint16 currentEpoch_ = _clock();
         AccountSnap[] storage delegateeSnaps_ = _delegatees[delegator_];
         uint256 length_ = delegateeSnaps_.length;
 
         // If this will be the first AccountSnap, we can just push it onto the empty array.
         if (length_ == 0) {
-            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegateeToWrite_));
+            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegatee_));
 
             return delegator_; // In this case, delegatee has always been the `delegator_` itself.
         }
@@ -250,16 +245,16 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         AccountSnap storage latestDelegateeSnap_ = _unsafeAccess(delegateeSnaps_, length_);
 
         // `oldDelegatee_` will be `delegator_` (the default) if it was retrieved as `address(0)`.
-        oldDelegatee_ = _getDefaultIfZero(latestDelegateeSnap_.account, delegator_);
+        oldDelegatee_ = latestDelegateeSnap_.account;
 
         emit DelegateChanged(delegator_, oldDelegatee_, delegatee_);
 
         // If the current epoch is greater than the last AccountSnap's startingEpoch, we can push a new
         // AccountSnap onto the array, else we can just update the last AccountSnap's account.
         if (currentEpoch_ > latestDelegateeSnap_.startingEpoch) {
-            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegateeToWrite_));
+            delegateeSnaps_.push(AccountSnap(currentEpoch_, delegatee_));
         } else {
-            latestDelegateeSnap_.account = delegateeToWrite_;
+            latestDelegateeSnap_.account = delegatee_;
         }
     }
 
@@ -390,7 +385,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         while (index_ > 0) {
             AccountSnap storage accountSnap_ = _unsafeAccess(delegateeSnaps_, --index_);
 
-            if (accountSnap_.startingEpoch <= epoch_) return _getDefaultIfZero(accountSnap_.account, account_);
+            if (accountSnap_.startingEpoch <= epoch_) return accountSnap_.account;
         }
 
         return account_;
@@ -465,26 +460,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         unchecked {
             return a_ + b_;
         }
-    }
-
-    /**
-     * @dev    Return `default_` if `input_` is equal to address(0), else return `input_`.
-     * @param  input_   The input address.
-     * @param  default_ The default address.
-     * @return The input address if not equal to the zero address, else the default address.
-     */
-    function _getDefaultIfZero(address input_, address default_) internal pure returns (address) {
-        return input_ == address(0) ? default_ : input_;
-    }
-
-    /**
-     * @dev Return address(0) if `input_` is `default_`, else return `input_`.
-     * @param  input_   The input address.
-     * @param  default_ The default address.
-     * @return The input address if it is not the default address, else address(0).
-     */
-    function _getZeroIfDefault(address input_, address default_) internal pure returns (address) {
-        return input_ == default_ ? address(0) : input_;
     }
 
     /**

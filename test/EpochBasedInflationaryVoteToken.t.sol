@@ -566,4 +566,38 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 2_487);
     }
+
+    function test_addressZeroFailure() external {
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, 1_000);
+        _vote.mint(_bob, 900);
+        _vote.mint(_carol, 800);
+
+        assertEq(_vote.getVotes(_alice), 1_000);
+        assertEq(_vote.getVotes(_bob), 900);
+        assertEq(_vote.getVotes(_carol), 800);
+
+        vm.prank(_alice);
+        _vote.delegate(address(0));
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(address(0)), 1_000);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 1_900);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 400);
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 1_500);
+        assertEq(_vote.getVotes(_carol), 1200);
+
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_carol), 1200);
+    }
 }

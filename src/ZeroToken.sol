@@ -155,7 +155,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
                     --epochsIndex_;
                 }
 
-                delegatees_[epochsIndex_] = _getDefaultIfZero(accountSnap_.account, account_);
+                delegatees_[epochsIndex_] = accountSnap_.account;
 
                 if (epochsIndex_ == 0) return delegatees_;
 
