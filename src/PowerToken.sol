@@ -262,7 +262,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      */
     function _delegate(address delegator_, address newDelegatee_) internal override {
         _bootstrap(delegator_);
-        _bootstrap(newDelegatee_);
+        if (delegator_ != newDelegatee_) _bootstrap(newDelegatee_);
 
         // NOTE: Need to sync `newDelegatee_` to ensure `_markParticipation` does not overwrite its voting power.
         _sync(newDelegatee_);
@@ -297,7 +297,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      */
     function _transfer(address sender_, address recipient_, uint256 amount_) internal override {
         _bootstrap(sender_);
-        _bootstrap(recipient_);
+        if (sender_ != recipient_) _bootstrap(recipient_);
+
         super._transfer(sender_, recipient_, amount_);
     }
 

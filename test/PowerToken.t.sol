@@ -359,4 +359,42 @@ contract PowerTokenTests is TestUtils {
         assertLe(b1 + b2 + b3 + b4 + b5, 10_000);
         assertLe(v1 + v2 + v3 + v4 + v5, 10_000);
     }
+
+    function test_sameAccountInBootstrapAction() external {
+        address attacker = makeAddr("attacker");
+        address victim = makeAddr("victim");
+        address[] memory _initialAccounts = new address[](2);
+        _initialAccounts[0] = attacker;
+        _initialAccounts[1] = victim;
+
+        uint256[] memory _initialAmounts = new uint256[](2);
+        _initialAmounts[0] = 1_000_000 * 1e6;
+        _initialAmounts[1] = 1_000_000 * 1e6;
+
+        PowerBootstrapToken bootstrapToken_ = new PowerBootstrapToken(_initialAccounts, _initialAmounts);
+
+        PowerTokenHarness powerToken1_ = new PowerTokenHarness(
+            address(bootstrapToken_),
+            makeAddr("standard"),
+            makeAddr("cash"),
+            makeAddr("vault")
+        );
+
+        _warpToNextEpoch();
+
+        assertEq(powerToken1_.balanceOf(attacker), 500);
+        assertEq(powerToken1_.balanceOf(victim), 500);
+
+        vm.prank(attacker);
+        powerToken1_.transfer(attacker, 0);
+
+        assertEq(powerToken1_.balanceOf(attacker), 500);
+        assertEq(powerToken1_.balanceOf(victim), 500);
+
+        vm.prank(attacker);
+        powerToken1_.delegate(attacker);
+
+        assertEq(powerToken1_.balanceOf(attacker), 500);
+        assertEq(powerToken1_.balanceOf(victim), 500);
+    }
 }
