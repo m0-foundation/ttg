@@ -382,19 +382,19 @@ contract PowerTokenTests is TestUtils {
 
         _warpToNextEpoch();
 
-        assertEq(powerToken1_.balanceOf(attacker), 500);
-        assertEq(powerToken1_.balanceOf(victim), 500);
+        assertEq(powerToken1_.balanceOf(attacker), 5000);
+        assertEq(powerToken1_.balanceOf(victim), 5000);
 
         vm.prank(attacker);
         powerToken1_.transfer(attacker, 0);
 
-        assertEq(powerToken1_.balanceOf(attacker), 500);
-        assertEq(powerToken1_.balanceOf(victim), 500);
+        assertEq(powerToken1_.balanceOf(attacker), 5000);
+        assertEq(powerToken1_.balanceOf(victim), 5000);
 
         vm.prank(attacker);
         powerToken1_.delegate(attacker);
 
-        assertEq(powerToken1_.balanceOf(attacker), 500);
-        assertEq(powerToken1_.balanceOf(victim), 500);
+        assertEq(powerToken1_.balanceOf(attacker), 5000);
+        assertEq(powerToken1_.balanceOf(victim), 5000);
     }
 }
