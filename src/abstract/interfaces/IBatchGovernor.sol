@@ -76,16 +76,16 @@ interface IBatchGovernor is IGovernor {
 
     /**
      * @notice Allows the caller to cast votes on multiple proposals.
-     * @param  proposalIds An array of unique identifiers for the proposals.
-     * @param  support     An array of the type of support that to cast for each respective proposal.
+     * @param  proposalIds The list of unique proposal IDs being voted on.
+     * @param  supportList The list of support type per proposal IDs to cast.
      * @return weight      The number of votes cast for each proposal (the same for all of them).
      */
-    function castVotes(uint256[] calldata proposalIds, uint8[] calldata support) external returns (uint256 weight);
+    function castVotes(uint256[] calldata proposalIds, uint8[] calldata supportList) external returns (uint256 weight);
 
     /**
      * @notice Allows a signer to cast votes on multiple proposals via an ECDSA secp256k1 signature.
-     * @param  proposalIds An array of unique identifiers for the proposals.
-     * @param  support     An array of the type of support that to cast for each respective proposal.
+     * @param  proposalIds The list of unique proposal IDs being voted on.
+     * @param  supportList The list of support type per proposal IDs to cast.
      * @param  v           An ECDSA secp256k1 signature parameter.
      * @param  r           An ECDSA secp256k1 signature parameter.
      * @param  s           An ECDSA secp256k1 signature parameter.
@@ -93,7 +93,7 @@ interface IBatchGovernor is IGovernor {
      */
     function castVotesBySig(
         uint256[] calldata proposalIds,
-        uint8[] calldata support,
+        uint8[] calldata supportList,
         uint8 v,
         bytes32 r,
         bytes32 s
@@ -101,15 +101,15 @@ interface IBatchGovernor is IGovernor {
 
     /**
      * @notice Allows a signer to cast votes on multiple proposals via an arbitrary signature.
-     * @param  proposalIds An array of unique identifiers for the proposals.
-     * @param  support     An array of the type of support that to cast for each respective proposal.
+     * @param  proposalIds The list of unique proposal IDs being voted on.
+     * @param  supportList The list of support type per proposal IDs to cast.
      * @param  signature   An arbitrary signature
      * @return weight      The number of votes cast for each proposal (the same for all of them).
      */
     function castVotesBySig(
         address voter,
         uint256[] calldata proposalIds,
-        uint8[] calldata support,
+        uint8[] calldata supportList,
         bytes memory signature
     ) external returns (uint256 weight);
 
@@ -118,20 +118,23 @@ interface IBatchGovernor is IGovernor {
     \******************************************************************************************************************/
 
     /**
-     * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
-     * @param  proposalId The unique identifier of a proposal being voted on.
+     * @notice Returns the ballot digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  proposalId The unique proposal ID being voted on.
      * @param  support    The type of support to cast for the proposal.
      * @return The digest to be signed.
      */
     function getBallotDigest(uint256 proposalId, uint8 support) external view returns (bytes32);
 
     /**
-     * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
-     * @param  proposalIds The unique identifiers of an array of proposals being voted on.
-     * @param  support     The type of support to cast for each proposal.
+     * @notice Returns the ballots digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  proposalIds The list of unique proposal IDs being voted on.
+     * @param  supportList The list of support type per proposal IDs to cast.
      * @return The digest to be signed.
      */
-    function getBallotsDigest(uint256[] calldata proposalIds, uint8[] calldata support) external view returns (bytes32);
+    function getBallotsDigest(
+        uint256[] calldata proposalIds,
+        uint8[] calldata supportList
+    ) external view returns (bytes32);
 
     /**
      * @notice Returns the unique identifier for the proposal if it were created at this exact moment.

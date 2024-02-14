@@ -72,7 +72,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     \******************************************************************************************************************/
 
     /// @inheritdoc IERC20
-    function balanceOf(address account_) external view returns (uint256) {
+    function balanceOf(address account_) external view override(ERC20Extended, IERC20) returns (uint256) {
         return _getBalance(account_, _clock());
     }
 
@@ -96,7 +96,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC5805
-    function delegates(address account_) external view returns (address) {
+    function delegates(address account_) external view override(ERC5805, IERC5805) returns (address) {
         return _getDelegatee(account_, _clock());
     }
 
@@ -110,12 +110,15 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC5805
-    function getVotes(address account_) external view returns (uint256) {
+    function getVotes(address account_) external view override(ERC5805, IERC5805) returns (uint256) {
         return _getVotes(account_, _clock());
     }
 
     /// @inheritdoc IERC5805
-    function getPastVotes(address account_, uint256 epoch_) external view returns (uint256) {
+    function getPastVotes(
+        address account_,
+        uint256 epoch_
+    ) external view override(ERC5805, IERC5805) returns (uint256) {
         uint16 safeEpoch_ = UIntMath.safe16(epoch_);
 
         _revertIfNotPastTimepoint(safeEpoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
@@ -124,7 +127,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC20
-    function totalSupply() external view override returns (uint256) {
+    function totalSupply() external view override(ERC20Extended, IERC20) returns (uint256) {
         return _getTotalSupply(_clock());
     }
 

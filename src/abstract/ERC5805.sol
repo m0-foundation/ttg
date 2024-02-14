@@ -7,8 +7,11 @@ import { StatefulERC712 } from "../../lib/common/src/StatefulERC712.sol";
 import { IERC5805 } from "./interfaces/IERC5805.sol";
 
 abstract contract ERC5805 is IERC5805, StatefulERC712 {
-    // NOTE: Keeping this constant, despite `delegateBySig` parameter name differences, to ensure max EIP-5805 compatibility.
-    // keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
+    /**
+     * @inheritdoc IERC5805
+     * @dev Keeping this constant, despite `delegateBySig` parameter name differences, to ensure max EIP-5805 compatibility.
+     *      keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
+     */
     bytes32 public constant DELEGATION_TYPEHASH = 0xe48329057bfd03d55e49b547132e39cffd9c1820ad7b9d4c5307691425d15adf;
 
     /******************************************************************************************************************\
@@ -38,18 +41,31 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
     }
 
     /******************************************************************************************************************\
+    |                                               View/Pure Functions                                                |
+    \******************************************************************************************************************/
+
+    /// @inheritdoc IERC5805
+    function delegates(address account) external view virtual returns (address);
+
+    /// @inheritdoc IERC5805
+    function getPastVotes(address account, uint256 timepoint) external view virtual returns (uint256);
+
+    /// @inheritdoc IERC5805
+    function getVotes(address account) external view virtual returns (uint256);
+
+    /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
     /**
-     * @dev   Reverts if a given nonce is reused for `account_`, then increments the nonce in storage.
-     * @param account_ The address of the account the nonce is being verifier for.
+     * @dev   Reverts if a given `nonce_` is reused for `account_`, then increments the nonce in storage.
+     * @param account_ The address of the account the nonce is being verified for.
      * @param nonce_   The nonce being used by the account.
      */
     function _checkAndIncrementNonce(address account_, uint256 nonce_) internal {
         uint256 currentNonce_ = nonces[account_];
 
-        if (nonce_ != currentNonce_) revert ReusedNonce(nonce_, currentNonce_);
+        if (nonce_ != currentNonce_) revert InvalidAccountNonce(nonce_, currentNonce_);
 
         unchecked {
             nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
