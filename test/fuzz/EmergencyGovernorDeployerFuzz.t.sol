@@ -8,7 +8,7 @@ import { IEmergencyGovernorDeployer } from "../../src/interfaces/IEmergencyGover
 
 import { EmergencyGovernorDeployer } from "../../src/EmergencyGovernorDeployer.sol";
 
-import {IThresholdGovernor} from "src/abstract/interfaces/IThresholdGovernor.sol";
+import { IThresholdGovernor } from "src/abstract/interfaces/IThresholdGovernor.sol";
 
 contract EmergencyGovernorDeployerTests is Test {
     address internal _registrar = makeAddr("registrar");
@@ -26,12 +26,19 @@ contract EmergencyGovernorDeployerTests is Test {
         address nextDeploy_ = _deployer.nextDeploy();
 
         vm.prank(_zeroGovernor);
-        if (thresholdRatio_ < _MIN_THRESHOLD_RATIO || thresholdRatio_ > ONE ) {
-            vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidThresholdRatio.selector, thresholdRatio_, _MIN_THRESHOLD_RATIO, ONE));
+        if (thresholdRatio_ < _MIN_THRESHOLD_RATIO || thresholdRatio_ > ONE) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IThresholdGovernor.InvalidThresholdRatio.selector,
+                    thresholdRatio_,
+                    _MIN_THRESHOLD_RATIO,
+                    ONE
+                )
+            );
             _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);
         } else {
             address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);
-            assertEq(deployed_, nextDeploy_);   
+            assertEq(deployed_, nextDeploy_);
         }
     }
 }

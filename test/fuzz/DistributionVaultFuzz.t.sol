@@ -37,30 +37,29 @@ contract DistributionVaultTests is TestUtils {
         uint256 account1PastBalance,
         uint256 account2PastBalance,
         uint256 pastTotalSupply
-        ) external {
+    ) external {
         token1Balance = bound(token1Balance, 0, type(uint128).max);
-        account1PastBalance = bound(account1PastBalance, 0, type(uint128).max); //@elcid closed environment. 
+        account1PastBalance = bound(account1PastBalance, 0, type(uint128).max); //@elcid closed environment.
         account2PastBalance = bound(account2PastBalance, 0, type(uint128).max);
         vm.assume(account1PastBalance + account2PastBalance < type(uint128).max);
         pastTotalSupply = bound(pastTotalSupply, account1PastBalance + account2PastBalance, type(uint128).max);
-        
+
         _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), account1PastBalance); //@elcid sets ZERO balance
         _baseToken.setPastBalanceOf(_accounts[1], PureEpochs.currentEpoch(), account2PastBalance);
         _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), pastTotalSupply);
 
-        _token1.setBalance(address(_vault), token1Balance); //@elcid sets token.balanceOf 
+        _token1.setBalance(address(_vault), token1Balance); //@elcid sets token.balanceOf
         _vault.distribute(address(_token1));
         assertEq(_vault.distributionOfAt(address(_token1), PureEpochs.currentEpoch()), token1Balance);
-        
+
         uint256 startEpoch_ = PureEpochs.currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
-        _warpToNextEpoch();  
+        _warpToNextEpoch();
 
         vm.prank(_accounts[0]);
         _vault.claim(address(_token1), startEpoch_, endEpoch_, _accounts[0]);
         vm.prank(_accounts[1]);
-        _vault.claim(address(_token1), startEpoch_, endEpoch_, _accounts[1]);      
-
+        _vault.claim(address(_token1), startEpoch_, endEpoch_, _accounts[1]);
     }
 }

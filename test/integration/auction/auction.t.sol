@@ -47,7 +47,7 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
         uint256 evePowerBalanceBefore_ = _powerToken.balanceOf(_eve);
 
         vm.prank(_dave);
-        (uint256 purchaseAmount_, uint256 purchaseCost_) = _powerToken.buy(200, 200, _eve);
+        (uint256 purchaseAmount_, uint256 purchaseCost_) = _powerToken.buy(200, 200, _eve, _currentEpoch());
 
         uint256 daveCashBalanceAfter_ = _cashToken1.balanceOf(_dave);
         uint256 evePowerBalanceAfter_ = _powerToken.balanceOf(_eve);

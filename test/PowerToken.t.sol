@@ -191,7 +191,7 @@ contract PowerTokenTests is TestUtils {
 
     function test_buy_insufficientAuctionSupply() external {
         vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, 1));
-        _powerToken.buy(1, 1, _account);
+        _powerToken.buy(1, 1, _account, _currentEpoch());
     }
 
     function test_buy_notInVotePeriod() external {
@@ -201,7 +201,7 @@ contract PowerTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, 1));
         vm.prank(_account);
-        _powerToken.buy(1, 1, _account);
+        _powerToken.buy(1, 1, _account, _currentEpoch());
     }
 
     function test_buy_transferFromFailed() external {
@@ -212,7 +212,12 @@ contract PowerTokenTests is TestUtils {
         _cashToken.setTransferFromFail(true);
 
         vm.expectRevert(IPowerToken.TransferFromFailed.selector);
-        _powerToken.buy(1, 1, _account);
+        _powerToken.buy(1, 1, _account, _currentEpoch());
+    }
+
+    function test_buy_expiredBuyOrder() external {
+        vm.expectRevert(IPowerToken.ExpiredBuyOrder.selector);
+        _powerToken.buy(1, 1, _account, _currentEpoch() - 1);
     }
 
     function test_buy() external {
@@ -227,7 +232,7 @@ contract PowerTokenTests is TestUtils {
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
         vm.prank(_account);
-        _powerToken.buy(0, oneBasisPointOfTotalSupply_, _account);
+        _powerToken.buy(0, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
 
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }
