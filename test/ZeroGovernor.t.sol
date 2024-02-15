@@ -282,4 +282,39 @@ contract ZeroGovernorTests is TestUtils {
         vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
         _zeroGovernor.revertIfInvalidCalldata(abi.encode("randomCalldata"));
     }
+
+    function test_revertIfInvalidCalldata_resetToPowerHolders() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector), "randomCalldata")
+        );
+    }
+
+    function test_revertIfInvalidCalldata_resetToZeroHolders() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeWithSelector(_zeroGovernor.resetToZeroHolders.selector), "randomCalldata")
+        );
+    }
+
+    function test_revertIfInvalidCalldata_setCashToken() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeCall(_zeroGovernor.setCashToken, (makeAddr("random"), 10)), "randomCalldata")
+        );
+    }
+
+    function test_revertIfInvalidCalldata_setEmergencyProposalThresholdRatio() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeCall(_zeroGovernor.setEmergencyProposalThresholdRatio, (1000)), "randomCalldata")
+        );
+    }
+
+    function test_revertIfInvalidCalldata_setZeroProposalThresholdRatio() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeCall(_zeroGovernor.setZeroProposalThresholdRatio, (1000)), "randomCalldata")
+        );
+    }
 }

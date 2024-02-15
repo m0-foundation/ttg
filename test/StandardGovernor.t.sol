@@ -751,4 +751,45 @@ contract StandardGovernorTests is TestUtils {
         vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
         _standardGovernor.revertIfInvalidCalldata(abi.encode("randomCalldata"));
     }
+
+    function test_revertIfInvalidCalldata_addToList() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _standardGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeCall(_standardGovernor.addToList, ("someList", _account1)), "randomCalldata")
+        );
+    }
+
+    function test_revertIfInvalidCalldata_removeFromList() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _standardGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(
+                abi.encodeCall(_standardGovernor.removeFromList, ("someList", _account1)),
+                "randomCalldata"
+            )
+        );
+    }
+
+    function test_revertIfInvalidCalldata_removeFromAndAddToList() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _standardGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(
+                abi.encodeCall(_standardGovernor.removeFromAndAddToList, ("someList", _account1, _account1)),
+                "randomCalldata"
+            )
+        );
+    }
+
+    function test_revertIfInvalidCalldata_setKey() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _standardGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeCall(_standardGovernor.setKey, ("someList", "someKey")), "randomCalldata")
+        );
+    }
+
+    function test_revertIfInvalidCalldata_setProposalFee() external {
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _standardGovernor.revertIfInvalidCalldata(
+            abi.encodePacked(abi.encodeCall(_standardGovernor.setProposalFee, (0)), "randomCalldata")
+        );
+    }
 }

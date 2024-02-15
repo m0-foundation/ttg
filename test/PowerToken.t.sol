@@ -363,15 +363,15 @@ contract PowerTokenTests is TestUtils {
     function test_sameAccountInBootstrapAction() external {
         address attacker = makeAddr("attacker");
         address victim = makeAddr("victim");
-        address[] memory _initialAccounts = new address[](2);
-        _initialAccounts[0] = attacker;
-        _initialAccounts[1] = victim;
+        address[] memory initialAccounts = new address[](2);
+        initialAccounts[0] = attacker;
+        initialAccounts[1] = victim;
 
-        uint256[] memory _initialAmounts = new uint256[](2);
-        _initialAmounts[0] = 1_000_000 * 1e6;
-        _initialAmounts[1] = 1_000_000 * 1e6;
+        uint256[] memory initialAmounts = new uint256[](2);
+        initialAmounts[0] = 1_000_000 * 1e6;
+        initialAmounts[1] = 1_000_000 * 1e6;
 
-        PowerBootstrapToken bootstrapToken_ = new PowerBootstrapToken(_initialAccounts, _initialAmounts);
+        PowerBootstrapToken bootstrapToken_ = new PowerBootstrapToken(initialAccounts, initialAmounts);
 
         PowerTokenHarness powerToken1_ = new PowerTokenHarness(
             address(bootstrapToken_),

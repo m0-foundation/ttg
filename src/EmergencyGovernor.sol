@@ -111,13 +111,14 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
      */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {
         bytes4 func_ = bytes4(callData_);
+        uint256 length = callData_.length;
 
         if (
-            func_ != this.addToList.selector &&
-            func_ != this.removeFromList.selector &&
-            func_ != this.removeFromAndAddToList.selector &&
-            func_ != this.setKey.selector &&
-            func_ != this.setStandardProposalFee.selector
+            !(func_ == this.addToList.selector && length == 68) &&
+            !(func_ == this.removeFromList.selector && length == 68) &&
+            !(func_ == this.removeFromAndAddToList.selector && length == 100) &&
+            !(func_ == this.setKey.selector && length == 68) &&
+            !(func_ == this.setStandardProposalFee.selector && length == 36)
         ) revert InvalidCallData();
     }
 }
