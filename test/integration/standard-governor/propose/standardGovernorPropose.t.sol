@@ -44,9 +44,6 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         emit IPowerToken.TargetSupplyInflated(voteStart_, _getNextTargetSupply(_powerToken));
 
         vm.expectEmit();
-        emit IERC20.Approval(_dave, address(_standardGovernor), _cashToken1MaxAmount - _standardProposalFee);
-
-        vm.expectEmit();
         emit IERC20.Transfer(_dave, address(_standardGovernor), _standardProposalFee);
 
         vm.prank(_dave);
@@ -95,9 +92,6 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         vm.expectEmit();
         emit IPowerToken.TargetSupplyInflated(voteStart_, _getNextTargetSupply(_powerToken));
-
-        vm.expectEmit();
-        emit IERC20.Approval(_dave, address(_standardGovernor), _cashToken1MaxAmount - _standardProposalFee);
 
         vm.expectEmit();
         emit IERC20.Transfer(_dave, address(_standardGovernor), _standardProposalFee);
@@ -184,9 +178,6 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         vm.expectEmit();
         emit IPowerToken.TargetSupplyInflated(voteStart_, _getNextTargetSupply(_powerToken));
-
-        vm.expectEmit();
-        emit IERC20.Approval(_dave, address(_standardGovernor), _cashToken1MaxAmount - _standardProposalFee);
 
         vm.expectEmit();
         emit IERC20.Transfer(_dave, address(_standardGovernor), _standardProposalFee);
