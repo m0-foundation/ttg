@@ -71,19 +71,6 @@ interface IZeroToken is IEpochBasedVoteToken {
     ) external view returns (uint256[] memory);
 
     /**
-     * @notice Returns the delegatee of `account` between `startEpoch` and `endEpoch` past inclusive clocks.
-     * @param  account    The address of some account.
-     * @param  startEpoch The starting epoch number as a clock value.
-     * @param  endEpoch   The ending epoch number as a clock value.
-     * @return An array of delegatees, each relating to an epoch in the inclusive range.
-     */
-    function pastDelegates(
-        address account,
-        uint256 startEpoch,
-        uint256 endEpoch
-    ) external view returns (address[] memory);
-
-    /**
      * @notice Returns an array of total token supplies between `startEpoch` and `endEpoch` clocks inclusively.
      * @param  startEpoch The starting epoch number as a clock value.
      * @param  endEpoch   The ending epoch number as a clock value.
