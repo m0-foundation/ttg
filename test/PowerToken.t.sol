@@ -232,6 +232,22 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }
 
+    /* ============ markNextVotingEpochAsActive ============ */
+    function test_markNextVotingEpochAsActive_notStandardGovernor() external {
+        vm.expectRevert(IPowerToken.NotStandardGovernor.selector);
+        _powerToken.markNextVotingEpochAsActive();
+    }
+
+    function test_markNextVotingEpochAsActive_maxValue() external {
+        _powerToken.setInternalNextTargetSupply(type(uint240).max);
+
+        vm.expectEmit();
+        emit IPowerToken.TargetSupplyInflated(PureEpochs.currentEpoch() + 2, type(uint240).max);
+
+        vm.prank(_standardGovernor);
+        _powerToken.markNextVotingEpochAsActive();
+    }
+
     function test_setNextCashToken_NotStandardGovernor() external {
         vm.expectRevert(IPowerToken.NotStandardGovernor.selector);
         _powerToken.setNextCashToken(address(0));

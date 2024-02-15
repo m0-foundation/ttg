@@ -136,7 +136,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         // NOTE: Cap the next target supply at `type(uint240).max`.
         uint240 nextTargetSupply_ = _nextTargetSupply = UIntMath.bound240(
-            uint256(_targetSupply) + (_targetSupply * participationInflation) / ONE
+            uint256(_targetSupply) + (uint256(_targetSupply) * participationInflation) / ONE
         );
 
         emit TargetSupplyInflated(targetEpoch_, nextTargetSupply_);
