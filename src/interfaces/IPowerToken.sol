@@ -76,6 +76,9 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Revert message when the buy order has expired using epoch-based expiration clock.
     error ExpiredBuyOrder();
 
+    /// @notice Revert message when the buy order has zero maximum and minimum amounts.
+    error ZeroPurchaseAmount();
+
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/

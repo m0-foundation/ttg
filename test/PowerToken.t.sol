@@ -220,6 +220,11 @@ contract PowerTokenTests is TestUtils {
         _powerToken.buy(1, 1, _account, _currentEpoch() - 1);
     }
 
+    function test_buy_zeroPurchaseAmount() external {
+        vm.expectRevert(IPowerToken.ZeroPurchaseAmount.selector);
+        _powerToken.buy(0, 0, _account, _currentEpoch());
+    }
+
     function test_buy() external {
         _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + _powerToken.totalSupply() / 10);
 
