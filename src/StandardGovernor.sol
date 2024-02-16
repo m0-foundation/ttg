@@ -277,7 +277,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         uint16 voteEnd_ = _getVoteEnd(voteStart_);
 
-        if (currentEpoch_ <= voteEnd_) return ProposalState.Active;
+        if (currentEpoch_ == voteEnd_) return ProposalState.Active;
 
         if (proposal_.yesWeight <= proposal_.noWeight) return ProposalState.Defeated;
 
