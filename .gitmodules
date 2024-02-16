@@ -8,4 +8,3 @@
 [submodule "lib/common"]
 	path = lib/common
 	url = git@github.com:MZero-Labs/common.git
-	branch = fix/WEB3-720-signature-issues
