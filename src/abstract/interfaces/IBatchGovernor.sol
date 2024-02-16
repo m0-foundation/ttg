@@ -37,7 +37,7 @@ interface IBatchGovernor is IGovernor {
     /// @notice Revert message when a proposal's call data array is not of length 1.
     error InvalidCallDatasLength();
 
-    /// @notice Revert message when a proposal target is no this governor itself.
+    /// @notice Revert message when a proposal target is not this governor itself.
     error InvalidTarget();
 
     /// @notice Revert message when a proposal's targets array is not of length 1.
