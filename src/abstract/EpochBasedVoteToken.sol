@@ -285,7 +285,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /**
-     * @dev    Update a storage AmountSnap array of given by `amount_` given `operation_`.
+     * @dev    Update a storage AmountSnap by `amount_` given `operation_`.
      * @param  amountSnaps_ The storage pointer to an AmountSnap array to update.
      * @param  operation_   The operation to perform on the old and new amounts.
      * @param  amount_      The amount to update the Snap by.
