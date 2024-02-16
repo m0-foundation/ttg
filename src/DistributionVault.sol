@@ -142,11 +142,13 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
         for (uint256 index_; index_ < epochCount_; ++index_) {
             uint256 balance_ = balances_[index_];
-            uint256 totalSupply_ = totalSupplies_[index_];
+
+            // Skip epochs with no Zero token balance (i.e. no distribution).
+            if (balance_ == 0) continue;
 
             if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
 
-            claimable_ += (distributionOfAt[token_][startEpoch_ + index_] * balance_) / totalSupply_;
+            claimable_ += (distributionOfAt[token_][startEpoch_ + index_] * balance_) / totalSupplies_[index_];
         }
     }
 
