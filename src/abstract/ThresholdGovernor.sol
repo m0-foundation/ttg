@@ -38,12 +38,8 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
-        uint16 currentEpoch_ = _clock();
-
-        if (currentEpoch_ == 0) revert InvalidEpoch();
-
         // Proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.
-        uint16 latestPossibleVoteStart_ = currentEpoch_;
+        uint16 latestPossibleVoteStart_ = _clock();
         uint16 earliestPossibleVoteStart_ = latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0;
 
         proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
