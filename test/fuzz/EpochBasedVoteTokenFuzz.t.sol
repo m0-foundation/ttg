@@ -30,37 +30,33 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     }
 
     function testFuzz_pastBalanceOf(
-        uint8 firstPushEpoch, 
+        uint8 firstPushEpoch,
         uint8 secondPushEpoch,
         uint256 firstValuePushed,
-        uint256 secondValuePushed 
-        ) external {
+        uint256 secondValuePushed
+    ) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
         secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         vm.assume(firstPushEpoch > secondPushEpoch);
-        
+
         _vote.pushBalance(_alice, currentEpoch_ - firstPushEpoch, firstValuePushed);
         _vote.pushBalance(_alice, currentEpoch_ - secondPushEpoch, secondValuePushed);
 
         assertEq(_vote.pastBalanceOf(_alice, currentEpoch_ - firstPushEpoch), firstValuePushed);
         assertEq(_vote.pastBalanceOf(_alice, currentEpoch_ - firstPushEpoch - 1), 0);
-        assertEq(_vote.pastBalanceOf(_alice, currentEpoch_ - secondPushEpoch), secondValuePushed); 
+        assertEq(_vote.pastBalanceOf(_alice, currentEpoch_ - secondPushEpoch), secondValuePushed);
         assertEq(_vote.pastBalanceOf(_alice, currentEpoch_ - secondPushEpoch - 1), firstValuePushed);
     }
 
-    function testFuzz_pastDelegate(        
-        uint8 firstPushEpoch, 
-        uint8 secondPushEpoch,
-        uint8 thirdPushEpoch
-        ) external {
+    function testFuzz_pastDelegate(uint8 firstPushEpoch, uint8 secondPushEpoch, uint8 thirdPushEpoch) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));  
-        thirdPushEpoch = uint8(bound(thirdPushEpoch, 1, currentEpoch_ - 1));  
-        vm.assume(firstPushEpoch > secondPushEpoch && secondPushEpoch > thirdPushEpoch);      
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
+        thirdPushEpoch = uint8(bound(thirdPushEpoch, 1, currentEpoch_ - 1));
+        vm.assume(firstPushEpoch > secondPushEpoch && secondPushEpoch > thirdPushEpoch);
 
         _vote.pushDelegatee(_alice, currentEpoch_ - firstPushEpoch, _carol);
         _vote.pushDelegatee(_alice, currentEpoch_ - secondPushEpoch, address(0));
@@ -75,10 +71,10 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     }
 
     function testFuzz_getPastVotes(
-        uint8 firstPushEpoch, 
+        uint8 firstPushEpoch,
         uint8 secondPushEpoch,
         uint256 firstValuePushed,
-        uint256 secondValuePushed                
+        uint256 secondValuePushed
     ) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
@@ -86,7 +82,7 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         vm.assume(firstPushEpoch > secondPushEpoch);
-        
+
         _vote.pushVotes(_alice, currentEpoch_ - firstPushEpoch, firstValuePushed);
         _vote.pushVotes(_alice, currentEpoch_ - secondPushEpoch, secondValuePushed);
 
@@ -98,21 +94,21 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     }
 
     function testFuzz_pastTotalSupply(
-        uint8 firstPushEpoch, 
+        uint8 firstPushEpoch,
         uint8 secondPushEpoch,
         uint256 firstValuePushed,
-        uint256 secondValuePushed          
+        uint256 secondValuePushed
     ) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
         secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
-        vm.assume(firstPushEpoch > secondPushEpoch);        
+        vm.assume(firstPushEpoch > secondPushEpoch);
 
         _vote.pushTotalSupply(currentEpoch_ - firstPushEpoch, firstValuePushed);
         _vote.pushTotalSupply(currentEpoch_ - secondPushEpoch, secondValuePushed);
-        
+
         assertEq(_vote.pastTotalSupply(currentEpoch_ - firstPushEpoch - 1), 0);
         assertEq(_vote.pastTotalSupply(currentEpoch_ - firstPushEpoch), firstValuePushed);
         assertEq(_vote.pastTotalSupply(currentEpoch_ - secondPushEpoch - 1), firstValuePushed);

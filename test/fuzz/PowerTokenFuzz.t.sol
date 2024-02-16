@@ -52,7 +52,7 @@ contract PowerTokenTests is TestUtils {
 
         _powerToken = new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(_cashToken), _vault);
     }
-    
+
     function testFuzz_amountToAuction(uint240 targetSupply_) external {
         uint256 inflation_;
 
@@ -66,17 +66,12 @@ contract PowerTokenTests is TestUtils {
 
         if (totalSupply_ <= targetSupply_) {
             assertEq(_powerToken.amountToAuction(), targetSupply_ - totalSupply_);
-        }
-        else {
+        } else {
             assertEq(_powerToken.amountToAuction(), 0);
         }
     }
 
-    function testFuzz_buy(
-        uint240 minAmount_,
-        uint240 maxAmount_,
-        uint40 auctionPeriod
-        ) external {
+    function testFuzz_buy(uint240 minAmount_, uint240 maxAmount_, uint40 auctionPeriod) external {
         minAmount_ = uint240(bound(minAmount_, 1, type(uint240).max));
         maxAmount_ = uint240(bound(maxAmount_, 1, type(uint240).max));
         auctionPeriod = uint40(bound(auctionPeriod, 0, PureEpochs._EPOCH_PERIOD));
@@ -84,24 +79,26 @@ contract PowerTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, minAmount_));
         vm.prank(_account);
-        _powerToken.buy(minAmount_, maxAmount_, _account);
-                        
+        _powerToken.buy(minAmount_, maxAmount_, _account, _currentEpoch());
+
         _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + _powerToken.totalSupply() / 10); //@elcid 10% increase
-        
+
         _warpToNextTransferEpoch();
         _jumpSeconds(auctionPeriod);
-       
+
         uint240 amountToAuction_ = _powerToken.amountToAuction();
         uint240 amount_ = amountToAuction_ > maxAmount_ ? maxAmount_ : amountToAuction_;
         console.log(amountToAuction_);
 
         if (amount_ < minAmount_) {
-            vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, amountToAuction_, minAmount_));
+            vm.expectRevert(
+                abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, amountToAuction_, minAmount_)
+            );
             vm.prank(_account);
-            _powerToken.buy(minAmount_, maxAmount_, _account);
+            _powerToken.buy(minAmount_, maxAmount_, _account, _currentEpoch());
         } else {
             vm.prank(_account);
-            _powerToken.buy(minAmount_, maxAmount_, _account);
+            _powerToken.buy(minAmount_, maxAmount_, _account, _currentEpoch());
 
             assertEq(_powerToken.balanceOf(_account), amount_);
             assertTrue(_powerToken.getCost(amount_) != 0); //no rounding down issues

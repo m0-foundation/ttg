@@ -75,37 +75,35 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ castVotes ============ */
-    function testFuzz_castVotes(
-        uint numberOfProposals
-    ) external {
+    function testFuzz_castVotes(uint numberOfProposals) external {
         numberOfProposals = uint8(bound(numberOfProposals, 1, type(uint8).max));
 
         uint256[] memory proposalIds_ = new uint256[](numberOfProposals);
         uint8[] memory supports_ = new uint8[](numberOfProposals);
-        uint256 proposalId;    
+        uint256 proposalId;
 
         uint256 currentEpoch = _standardGovernor.clock();
-        
+
         _powerToken.setVotePower(_votePower);
         _powerToken.setPastTotalSupply(_votePower);
         _standardGovernor.setNumberOfProposals(currentEpoch, numberOfProposals);
-        
+
         for (proposalId; proposalId < numberOfProposals; ++proposalId) {
             _standardGovernor.setProposal(proposalId, currentEpoch);
 
             proposalIds_[proposalId] = proposalId;
-            supports_[proposalId] = uint8(IBatchGovernor.VoteType.Yes);   
+            supports_[proposalId] = uint8(IBatchGovernor.VoteType.Yes);
         }
-        
+
         for (proposalId = 0; proposalId < numberOfProposals; ++proposalId) {
             vm.expectEmit();
-            emit IGovernor.VoteCast(_alice, proposalId, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");        
+            emit IGovernor.VoteCast(_alice, proposalId, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
         }
-        
+
         vm.expectEmit();
         emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch);
 
         vm.prank(_alice);
-        assertEq(_standardGovernor.castVotes(proposalIds_, supports_), _votePower);            
+        assertEq(_standardGovernor.castVotes(proposalIds_, supports_), _votePower);
     }
 }

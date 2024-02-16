@@ -102,8 +102,13 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function buy(
         uint256 minAmount_,
         uint256 maxAmount_,
-        address destination_
+        address destination_,
+        uint16 expiryEpoch_
     ) external returns (uint240 amount_, uint256 cost_) {
+        // NOTE: Buy order has an epoch-based expiration logic to avoid user's unfair purchases in subsequent auctions.
+        //       Order should be typically valid till the end of current transfer epoch.
+        if (_clock() > expiryEpoch_) revert ExpiredBuyOrder();
+
         uint240 amountToAuction_ = amountToAuction();
         uint240 safeMinAmount_ = UIntMath.safe240(minAmount_);
         uint240 safeMaxAmount_ = UIntMath.safe240(maxAmount_);

@@ -73,6 +73,9 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Revert message when divideUp math overflows.
     error DivideUpOverflow();
 
+    /// @notice Revert message when the buy order has expired using epoch-based expiration clock.
+    error ExpiredBuyOrder();
+
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
@@ -82,13 +85,15 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      * @param  minAmount   The minimum amount of tokens the caller is interested in buying.
      * @param  maxAmount   The maximum amount of tokens the caller is interested in buying.
      * @param  destination The address of the account to send the bought tokens.
+     * @param  expiryEpoch The epoch number at the end of which the buy order expires.
      * @return amount      The amount of token bought.
      * @return cost        The total cash token cost of the purchase.
      */
     function buy(
         uint256 minAmount,
         uint256 maxAmount,
-        address destination
+        address destination,
+        uint16 expiryEpoch
     ) external returns (uint240 amount, uint256 cost);
 
     /// @notice Marks the next voting epoch as targeted for inflation.
