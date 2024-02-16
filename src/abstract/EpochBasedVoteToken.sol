@@ -241,6 +241,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         if (length_ == 0) {
             delegateeSnaps_.push(AccountSnap(currentEpoch_, delegatee_));
 
+            emit DelegateChanged(delegator_, delegator_, delegatee_);
+
             return delegator_; // In this case, delegatee has always been the `delegator_` itself.
         }
 

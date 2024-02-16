@@ -149,6 +149,63 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.pastTotalSupply(currentEpoch_ - 5), 0);
     }
 
+    /* ============ delegate ============ */
+    function test_delegate_change() external {
+        uint256 aliceBalance_ = 1_000;
+
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, aliceBalance_);
+
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.balanceOf(_alice), aliceBalance_);
+        assertEq(_vote.getVotes(_alice), aliceBalance_);
+
+        assertEq(_vote.delegates(_bob), _bob);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.delegates(_carol), _carol);
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        vm.expectEmit();
+        emit IERC5805.DelegateChanged(_alice, _alice, _bob);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        assertEq(_vote.delegates(_alice), _bob);
+        assertEq(_vote.balanceOf(_alice), aliceBalance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.delegates(_bob), _bob);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), aliceBalance_);
+
+        assertEq(_vote.delegates(_carol), _carol);
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        vm.expectEmit();
+        emit IERC5805.DelegateChanged(_alice, _bob, _carol);
+
+        vm.prank(_alice);
+        _vote.delegate(_carol);
+
+        assertEq(_vote.delegates(_alice), _carol);
+        assertEq(_vote.balanceOf(_alice), aliceBalance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.delegates(_bob), _bob);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.delegates(_carol), _carol);
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), aliceBalance_);
+    }
+
     function test_delegatingToAddressZeroIsEquivalentToDelegatingToSelf() external {
         _warpToNextTransferEpoch();
 
