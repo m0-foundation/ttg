@@ -282,7 +282,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @param  voter_      The address of the voter.
      * @param  proposalId_ The unique identifier of the proposal.
      * @param  support_    The type of support to cast for the proposal.
-     * @return weight_     The type of support to cast for each proposal
+     * @return weight_     The number of votes cast.
      */
     function _castVote(address voter_, uint256 proposalId_, uint8 support_) internal returns (uint256 weight_) {
         unchecked {
