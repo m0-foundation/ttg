@@ -371,6 +371,34 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.castVotes(secondBatchOfProposalIds_, secondBatchOfSupports_), _votePower);
     }
 
+    function test_castVotes_invalidSupportLength() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supports_ = new uint8[](1);
+        supports_[0] = uint8(IBatchGovernor.VoteType.Yes);
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.InvalidSupportLength.selector, 2, 1));
+
+        vm.prank(_alice);
+        _standardGovernor.castVotes(proposalIds_, supports_);
+    }
+
+    function test_castVotes_invalidSupportLength_zeroLength() external {
+        uint256[] memory proposalIds_ = new uint256[](0);
+
+        uint8[] memory supports_ = new uint8[](0);
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.InvalidSupportLength.selector, 0, 0));
+
+        vm.prank(_alice);
+        _standardGovernor.castVotes(proposalIds_, supports_);
+    }
+
     /* ============ propose ============ */
     function test_propose_invalidTargetsLength() external {
         vm.expectRevert(IBatchGovernor.InvalidTargetsLength.selector);

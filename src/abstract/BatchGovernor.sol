@@ -269,6 +269,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint256[] calldata proposalIds_,
         uint8[] calldata supportList_
     ) internal virtual returns (uint256 weight_) {
+        if (proposalIds_.length != supportList_.length || proposalIds_.length == 0)
+            revert InvalidSupportLength(proposalIds_.length, supportList_.length);
+
         for (uint256 index_; index_ < proposalIds_.length; ++index_) {
             weight_ = _castVote(voter_, proposalIds_[index_], supportList_[index_]);
         }
