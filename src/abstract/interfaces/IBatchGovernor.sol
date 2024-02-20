@@ -52,7 +52,7 @@ interface IBatchGovernor is IGovernor {
     /// @notice Revert message when the vote token specified in the constructor is address(0).
     error InvalidVoteTokenAddress();
 
-    /// @notice Revert message when the support list is not of the same length as the proposal IDs list.
+    /// @notice Revert message when the support list is not of the same length as the proposal IDs list or if the proposal IDs list is empty.
     error InvalidSupportLength(uint256 proposalIdsLength, uint256 supportListLength);
 
     /// @notice Revert message when the caller of a governance-controlled function is not this governor itself.
