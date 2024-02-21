@@ -23,7 +23,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
 
     /**
      * @notice Emitted when the available voting power of `delegatee` changes from `previousBalance` to `newBalance`.
-     * @param  delegatee       The address of the account who's voting power is changed.
+     * @param  delegatee       The address of the account whose voting power is changed.
      * @param  previousBalance The previous voting power of `delegatee`.
      * @param  newBalance      The new voting power of `delegatee`.
      */

@@ -491,18 +491,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /**
-     * @dev    Subtract `b_` from `a_`, using unchecked math.
-     * @param  a_ The amount to subtract from.
-     * @param  b_ The amount to subtract.
-     * @return The difference of `a_` and `b_`.
-     */
-    function _subUnchecked(uint240 a_, uint240 b_) internal pure returns (uint240) {
-        unchecked {
-            return a_ - b_;
-        }
-    }
-
-    /**
      * @dev    Returns the AmountSnap in an array at a given index without doing bounds checking.
      * @param  amountSnaps_ The array of AmountSnaps to parse.
      * @param  index_       The index of the AmountSnap to return.

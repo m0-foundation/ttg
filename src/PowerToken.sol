@@ -108,6 +108,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         // NOTE: Buy order has an epoch-based expiration logic to avoid user's unfair purchases in subsequent auctions.
         //       Order should be typically valid till the end of current transfer epoch.
         if (_clock() > expiryEpoch_) revert ExpiredBuyOrder();
+        if (minAmount_ == 0 || maxAmount_ == 0) revert ZeroPurchaseAmount();
 
         uint240 amountToAuction_ = amountToAuction();
         uint240 safeMinAmount_ = UIntMath.safe240(minAmount_);

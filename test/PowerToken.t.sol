@@ -220,6 +220,16 @@ contract PowerTokenTests is TestUtils {
         _powerToken.buy(1, 1, _account, _currentEpoch() - 1);
     }
 
+    function test_buy_zeroPurchaseAmount_maxAmount() external {
+        vm.expectRevert(IPowerToken.ZeroPurchaseAmount.selector);
+        _powerToken.buy(1, 0, _account, _currentEpoch());
+    }
+
+    function test_buy_zeroPurchaseAmount_minAmount() external {
+        vm.expectRevert(IPowerToken.ZeroPurchaseAmount.selector);
+        _powerToken.buy(0, 1, _account, _currentEpoch());
+    }
+
     function test_buy() external {
         _powerToken.setInternalNextTargetSupply(_powerToken.totalSupply() + _powerToken.totalSupply() / 10);
 
@@ -232,7 +242,7 @@ contract PowerTokenTests is TestUtils {
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
         vm.prank(_account);
-        _powerToken.buy(0, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
+        _powerToken.buy(1, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
 
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }

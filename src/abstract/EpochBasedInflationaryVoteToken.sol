@@ -9,7 +9,7 @@ import { IEpochBasedInflationaryVoteToken } from "./interfaces/IEpochBasedInflat
 import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 
 // NOTE: There is no feasible way to emit `Transfer` events for inflationary minting such that external client can
-//       index them and track balances and total supply correctly. Specifically,a nd only for total supply indexing, one
+//       index them and track balances and total supply correctly. Specifically, and only for total supply indexing, one
 //       can assume that total supply is the sum of all voting powers, thus tracking the deltas of the
 //       `DelegateVotesChanged` events will suffice.
 

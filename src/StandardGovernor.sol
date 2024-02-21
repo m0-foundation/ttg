@@ -302,6 +302,9 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint256[] calldata proposalIds_,
         uint8[] calldata support_
     ) internal override returns (uint256 weight_) {
+        if (proposalIds_.length != support_.length || proposalIds_.length == 0)
+            revert InvalidSupportLength(proposalIds_.length, support_.length);
+
         // In this governor, since the votingPeriod is 0, the snapshot for all active proposals is the previous epoch.
         weight_ = getVotes(voter_, _clock() - 1);
 
