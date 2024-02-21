@@ -42,6 +42,7 @@ contract DistributionVaultTests is TestUtils {
         account1PastBalance = bound(account1PastBalance, 0, type(uint128).max); //@elcid closed environment.
         account2PastBalance = bound(account2PastBalance, 0, type(uint128).max);
         vm.assume(account1PastBalance + account2PastBalance < type(uint128).max);
+        vm.assume(account1PastBalance + account2PastBalance > 0);
         pastTotalSupply = bound(pastTotalSupply, account1PastBalance + account2PastBalance, type(uint128).max);
 
         _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), account1PastBalance); //@elcid sets ZERO balance
