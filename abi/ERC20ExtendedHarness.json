@@ -939,17 +939,7 @@
   },
   {
     "type": "error",
-    "name": "InvalidSignature",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidSignatureLength",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ReusedNonce",
+    "name": "InvalidAccountNonce",
     "inputs": [
       {
         "name": "nonce",
@@ -962,6 +952,26 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureLength",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureS",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureV",
+    "inputs": []
   },
   {
     "type": "error",

@@ -645,35 +645,6 @@
   },
   {
     "type": "function",
-    "name": "pastDelegates",
-    "inputs": [
-      {
-        "name": "account_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "startEpoch_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "endEpoch_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "pastTotalSupplies",
     "inputs": [
       {
@@ -1393,12 +1364,38 @@
   },
   {
     "type": "error",
+    "name": "InvalidAccountNonce",
+    "inputs": [
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "expectedNonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InvalidSignature",
     "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidSignatureLength",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureS",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignatureV",
     "inputs": []
   },
   {
@@ -1452,22 +1449,6 @@
     "type": "error",
     "name": "NotStandardGovernor",
     "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ReusedNonce",
-    "inputs": [
-      {
-        "name": "nonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "expectedNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
   },
   {
     "type": "error",
