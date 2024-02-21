@@ -46,6 +46,9 @@ interface IBatchGovernor is IGovernor {
     /// @notice Revert message when a proposal value is not 0 ETH.
     error InvalidValue();
 
+    /// @notice Revert message when a an invalid vote start is detected.
+    error InvalidVoteStart();
+
     /// @notice Revert message when a proposal's values array is not of length 1.
     error InvalidValuesLength();
 
