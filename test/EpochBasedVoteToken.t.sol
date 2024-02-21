@@ -148,4 +148,254 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.pastTotalSupply(currentEpoch_ - 4), 5);
         assertEq(_vote.pastTotalSupply(currentEpoch_ - 5), 0);
     }
+
+    /* ============ delegate ============ */
+    function test_delegate_change() external {
+        uint256 aliceBalance_ = 1_000;
+
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, aliceBalance_);
+
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.balanceOf(_alice), aliceBalance_);
+        assertEq(_vote.getVotes(_alice), aliceBalance_);
+
+        assertEq(_vote.delegates(_bob), _bob);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.delegates(_carol), _carol);
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        vm.expectEmit();
+        emit IERC5805.DelegateChanged(_alice, _alice, _bob);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        assertEq(_vote.delegates(_alice), _bob);
+        assertEq(_vote.balanceOf(_alice), aliceBalance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.delegates(_bob), _bob);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), aliceBalance_);
+
+        assertEq(_vote.delegates(_carol), _carol);
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        vm.expectEmit();
+        emit IERC5805.DelegateChanged(_alice, _bob, _carol);
+
+        vm.prank(_alice);
+        _vote.delegate(_carol);
+
+        assertEq(_vote.delegates(_alice), _carol);
+        assertEq(_vote.balanceOf(_alice), aliceBalance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.delegates(_bob), _bob);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.delegates(_carol), _carol);
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), aliceBalance_);
+    }
+
+    function test_delegatingToAddressZeroIsEquivalentToDelegatingToSelf() external {
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, 1_000);
+
+        assertEq(_vote.delegates(_alice), _alice);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 800);
+        assertEq(_vote.balanceOf(_carol), 200);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 800);
+        assertEq(_vote.getVotes(_carol), 200);
+
+        vm.prank(_alice);
+        _vote.delegate(address(0));
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 800);
+        assertEq(_vote.balanceOf(_carol), 200);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 800);
+        assertEq(_vote.getVotes(_carol), 200);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_carol), 400);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 600);
+        assertEq(_vote.getVotes(_carol), 400);
+
+        vm.prank(_alice);
+        _vote.delegate(_alice);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_carol), 400);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 600);
+        assertEq(_vote.getVotes(_carol), 400);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _bob);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 400);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 600);
+        assertEq(_vote.getVotes(_carol), 400);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _bob);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 400);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 600);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 400);
+        assertEq(_vote.getVotes(_carol), 600);
+
+        vm.prank(_alice);
+        _vote.delegate(address(0));
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 400);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 600);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 400);
+        assertEq(_vote.getVotes(_bob), 0);
+        assertEq(_vote.getVotes(_carol), 600);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 200);
+
+        assertEq(_vote.delegates(address(0)), address(0));
+        assertEq(_vote.delegates(_alice), _alice);
+        assertEq(_vote.delegates(_carol), _carol);
+
+        assertEq(_vote.balanceOf(address(0)), 0);
+        assertEq(_vote.balanceOf(_alice), 200);
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.balanceOf(_carol), 800);
+
+        assertEq(_vote.getVotes(address(0)), 0);
+        assertEq(_vote.getVotes(_alice), 200);
+        assertEq(_vote.getVotes(_bob), 0);
+        assertEq(_vote.getVotes(_carol), 800);
+    }
+
+    function test_delegateToZeroAddress_transferToZeroAddress() external {
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, 1_000);
+        _vote.mint(_bob, 900);
+        _vote.mint(_carol, 800);
+
+        assertEq(_vote.getVotes(_alice), 1_000);
+        assertEq(_vote.getVotes(_bob), 900);
+        assertEq(_vote.getVotes(_carol), 800);
+
+        vm.prank(_alice);
+        _vote.delegate(address(0)); // self-delegation instead of delegation to 0x0 address
+
+        assertEq(_vote.getVotes(_alice), 1_000);
+        assertEq(_vote.getVotes(address(0)), 0);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 1_900);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 400);
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 1_500);
+        assertEq(_vote.getVotes(_carol), 1_200);
+
+        assertEq(_vote.balanceOf(_alice), 600);
+        assertEq(_vote.balanceOf(_carol), 1_200);
+
+        vm.prank(_alice);
+        _vote.transfer(address(0), 300);
+
+        assertEq(_vote.balanceOf(_alice), 300);
+        assertEq(_vote.balanceOf(address(0)), 300);
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 1_200);
+        assertEq(_vote.getVotes(_carol), 1_200);
+        assertEq(_vote.getVotes(address(0)), 300);
+
+        vm.prank(_alice);
+        _vote.transfer(_carol, 300);
+
+        assertEq(_vote.balanceOf(_alice), 0);
+        assertEq(_vote.balanceOf(_carol), 1_500);
+        assertEq(_vote.balanceOf(address(0)), 300);
+
+        assertEq(_vote.getVotes(_alice), 0);
+        assertEq(_vote.getVotes(_bob), 900);
+        assertEq(_vote.getVotes(_carol), 1_500);
+        assertEq(_vote.getVotes(address(0)), 300);
+    }
 }
