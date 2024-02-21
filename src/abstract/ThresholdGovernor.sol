@@ -9,12 +9,6 @@ import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
 import { BatchGovernor } from "./BatchGovernor.sol";
 
-// TODO: Determine `quorumNumerator`/`quorumDenominator`/`QuorumNumeratorUpdated` stuff, and how it applies to tokens
-//       with a growing total supply.
-//       See: https://docs.tally.xyz/user-guides/tally-contract-compatibility/openzeppelin-governor
-//       See: https://docs.openzeppelin.com/contracts/4.x/api/governance#GovernorVotesQuorumFraction-quorumDenominator--
-//       See: https://portal.thirdweb.com/contracts/VoteERC20
-
 /// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     /// @notice The minimum allowed threshold ratio.
