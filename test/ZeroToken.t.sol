@@ -3,6 +3,7 @@
 pragma solidity 0.8.23;
 
 import { IERC5805 } from "../src/abstract/interfaces/IERC5805.sol";
+import { IEpochBasedVoteToken } from "../src/abstract/interfaces/IEpochBasedVoteToken.sol";
 import { IZeroToken } from "../src/interfaces/IZeroToken.sol";
 
 import { TestUtils } from "./utils/TestUtils.sol";
@@ -46,6 +47,7 @@ contract ZeroTokenTests is TestUtils {
         }
     }
 
+    /* ============ pastBalancesOf ============ */
     function test_pastBalancesOf_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -54,6 +56,11 @@ contract ZeroTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.pastBalancesOf(_alice, currentEpoch_ - 1, currentEpoch_ + 1);
+    }
+
+    function test_pastBalancesOf_EpochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _zeroToken.pastBalancesOf(_alice, 0, 1);
     }
 
     function test_pastBalancesOf_startEpochAfterEndEpoch() external {
@@ -125,6 +132,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 5);
     }
 
+    /* ============ getPastVotes ============ */
     function test_getPastVotes_multi_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -133,6 +141,11 @@ contract ZeroTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.getPastVotes(_alice, currentEpoch_ - 1, currentEpoch_ + 1);
+    }
+
+    function test_getPastVotes_multi_EpochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _zeroToken.getPastVotes(_alice, 0, 1);
     }
 
     function test_getPastVotes_multi_startEpochAfterEndEpoch() external {
@@ -204,6 +217,7 @@ contract ZeroTokenTests is TestUtils {
         assertEq(balances_[0], 5);
     }
 
+    /* ============ pastTotalSupplies ============ */
     function test_pastTotalSupplies_notPastTimepoint() external {
         uint256 currentEpoch_ = _zeroToken.clock();
 
@@ -212,6 +226,11 @@ contract ZeroTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _zeroToken.pastTotalSupplies(currentEpoch_ - 1, currentEpoch_ + 1);
+    }
+
+    function test_pastTotalSupplies_EpochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _zeroToken.pastTotalSupplies(0, 1);
     }
 
     function test_pastTotalSupplies_startEpochAfterEndEpoch() external {

@@ -3,8 +3,7 @@
 pragma solidity 0.8.23;
 
 import { IERC5805 } from "../src/abstract/interfaces/IERC5805.sol";
-
-import { PureEpochs } from "../src/libs/PureEpochs.sol";
+import { IEpochBasedVoteToken } from "../src/abstract/interfaces/IEpochBasedVoteToken.sol";
 
 import { EpochBasedVoteTokenHarness as Vote } from "./utils/EpochBasedVoteTokenHarness.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
@@ -29,12 +28,14 @@ contract EpochBasedVoteTokenTests is TestUtils {
         _vote = new Vote("Vote Epoch Token", "VOTE", 0);
     }
 
+    /* ============ balanceOf ============ */
     function test_balanceOf() external {
         _vote.pushBalance(_alice, _vote.clock(), 13);
 
         assertEq(_vote.balanceOf(_alice), 13);
     }
 
+    /* ============ pastBalanceOf ============ */
     function test_pastBalanceOf_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
@@ -43,6 +44,11 @@ contract EpochBasedVoteTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.pastBalanceOf(_alice, currentEpoch_ + 1);
+    }
+
+    function test_pastBalanceOf_epochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.pastBalanceOf(_alice, 0);
     }
 
     function test_pastBalanceOf() external {
@@ -58,12 +64,14 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.pastBalanceOf(_alice, currentEpoch_ - 5), 0);
     }
 
+    /* ============ delegates ============ */
     function test_delegates() external {
         _vote.pushDelegatee(_alice, _vote.clock(), _bob);
 
         assertEq(_vote.delegates(_alice), _bob);
     }
 
+    /* ============ pastDelegates ============ */
     function test_pastDelegates_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
@@ -72,6 +80,11 @@ contract EpochBasedVoteTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.pastDelegates(_alice, currentEpoch_ + 1);
+    }
+
+    function test_pastDelegates_epochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.pastDelegates(_alice, 0);
     }
 
     function test_pastDelegate() external {
@@ -91,12 +104,14 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.pastDelegates(_alice, currentEpoch_ - 8), _alice);
     }
 
+    /* ============ getVotes ============ */
     function test_getVotes() external {
         _vote.pushVotes(_alice, _vote.clock(), 13);
 
         assertEq(_vote.getVotes(_alice), 13);
     }
 
+    /* ============ getPastVotes ============ */
     function test_getPastVotes_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
@@ -105,6 +120,11 @@ contract EpochBasedVoteTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.getPastVotes(_alice, currentEpoch_ + 1);
+    }
+
+    function test_getPastVotes_epochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.getPastVotes(_alice, 0);
     }
 
     function test_getPastVotes() external {
@@ -120,12 +140,14 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.getPastVotes(_alice, currentEpoch_ - 5), 0);
     }
 
+    /* ============ totalSupply ============ */
     function test_totalSupply() external {
         _vote.pushTotalSupply(_vote.clock(), 13);
 
         assertEq(_vote.totalSupply(), 13);
     }
 
+    /* ============ pastTotalSupply ============ */
     function test_pastTotalSupply_notPastTimepoint() external {
         uint256 currentEpoch_ = _vote.clock();
 
@@ -134,6 +156,11 @@ contract EpochBasedVoteTokenTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IERC5805.NotPastTimepoint.selector, currentEpoch_ + 1, currentEpoch_));
         _vote.pastTotalSupply(currentEpoch_ + 1);
+    }
+
+    function test_pastTotalSupply_epochZero() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.pastTotalSupply(0);
     }
 
     function test_pastTotalSupply() external {

@@ -384,6 +384,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @return The delegatee of `account_` at `epoch_`.
      */
     function _getDelegatee(address account_, uint256 epoch_) internal view virtual returns (address) {
+        if (epoch_ == 0) revert EpochZero();
+
         AccountSnap[] storage delegateeSnaps_ = _delegatees[account_];
 
         uint256 index_ = delegateeSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
@@ -415,6 +417,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @return The value of the AmountSnap array at `epoch_`.
      */
     function _getValueAt(AmountSnap[] storage amountSnaps_, uint16 epoch_) internal view returns (uint240) {
+        if (epoch_ == 0) revert EpochZero();
+
         uint256 index_ = amountSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
