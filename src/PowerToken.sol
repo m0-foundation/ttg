@@ -119,11 +119,11 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         emit Buy(msg.sender, amount_, cost_ = getCost(amount_));
 
+        _mint(destination_, amount_);
+
         // NOTE: Not calling `distribute` on vault since anyone can do it, anytime, and this contract should not need to
         //       know how the vault works
         if (!ERC20Helper.transferFrom(cashToken(), msg.sender, vault, cost_)) revert TransferFromFailed();
-
-        _mint(destination_, amount_);
     }
 
     /// @inheritdoc IPowerToken
