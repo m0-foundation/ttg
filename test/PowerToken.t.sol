@@ -242,7 +242,7 @@ contract PowerTokenTests is TestUtils {
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
         vm.prank(_account);
-        _powerToken.buy(0, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
+        _powerToken.buy(1, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
 
         assertEq(_powerToken.balanceOf(_account), oneBasisPointOfTotalSupply_);
     }
