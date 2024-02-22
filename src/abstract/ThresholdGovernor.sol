@@ -38,15 +38,10 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
-        uint16 currentEpoch_ = _clock();
-
-        if (currentEpoch_ == 0) revert InvalidEpoch();
+        uint16 latestPossibleVoteStart_ = _clock();
 
         // Proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.
-        uint16 latestPossibleVoteStart_ = currentEpoch_;
-        uint16 earliestPossibleVoteStart_ = latestPossibleVoteStart_ > 0 ? latestPossibleVoteStart_ - 1 : 0;
-
-        proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, earliestPossibleVoteStart_);
+        proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, latestPossibleVoteStart_ - 1);
     }
 
     /// @inheritdoc IGovernor
@@ -112,18 +107,14 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
         if (voteStart_ == 0) revert ProposalDoesNotExist();
 
-        uint16 currentEpoch_ = _clock();
-
-        if (currentEpoch_ < voteStart_) return ProposalState.Pending;
-
         uint256 totalSupply_ = _getTotalSupply(voteStart_ - 1);
-        uint16 thresholdRatio_ = proposal_.thresholdRatio;
-
-        bool isVotingOpen_ = currentEpoch_ <= _getVoteEnd(voteStart_);
+        bool isVotingOpen_ = _clock() <= _getVoteEnd(voteStart_);
 
         // If the total supply of Vote Tokens is 0 and the vote has not ended yet, the proposal is active.
         // The proposal will expire once the voting period closes.
         if (totalSupply_ == 0) return isVotingOpen_ ? ProposalState.Active : ProposalState.Expired;
+
+        uint16 thresholdRatio_ = proposal_.thresholdRatio;
 
         // If proposal is currently succeeding, it has either succeeded or expired.
         if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {

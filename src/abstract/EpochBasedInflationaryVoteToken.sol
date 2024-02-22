@@ -109,11 +109,11 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     }
 
     /**
-     * @dev   Syncs `account_` so that it balance Snap array in storage, reflects their unrealized inflation.
+     * @dev   Syncs `account_` so that its balance Snap array in storage, reflects their unrealized inflation.
      * @param account_ The address of the account to sync.
      */
     function _sync(address account_) internal {
-        // Realized the account's unrealized inflation since the its last sync, and update its last sync.
+        // Realized the account's unrealized inflation since its last sync, and update its last sync.
         _addBalance(account_, _getUnrealizedInflation(account_, _clock()));
         _update(_lastSyncs[account_]);
     }

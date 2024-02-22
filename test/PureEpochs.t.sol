@@ -92,30 +92,30 @@ contract PureEpochsTests is Test {
         assertEq(PureEpochs.getTimeUntilEpochStart(3), PureEpochs._EPOCH_PERIOD - 1);
     }
 
-    function test_getTimeUntilEpochEnds() external {
+    function test_getTimeUntilEpochEnd() external {
         vm.warp(PureEpochs._MERGE_TIMESTAMP);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), 2 * PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 3 * PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(1), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(2), 2 * PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(3), 3 * PureEpochs._EPOCH_PERIOD);
 
         vm.warp(PureEpochs._MERGE_TIMESTAMP + 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), PureEpochs._EPOCH_PERIOD - 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), (2 * PureEpochs._EPOCH_PERIOD) - 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(3), (3 * PureEpochs._EPOCH_PERIOD) - 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(1), PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(2), (2 * PureEpochs._EPOCH_PERIOD) - 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(3), (3 * PureEpochs._EPOCH_PERIOD) - 1);
 
         vm.warp(PureEpochs._MERGE_TIMESTAMP + PureEpochs._EPOCH_PERIOD - 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD + 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(3), (2 * PureEpochs._EPOCH_PERIOD) + 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(1), 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(2), PureEpochs._EPOCH_PERIOD + 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(3), (2 * PureEpochs._EPOCH_PERIOD) + 1);
 
         vm.warp(PureEpochs._MERGE_TIMESTAMP + PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(1), 0);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(3), 2 * PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(1), 0);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(2), PureEpochs._EPOCH_PERIOD);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(3), 2 * PureEpochs._EPOCH_PERIOD);
 
         vm.warp(PureEpochs._MERGE_TIMESTAMP + PureEpochs._EPOCH_PERIOD + 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(2), PureEpochs._EPOCH_PERIOD - 1);
-        assertEq(PureEpochs.getTimeUntilEpochEnds(3), (2 * PureEpochs._EPOCH_PERIOD) - 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(2), PureEpochs._EPOCH_PERIOD - 1);
+        assertEq(PureEpochs.getTimeUntilEpochEnd(3), (2 * PureEpochs._EPOCH_PERIOD) - 1);
     }
 
     function test_getTimeSinceEpochStart() external {

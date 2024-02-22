@@ -285,7 +285,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /**
-     * @dev    Update a storage AmountSnap array of given by `amount_` given `operation_`.
+     * @dev    Update a storage AmountSnap by `amount_` given `operation_`.
      * @param  amountSnaps_ The storage pointer to an AmountSnap array to update.
      * @param  operation_   The operation to perform on the old and new amounts.
      * @param  amount_      The amount to update the Snap by.
@@ -384,6 +384,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @return The delegatee of `account_` at `epoch_`.
      */
     function _getDelegatee(address account_, uint256 epoch_) internal view virtual returns (address) {
+        if (epoch_ == 0) revert EpochZero();
+
         AccountSnap[] storage delegateeSnaps_ = _delegatees[account_];
 
         uint256 index_ = delegateeSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
@@ -415,6 +417,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @return The value of the AmountSnap array at `epoch_`.
      */
     function _getValueAt(AmountSnap[] storage amountSnaps_, uint16 epoch_) internal view returns (uint240) {
+        if (epoch_ == 0) revert EpochZero();
+
         uint256 index_ = amountSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap

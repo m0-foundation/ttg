@@ -313,10 +313,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     \******************************************************************************************************************/
 
     /**
-     * @dev    Returns the balance of `account_` plus any inflation that in unrealized before `epoch_`.
+     * @dev    Returns the balance of `account_` plus any inflation that is unrealized before `epoch_`.
      * @param  account_ The account to get the balance for.
      * @param  epoch_   The epoch to get the balance at.
-     * @return The balance of `account_` plus any inflation that in unrealized before `epoch_`.
+     * @return The balance of `account_` plus any inflation that is unrealized before `epoch_`.
      */
     function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
@@ -325,11 +325,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
         if (_balances[account_].length == 0) {
             unchecked {
-                return
-                    UIntMath.bound240(
-                        uint256(_getBootstrapBalance(account_, bootstrapEpoch)) +
-                            _getUnrealizedInflation(account_, epoch_)
-                    );
+                return UIntMath.bound240(uint256(_getBootstrapBalance(account_, bootstrapEpoch)));
             }
         }
 
@@ -395,11 +391,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
         if (_votingPowers[account_].length == 0) {
             unchecked {
-                return
-                    UIntMath.bound240(
-                        uint256(_getBootstrapBalance(account_, bootstrapEpoch)) +
-                            _getUnrealizedInflation(account_, epoch_)
-                    );
+                return UIntMath.bound240(uint256(_getBootstrapBalance(account_, bootstrapEpoch)));
             }
         }
 

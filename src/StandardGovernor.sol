@@ -111,12 +111,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
-        uint16 currentEpoch_ = _clock();
-
-        if (currentEpoch_ == 0) revert InvalidEpoch();
-
         // Proposals have voteStart=N and voteEnd=N, and can be executed only during epoch N+1.
-        uint16 latestPossibleVoteStart_ = currentEpoch_ - 1;
+        uint16 latestPossibleVoteStart_ = _clock() - 1;
 
         proposalId_ = _tryExecute(callDatas_[0], latestPossibleVoteStart_, latestPossibleVoteStart_);
 
@@ -277,7 +273,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         uint16 voteEnd_ = _getVoteEnd(voteStart_);
 
-        if (currentEpoch_ <= voteEnd_) return ProposalState.Active;
+        if (currentEpoch_ == voteEnd_) return ProposalState.Active;
 
         if (proposal_.yesWeight <= proposal_.noWeight) return ProposalState.Defeated;
 

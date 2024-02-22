@@ -117,6 +117,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         uint16 startEpoch_,
         uint16 endEpoch_
     ) internal view returns (uint256[] memory values_) {
+        if (startEpoch_ == 0) revert EpochZero();
         if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch();
 
         uint16 epochsIndex_ = endEpoch_ - startEpoch_ + 1;

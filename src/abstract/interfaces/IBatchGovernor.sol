@@ -28,9 +28,6 @@ interface IBatchGovernor is IGovernor {
      */
     error ExecutionFailed(bytes data);
 
-    /// @notice Revert message when an invalid epoch is detected.
-    error InvalidEpoch();
-
     /// @notice Revert message when a proposal's call data is not specifically supported.
     error InvalidCallData();
 

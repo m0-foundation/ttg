@@ -27,7 +27,7 @@ library PureEpochs {
         return getTimestampOfEpochStart(epoch) - uint40(block.timestamp);
     }
 
-    function getTimeUntilEpochEnds(uint16 epoch) internal view returns (uint40 time_) {
+    function getTimeUntilEpochEnd(uint16 epoch) internal view returns (uint40 time_) {
         return getTimestampOfEpochEnd(epoch) - uint40(block.timestamp);
     }
 

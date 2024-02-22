@@ -10,8 +10,6 @@ import { DistributionVault } from "../../src/DistributionVault.sol";
 import { MockERC20, MockEpochBasedVoteToken } from "./../utils/Mocks.sol";
 import { TestUtils } from "./../utils/TestUtils.sol";
 
-import "forge-std/console.sol";
-
 contract DistributionVaultTests is TestUtils {
     DistributionVault internal _vault;
     MockERC20 internal _token1;
@@ -41,6 +39,7 @@ contract DistributionVaultTests is TestUtils {
         token1Balance = bound(token1Balance, 0, type(uint128).max);
         account1PastBalance = bound(account1PastBalance, 0, type(uint128).max); //@elcid closed environment.
         account2PastBalance = bound(account2PastBalance, 0, type(uint128).max);
+
         vm.assume(account1PastBalance + account2PastBalance < type(uint128).max);
         vm.assume(account1PastBalance + account2PastBalance > 0);
         pastTotalSupply = bound(pastTotalSupply, account1PastBalance + account2PastBalance, type(uint128).max);

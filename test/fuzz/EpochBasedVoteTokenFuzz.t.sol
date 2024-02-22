@@ -40,6 +40,8 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
         secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
+
+        vm.assume(currentEpoch_ - firstPushEpoch - 1 != 0);
         vm.assume(firstPushEpoch > secondPushEpoch);
 
         _vote.pushBalance(_alice, currentEpoch_ - firstPushEpoch, firstValuePushed);
@@ -81,6 +83,8 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
         secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
+
+        vm.assume(currentEpoch_ - firstPushEpoch - 1 != 0);
         vm.assume(firstPushEpoch > secondPushEpoch);
 
         _vote.pushVotes(_alice, currentEpoch_ - firstPushEpoch, firstValuePushed);
@@ -104,6 +108,8 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
         secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
+
+        vm.assume(currentEpoch_ - firstPushEpoch - 1 != 0);
         vm.assume(firstPushEpoch > secondPushEpoch);
 
         _vote.pushTotalSupply(currentEpoch_ - firstPushEpoch, firstValuePushed);

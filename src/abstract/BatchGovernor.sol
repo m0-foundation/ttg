@@ -282,7 +282,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @param  voter_      The address of the voter.
      * @param  proposalId_ The unique identifier of the proposal.
      * @param  support_    The type of support to cast for the proposal.
-     * @return weight_     The type of support to cast for each proposal
+     * @return weight_     The number of votes cast.
      */
     function _castVote(address voter_, uint256 proposalId_, uint8 support_) internal returns (uint256 weight_) {
         unchecked {
@@ -420,7 +420,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         while (latestVoteStart_ >= earliestVoteStart_) {
             // `proposalId_` will be 0 if no proposal exists for `callData_` and `latestVoteStart_`, or if the proposal
             // is not in  a `Succeeded` state. It will be executed otherwise. (see `_execute`)
-            proposalId_ = _execute(callData_, latestVoteStart_--);
+            unchecked {
+                proposalId_ = _execute(callData_, latestVoteStart_--);
+            }
 
             // If the `proposalId_` is not 0, then a proposal matching `callData_` and `latestVoteStart_` was found, in
             // a Succeeded state, and was executed, so return it.
