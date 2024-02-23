@@ -62,19 +62,6 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     \******************************************************************************************************************/
 
     /// @inheritdoc IZeroToken
-    function getPastVotes(
-        address account_,
-        uint256 startEpoch_,
-        uint256 endEpoch_
-    ) external view returns (uint256[] memory) {
-        uint16 safeEndEpoch_ = UIntMath.safe16(endEpoch_);
-
-        _revertIfNotPastTimepoint(safeEndEpoch_);
-
-        return _getValuesBetween(_votingPowers[account_], UIntMath.safe16(startEpoch_), safeEndEpoch_);
-    }
-
-    /// @inheritdoc IZeroToken
     function pastBalancesOf(
         address account_,
         uint256 startEpoch_,
