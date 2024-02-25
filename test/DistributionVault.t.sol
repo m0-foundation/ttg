@@ -157,4 +157,13 @@ contract DistributionVaultTests is TestUtils {
         );
         _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
     }
+
+    function test_getClaimable_startEpochAfterEndEpoch() external {
+        uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
+        uint256 endEpoch_ = PureEpochs.currentEpoch() - 2;
+        vm.expectRevert(
+            abi.encodeWithSelector(IDistributionVault.StartEpochAfterEndEpoch.selector, startEpoch_, endEpoch_)
+        );
+        _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
+    }
 }
