@@ -12,9 +12,6 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
 
-    /// @notice Revert message when an number being casted to a uint240 exceeds the maximum uint240 value.
-    error AmountExceedsUint240();
-
     /// @notice Revert message when the provided epoch is zero.
     error EpochZero();
 

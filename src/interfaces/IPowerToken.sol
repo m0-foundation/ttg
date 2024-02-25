@@ -70,9 +70,6 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Revert message when auction calculations use zero as denominator.
     error DivisionByZero();
 
-    /// @notice Revert message when divideUp math overflows.
-    error DivideUpOverflow();
-
     /// @notice Revert message when the buy order has expired using epoch-based expiration clock.
     error ExpiredBuyOrder();
 
