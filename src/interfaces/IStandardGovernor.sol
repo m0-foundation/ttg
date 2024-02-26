@@ -86,7 +86,7 @@ interface IStandardGovernor is IBatchGovernor {
 
     /**
      * @notice Sends the proposal fee for proposal `proposalId` to the vault, if it is Defeated or Expired.
-     * @param  proposalId The minimum amount of tokens the caller is interested in buying.
+     * @param  proposalId The unique identifier of the proposal.
      */
     function sendProposalFeeToVault(uint256 proposalId) external;
 

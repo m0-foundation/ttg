@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-/// @title A book of record of SPOG-specific contracts and arbitrary key-value pairs and lists.
+/// @title A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
 interface IRegistrar {
     /******************************************************************************************************************\
     |                                                      Events                                                      |

@@ -256,4 +256,13 @@ contract EmergencyGovernorTests is TestUtils {
             abi.encodePacked(abi.encodeCall(_emergencyGovernor.setStandardProposalFee, (0)), "randomCalldata")
         );
     }
+
+    /* ============ castVote ============ */
+    function test_castVote_proposalDoesNotExist() external {
+        uint256 proposalId_ = 1;
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
+
+        _emergencyGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+    }
 }

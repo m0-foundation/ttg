@@ -317,4 +317,13 @@ contract ZeroGovernorTests is TestUtils {
             abi.encodePacked(abi.encodeCall(_zeroGovernor.setZeroProposalThresholdRatio, (1000)), "randomCalldata")
         );
     }
+
+    /* ============ castVote ============ */
+    function test_castVote_proposalDoesNotExist() external {
+        uint256 proposalId_ = 1;
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
+
+        _zeroGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+    }
 }

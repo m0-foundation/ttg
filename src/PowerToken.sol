@@ -430,8 +430,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         z = (x * ONE) + y;
 
-        if (z < x) revert DivideUpOverflow();
-
         unchecked {
             z = (z - 1) / y;
         }
