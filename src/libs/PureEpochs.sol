@@ -23,22 +23,6 @@ library PureEpochs {
         return getTimestampOfEpochEnd(currentEpoch()) - uint40(block.timestamp);
     }
 
-    function getTimeUntilEpochStart(uint16 epoch) internal view returns (uint40 time_) {
-        return getTimestampOfEpochStart(epoch) - uint40(block.timestamp);
-    }
-
-    function getTimeUntilEpochEnd(uint16 epoch) internal view returns (uint40 time_) {
-        return getTimestampOfEpochEnd(epoch) - uint40(block.timestamp);
-    }
-
-    function getTimeSinceEpochStart(uint16 epoch) internal view returns (uint40 time_) {
-        return uint40(block.timestamp) - getTimestampOfEpochStart(epoch);
-    }
-
-    function getTimeSinceEpochEnd(uint16 epoch) internal view returns (uint40 time_) {
-        return uint40(block.timestamp) - getTimestampOfEpochEnd(epoch);
-    }
-
     function getTimestampOfEpochStart(uint16 epoch) internal pure returns (uint40 timestamp_) {
         return _MERGE_TIMESTAMP + (epoch - 1) * _EPOCH_PERIOD;
     }
