@@ -261,6 +261,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         if (balance_ == 0) return 0; // No inflation if the account had no balance.
 
+        if (balance_ == type(uint240).max) return 0; // No inflation if the account's balance is at the maximum.
+
         address delegatee_ = _getDelegatee(account_, lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
 
         // NOTE: Starting from the epoch after the latest sync, before `lastEpoch_`.
@@ -275,13 +277,13 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
             unchecked {
                 uint256 inflatedBalance_ = uint256(balance_) + inflation_;
 
-                // Cap inflation to `type(uint240).max`.
-                if (inflatedBalance_ >= type(uint240).max) return type(uint240).max;
+                // Cap inflation to `type(uint240).max` - balance_.
+                if (inflatedBalance_ >= type(uint240).max) return type(uint240).max - balance_;
 
                 uint256 newInflation_ = uint256(inflation_) + _getInflation(uint240(inflatedBalance_));
 
-                // Cap inflation to `type(uint240).max`.
-                if (newInflation_ >= type(uint240).max) return type(uint240).max;
+                // Cap inflation to `type(uint240).max` - balance_.
+                if (newInflation_ >= type(uint240).max) return type(uint240).max - balance_;
 
                 inflation_ = uint240(newInflation_); // Accumulate compounded inflation.
             }
