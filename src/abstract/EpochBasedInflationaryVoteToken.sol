@@ -259,10 +259,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         // The balance and delegatee the account had at the epoch are the same since the last sync (by definition).
         uint240 balance_ = _getBalanceWithoutUnrealizedInflation(account_, lastEpoch_);
 
-        if (balance_ == 0) return 0; // No inflation if the account had no balance.
-
-        if (balance_ == type(uint240).max) return 0; // No inflation if the account's balance is at the maximum.
-
+        if (balance_ == 0 || balance_ == type(uint240).max) return 0; // No inflation if the account had no balance or reached the maximum balance.
         address delegatee_ = _getDelegatee(account_, lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
 
         // NOTE: Starting from the epoch after the latest sync, before `lastEpoch_`.
