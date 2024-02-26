@@ -168,6 +168,14 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 
+    function test_castVote_proposalDoesNotExist() external {
+        uint256 proposalId_ = 1;
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
+
+        _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+    }
+
     function test_castVote_alreadyVoted() external {
         uint256 proposalId_ = 1;
         uint256 currentEpoch = _standardGovernor.clock();

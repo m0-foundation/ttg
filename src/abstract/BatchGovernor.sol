@@ -285,6 +285,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @return weight_     The number of votes cast.
      */
     function _castVote(address voter_, uint256 proposalId_, uint8 support_) internal returns (uint256 weight_) {
+        if (_proposals[proposalId_].voteStart == 0) revert ProposalDoesNotExist();
+
         unchecked {
             // NOTE: Can be done unchecked since `voteStart` is always greater than 0.
             weight_ = getVotes(voter_, _proposals[proposalId_].voteStart - 1);
