@@ -135,6 +135,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 currentEpoch_ = clock();
 
         if (endEpoch_ >= currentEpoch_) revert NotPastTimepoint(endEpoch_, currentEpoch_); // Range must be past epochs.
+        if (startEpoch_ > endEpoch_) revert StartEpochAfterEndEpoch(startEpoch_, endEpoch_); // Start must be before end.
 
         uint256[] memory balances_ = IZeroToken(zeroToken).pastBalancesOf(account_, startEpoch_, endEpoch_);
         uint256[] memory totalSupplies_ = IZeroToken(zeroToken).pastTotalSupplies(startEpoch_, endEpoch_);

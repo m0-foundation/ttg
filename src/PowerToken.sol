@@ -426,6 +426,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function _divideUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
         if (y == 0) revert DivisionByZero();
 
+        if (x == 0) return 0;
+
         z = (x * ONE) + y;
 
         if (z < x) revert DivideUpOverflow();

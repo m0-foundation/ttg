@@ -46,6 +46,9 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     /// @notice Revert message when a token transfer, from this contract, fails.
     error TransferFailed();
 
+    /// @notice Revert message when the start epoch is greater than the end epoch.
+    error StartEpochAfterEndEpoch(uint256 startEpoch, uint256 endEpoch);
+
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/
