@@ -391,7 +391,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         uint256 index_ = delegateeSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
-        // has the account applicable to `epoch_`. If we exhaust the array, then the delegatee is address(0).
+        // has the account applicable to `epoch_`. If we exhaust the array, then the delegatee is an account itself.
         while (index_ > 0) {
             AccountSnap storage accountSnap_ = _unsafeAccess(delegateeSnaps_, --index_);
 
