@@ -180,7 +180,7 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         vm.warp(block.timestamp + 1);
 
-        assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // proposal is Defeated
+        assertEq(uint256(_emergencyGovernor.state(proposalId_)), 3); // proposal is Defeated
     }
 
     function test_emergencyGovernorPropose_bootstrapVotes_certora_H01() public {
