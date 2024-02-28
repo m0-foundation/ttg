@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.23;
 
+import { IERC712 } from "../lib/common/src/interfaces/IERC712.sol";
+
 import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
 import { IDistributionVault } from "../src/interfaces/IDistributionVault.sol";
@@ -30,6 +32,7 @@ contract DistributionVaultTests is TestUtils {
         _vault = new DistributionVault(address(_baseToken));
     }
 
+    /* ============ constructor ============ */
     function test_constructor() external {
         assertEq(_vault.zeroToken(), address(_baseToken));
         assertEq(_vault.name(), "DistributionVault");
@@ -42,6 +45,7 @@ contract DistributionVaultTests is TestUtils {
         new DistributionVault(address(0));
     }
 
+    /* ============ distribution ============ */
     function test_distribution() external {
         // Sets account balances this epoch.
         _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
@@ -149,6 +153,7 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[1], startEpoch_, endEpoch_), 0);
     }
 
+    /* ============ getClaimable ============ */
     function test_getClaimable_notPastTimepoint() external {
         uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
         uint256 endEpoch_ = PureEpochs.currentEpoch() + 1;
@@ -165,5 +170,126 @@ contract DistributionVaultTests is TestUtils {
             abi.encodeWithSelector(IDistributionVault.StartEpochAfterEndEpoch.selector, startEpoch_, endEpoch_)
         );
         _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
+    }
+
+    /* ============ claimBySig ============ */
+    function test_claimBySig_replayAttack() external {
+        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
+
+        _warpToNextEpoch();
+
+        bytes32 digest_ = _vault.getClaimDigest(
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            _vault.nonces(_accounts[0]),
+            block.timestamp + 1 days
+        );
+
+        _vault.claimBySig(
+            _accounts[0], // for
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0], // destination
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account1"))
+        );
+
+        // Can reuse digest since account is not part of the digest.
+        // Effectively sending their claimable tokens to account 1.
+        // It only works because both accounts have the same nonce.
+        _vault.claimBySig(
+            _accounts[1], // different account
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account2"))
+        );
+
+        vm.expectRevert(IERC712.InvalidSignature.selector);
+
+        // Reverts here since the nonce is now different from the one used in the digest.
+        _vault.claimBySig(
+            _accounts[1],
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account2"))
+        );
+
+        _warpToNextEpoch();
+
+        digest_ = _vault.getClaimDigest(
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            _vault.nonces(_accounts[0]),
+            block.timestamp + 1 days
+        );
+
+        _vault.claimBySig(
+            _accounts[0],
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account1"))
+        );
+
+        vm.expectRevert(IERC712.InvalidSignature.selector);
+
+        // Reverts here since the destination is different from the one used in the digest.
+        _vault.claimBySig(
+            _accounts[1], // different account
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[1], // different destination
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account2"))
+        );
+
+        _warpToNextEpoch();
+
+        digest_ = _vault.getClaimDigest(
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            _vault.nonces(_accounts[0]),
+            block.timestamp + 1 days
+        );
+
+        _vault.claimBySig(
+            _accounts[0],
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account1"))
+        );
+
+        vm.expectRevert(IERC712.InvalidSignature.selector);
+
+        // Reverts here since the account signing is different from the passed account.
+        _vault.claimBySig(
+            _accounts[0], // same account
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[1],
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account2")) // different signer
+        );
     }
 }
