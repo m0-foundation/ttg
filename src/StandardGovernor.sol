@@ -290,22 +290,28 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
      * @dev    Cast votes on several proposals for `voter_`.
      * @param  voter_       The address of the voter.
      * @param  proposalIds_ The unique identifiers of the proposals.
-     * @param  support_     The type of support to cast for each proposal.
+     * @param  supportList_ The type of support to cast for each proposal.
+     * @param  reasonList_  The list of reason per proposal IDs to cast.
      * @return weight_      The number of votes the voter cast on each proposal.
      */
     function _castVotes(
         address voter_,
         uint256[] calldata proposalIds_,
-        uint8[] calldata support_
+        uint8[] calldata supportList_,
+        string[] memory reasonList_
     ) internal override returns (uint256 weight_) {
-        if (proposalIds_.length != support_.length || proposalIds_.length == 0)
-            revert InvalidSupportLength(proposalIds_.length, support_.length);
+        uint256 length_ = proposalIds_.length;
+
+        if (length_ == 0) revert EmptyProposalIdsArray();
+
+        if (length_ != supportList_.length || length_ != reasonList_.length)
+            revert ArrayLengthMismatch(length_, supportList_.length, reasonList_.length);
 
         // In this governor, since the votingPeriod is 0, the snapshot for all active proposals is the previous epoch.
         weight_ = getVotes(voter_, _clock() - 1);
 
-        for (uint256 index_; index_ < proposalIds_.length; ++index_) {
-            _castVote(voter_, weight_, proposalIds_[index_], support_[index_]);
+        for (uint256 index_; index_ < length_; ++index_) {
+            _castVote(voter_, weight_, proposalIds_[index_], supportList_[index_], reasonList_[index_]);
         }
     }
 
@@ -323,10 +329,17 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
      * @param voter_      The address of the voter.
      * @param weight_     The number of votes the voter is casting.
      * @param proposalId_ The unique identifier of the proposal.
+     * @param reason_     The reason for which the caller casts their vote, if any.
      * @param support_    The type of support to cast for the proposal.
      */
-    function _castVote(address voter_, uint256 weight_, uint256 proposalId_, uint8 support_) internal override {
-        super._castVote(voter_, weight_, proposalId_, support_);
+    function _castVote(
+        address voter_,
+        uint256 weight_,
+        uint256 proposalId_,
+        uint8 support_,
+        string memory reason_
+    ) internal override {
+        super._castVote(voter_, weight_, proposalId_, support_, reason_);
 
         uint16 currentEpoch_ = _clock();
         uint256 numberOfProposalsVotedOn_ = ++numberOfProposalsVotedOnAt[voter_][currentEpoch_];
