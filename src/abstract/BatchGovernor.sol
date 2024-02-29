@@ -36,6 +36,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         uint256 yesWeight;
     }
 
+    uint256 internal constant _SELECTOR_PLUS_0_ARGS = 4;
+    uint256 internal constant _SELECTOR_PLUS_1_ARGS = 36;
+    uint256 internal constant _SELECTOR_PLUS_2_ARGS = 68;
+    uint256 internal constant _SELECTOR_PLUS_3_ARGS = 100;
+
     /// @inheritdoc IBatchGovernor
     uint256 public constant ONE = 10_000;
 
@@ -403,8 +408,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
         if (length_ == 0) revert EmptyProposalIdsArray();
 
-        if (length_ != supportList_.length || length_ != reasonList_.length)
-            revert ArrayLengthMismatch(length_, supportList_.length, reasonList_.length);
+        if (length_ != supportList_.length) revert ArrayLengthMismatch(length_, supportList_.length);
+
+        if (length_ != reasonList_.length) revert ArrayLengthMismatch(length_, reasonList_.length);
 
         for (uint256 index_; index_ < length_; ++index_) {
             weight_ = _castVote(voter_, proposalIds_[index_], supportList_[index_], reasonList_[index_]);
@@ -425,7 +431,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         uint8 support_,
         string memory reason_
     ) internal returns (uint256 weight_) {
-        if (_proposals[proposalId_].voteStart == 0) revert ProposalDoesNotExist();
+        ProposalState state_ = state(proposalId_);
+
+        if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
 
         unchecked {
             // NOTE: Can be done unchecked since `voteStart` is always greater than 0.
@@ -450,10 +458,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         uint8 support_,
         string memory reason_
     ) internal virtual {
-        ProposalState state_ = state(proposalId_);
-
-        if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
-
         if (hasVoted[proposalId_][voter_]) revert AlreadyVoted();
 
         hasVoted[proposalId_][voter_] = true;

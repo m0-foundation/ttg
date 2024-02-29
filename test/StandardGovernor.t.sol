@@ -622,24 +622,15 @@ contract StandardGovernorTests is TestUtils {
     }
 
     function test_castVotes_arrayLengthMismatch() external {
-        uint256 firstProposalId_ = 1;
-        uint256 secondProposalId_ = 2;
-
-        uint256[] memory proposalIds_ = new uint256[](2);
-        proposalIds_[0] = firstProposalId_;
-        proposalIds_[1] = secondProposalId_;
-
-        uint8[] memory supportList_ = new uint8[](1);
-        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
-
-        string[] memory reasonList_ = new string[](2);
-        reasonList_[0] = "";
-        reasonList_[1] = "";
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1, 2));
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1));
 
         vm.prank(_alice);
-        _standardGovernor.castVotes(proposalIds_, supportList_);
+        _standardGovernor.castVotes(new uint256[](1), new uint256[](2), new uint256[](2));
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1));
+
+        vm.prank(_alice);
+        _standardGovernor.castVotes(new uint256[](1), new uint256[](1), new uint256[](2));
     }
 
     function test_castVotes_emptyProposalIdsArray() external {

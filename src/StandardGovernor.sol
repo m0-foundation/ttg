@@ -312,8 +312,9 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         if (length_ == 0) revert EmptyProposalIdsArray();
 
-        if (length_ != supportList_.length || length_ != reasonList_.length)
-            revert ArrayLengthMismatch(length_, supportList_.length, reasonList_.length);
+        if (length_ != supportList_.length) revert ArrayLengthMismatch(length_, supportList_.length);
+
+        if (length_ != reasonList_.length) revert ArrayLengthMismatch(length_, reasonList_.length);
 
         // In this governor, since the votingPeriod is 0, the snapshot for all active proposals is the previous epoch.
         weight_ = getVotes(voter_, _clock() - 1);
@@ -347,6 +348,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint8 support_,
         string memory reason_
     ) internal override {
+        ProposalState state_ = state(proposalId_);
+
+        if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
+
         super._castVote(voter_, weight_, proposalId_, support_, reason_);
 
         uint16 currentEpoch_ = _clock();
@@ -441,11 +446,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint256 length = callData_.length;
 
         if (
-            !(func_ == this.addToList.selector && length == 68) &&
-            !(func_ == this.removeFromList.selector && length == 68) &&
-            !(func_ == this.removeFromAndAddToList.selector && length == 100) &&
-            !(func_ == this.setKey.selector && length == 68) &&
-            !(func_ == this.setProposalFee.selector && length == 36)
+            !(func_ == this.addToList.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.removeFromList.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.removeFromAndAddToList.selector && length == _SELECTOR_PLUS_3_ARGS) &&
+            !(func_ == this.setKey.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.setProposalFee.selector && length == _SELECTOR_PLUS_1_ARGS)
         ) revert InvalidCallData();
     }
 

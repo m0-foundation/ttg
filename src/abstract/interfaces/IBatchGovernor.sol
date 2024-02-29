@@ -52,14 +52,8 @@ interface IBatchGovernor is IGovernor {
     /// @notice Revert message when the vote token specified in the constructor is address(0).
     error InvalidVoteTokenAddress();
 
-    /**
-     * @notice Revert message when the support list and/or the reason list
-     *         is not of the same length as the proposal IDs list.
-     * @param proposalIdsLength The length of the proposal IDs list.
-     * @param supportListLength The length of the support list.
-     * @param reasonListLength  The length of the reason list.
-     */
-    error ArrayLengthMismatch(uint256 proposalIdsLength, uint256 supportListLength, uint256 reasonListLength);
+    /// @notice Revert message when input arrays do not match in length.
+    error ArrayLengthMismatch(uint256 length1, uint256 length2);
 
     /// @notice Revert message when the proposal IDs array is empty.
     error EmptyProposalIdsArray();

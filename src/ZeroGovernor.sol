@@ -228,11 +228,11 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         uint256 length = callData_.length;
 
         if (
-            !(func_ == this.resetToPowerHolders.selector && length == 4) &&
-            !(func_ == this.resetToZeroHolders.selector && length == 4) &&
-            !(func_ == this.setCashToken.selector && length == 68) &&
-            !(func_ == this.setEmergencyProposalThresholdRatio.selector && length == 36) &&
-            !(func_ == this.setZeroProposalThresholdRatio.selector && length == 36)
+            !(func_ == this.resetToPowerHolders.selector && length == _SELECTOR_PLUS_0_ARGS) &&
+            !(func_ == this.resetToZeroHolders.selector && length == _SELECTOR_PLUS_0_ARGS) &&
+            !(func_ == this.setCashToken.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.setEmergencyProposalThresholdRatio.selector && length == _SELECTOR_PLUS_1_ARGS) &&
+            !(func_ == this.setZeroProposalThresholdRatio.selector && length == _SELECTOR_PLUS_1_ARGS)
         ) revert InvalidCallData();
     }
 }
