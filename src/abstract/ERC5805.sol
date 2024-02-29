@@ -41,19 +41,6 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
     }
 
     /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
-
-    /// @inheritdoc IERC5805
-    function delegates(address account) external view virtual returns (address);
-
-    /// @inheritdoc IERC5805
-    function getPastVotes(address account, uint256 timepoint) external view virtual returns (uint256);
-
-    /// @inheritdoc IERC5805
-    function getVotes(address account) external view virtual returns (uint256);
-
-    /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/
 
