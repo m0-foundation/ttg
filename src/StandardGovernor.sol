@@ -250,12 +250,12 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /// @inheritdoc IGovernor
     function quorum() external pure returns (uint256) {
-        return 0;
+        return 1;
     }
 
     /// @inheritdoc IGovernor
     function quorum(uint256) external pure returns (uint256) {
-        return 0;
+        return 1;
     }
 
     /// @inheritdoc IGovernor
