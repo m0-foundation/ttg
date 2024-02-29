@@ -117,6 +117,11 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.expectEmit();
         emit IStandardGovernor.HasVotedOnAllProposals(_alice, voteStart_);
 
+        // Due to bootstrap
+        vm.expectEmit(address(_powerToken));
+        emit IERC20.Transfer(_powerToken.bootstrapToken(), _alice, alicePowerWeight_);
+
+        // Due to bootstrap
         vm.expectEmit(address(_powerToken));
         emit IERC5805.DelegateVotesChanged(_alice, 0, alicePowerWeight_);
 
@@ -203,6 +208,11 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.expectEmit();
         emit IStandardGovernor.HasVotedOnAllProposals(_alice, voteStart_);
 
+        // Due to bootstrap
+        vm.expectEmit(address(_powerToken));
+        emit IERC20.Transfer(_powerToken.bootstrapToken(), _alice, alicePowerWeight_);
+
+        // Due to bootstrap
         vm.expectEmit(address(_powerToken));
         emit IERC5805.DelegateVotesChanged(_alice, 0, alicePowerWeight_);
 
