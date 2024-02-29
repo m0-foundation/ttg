@@ -130,7 +130,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         uint256 amount_
     ) internal virtual override notDuringVoteEpoch {
         _sync(sender_);
-        _sync(recipient_);
+        if (recipient_ != sender_) _sync(recipient_);
         super._transfer(sender_, recipient_, amount_);
     }
 

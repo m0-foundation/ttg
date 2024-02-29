@@ -323,7 +323,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
-        if (_balances[account_].length == 0) {
+        if (_balances[account_].length == 0 || _balances[account_][0].startingEpoch > epoch_) {
             unchecked {
                 return UIntMath.bound240(uint256(_getBootstrapBalance(account_, bootstrapEpoch)));
             }
@@ -389,7 +389,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
-        if (_votingPowers[account_].length == 0) {
+        if (_votingPowers[account_].length == 0 || _votingPowers[account_][0].startingEpoch > epoch_) {
             unchecked {
                 return UIntMath.bound240(uint256(_getBootstrapBalance(account_, bootstrapEpoch)));
             }

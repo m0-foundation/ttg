@@ -180,7 +180,51 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         vm.warp(block.timestamp + 1);
 
-        assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // proposal is Defeated
+        assertEq(uint256(_emergencyGovernor.state(proposalId_)), 3); // proposal is Defeated
+    }
+
+    function test_emergencyGovernorPropose_bootstrapVotes_certora_H01() public {
+        _warpToNextTransferEpoch();
+
+        (
+            address[] memory targets_,
+            uint256[] memory values_,
+            bytes[] memory callDatas_,
+            string memory description_
+        ) = _getRemoveFromAndAddToListProposeParams();
+
+        assertEq(_powerToken.getPastVotes(_alice, _currentEpoch() - 1), 5500);
+        assertEq(_powerToken.getPastVotes(_bob, _currentEpoch() - 1), 2500);
+        assertEq(_powerToken.getPastVotes(_carol, _currentEpoch() - 1), 2000);
+
+        vm.prank(_alice);
+        _powerToken.transfer(_bob, 0);
+
+        vm.prank(_bob);
+        _powerToken.transfer(_carol, 0);
+
+        assertEq(_powerToken.getPastVotes(_alice, _currentEpoch() - 1), 5500);
+        assertEq(_powerToken.getPastVotes(_bob, _currentEpoch() - 1), 2500);
+        assertEq(_powerToken.getPastVotes(_carol, _currentEpoch() - 1), 2000);
+
+        vm.prank(_dave);
+        uint256 proposalId_ = _emergencyGovernor.propose(targets_, values_, callDatas_, description_);
+
+        uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
+
+        assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // Active immediately
+
+        (, , , uint256 noVotes, uint256 yesVotes, , ) = _emergencyGovernor.getProposal(proposalId_);
+
+        vm.prank(_alice);
+        _emergencyGovernor.castVote(proposalId_, yesSupport_);
+
+        vm.prank(_bob);
+        _emergencyGovernor.castVote(proposalId_, yesSupport_);
+
+        (, , , noVotes, yesVotes, , ) = _emergencyGovernor.getProposal(proposalId_);
+
+        assertEq(uint256(_emergencyGovernor.state(proposalId_)), 4);
     }
 
     function _getRemoveFromAndAddToListProposeParams()
