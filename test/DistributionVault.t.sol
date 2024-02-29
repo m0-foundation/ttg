@@ -217,7 +217,7 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account2"))
         );
 
-        vm.expectRevert(IERC712.InvalidSignature.selector);
+        vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the nonce is now different from the one used in the digest.
         _vault.claimBySig(
@@ -251,7 +251,7 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account1"))
         );
 
-        vm.expectRevert(IERC712.InvalidSignature.selector);
+        vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the destination is different from the one used in the digest.
         _vault.claimBySig(
@@ -285,7 +285,7 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account1"))
         );
 
-        vm.expectRevert(IERC712.InvalidSignature.selector);
+        vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the account signing is different from the passed account.
         _vault.claimBySig(
