@@ -41,16 +41,20 @@ contract TestUtils is Test {
         _jumpEpochs(_isVotingEpoch(PureEpochs.currentEpoch()) ? 1 : 2);
     }
 
+    function _getTimestampOfEpochStart(uint16 epoch) internal pure returns (uint40 timestamp_) {
+        return PureEpochs._MERGE_TIMESTAMP + (epoch - 1) * PureEpochs._EPOCH_PERIOD;
+    }
+
     function _warpToEpoch(uint256 epoch_) internal {
-        vm.warp(PureEpochs.getTimestampOfEpochStart(uint16(epoch_)));
+        vm.warp(_getTimestampOfEpochStart(uint16(epoch_)));
     }
 
     function _warpToTheEndOfTheEpoch(uint256 epoch_) internal {
-        vm.warp(PureEpochs.getTimestampOfEpochStart(uint16(epoch_) + 1) - 1);
+        vm.warp(_getTimestampOfEpochStart(uint16(epoch_) + 1) - 1);
     }
 
     function _jumpEpochs(uint256 epochs_) internal {
-        vm.warp(PureEpochs.getTimestampOfEpochStart(PureEpochs.currentEpoch() + uint16(epochs_)));
+        vm.warp(_getTimestampOfEpochStart(PureEpochs.currentEpoch() + uint16(epochs_)));
     }
 
     function _jumpSeconds(uint256 seconds_) internal {
