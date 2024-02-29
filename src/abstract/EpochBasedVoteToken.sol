@@ -72,7 +72,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     \******************************************************************************************************************/
 
     /// @inheritdoc IERC20
-    function balanceOf(address account_) external view override(ERC20Extended, IERC20) returns (uint256) {
+    function balanceOf(address account_) external view returns (uint256) {
         return _getBalance(account_, _clock());
     }
 
@@ -127,7 +127,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC20
-    function totalSupply() external view override(ERC20Extended, IERC20) returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return _getTotalSupply(_clock());
     }
 

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { ERC712 } from "../../lib/common/src/ERC712.sol";
+import { ERC712Extended } from "../../lib/common/src/ERC712Extended.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
@@ -12,7 +12,7 @@ import { IERC6372 } from "./interfaces/IERC6372.sol";
 import { IGovernor } from "./interfaces/IGovernor.sol";
 
 /// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
-abstract contract BatchGovernor is IBatchGovernor, ERC712 {
+abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     /**
      * @notice Proposal struct for storing all relevant proposal information.
      * @param voteStart      The epoch at which voting begins, inclusively.
@@ -75,7 +75,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @param  name_      The name of the contract. Used to compute EIP712 domain separator.
      * @param  voteToken_ The address of the token used to vote.
      */
-    constructor(string memory name_, address voteToken_) ERC712(name_) {
+    constructor(string memory name_, address voteToken_) ERC712Extended(name_) {
         if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }
 
