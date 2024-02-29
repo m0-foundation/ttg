@@ -42,6 +42,9 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Revert message when the total supply of the bootstrap token is larger than `type(uint240).max`.
     error BootstrapSupplyTooLarge();
 
+    /// @notice Revert message when the total supply of the bootstrap token is 0.
+    error BootstrapSupplyZero();
+
     /**
      * @notice Revert message when the amount available for auction is less than the minimum requested to buy.
      * @param  amountToAuction    The amount available for auction.

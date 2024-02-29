@@ -87,6 +87,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         uint16 bootstrapEpoch_ = bootstrapEpoch = (_clock() - 1);
         uint256 bootstrapSupply_ = IEpochBasedVoteToken(bootstrapToken_).pastTotalSupply(bootstrapEpoch_);
 
+        if (bootstrapSupply_ == 0) revert BootstrapSupplyZero();
+
         if (bootstrapSupply_ > type(uint240).max) revert BootstrapSupplyTooLarge();
 
         _bootstrapSupply = uint240(bootstrapSupply_);
