@@ -282,6 +282,14 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         }
     }
 
+    /// @inheritdoc IStandardGovernor
+    function getProposalFee(uint256 proposalId_) external view returns (address cashToken_, uint256 fee_) {
+        ProposalFeeInfo storage proposalFee_ = _proposalFees[proposalId_];
+
+        cashToken_ = proposalFee_.cashToken;
+        fee_ = proposalFee_.fee;
+    }
+
     /******************************************************************************************************************\
     |                                          Internal Interactive Functions                                          |
     \******************************************************************************************************************/

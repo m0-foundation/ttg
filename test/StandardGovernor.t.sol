@@ -493,6 +493,10 @@ contract StandardGovernorTests is TestUtils {
 
         uint256 proposalId1_ = _standardGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
 
+        (address proposalCashToken_, uint256 proposalFee_) = _standardGovernor.getProposalFee(proposalId1_);
+        assertEq(proposalFee_, _proposalFee);
+        assertEq(proposalCashToken_, address(_cashToken));
+
         uint256 currentEpoch_ = _standardGovernor.clock();
 
         uint256 expectedProposalId1_ = uint256(
