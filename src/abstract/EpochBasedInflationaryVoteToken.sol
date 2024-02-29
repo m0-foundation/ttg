@@ -130,7 +130,9 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         uint256 amount_
     ) internal virtual override notDuringVoteEpoch {
         _sync(sender_);
+
         if (recipient_ != sender_) _sync(recipient_);
+
         super._transfer(sender_, recipient_, amount_);
     }
 
@@ -261,6 +263,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         if (balance_ == 0) return 0; // No inflation if the account had no balance.
 
+        uint256 inflatedBalance_ = balance_;
         address delegatee_ = _getDelegatee(account_, lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
 
         // NOTE: Starting from the epoch after the latest sync, before `lastEpoch_`.
@@ -273,19 +276,14 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
             if (!_isVotingEpoch(epoch_) || !_hasParticipatedAt(delegatee_, epoch_)) continue;
 
             unchecked {
-                uint256 inflatedBalance_ = uint256(balance_) + inflation_;
+                inflatedBalance_ += _getInflation(uint240(inflatedBalance_));
 
                 // Cap inflation to `type(uint240).max`.
-                if (inflatedBalance_ >= type(uint240).max) return type(uint240).max;
-
-                uint256 newInflation_ = uint256(inflation_) + _getInflation(uint240(inflatedBalance_));
-
-                // Cap inflation to `type(uint240).max`.
-                if (newInflation_ >= type(uint240).max) return type(uint240).max;
-
-                inflation_ = uint240(newInflation_); // Accumulate compounded inflation.
+                if (inflatedBalance_ >= type(uint240).max) return type(uint240).max - balance_;
             }
         }
+
+        return uint240(inflatedBalance_ - balance_);
     }
 
     /// @dev Reverts if the current epoch is a voting epoch.
