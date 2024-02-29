@@ -699,8 +699,8 @@ contract StandardGovernorTests is TestUtils {
     /* ============ View Functions ============ */
 
     function test_quorum() external {
-        assertEq(_standardGovernor.quorum(), 0);
-        assertEq(_standardGovernor.quorum(1), 0);
+        assertEq(_standardGovernor.quorum(), 1);
+        assertEq(_standardGovernor.quorum(1), 1);
     }
 
     function test_votingDelay() external {
