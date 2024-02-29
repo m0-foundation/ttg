@@ -17,6 +17,8 @@ import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
 /// @title A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
 contract DistributionVault is IDistributionVault, StatefulERC712 {
+    uint256 internal constant _GRANULARITY = 1e9;
+
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
     /// @inheritdoc IDistributionVault
     bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
@@ -149,7 +151,13 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
             if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
 
-            claimable_ += (distributionOfAt[token_][startEpoch_ + index_] * balance_) / totalSupplies_[index_];
+            claimable_ +=
+                (distributionOfAt[token_][startEpoch_ + index_] * balance_ * _GRANULARITY) /
+                totalSupplies_[index_];
+        }
+
+        unchecked {
+            return claimable_ / _GRANULARITY;
         }
     }
 
