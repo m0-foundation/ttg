@@ -8,6 +8,10 @@ import { IERC6372 } from "./IERC6372.sol";
 
 /// @title Minimal OpenZeppelin-style, Tally-compatible governor.
 interface IGovernor is IERC6372, IERC712 {
+    /******************************************************************************************************************\
+    |                                                      Enums                                                       |
+    \******************************************************************************************************************/
+
     /**
      * @notice Proposal state.
      * @param  Pending   The proposal has been created, but the vote has not started yet.
