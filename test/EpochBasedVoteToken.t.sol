@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.23;
 
+import { IERC20Extended } from "../lib/common/src/interfaces/IERC20Extended.sol";
+
 import { IERC5805 } from "../src/abstract/interfaces/IERC5805.sol";
 import { IEpochBasedVoteToken } from "../src/abstract/interfaces/IEpochBasedVoteToken.sol";
 
@@ -369,60 +371,27 @@ contract EpochBasedVoteTokenTests is TestUtils {
         assertEq(_vote.getVotes(_carol), 800);
     }
 
-    function test_delegateToZeroAddress_transferToZeroAddress() external {
-        _warpToNextTransferEpoch();
+    /* ============ mint ============ */
+    function test_mint_invalidRecipient() external {
+        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(0)));
+        _vote.mint(address(0), 1_000);
 
+        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(_vote)));
+        _vote.mint(address(_vote), 1_000);
+    }
+
+    /* ============ transfer ============ */
+    function test_transfer_invalidRecipient() external {
         _vote.mint(_alice, 1_000);
-        _vote.mint(_bob, 900);
-        _vote.mint(_carol, 800);
 
-        assertEq(_vote.getVotes(_alice), 1_000);
-        assertEq(_vote.getVotes(_bob), 900);
-        assertEq(_vote.getVotes(_carol), 800);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(0)));
 
         vm.prank(_alice);
-        _vote.delegate(address(0)); // self-delegation instead of delegation to 0x0 address
+        _vote.transfer(address(0), 1_000);
 
-        assertEq(_vote.getVotes(_alice), 1_000);
-        assertEq(_vote.getVotes(address(0)), 0);
-
-        vm.prank(_alice);
-        _vote.delegate(_bob);
-
-        assertEq(_vote.getVotes(_alice), 0);
-        assertEq(_vote.getVotes(_bob), 1_900);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(_vote)));
 
         vm.prank(_alice);
-        _vote.transfer(_carol, 400);
-
-        assertEq(_vote.getVotes(_alice), 0);
-        assertEq(_vote.getVotes(_bob), 1_500);
-        assertEq(_vote.getVotes(_carol), 1_200);
-
-        assertEq(_vote.balanceOf(_alice), 600);
-        assertEq(_vote.balanceOf(_carol), 1_200);
-
-        vm.prank(_alice);
-        _vote.transfer(address(0), 300);
-
-        assertEq(_vote.balanceOf(_alice), 300);
-        assertEq(_vote.balanceOf(address(0)), 300);
-
-        assertEq(_vote.getVotes(_alice), 0);
-        assertEq(_vote.getVotes(_bob), 1_200);
-        assertEq(_vote.getVotes(_carol), 1_200);
-        assertEq(_vote.getVotes(address(0)), 300);
-
-        vm.prank(_alice);
-        _vote.transfer(_carol, 300);
-
-        assertEq(_vote.balanceOf(_alice), 0);
-        assertEq(_vote.balanceOf(_carol), 1_500);
-        assertEq(_vote.balanceOf(address(0)), 300);
-
-        assertEq(_vote.getVotes(_alice), 0);
-        assertEq(_vote.getVotes(_bob), 900);
-        assertEq(_vote.getVotes(_carol), 1_500);
-        assertEq(_vote.getVotes(address(0)), 300);
+        _vote.transfer(address(_vote), 1_000);
     }
 }
