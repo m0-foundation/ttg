@@ -194,6 +194,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     function _mint(address recipient_, uint256 amount_) internal virtual {
         _revertIfInvalidRecipient(recipient_);
+        if (amount_ == 0) revert InsufficientAmount(amount_);
 
         emit Transfer(address(0), recipient_, amount_);
 

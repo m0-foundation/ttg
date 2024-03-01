@@ -377,6 +377,11 @@ contract EpochBasedVoteTokenTests is TestUtils {
         _vote.mint(address(0), 1_000);
     }
 
+    function test_mint_insufficientAmount() external {
+        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InsufficientAmount.selector, 0));
+        _vote.mint(_alice, 0);
+    }
+
     /* ============ transfer ============ */
     function test_transfer_invalidRecipient() external {
         _vote.mint(_alice, 1_000);
