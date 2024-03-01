@@ -22,7 +22,7 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     /// @inheritdoc IDeployer
     uint256 public nonce;
 
-    /// @notice Throws if called by any contract other than the Zero Governor.
+    /// @dev Throws if called by any contract other than the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;

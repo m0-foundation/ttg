@@ -50,12 +50,10 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
      * @param nonce_   The nonce being used by the account.
      */
     function _checkAndIncrementNonce(address account_, uint256 nonce_) internal {
-        uint256 currentNonce_ = nonces[account_];
-
-        if (nonce_ != currentNonce_) revert InvalidAccountNonce(nonce_, currentNonce_);
-
         unchecked {
-            nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
+            uint256 currentNonce_ = nonces[account_]++; // Nonce realistically cannot overflow.
+
+            if (nonce_ != currentNonce_) revert InvalidAccountNonce(nonce_, currentNonce_);
         }
     }
 

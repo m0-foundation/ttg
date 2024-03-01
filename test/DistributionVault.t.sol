@@ -4,8 +4,6 @@ pragma solidity 0.8.23;
 
 import { IERC712 } from "../lib/common/src/interfaces/IERC712.sol";
 
-import { PureEpochs } from "../src/libs/PureEpochs.sol";
-
 import { IDistributionVault } from "../src/interfaces/IDistributionVault.sol";
 import { DistributionVault } from "../src/DistributionVault.sol";
 
@@ -37,7 +35,7 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.zeroToken(), address(_baseToken));
         assertEq(_vault.name(), "DistributionVault");
         assertEq(_vault.CLOCK_MODE(), "mode=epoch");
-        assertEq(_vault.clock(), PureEpochs.currentEpoch());
+        assertEq(_vault.clock(), _currentEpoch());
     }
 
     function test_constructor_invalidZeroTokenAddress() external {
@@ -48,15 +46,15 @@ contract DistributionVaultTests is TestUtils {
     /* ============ distribution ============ */
     function test_distribution() external {
         // Sets account balances this epoch.
-        _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
-        _baseToken.setPastBalanceOf(_accounts[1], PureEpochs.currentEpoch(), 5_000_000);
-        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[0], _currentEpoch(), 1_000_000);
+        _baseToken.setPastBalanceOf(_accounts[1], _currentEpoch(), 5_000_000);
+        _baseToken.setPastTotalSupply(_currentEpoch(), 15_000_000);
 
         // Mint 1_000_000 funds tokens to the ZeroToken contract and distribute them.
         _token1.setBalance(address(_vault), 1_000_000);
         _vault.distribute(address(_token1));
 
-        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 startEpoch_ = _currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
         _warpToNextEpoch();
@@ -66,15 +64,15 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[1], startEpoch_, endEpoch_), 333_333);
 
         // Sets account balances this epoch.
-        _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 1_000_000);
-        _baseToken.setPastBalanceOf(_accounts[1], PureEpochs.currentEpoch(), 5_000_000);
-        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[0], _currentEpoch(), 1_000_000);
+        _baseToken.setPastBalanceOf(_accounts[1], _currentEpoch(), 5_000_000);
+        _baseToken.setPastTotalSupply(_currentEpoch(), 15_000_000);
 
         // Mint 500_000 funds tokens to the ZeroToken contract and distribute them.
         _token1.setBalance(address(_vault), 1_500_000); // 1_000_000 + 500_000
         _vault.distribute(address(_token1));
 
-        endEpoch_ = PureEpochs.currentEpoch();
+        endEpoch_ = _currentEpoch();
 
         _warpToNextEpoch();
 
@@ -83,9 +81,9 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[1], startEpoch_, endEpoch_), 499_999);
 
         // Sets account balances this epoch (Account 0 transfers half their balance to Account 1).
-        _baseToken.setPastBalanceOf(_accounts[0], PureEpochs.currentEpoch(), 500_000); // 1_000_000 - 500_000
-        _baseToken.setPastBalanceOf(_accounts[1], PureEpochs.currentEpoch(), 5_500_000); // 5_000_000 + 500_000
-        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[0], _currentEpoch(), 500_000); // 1_000_000 - 500_000
+        _baseToken.setPastBalanceOf(_accounts[1], _currentEpoch(), 5_500_000); // 5_000_000 + 500_000
+        _baseToken.setPastTotalSupply(_currentEpoch(), 15_000_000);
 
         // Check that the claimable funds tokens have not changed.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 99_999);
@@ -95,7 +93,7 @@ contract DistributionVaultTests is TestUtils {
         _token1.setBalance(address(_vault), 3_000_000); // 1_500_000 + 1_500_000
         _vault.distribute(address(_token1));
 
-        endEpoch_ = PureEpochs.currentEpoch();
+        endEpoch_ = _currentEpoch();
 
         _warpToNextEpoch();
 
@@ -104,8 +102,8 @@ contract DistributionVaultTests is TestUtils {
         assertEq(_vault.getClaimable(address(_token1), _accounts[1], startEpoch_, endEpoch_), 1_049_999);
 
         // Sets account balances this epoch (Account 0 transfers their remaining balance to Account 1).
-        _baseToken.setPastBalanceOf(_accounts[1], PureEpochs.currentEpoch(), 6_000_000); // 5_500_000 + 500_000
-        _baseToken.setPastTotalSupply(PureEpochs.currentEpoch(), 15_000_000);
+        _baseToken.setPastBalanceOf(_accounts[1], _currentEpoch(), 6_000_000); // 5_500_000 + 500_000
+        _baseToken.setPastTotalSupply(_currentEpoch(), 15_000_000);
 
         // Check that the claimable funds tokens have not changed.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 149_999);
@@ -115,7 +113,7 @@ contract DistributionVaultTests is TestUtils {
         _token1.setBalance(address(_vault), 3_100_000); // 3_000_000 + 100_000
         _vault.distribute(address(_token1));
 
-        endEpoch_ = PureEpochs.currentEpoch();
+        endEpoch_ = _currentEpoch();
 
         _warpToNextEpoch();
 
@@ -127,25 +125,52 @@ contract DistributionVaultTests is TestUtils {
         vm.prank(_accounts[0]);
         _vault.claim(address(_token1), startEpoch_, endEpoch_, _accounts[0]);
 
-        // Tokens are claimed for Account 1 by signature.
+        uint256 midEpoch_ = (startEpoch_ + endEpoch_) / 2;
+
+        // Some token are claimed for Account 1 by bytes signature.
         bytes32 digest_ = _vault.getClaimDigest(
             address(_token1),
             startEpoch_,
-            endEpoch_,
+            midEpoch_,
             _accounts[1],
             _vault.nonces(_accounts[1]),
             block.timestamp + 1 days
         );
+
         bytes memory claimSignature_ = _getSignature(digest_, _makeKey("account2"));
 
         _vault.claimBySig(
             _accounts[1], // for
             address(_token1),
             startEpoch_,
-            endEpoch_,
+            midEpoch_,
             _accounts[1], // destination
             block.timestamp + 1 days,
             claimSignature_
+        );
+
+        // Rest of token are claimed for Account 1 by vrs signature.
+        digest_ = _vault.getClaimDigest(
+            address(_token1),
+            midEpoch_,
+            endEpoch_,
+            _accounts[1],
+            _vault.nonces(_accounts[1]),
+            block.timestamp + 1 days
+        );
+
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(_makeKey("account2"), digest_);
+
+        _vault.claimBySig(
+            _accounts[1], // for
+            address(_token1),
+            midEpoch_,
+            endEpoch_,
+            _accounts[1], // destination
+            block.timestamp + 1 days,
+            v_,
+            r_,
+            s_
         );
 
         // Check that the claimable funds tokens have zeroed.
@@ -155,23 +180,23 @@ contract DistributionVaultTests is TestUtils {
 
     /* ============ getClaimable ============ */
     function test_getClaimable_notPastTimepoint() external {
-        uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
-        uint256 endEpoch_ = PureEpochs.currentEpoch() + 1;
+        uint256 startEpoch_ = _currentEpoch() - 1;
+        uint256 endEpoch_ = _currentEpoch() + 1;
         vm.expectRevert(
-            abi.encodeWithSelector(IDistributionVault.NotPastTimepoint.selector, endEpoch_, PureEpochs.currentEpoch())
+            abi.encodeWithSelector(IDistributionVault.NotPastTimepoint.selector, endEpoch_, _currentEpoch())
         );
         _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
     }
 
     function test_getClaimable_startEpochSameAsEndEpoch() external {
-        uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
+        uint256 startEpoch_ = _currentEpoch() - 1;
         uint256 endEpoch_ = startEpoch_;
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 0);
     }
 
     function test_getClaimable_startEpochAfterEndEpoch() external {
-        uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
-        uint256 endEpoch_ = PureEpochs.currentEpoch() - 2;
+        uint256 startEpoch_ = _currentEpoch() - 1;
+        uint256 endEpoch_ = _currentEpoch() - 2;
         vm.expectRevert(
             abi.encodeWithSelector(IDistributionVault.StartEpochAfterEndEpoch.selector, startEpoch_, endEpoch_)
         );
@@ -180,7 +205,7 @@ contract DistributionVaultTests is TestUtils {
 
     /* ============ claim ============ */
     function test_claim_invalidDestination() external {
-        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 startEpoch_ = _currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
         vm.expectRevert(IDistributionVault.InvalidDestinationAddress.selector);
@@ -189,7 +214,7 @@ contract DistributionVaultTests is TestUtils {
 
     /* ============ claimBySig ============ */
     function test_claimBySig_invalidDestination() external {
-        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 startEpoch_ = _currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
         bytes32 digest_ = _vault.getClaimDigest(
@@ -214,7 +239,7 @@ contract DistributionVaultTests is TestUtils {
     }
 
     function test_claimBySig_replayAttack() external {
-        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 startEpoch_ = _currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
         _warpToNextEpoch();

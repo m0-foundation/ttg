@@ -15,13 +15,13 @@ import { IGovernor } from "./interfaces/IGovernor.sol";
 abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     /**
      * @notice Proposal struct for storing all relevant proposal information.
-     * @param voteStart      The epoch at which voting begins, inclusively.
-     * @param executed       Whether or not the proposal has been executed.
-     * @param proposer       The address of the proposer.
-     * @param thresholdRatio The ratio of yes votes required for a proposal to succeed.
-     * @param quorumRatio    The ratio of total votes required for a proposal to succeed.
-     * @param noWeight       The total number of votes against the proposal.
-     * @param yesWeight      The total number of votes for the proposal.
+     * @param  voteStart      The epoch at which voting begins, inclusively.
+     * @param  executed       Whether or not the proposal has been executed.
+     * @param  proposer       The address of the proposer.
+     * @param  thresholdRatio The ratio of yes votes required for a proposal to succeed.
+     * @param  quorumRatio    The ratio of total votes required for a proposal to succeed.
+     * @param  noWeight       The total number of votes against the proposal.
+     * @param  yesWeight      The total number of votes for the proposal.
      */
     struct Proposal {
         // 1st slot
@@ -630,7 +630,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @notice Returns the ballot digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @dev    Returns the ballot digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
      * @param  proposalId_ The unique proposal ID being voted on.
      * @param  support_    The type of support to cast for the proposal.
      * @return The digest to be signed.
@@ -640,7 +640,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @notice Returns the ballots digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @dev    Returns the ballots digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
      * @param  proposalIdsHash_ The hash of the list of unique proposal IDs being voted on.
      * @param  supportListHash_ The hash of the list of support type per proposal IDs to cast.
      * @return The digest to be signed.
@@ -650,7 +650,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @notice Returns the ballot with reason digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @dev    Returns the ballot with reason digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
      * @param  proposalId_ The unique proposal ID being voted on.
      * @param  support_    The type of support to cast for the proposal.
      * @param  reason_     The reason for which the caller casts their vote, if any.
@@ -668,7 +668,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @notice Returns the ballots digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @dev    Returns the ballots digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
      * @param  proposalIdsHash_ The hash of the list of unique proposal IDs being voted on.
      * @param  supportListHash_ The hash of the list of support type per proposal IDs to cast.
      * @param  reasonListHash_  The hash of the list of reason per proposal IDs to cast.
@@ -686,7 +686,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @notice Returns the hash of the reason list to be used in the ballots digest.
+     * @dev    Returns the hash of the reason list to be used in the ballots digest.
      * @param  reasonList_ The list of reasons to hash.
      * @return The hash of the reason list.
      */

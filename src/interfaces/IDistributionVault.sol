@@ -79,6 +79,31 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @param  endEpoch    The ending epoch number as a clock value.
      * @param  destination The address of the account where the claimed token will be sent.
      * @param  deadline    The last timestamp at which the signature is still valid.
+     * @param  v           v of the signature.
+     * @param  r           r of the signature.
+     * @param  s           s of the signature.
+     * @return claimed     The total amount of token claimed by `account`.
+     */
+    function claimBySig(
+        address account,
+        address token,
+        uint256 startEpoch,
+        uint256 endEpoch,
+        address destination,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 claimed);
+
+    /**
+     * @notice Allows a signer to claim `token` distribution between inclusive epochs `startEpoch` and `endEpoch`.
+     * @param  account     The purported address of the signing account.
+     * @param  token       The address of the token being claimed.
+     * @param  startEpoch  The starting epoch number as a clock value.
+     * @param  endEpoch    The ending epoch number as a clock value.
+     * @param  destination The address of the account where the claimed token will be sent.
+     * @param  deadline    The last timestamp at which the signature is still valid.
      * @param  signature   A byte array signature.
      * @return claimed     The total amount of token claimed by `account`.
      */

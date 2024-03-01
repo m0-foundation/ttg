@@ -361,7 +361,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     \******************************************************************************************************************/
 
     /**
-     * @notice Returns the current timepoint according to the mode the contract is operating on.
+     * @dev    Returns the current timepoint according to the mode the contract is operating on.
      * @return Current timepoint.
      */
     function _clock() internal view returns (uint16) {
