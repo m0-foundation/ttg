@@ -100,7 +100,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @dev   Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
      * @param delegatee_ The address of the account being marked as having participated.
      */
-    function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
+    function _markParticipation(address delegatee_) internal onlyDuringVoteEpoch {
         uint16 currentEpoch_ = _clock();
 
         // Revert if could not update, as it means the delegatee has already participated in this epoch.
@@ -121,7 +121,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param recipient_ The address of the account to mint tokens to.
      * @param amount_    The amount of tokens to mint.
      */
-    function _mint(address recipient_, uint256 amount_) internal virtual override notDuringVoteEpoch {
+    function _mint(address recipient_, uint256 amount_) internal override notDuringVoteEpoch {
         _sync(recipient_, _clock());
         super._mint(recipient_, amount_);
     }
@@ -143,11 +143,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param recipient_ The address of the account to transfer tokens to.
      * @param amount_    The amount of tokens to transfer.
      */
-    function _transfer(
-        address sender_,
-        address recipient_,
-        uint256 amount_
-    ) internal virtual override notDuringVoteEpoch {
+    function _transfer(address sender_, address recipient_, uint256 amount_) internal override notDuringVoteEpoch {
         _sync(sender_, _clock());
 
         if (recipient_ != sender_) _sync(recipient_, _clock());
