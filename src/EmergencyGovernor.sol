@@ -14,7 +14,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     address public immutable standardGovernor;
     address public immutable zeroGovernor;
 
-    /// @notice Throws if called by any account other than the Zero Governor.
+    /// @dev Throws if called by any account other than the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;

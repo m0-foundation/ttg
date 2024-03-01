@@ -70,17 +70,48 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 endEpoch_,
         address destination_,
         uint256 deadline_,
-        bytes memory signature_
+        uint8 v_,
+        bytes32 r_,
+        bytes32 s_
     ) external returns (uint256) {
-        uint256 currentNonce_ = nonces[account_];
-        bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
+        unchecked {
+            // Nonce realistically cannot overflow.
+            uint256 nonce_ = nonces[account_]++;
+            bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_);
 
-        _revertIfInvalidSignature(account_, digest_, signature_);
+            _revertIfInvalidSignature(account_, digest_, v_, r_, s_);
+        }
+
         _revertIfExpired(deadline_);
 
+        return _claim(account_, token_, startEpoch_, endEpoch_, destination_);
+    }
+
+    /// @inheritdoc IDistributionVault
+    function claimBySig(
+        address account_,
+        address token_,
+        uint256 startEpoch_,
+        uint256 endEpoch_,
+        address destination_,
+        uint256 deadline_,
+        bytes memory signature_
+    ) external returns (uint256) {
         unchecked {
-            nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
+            // Nonce realistically cannot overflow.
+            bytes32 digest_ = getClaimDigest(
+                token_,
+                startEpoch_,
+                endEpoch_,
+                destination_,
+                nonces[account_]++,
+                deadline_
+            );
+
+            _revertIfInvalidSignature(account_, digest_, signature_);
         }
+
+        _revertIfExpired(deadline_);
 
         return _claim(account_, token_, startEpoch_, endEpoch_, destination_);
     }
@@ -176,7 +207,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     \******************************************************************************************************************/
 
     /**
-     * @notice Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.
+     * @dev    Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.
      * @param  account_    The address of the account claiming the token.
      * @param  token_       The address of the token being claimed.
      * @param  startEpoch_  The starting epoch number as a clock value.

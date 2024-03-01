@@ -60,7 +60,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     /// @dev The next target supply of the token.
     uint240 internal _nextTargetSupply = INITIAL_SUPPLY;
 
-    /// @notice Reverts if the caller is not the Standard Governor.
+    /// @dev Reverts if the caller is not the Standard Governor.
     modifier onlyStandardGovernor() {
         _revertIfNotStandardGovernor();
         _;
