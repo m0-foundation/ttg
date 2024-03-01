@@ -190,6 +190,49 @@
   },
   {
     "type": "function",
+    "name": "eip712Domain",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "fields_",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      },
+      {
+        "name": "name_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "version_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyingContract_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "salt_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "extensions_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getClaimDigest",
     "inputs": [
       {
@@ -403,6 +446,12 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "EIP712DomainChanged",
+    "inputs": [],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "InvalidAccountNonce",
     "inputs": [
@@ -479,6 +528,22 @@
     "type": "error",
     "name": "SignerMismatch",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StartEpochAfterEndEpoch",
+    "inputs": [
+      {
+        "name": "startEpoch",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "endEpoch",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",

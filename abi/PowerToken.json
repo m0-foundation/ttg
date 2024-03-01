@@ -539,6 +539,49 @@
   },
   {
     "type": "function",
+    "name": "eip712Domain",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "fields_",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      },
+      {
+        "name": "name_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "version_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyingContract_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "salt_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "extensions_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getCost",
     "inputs": [
       {
@@ -1045,6 +1088,24 @@
   },
   {
     "type": "function",
+    "name": "sync",
+    "inputs": [
+      {
+        "name": "account_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "epoch_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "targetSupply",
     "inputs": [],
     "outputs": [
@@ -1419,6 +1480,12 @@
   },
   {
     "type": "event",
+    "name": "EIP712DomainChanged",
+    "inputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "NextCashTokenSet",
     "inputs": [
       {
@@ -1432,6 +1499,25 @@
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Sync",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "epoch",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       }
     ],
     "anonymous": false
@@ -1483,11 +1569,6 @@
   {
     "type": "error",
     "name": "AlreadyParticipated",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "AmountExceedsUint240",
     "inputs": []
   },
   {
@@ -1545,6 +1626,11 @@
   },
   {
     "type": "error",
+    "name": "BootstrapSupplyZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "CallerMustBePayee",
     "inputs": [
       {
@@ -1561,12 +1647,12 @@
   },
   {
     "type": "error",
-    "name": "DivideUpOverflow",
+    "name": "DivisionByZero",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "DivisionByZero",
+    "name": "EpochZero",
     "inputs": []
   },
   {
@@ -1576,8 +1662,56 @@
   },
   {
     "type": "error",
+    "name": "FutureEpoch",
+    "inputs": [
+      {
+        "name": "currentEpoch",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "epoch",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InflationTooHigh",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientAllowance",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "allowance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "needed",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InsufficientAmount",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
@@ -1620,6 +1754,17 @@
     "type": "error",
     "name": "InvalidCashTokenAddress",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRecipient",
+    "inputs": [
+      {
+        "name": "recipient",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
     "type": "error",
@@ -1710,12 +1855,33 @@
   },
   {
     "type": "error",
+    "name": "SyncBeforeBootstrap",
+    "inputs": [
+      {
+        "name": "bootstrapEpoch",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "epoch",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "TransferFromFailed",
     "inputs": []
   },
   {
     "type": "error",
     "name": "VoteEpoch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroPurchaseAmount",
     "inputs": []
   }
 ]

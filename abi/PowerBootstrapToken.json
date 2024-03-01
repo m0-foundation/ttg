@@ -60,7 +60,7 @@
   },
   {
     "type": "error",
-    "name": "LengthMismatch",
+    "name": "ArrayLengthMismatch",
     "inputs": [
       {
         "name": "accountsLength",

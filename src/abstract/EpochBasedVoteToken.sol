@@ -296,7 +296,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     function _update(
         AmountSnap[] storage amountSnaps_,
-        function(uint240, uint240) returns (uint240) operation_,
+        function(uint240, uint240) internal pure returns (uint240) operation_,
         uint240 amount_
     ) internal returns (uint240 oldAmount_, uint240 newAmount_) {
         uint16 currentEpoch_ = _clock();
@@ -334,7 +334,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     function _updateBalance(
         address account_,
-        function(uint240, uint240) returns (uint240) operation_,
+        function(uint240, uint240) internal pure returns (uint240) operation_,
         uint240 amount_
     ) internal {
         _update(_balances[account_], operation_, amount_);
@@ -348,7 +348,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     function _updateVotingPower(
         address delegatee_,
-        function(uint240, uint240) returns (uint240) operation_,
+        function(uint240, uint240) internal pure returns (uint240) operation_,
         uint240 amount_
     ) internal {
         (uint240 oldAmount_, uint240 newAmount_) = _update(_votingPowers[delegatee_], operation_, amount_);

@@ -305,15 +305,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @return The balance of `account_` plus any inflation that is unrealized before `epoch_`.
      */
     function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
-        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
-        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
-
-        // If no snaps, return the bootstrap balance at the bootstrap epoch.
-        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
-        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
-        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
-
-        return super._getBalance(account_, epoch_);
+        return _getInternalOrBootstrap(account_, epoch_, super._getBalance);
     }
 
     /**
@@ -326,15 +318,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint16 epoch_
     ) internal view override returns (uint240) {
-        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
-        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
-
-        // If no snaps, return the bootstrap balance at the bootstrap epoch.
-        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
-        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
-        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
-
-        return super._getBalanceWithoutUnrealizedInflation(account_, epoch_);
+        return _getInternalOrBootstrap(account_, epoch_, super._getBalanceWithoutUnrealizedInflation);
     }
 
     /**
@@ -370,16 +354,33 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @dev    Returns the amount of votes of `account_` plus any inflation that should be realized at `epoch_`.
      * @param  account_ The account to get the votes for.
      * @param  epoch_   The epoch to get the votes at.
-     * @return The balance of votes of `account_` plus any inflation that should be realized at `epoch_`.
+     * @return The votes of `account_` at `epoch_`.
      */
     function _getVotes(address account_, uint16 epoch_) internal view override returns (uint240) {
+        return _getInternalOrBootstrap(account_, epoch_, super._getVotes);
+    }
+
+    /**
+     * @dev    Returns the amount of balance/votes for `account_` at clock value `epoch_`.
+     * @param  account_ The account to get the balance/votes for.
+     * @param  epoch_   The epoch to get the balance/votes at.
+     * @param  getter_  An internal view function that returns the balance/votes that are internally tracked.
+     * @return The balance/votes of `account_` (plus any inflation that should be realized) at `epoch_`.
+     */
+    function _getInternalOrBootstrap(
+        address account_,
+        uint16 epoch_,
+        function(address, uint16) internal view returns (uint240) getter_
+    ) internal view returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
-        // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
-        if (_votingPowers[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
+        // If no syncs, return the bootstrap balance at the bootstrap epoch.
+        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
+        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
+        if (_lastSyncs[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
 
-        return super._getVotes(account_, epoch_);
+        return getter_(account_, epoch_);
     }
 
     /**
