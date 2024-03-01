@@ -17,6 +17,12 @@ import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
 /// @title A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
 contract DistributionVault is IDistributionVault, StatefulERC712 {
+    /**
+     * @dev The scale to apply when accumulating an account's claimable token, per epoch, before dividing.
+     *      It is arbitrarily set to `1e9`. The smaller it is, the more dust will accumulate in the contract.
+     *      Conversely, the larger it is, the more likely it is to overflow when accumulating.
+     *      The more epochs that are claimed at once, the less dust will remain.
+     */
     uint256 internal constant _GRANULARITY = 1e9;
 
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
@@ -64,17 +70,48 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 endEpoch_,
         address destination_,
         uint256 deadline_,
-        bytes memory signature_
+        uint8 v_,
+        bytes32 r_,
+        bytes32 s_
     ) external returns (uint256) {
-        uint256 currentNonce_ = nonces[account_];
-        bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, currentNonce_, deadline_);
+        unchecked {
+            // Nonce realistically cannot overflow.
+            uint256 nonce_ = nonces[account_]++;
+            bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_);
 
-        _revertIfInvalidSignature(account_, digest_, signature_);
+            _revertIfInvalidSignature(account_, digest_, v_, r_, s_);
+        }
+
         _revertIfExpired(deadline_);
 
+        return _claim(account_, token_, startEpoch_, endEpoch_, destination_);
+    }
+
+    /// @inheritdoc IDistributionVault
+    function claimBySig(
+        address account_,
+        address token_,
+        uint256 startEpoch_,
+        uint256 endEpoch_,
+        address destination_,
+        uint256 deadline_,
+        bytes memory signature_
+    ) external returns (uint256) {
         unchecked {
-            nonces[account_] = currentNonce_ + 1; // Nonce realistically cannot overflow.
+            // Nonce realistically cannot overflow.
+            bytes32 digest_ = getClaimDigest(
+                token_,
+                startEpoch_,
+                endEpoch_,
+                destination_,
+                nonces[account_]++,
+                deadline_
+            );
+
+            _revertIfInvalidSignature(account_, digest_, signature_);
         }
+
+        _revertIfExpired(deadline_);
 
         return _claim(account_, token_, startEpoch_, endEpoch_, destination_);
     }
@@ -89,8 +126,11 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
         emit Distribution(token_, currentEpoch_, amount_);
 
-        distributionOfAt[token_][currentEpoch_] += amount_; // Add the amount to the distribution for the current epoch.
-        _lastTokenBalances[token_] = lastTokenBalance_ + amount_; // Track this contract's latest balance of `token_`.
+        unchecked {
+            // NOTE: Can be done unchecked because a token's total supply fits in a `uint256`.
+            distributionOfAt[token_][currentEpoch_] += amount_; // Add to the distribution for the current epoch.
+            _lastTokenBalances[token_] = lastTokenBalance_ + amount_; // Track this contract's latest balance.
+        }
     }
 
     /******************************************************************************************************************\
@@ -151,14 +191,18 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             // Skip epochs with no Zero token balance (i.e. no distribution).
             if (balance_ == 0) continue;
 
-            if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
+            unchecked {
+                if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
+            }
 
+            // Scale the amount by `_GRANULARITY` to avoid some amount of truncation while accumulating.
             claimable_ +=
                 (distributionOfAt[token_][startEpoch_ + index_] * balance_ * _GRANULARITY) /
                 totalSupplies_[index_];
         }
 
         unchecked {
+            // Divide the accumulated amount by `_GRANULARITY` to get the actual claimable amount.
             return claimable_ / _GRANULARITY;
         }
     }
@@ -168,7 +212,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     \******************************************************************************************************************/
 
     /**
-     * @notice Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.
+     * @dev    Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.
      * @param  account_    The address of the account claiming the token.
      * @param  token_       The address of the token being claimed.
      * @param  startEpoch_  The starting epoch number as a clock value.
@@ -183,6 +227,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 endEpoch_,
         address destination_
     ) internal returns (uint256 claimed_) {
+        if (destination_ == address(0)) revert InvalidDestinationAddress();
+
         claimed_ = getClaimable(token_, account_, startEpoch_, endEpoch_);
 
         // NOTE: `getClaimable` skips epochs the account already claimed, so we can safely mark all epochs as claimed.

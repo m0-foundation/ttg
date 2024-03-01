@@ -93,7 +93,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
     \******************************************************************************************************************/
 
     /**
-     * @notice Returns the values of `amountSnaps_` between `startEpoch_` and `endEpoch_`.
+     * @dev    Returns the values of `amountSnaps_` between `startEpoch_` and `endEpoch_`.
      * @param  amountSnaps_ The array of AmountSnaps to query.
      * @param  startEpoch_  The epoch from which to start querying.
      * @param  endEpoch_    The epoch at which to stop querying.

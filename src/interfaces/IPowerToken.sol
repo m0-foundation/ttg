@@ -80,7 +80,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     error ZeroPurchaseAmount();
 
     /**
-     * @notice Revert message when tying to sync to an the epoch that is before the bootstrap epoch.
+     * @notice Revert message when trying to sync to an epoch that is before the bootstrap epoch.
      * @param  bootstrapEpoch The bootstrap epoch.
      * @param  epoch          The epoch attempting to be synced to, not inclusively.
      */

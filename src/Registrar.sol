@@ -28,10 +28,10 @@ contract Registrar is IRegistrar {
     /// @inheritdoc IRegistrar
     address public immutable zeroToken;
 
-    /// @notice A mapping of keys to values.
+    /// @dev A mapping of keys to values.
     mapping(bytes32 key => bytes32 value) internal _valueAt;
 
-    /// @notice Revert if the caller is not the Standard Governor nor the Emergency Governor.
+    /// @dev Revert if the caller is not the Standard Governor nor the Emergency Governor.
     modifier onlyStandardOrEmergencyGovernor() {
         _revertIfNotStandardOrEmergencyGovernor();
         _;
