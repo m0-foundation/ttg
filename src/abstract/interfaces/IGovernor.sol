@@ -295,7 +295,7 @@ interface IGovernor is IERC6372, IERC712 {
     /// @notice Returns the number of clock values between the vote start and vote end.
     function votingPeriod() external view returns (uint256);
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVoteBySig function.
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVoteBySig` function.
     function BALLOT_TYPEHASH() external pure returns (bytes32);
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVoteWithReasonBySig` function.
