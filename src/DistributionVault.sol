@@ -17,6 +17,12 @@ import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
 /// @title A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
 contract DistributionVault is IDistributionVault, StatefulERC712 {
+    /**
+     * @dev The scale to apply when accumulating an account's claimable token, per epoch, before dividing.
+     *      It is arbitrarily set to `1e9`. The smaller it is, the more dust will accumulate in the contract.
+     *      Conversely, the larger it is, the more likely it is to overflow when accumulating.
+     *      The more epochs that are claimed at once, the less dust will remain.
+     */
     uint256 internal constant _GRANULARITY = 1e9;
 
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
@@ -153,12 +159,14 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
             if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
 
+            // Scale the amount by `_GRANULARITY` to avoid some amount of truncation while accumulating.
             claimable_ +=
                 (distributionOfAt[token_][startEpoch_ + index_] * balance_ * _GRANULARITY) /
                 totalSupplies_[index_];
         }
 
         unchecked {
+            // Divide the accumulated amount by `_GRANULARITY` to get the actual claimable amount.
             return claimable_ / _GRANULARITY;
         }
     }
