@@ -622,25 +622,17 @@ contract StandardGovernorTests is TestUtils {
     }
 
     function test_castVotes_arrayLengthMismatch() external {
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1));
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 1, 2));
 
         vm.prank(_alice);
-        _standardGovernor.castVotes(new uint256[](1), new uint256[](2), new uint256[](2));
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1));
-
-        vm.prank(_alice);
-        _standardGovernor.castVotes(new uint256[](1), new uint256[](1), new uint256[](2));
+        _standardGovernor.castVotes(new uint256[](1), new uint8[](2));
     }
 
     function test_castVotes_emptyProposalIdsArray() external {
-        uint256[] memory proposalIds_ = new uint256[](0);
-        uint8[] memory supportList_ = new uint8[](0);
-
         vm.expectRevert(IBatchGovernor.EmptyProposalIdsArray.selector);
 
         vm.prank(_alice);
-        _standardGovernor.castVotes(proposalIds_, supportList_);
+        _standardGovernor.castVotes(new uint256[](0), new uint8[](0));
     }
 
     /* ============ castVotesBySig ============ */
@@ -774,55 +766,22 @@ contract StandardGovernorTests is TestUtils {
     }
 
     function test_castVotesWithReason_arrayLengthMismatch() external {
-        uint256 firstProposalId_ = 1;
-        uint256 secondProposalId_ = 2;
-        uint256 currentEpoch_ = _standardGovernor.clock();
-
-        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
-        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
-        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
-
-        _powerToken.setVotePower(_votePower);
-        _powerToken.setPastTotalSupply(1);
-
-        uint256[] memory proposalIds_ = new uint256[](2);
-        proposalIds_[0] = firstProposalId_;
-        proposalIds_[1] = secondProposalId_;
-
-        uint8[] memory supportList_ = new uint8[](1);
-        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
-
-        string[] memory reasonList_ = new string[](2);
-        reasonList_[0] = "";
-        reasonList_[1] = "";
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1, 2));
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 1, 2));
 
         vm.prank(_alice);
-        _standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_);
+        _standardGovernor.castVotesWithReason(new uint256[](1), new uint8[](2), new string[](2));
 
-        supportList_ = new uint8[](2);
-        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
-        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
-
-        reasonList_ = new string[](1);
-        reasonList_[0] = "";
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 2, 1));
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 1, 2));
 
         vm.prank(_alice);
-        _standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_);
+        _standardGovernor.castVotesWithReason(new uint256[](1), new uint8[](1), new string[](2));
     }
 
     function test_castVotesWithReason_emptyProposalIdsArray() external {
-        uint256[] memory proposalIds_ = new uint256[](0);
-        uint8[] memory supportList_ = new uint8[](0);
-        string[] memory reasonList_ = new string[](0);
-
         vm.expectRevert(IBatchGovernor.EmptyProposalIdsArray.selector);
 
         vm.prank(_alice);
-        _standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_);
+        _standardGovernor.castVotesWithReason(new uint256[](0), new uint8[](0), new string[](0));
     }
 
     /* ============ castVotesWithReasonBySig ============ */
