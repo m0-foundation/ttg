@@ -277,44 +277,21 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @param newDelegatee_ The address of the account receiving voting power.
      */
     function _delegate(address delegator_, address newDelegatee_) internal override {
-        _bootstrap(delegator_);
-
-        if (delegator_ != newDelegatee_) _bootstrap(newDelegatee_);
+        if (delegator_ != newDelegatee_) _sync(newDelegatee_, _clock());
 
         super._delegate(delegator_, newDelegatee_);
     }
 
     /**
-     * @dev   Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
-     * @param delegatee_ The address of the account being marked as having participated.
+     * @dev   Syncs `account_` so that its balance Snap array in storage, reflects their unrealized inflation.
+     * @param account_ The address of the account to sync.
+     * @param epoch_   The latest epoch to sync to.
      */
-    function _markParticipation(address delegatee_) internal override {
-        _bootstrap(delegatee_);
-        super._markParticipation(delegatee_);
-    }
+    function _sync(address account_, uint16 epoch_) internal override {
+        if (epoch_ < bootstrapEpoch) revert SyncBeforeBootstrap(bootstrapEpoch, epoch_);
 
-    /**
-     * @dev   Mint `amount_` tokens to `recipient_`.
-     * @param recipient_ The address of the account to mint tokens to.
-     * @param amount_    The amount of tokens to mint.
-     */
-    function _mint(address recipient_, uint256 amount_) internal override {
-        _bootstrap(recipient_);
-        super._mint(recipient_, amount_);
-    }
-
-    /**
-     * @dev   Transfers `amount_` tokens from `sender_` to `recipient_`.
-     * @param sender_    The address of the account to transfer tokens from.
-     * @param recipient_ The address of the account to transfer tokens to.
-     * @param amount_    The amount of tokens to transfer.
-     */
-    function _transfer(address sender_, address recipient_, uint256 amount_) internal override {
-        _bootstrap(sender_);
-
-        if (sender_ != recipient_) _bootstrap(recipient_);
-
-        super._transfer(sender_, recipient_, amount_);
+        _bootstrap(account_);
+        super._sync(account_, epoch_);
     }
 
     /******************************************************************************************************************\

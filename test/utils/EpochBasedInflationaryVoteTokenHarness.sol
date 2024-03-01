@@ -19,4 +19,8 @@ contract EpochBasedInflationaryVoteTokenHarness is EpochBasedInflationaryVoteTok
     function mint(address account_, uint256 amount_) external {
         _mint(account_, amount_);
     }
+
+    function lastSyncs(address account_, uint256 index_) external view returns (uint16) {
+        return _lastSyncs[account_][index_].startingEpoch;
+    }
 }
