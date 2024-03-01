@@ -126,8 +126,11 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
         emit Distribution(token_, currentEpoch_, amount_);
 
-        distributionOfAt[token_][currentEpoch_] += amount_; // Add the amount to the distribution for the current epoch.
-        _lastTokenBalances[token_] = lastTokenBalance_ + amount_; // Track this contract's latest balance of `token_`.
+        unchecked {
+            // NOTE: Can be done unchecked because a token's total supply fits in a `uint256`.
+            distributionOfAt[token_][currentEpoch_] += amount_; // Add to the distribution for the current epoch.
+            _lastTokenBalances[token_] = lastTokenBalance_ + amount_; // Track this contract's latest balance.
+        }
     }
 
     /******************************************************************************************************************\
@@ -188,7 +191,9 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             // Skip epochs with no Zero token balance (i.e. no distribution).
             if (balance_ == 0) continue;
 
-            if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
+            unchecked {
+                if (hasClaimed[token_][startEpoch_ + index_][account_]) continue;
+            }
 
             // Scale the amount by `_GRANULARITY` to avoid some amount of truncation while accumulating.
             claimable_ +=
