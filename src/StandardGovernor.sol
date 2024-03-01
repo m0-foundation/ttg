@@ -350,7 +350,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     ) internal override {
         ProposalState state_ = state(proposalId_);
 
-        if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
+        if (state_ != ProposalState.Active) revert ProposalInactive(state_);
 
         super._castVote(voter_, weight_, proposalId_, support_, reason_);
 

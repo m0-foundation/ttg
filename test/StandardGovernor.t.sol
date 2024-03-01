@@ -279,7 +279,7 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.setProposal(proposalId_, currentEpoch + 1);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IBatchGovernor.ProposalNotActive.selector, IGovernor.ProposalState.Pending)
+            abi.encodeWithSelector(IBatchGovernor.ProposalInactive.selector, IGovernor.ProposalState.Pending)
         );
 
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));

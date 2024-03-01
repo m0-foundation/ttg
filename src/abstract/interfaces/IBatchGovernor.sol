@@ -74,7 +74,7 @@ interface IBatchGovernor is IGovernor {
      * @notice Revert message when voting on a proposal that is not in an active state (i.e. not collecting votes).
      * @param  state The current state of the proposal.
      */
-    error ProposalNotActive(ProposalState state);
+    error ProposalInactive(ProposalState state);
 
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |

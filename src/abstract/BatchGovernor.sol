@@ -36,9 +36,16 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         uint256 yesWeight;
     }
 
+    /// @dev Length constant for calldata with no argument.
     uint256 internal constant _SELECTOR_PLUS_0_ARGS = 4;
+
+    /// @dev Length constant for calldata with one argument.
     uint256 internal constant _SELECTOR_PLUS_1_ARGS = 36;
+
+    /// @dev Length constant for calldata with two arguments.
     uint256 internal constant _SELECTOR_PLUS_2_ARGS = 68;
+
+    /// @dev Length constant for calldata with three arguments.
     uint256 internal constant _SELECTOR_PLUS_3_ARGS = 100;
 
     /// @inheritdoc IBatchGovernor
@@ -433,7 +440,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     ) internal returns (uint256 weight_) {
         ProposalState state_ = state(proposalId_);
 
-        if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
+        if (state_ != ProposalState.Active) revert ProposalInactive(state_);
 
         unchecked {
             // NOTE: Can be done unchecked since `voteStart` is always greater than 0.

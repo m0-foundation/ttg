@@ -11,7 +11,6 @@ import { IEpochBasedInflationaryVoteToken } from "../../src/abstract/interfaces/
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "../utils/EpochBasedInflationaryVoteTokenHarness.sol";
 import { Invariants } from "../utils/Invariants.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
-import "forge-std/console.sol";
 
 contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
     address internal _alice = makeAddr("alice");
