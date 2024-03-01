@@ -94,6 +94,9 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         _bootstrapSupply = uint240(bootstrapSupply_);
 
         _addTotalSupply(INITIAL_SUPPLY);
+
+        // NOTE: For event continuity, the initial supply is dispersed among holders of the bootstrap token.
+        emit Transfer(address(0), bootstrapToken_, INITIAL_SUPPLY);
     }
 
     /******************************************************************************************************************\
@@ -253,14 +256,19 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function _bootstrap(address account_) internal {
         if (_lastSyncs[account_].length != 0) return; // Skip if the account already has synced (and thus bootstrapped).
 
-        // NOTE: Don't need add `_getUnrealizedInflation(account_)` here since all callers of `_bootstrap` also call
-        //       `_sync`, which will handle that.
         uint240 bootstrapBalance_ = _getBootstrapBalance(account_, bootstrapEpoch);
+
+        _balances[account_].push(AmountSnap(bootstrapEpoch, bootstrapBalance_));
+        _votingPowers[account_].push(AmountSnap(bootstrapEpoch, bootstrapBalance_));
+        _lastSyncs[account_].push(VoidSnap(bootstrapEpoch));
 
         if (bootstrapBalance_ == 0) return;
 
-        _addBalance(account_, bootstrapBalance_);
-        _addVotingPower(account_, bootstrapBalance_);
+        // NOTE: For event continuity, the bootstrap token transfers the bootstrap balance to the account.
+        emit Transfer(bootstrapToken, account_, bootstrapBalance_);
+
+        // NOTE: For event continuity, the account's voting power is updated.
+        emit DelegateVotesChanged(account_, 0, bootstrapBalance_);
     }
 
     /**
@@ -270,10 +278,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      */
     function _delegate(address delegator_, address newDelegatee_) internal override {
         _bootstrap(delegator_);
-        if (delegator_ != newDelegatee_) _bootstrap(newDelegatee_);
 
-        // NOTE: Need to sync `newDelegatee_` to ensure `_markParticipation` does not overwrite its voting power.
-        _sync(newDelegatee_);
+        if (delegator_ != newDelegatee_) _bootstrap(newDelegatee_);
 
         super._delegate(delegator_, newDelegatee_);
     }
@@ -305,6 +311,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      */
     function _transfer(address sender_, address recipient_, uint256 amount_) internal override {
         _bootstrap(sender_);
+
         if (sender_ != recipient_) _bootstrap(recipient_);
 
         super._transfer(sender_, recipient_, amount_);
@@ -324,12 +331,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
-        // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
-        if (_balances[account_].length == 0 || _balances[account_][0].startingEpoch > epoch_) {
-            unchecked {
-                return UIntMath.bound240(uint256(_getBootstrapBalance(account_, bootstrapEpoch)));
-            }
-        }
+        // If no snaps, return the bootstrap balance at the bootstrap epoch.
+        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
+        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
+        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
 
         return super._getBalance(account_, epoch_);
     }
@@ -348,6 +353,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
         // If no snaps, return the bootstrap balance at the bootstrap epoch.
+        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
+        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
         if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
 
         return super._getBalanceWithoutUnrealizedInflation(account_, epoch_);
@@ -365,8 +372,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
             //       the bootstrap token is less than `type(uint240).max`. Can do math unchecked since
             //       `pastBalanceOf * INITIAL_SUPPLY <= type(uint256).max`.
             return
-                (uint240(IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_)) * INITIAL_SUPPLY) /
-                _bootstrapSupply;
+                uint240(
+                    (IEpochBasedVoteToken(bootstrapToken).pastBalanceOf(account_, epoch_) * INITIAL_SUPPLY) /
+                        _bootstrapSupply
+                );
         }
     }
 
@@ -391,11 +400,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
         // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
-        if (_votingPowers[account_].length == 0 || _votingPowers[account_][0].startingEpoch > epoch_) {
-            unchecked {
-                return UIntMath.bound240(uint256(_getBootstrapBalance(account_, bootstrapEpoch)));
-            }
-        }
+        if (_votingPowers[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
 
         return super._getVotes(account_, epoch_);
     }

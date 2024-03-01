@@ -24,18 +24,6 @@ contract PureEpochsTests is Test {
         assertEq(PureEpochs.currentEpoch(), 2);
     }
 
-    function test_getTimestampOfEpochStart() external {
-        assertEq(PureEpochs.getTimestampOfEpochStart(1), PureEpochs._MERGE_TIMESTAMP);
-        assertEq(PureEpochs.getTimestampOfEpochStart(2), PureEpochs._MERGE_TIMESTAMP + PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimestampOfEpochStart(3), PureEpochs._MERGE_TIMESTAMP + 2 * PureEpochs._EPOCH_PERIOD);
-    }
-
-    function test_getTimestampOfEpochEnd() external {
-        assertEq(PureEpochs.getTimestampOfEpochEnd(1), PureEpochs._MERGE_TIMESTAMP + PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimestampOfEpochEnd(2), PureEpochs._MERGE_TIMESTAMP + 2 * PureEpochs._EPOCH_PERIOD);
-        assertEq(PureEpochs.getTimestampOfEpochEnd(3), PureEpochs._MERGE_TIMESTAMP + 3 * PureEpochs._EPOCH_PERIOD);
-    }
-
     function test_timeRemainingInCurrentEpoch() external {
         vm.warp(PureEpochs._MERGE_TIMESTAMP);
         assertEq(PureEpochs.timeRemainingInCurrentEpoch(), PureEpochs._EPOCH_PERIOD);

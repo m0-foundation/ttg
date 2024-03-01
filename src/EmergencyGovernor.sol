@@ -114,11 +114,11 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         uint256 length = callData_.length;
 
         if (
-            !(func_ == this.addToList.selector && length == 68) &&
-            !(func_ == this.removeFromList.selector && length == 68) &&
-            !(func_ == this.removeFromAndAddToList.selector && length == 100) &&
-            !(func_ == this.setKey.selector && length == 68) &&
-            !(func_ == this.setStandardProposalFee.selector && length == 36)
+            !(func_ == this.addToList.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.removeFromList.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.removeFromAndAddToList.selector && length == _SELECTOR_PLUS_3_ARGS) &&
+            !(func_ == this.setKey.selector && length == _SELECTOR_PLUS_2_ARGS) &&
+            !(func_ == this.setStandardProposalFee.selector && length == _SELECTOR_PLUS_1_ARGS)
         ) revert InvalidCallData();
     }
 }

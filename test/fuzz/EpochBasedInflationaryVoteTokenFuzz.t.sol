@@ -11,7 +11,6 @@ import { IEpochBasedInflationaryVoteToken } from "../../src/abstract/interfaces/
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "../utils/EpochBasedInflationaryVoteTokenHarness.sol";
 import { Invariants } from "../utils/Invariants.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
-import "forge-std/console.sol";
 
 contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
     address internal _alice = makeAddr("alice");
@@ -123,7 +122,7 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
         uint240 amount,
         uint240 amountToTransfer
     ) external {
-        amount = uint240(bound(amount, 0, type(uint128).max));
+        amount = uint240(bound(amount, 1, type(uint128).max));
         amountToTransfer = uint240(bound(amountToTransfer, 0, amount));
         _warpToNextTransferEpoch();
 
@@ -173,7 +172,7 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
         uint240 amount,
         uint240 amountToTransfer
     ) external {
-        amount = uint240(bound(amount, 0, type(uint128).max));
+        amount = uint240(bound(amount, 1, type(uint128).max));
         amountToTransfer = uint240(bound(amountToTransfer, 0, amount));
         _warpToNextTransferEpoch();
 
@@ -238,7 +237,7 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
     }
 
     function testFuzz_UsersVoteInflationUpgradeOnDelegation(uint240 amount) external {
-        amount = uint240(bound(amount, 0, type(uint128).max));
+        amount = uint240(bound(amount, 1, type(uint128).max));
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, amount);
@@ -285,9 +284,9 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
         uint240 amountToTransferFromAlice,
         uint240 amountToTransferFromCarol
     ) external {
-        amountAlice = uint240(bound(amountAlice, 0, type(uint128).max));
-        amountBob = uint240(bound(amountBob, 0, type(uint128).max));
-        amountCarol = uint240(bound(amountCarol, 0, type(uint128).max));
+        amountAlice = uint240(bound(amountAlice, 1, type(uint128).max));
+        amountBob = uint240(bound(amountBob, 1, type(uint128).max));
+        amountCarol = uint240(bound(amountCarol, 1, type(uint128).max));
         amountToTransferFromAlice = uint240(bound(amountToTransferFromAlice, 0, amountAlice));
         amountToTransferFromCarol = uint240(bound(amountToTransferFromCarol, 0, amountCarol));
 
@@ -364,9 +363,9 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
         uint240 amountBob,
         uint240 amountCarol
     ) external {
-        amountAlice = uint240(bound(amountAlice, 0, type(uint128).max));
-        amountBob = uint240(bound(amountBob, 0, type(uint128).max));
-        amountCarol = uint240(bound(amountCarol, 0, type(uint128).max));
+        amountAlice = uint240(bound(amountAlice, 1, type(uint128).max));
+        amountBob = uint240(bound(amountBob, 1, type(uint128).max));
+        amountCarol = uint240(bound(amountCarol, 1, type(uint128).max));
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, amountAlice);

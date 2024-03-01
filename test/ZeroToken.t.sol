@@ -58,7 +58,7 @@ contract ZeroTokenTests is TestUtils {
         _zeroToken.pastBalancesOf(_alice, currentEpoch_ - 1, currentEpoch_ + 1);
     }
 
-    function test_pastBalancesOf_EpochZero() external {
+    function test_pastBalancesOf_epochZero() external {
         vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
         _zeroToken.pastBalancesOf(_alice, 0, 1);
     }

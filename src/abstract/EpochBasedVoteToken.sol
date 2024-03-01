@@ -72,7 +72,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     \******************************************************************************************************************/
 
     /// @inheritdoc IERC20
-    function balanceOf(address account_) external view override(ERC20Extended, IERC20) returns (uint256) {
+    function balanceOf(address account_) external view returns (uint256) {
         return _getBalance(account_, _clock());
     }
 
@@ -96,7 +96,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC5805
-    function delegates(address account_) external view override(ERC5805, IERC5805) returns (address) {
+    function delegates(address account_) external view returns (address) {
         return _getDelegatee(account_, _clock());
     }
 
@@ -110,15 +110,12 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC5805
-    function getVotes(address account_) external view override(ERC5805, IERC5805) returns (uint256) {
+    function getVotes(address account_) external view returns (uint256) {
         return _getVotes(account_, _clock());
     }
 
     /// @inheritdoc IERC5805
-    function getPastVotes(
-        address account_,
-        uint256 epoch_
-    ) external view override(ERC5805, IERC5805) returns (uint256) {
+    function getPastVotes(address account_, uint256 epoch_) external view returns (uint256) {
         uint16 safeEpoch_ = UIntMath.safe16(epoch_);
 
         _revertIfNotPastTimepoint(safeEpoch_); // Per EIP-5805, should revert if `epoch_` is not in the past.
@@ -127,7 +124,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     }
 
     /// @inheritdoc IERC20
-    function totalSupply() external view override(ERC20Extended, IERC20) returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return _getTotalSupply(_clock());
     }
 
@@ -196,6 +193,9 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param amount_    The amount of tokens to mint.
      */
     function _mint(address recipient_, uint256 amount_) internal virtual {
+        _revertIfInvalidRecipient(recipient_);
+        if (amount_ == 0) revert InsufficientAmount(amount_);
+
         emit Transfer(address(0), recipient_, amount_);
 
         uint240 safeAmount_ = UIntMath.safe240(amount_);
@@ -273,6 +273,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param amount_    The amount of tokens to transfer.
      */
     function _transfer(address sender_, address recipient_, uint256 amount_) internal virtual override {
+        _revertIfInvalidRecipient(recipient_);
+
         emit Transfer(sender_, recipient_, amount_);
 
         uint240 safeAmount_ = UIntMath.safe240(amount_);
@@ -450,6 +452,14 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         uint16 currentEpoch_ = _clock();
 
         if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_);
+    }
+
+    /**
+     * @dev   Reverts if the recipient of a `mint` or `transfer` is address(0).
+     * @param recipient_ Address of the recipient to check.
+     */
+    function _revertIfInvalidRecipient(address recipient_) internal pure {
+        if (recipient_ == address(0)) revert InvalidRecipient(recipient_);
     }
 
     /**

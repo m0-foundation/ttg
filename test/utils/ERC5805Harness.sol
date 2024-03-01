@@ -19,11 +19,11 @@ contract ERC5805Harness is ERC5805 {
         return uint48(0);
     }
 
-    function delegates(address account) external view override returns (address) {}
+    function delegates(address account) external view returns (address) {}
 
-    function getPastVotes(address account, uint256 timepoint) external view override returns (uint256) {}
+    function getPastVotes(address account, uint256 timepoint) external view returns (uint256) {}
 
-    function getVotes(address account) external view override returns (uint256) {}
+    function getVotes(address account) external view returns (uint256) {}
 
     function _delegate(address delegator_, address newDelegatee_) internal virtual override {}
 }

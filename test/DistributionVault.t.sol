@@ -163,6 +163,12 @@ contract DistributionVaultTests is TestUtils {
         _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
     }
 
+    function test_getClaimable_startEpochSameAsEndEpoch() external {
+        uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
+        uint256 endEpoch_ = startEpoch_;
+        assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 0);
+    }
+
     function test_getClaimable_startEpochAfterEndEpoch() external {
         uint256 startEpoch_ = PureEpochs.currentEpoch() - 1;
         uint256 endEpoch_ = PureEpochs.currentEpoch() - 2;
@@ -211,7 +217,7 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account2"))
         );
 
-        vm.expectRevert(IERC712.InvalidSignature.selector);
+        vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the nonce is now different from the one used in the digest.
         _vault.claimBySig(
@@ -245,7 +251,7 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account1"))
         );
 
-        vm.expectRevert(IERC712.InvalidSignature.selector);
+        vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the destination is different from the one used in the digest.
         _vault.claimBySig(
@@ -279,7 +285,7 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account1"))
         );
 
-        vm.expectRevert(IERC712.InvalidSignature.selector);
+        vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the account signing is different from the passed account.
         _vault.claimBySig(

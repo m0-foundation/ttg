@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { ERC712 } from "../../lib/common/src/ERC712.sol";
+import { ERC712Extended } from "../../lib/common/src/ERC712Extended.sol";
 
 import { PureEpochs } from "../libs/PureEpochs.sol";
 
@@ -12,7 +12,7 @@ import { IERC6372 } from "./interfaces/IERC6372.sol";
 import { IGovernor } from "./interfaces/IGovernor.sol";
 
 /// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
-abstract contract BatchGovernor is IBatchGovernor, ERC712 {
+abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     /**
      * @notice Proposal struct for storing all relevant proposal information.
      * @param voteStart      The epoch at which voting begins, inclusively.
@@ -35,6 +35,18 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         // 3rd slot
         uint256 yesWeight;
     }
+
+    /// @dev Length constant for calldata with no argument.
+    uint256 internal constant _SELECTOR_PLUS_0_ARGS = 4;
+
+    /// @dev Length constant for calldata with one argument.
+    uint256 internal constant _SELECTOR_PLUS_1_ARGS = 36;
+
+    /// @dev Length constant for calldata with two arguments.
+    uint256 internal constant _SELECTOR_PLUS_2_ARGS = 68;
+
+    /// @dev Length constant for calldata with three arguments.
+    uint256 internal constant _SELECTOR_PLUS_3_ARGS = 100;
 
     /// @inheritdoc IBatchGovernor
     uint256 public constant ONE = 10_000;
@@ -75,7 +87,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
      * @param  name_      The name of the contract. Used to compute EIP712 domain separator.
      * @param  voteToken_ The address of the token used to vote.
      */
-    constructor(string memory name_, address voteToken_) ERC712(name_) {
+    constructor(string memory name_, address voteToken_) ERC712Extended(name_) {
         if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }
 
@@ -403,8 +415,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
 
         if (length_ == 0) revert EmptyProposalIdsArray();
 
-        if (length_ != supportList_.length || length_ != reasonList_.length)
-            revert ArrayLengthMismatch(length_, supportList_.length, reasonList_.length);
+        if (length_ != supportList_.length) revert ArrayLengthMismatch(length_, supportList_.length);
+
+        if (length_ != reasonList_.length) revert ArrayLengthMismatch(length_, reasonList_.length);
 
         for (uint256 index_; index_ < length_; ++index_) {
             weight_ = _castVote(voter_, proposalIds_[index_], supportList_[index_], reasonList_[index_]);
@@ -425,7 +438,9 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint8 support_,
         string memory reason_
     ) internal returns (uint256 weight_) {
-        if (_proposals[proposalId_].voteStart == 0) revert ProposalDoesNotExist();
+        ProposalState state_ = state(proposalId_);
+
+        if (state_ != ProposalState.Active) revert ProposalInactive(state_);
 
         unchecked {
             // NOTE: Can be done unchecked since `voteStart` is always greater than 0.
@@ -450,10 +465,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712 {
         uint8 support_,
         string memory reason_
     ) internal virtual {
-        ProposalState state_ = state(proposalId_);
-
-        if (state_ != ProposalState.Active) revert ProposalNotActive(state_);
-
         if (hasVoted[proposalId_][voter_]) revert AlreadyVoted();
 
         hasVoted[proposalId_][voter_] = true;

@@ -16,14 +16,6 @@ library PureEpochs {
     }
 
     function timeRemainingInCurrentEpoch() internal view returns (uint40 time_) {
-        return getTimestampOfEpochEnd(currentEpoch()) - uint40(block.timestamp);
-    }
-
-    function getTimestampOfEpochStart(uint16 epoch) internal pure returns (uint40 timestamp_) {
-        return _MERGE_TIMESTAMP + (epoch - 1) * _EPOCH_PERIOD;
-    }
-
-    function getTimestampOfEpochEnd(uint16 epoch) internal pure returns (uint40 timestamp_) {
-        return getTimestampOfEpochStart(epoch + 1);
+        return _MERGE_TIMESTAMP + (currentEpoch() * _EPOCH_PERIOD) - uint40(block.timestamp);
     }
 }
