@@ -49,6 +49,9 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     /// @notice Revert message when the start epoch is greater than the end epoch.
     error StartEpochAfterEndEpoch(uint256 startEpoch, uint256 endEpoch);
 
+    /// @notice Revert message when the destination address is address(0).
+    error InvalidDestinationAddress();
+
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/

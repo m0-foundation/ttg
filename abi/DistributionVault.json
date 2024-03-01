@@ -469,6 +469,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidDestinationAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidSignature",
     "inputs": []
   },

@@ -178,7 +178,41 @@ contract DistributionVaultTests is TestUtils {
         _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
     }
 
+    /* ============ claim ============ */
+    function test_claim_invalidDestination() external {
+        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
+
+        vm.expectRevert(IDistributionVault.InvalidDestinationAddress.selector);
+        _vault.claim(address(_token1), startEpoch_, endEpoch_, address(0));
+    }
+
     /* ============ claimBySig ============ */
+    function test_claimBySig_invalidDestination() external {
+        uint256 startEpoch_ = PureEpochs.currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
+
+        bytes32 digest_ = _vault.getClaimDigest(
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            address(0),
+            _vault.nonces(_accounts[0]),
+            block.timestamp + 1 days
+        );
+
+        vm.expectRevert(IDistributionVault.InvalidDestinationAddress.selector);
+        _vault.claimBySig(
+            _accounts[0],
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            address(0),
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account1"))
+        );
+    }
+
     function test_claimBySig_replayAttack() external {
         uint256 startEpoch_ = PureEpochs.currentEpoch();
         uint256 endEpoch_ = startEpoch_;

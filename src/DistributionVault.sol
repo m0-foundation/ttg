@@ -183,6 +183,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         uint256 endEpoch_,
         address destination_
     ) internal returns (uint256 claimed_) {
+        if (destination_ == address(0)) revert InvalidDestinationAddress();
+
         claimed_ = getClaimable(token_, account_, startEpoch_, endEpoch_);
 
         // NOTE: `getClaimable` skips epochs the account already claimed, so we can safely mark all epochs as claimed.
