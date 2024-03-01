@@ -193,6 +193,9 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param amount_    The amount of tokens to mint.
      */
     function _mint(address recipient_, uint256 amount_) internal virtual {
+        _revertIfInvalidRecipient(recipient_);
+        if (amount_ == 0) revert InsufficientAmount(amount_);
+
         emit Transfer(address(0), recipient_, amount_);
 
         uint240 safeAmount_ = UIntMath.safe240(amount_);
@@ -270,6 +273,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param amount_    The amount of tokens to transfer.
      */
     function _transfer(address sender_, address recipient_, uint256 amount_) internal virtual override {
+        _revertIfInvalidRecipient(recipient_);
+
         emit Transfer(sender_, recipient_, amount_);
 
         uint240 safeAmount_ = UIntMath.safe240(amount_);
@@ -447,6 +452,14 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         uint16 currentEpoch_ = _clock();
 
         if (epoch_ >= currentEpoch_) revert NotPastTimepoint(epoch_, currentEpoch_);
+    }
+
+    /**
+     * @dev   Reverts if the recipient of a `mint` or `transfer` is address(0).
+     * @param recipient_ Address of the recipient to check.
+     */
+    function _revertIfInvalidRecipient(address recipient_) internal pure {
+        if (recipient_ == address(0)) revert InvalidRecipient(recipient_);
     }
 
     /**
