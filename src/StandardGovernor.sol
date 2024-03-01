@@ -365,10 +365,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         IPowerToken(voteToken).markParticipation(voter_);
 
-        IZeroToken(zeroToken).mint(
-            voter_,
-            (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(currentEpoch_ - 1)
-        );
+        uint256 reward_ = (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(currentEpoch_ - 1);
+
+        if (reward_ == 0) return;
+
+        IZeroToken(zeroToken).mint(voter_, reward_);
     }
 
     /**
