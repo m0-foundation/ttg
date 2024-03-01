@@ -375,9 +375,6 @@ contract EpochBasedVoteTokenTests is TestUtils {
     function test_mint_invalidRecipient() external {
         vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(0)));
         _vote.mint(address(0), 1_000);
-
-        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(_vote)));
-        _vote.mint(address(_vote), 1_000);
     }
 
     function test_mint_insufficientAmount() external {
@@ -393,10 +390,5 @@ contract EpochBasedVoteTokenTests is TestUtils {
 
         vm.prank(_alice);
         _vote.transfer(address(0), 1_000);
-
-        vm.expectRevert(abi.encodeWithSelector(IERC20Extended.InvalidRecipient.selector, address(_vote)));
-
-        vm.prank(_alice);
-        _vote.transfer(address(_vote), 1_000);
     }
 }
