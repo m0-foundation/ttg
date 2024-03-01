@@ -13,7 +13,7 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 /// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
 contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
-    /// @notice The maximum number of Zero tokens that can be rewarded per active epoch.
+    /// @dev The maximum number of Zero tokens that can be rewarded per active epoch.
     uint256 internal constant _MAX_TOTAL_ZERO_REWARD_PER_ACTIVE_EPOCH = 5_000_000e6;
 
     /// @inheritdoc IZeroGovernor
@@ -25,20 +25,20 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     /// @inheritdoc IZeroGovernor
     address public immutable standardGovernorDeployer;
 
-    /// @notice The set of allowed cash tokens.
+    /// @dev The set of allowed cash tokens.
     mapping(address token => bool allowed) internal _allowedCashTokens;
 
     /**
      * @notice Construct a new ZeroGovernor contract.
-     * @param  voteToken_                           The address of the token used to vote.
-     * @param  emergencyGovernorDeployer_           The address of the Emergency Governor Deployer contract.
-     * @param  powerTokenDeployer_                  The address of the Power Token Deployer contract.
-     * @param  standardGovernorDeployer_            The address of the Standard Governor Deployer contract.
-     * @param  bootstrapToken_                      The address of the token that bootstraps the reset.
-     * @param  standardProposalFee_                 The proposal fee for the Standard Governor.
-     * @param  emergencyProposalThresholdRatio_     The threshold ratio for the Emergency Governor.
-     * @param  zeroProposalThresholdRatio_          The threshold ratio for the Zero Governor.
-     * @param  allowedCashTokens_                   The set of allowed cash tokens.
+     * @param  voteToken_                       The address of the token used to vote.
+     * @param  emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
+     * @param  powerTokenDeployer_              The address of the Power Token Deployer contract.
+     * @param  standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
+     * @param  bootstrapToken_                  The address of the token that bootstraps the reset.
+     * @param  standardProposalFee_             The proposal fee for the Standard Governor.
+     * @param  emergencyProposalThresholdRatio_ The threshold ratio for the Emergency Governor.
+     * @param  zeroProposalThresholdRatio_      The threshold ratio for the Zero Governor.
+     * @param  allowedCashTokens_               The set of allowed cash tokens.
      */
     constructor(
         address voteToken_,
@@ -144,7 +144,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     \******************************************************************************************************************/
 
     /**
-     * @notice Deploys the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts.
+     * @dev   Deploys the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts.
      * @param emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
      * @param powerTokenDeployer_              The address of the Power Token Deployer contract.
      * @param standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
@@ -189,7 +189,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     }
 
     /**
-     * @notice Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
+     * @dev   Redeploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
      *         - the cash token is the same cash token in the existing `standardGovernor`
      *         - the `emergencyGovernor` threshold ratio is the same threshold ratio in the existing `emergencyGovernor`
      *         - the `standardGovernor` proposal fee is the same proposal fee in the existing `standardGovernor`

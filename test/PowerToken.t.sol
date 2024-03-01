@@ -2,11 +2,13 @@
 
 pragma solidity 0.8.23;
 
+import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
+
 import { PureEpochs } from "../src/libs/PureEpochs.sol";
 
-import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
-
 import { IPowerToken } from "../src/interfaces/IPowerToken.sol";
+import { IERC5805 } from "../src/abstract/interfaces/IERC5805.sol";
+import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { PowerBootstrapToken } from "../src/PowerBootstrapToken.sol";
 
@@ -57,7 +59,7 @@ contract PowerTokenTests is TestUtils {
         assertEq(_powerToken.cashToken(), address(_cashToken));
         assertEq(_powerToken.standardGovernor(), _standardGovernor);
         assertEq(_powerToken.vault(), _vault);
-        assertEq(_powerToken.bootstrapEpoch(), PureEpochs.currentEpoch() - 1);
+        assertEq(_powerToken.bootstrapEpoch(), _currentEpoch() - 1);
 
         assertEq(_powerToken.nextCashTokenStartingEpoch(), 0);
         assertEq(_powerToken.internalCashToken(), address(0));
@@ -96,7 +98,7 @@ contract PowerTokenTests is TestUtils {
 
         _warpToNextTransferEpoch();
 
-        uint256 totalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1);
+        uint256 totalSupply_ = _powerToken.pastTotalSupply(_currentEpoch() - 1);
         uint256 onePercentOfTotalSupply_ = totalSupply_ / 100;
         uint256 oneBasisPointOfTotalSupply_ = onePercentOfTotalSupply_ / 100;
 
@@ -235,7 +237,7 @@ contract PowerTokenTests is TestUtils {
 
         _warpToNextTransferEpoch();
 
-        uint256 oneBasisPointOfTotalSupply_ = _powerToken.pastTotalSupply(PureEpochs.currentEpoch() - 1) / 10_000;
+        uint256 oneBasisPointOfTotalSupply_ = _powerToken.pastTotalSupply(_currentEpoch() - 1) / 10_000;
 
         vm.expectCall(
             address(_cashToken),
@@ -257,12 +259,13 @@ contract PowerTokenTests is TestUtils {
         _powerToken.setInternalNextTargetSupply(type(uint240).max);
 
         vm.expectEmit();
-        emit IPowerToken.TargetSupplyInflated(PureEpochs.currentEpoch() + 2, type(uint240).max);
+        emit IPowerToken.TargetSupplyInflated(_currentEpoch() + 2, type(uint240).max);
 
         vm.prank(_standardGovernor);
         _powerToken.markNextVotingEpochAsActive();
     }
 
+    /* ============ setNextCashToken ============ */
     function test_setNextCashToken_NotStandardGovernor() external {
         vm.expectRevert(IPowerToken.NotStandardGovernor.selector);
         _powerToken.setNextCashToken(address(0));
@@ -280,7 +283,7 @@ contract PowerTokenTests is TestUtils {
         vm.prank(_standardGovernor);
         _powerToken.setNextCashToken(newCashToken_);
 
-        assertEq(_powerToken.nextCashTokenStartingEpoch(), PureEpochs.currentEpoch() + 1);
+        assertEq(_powerToken.nextCashTokenStartingEpoch(), _currentEpoch() + 1);
         assertEq(_powerToken.internalCashToken(), address(_cashToken));
         assertEq(_powerToken.internalNextCashToken(), newCashToken_);
 
@@ -294,7 +297,7 @@ contract PowerTokenTests is TestUtils {
     function test_setNextCashToken_beforeNextCashTokenStartingEpoch() external {
         address newCashToken_ = makeAddr("newCashToken");
 
-        uint256 nextCashTokenStartingEpoch_ = PureEpochs.currentEpoch() + 1;
+        uint256 nextCashTokenStartingEpoch_ = _currentEpoch() + 1;
 
         _powerToken.setNextCashTokenStartingEpoch(nextCashTokenStartingEpoch_);
         _powerToken.setInternalCashToken(address(_cashToken));
@@ -427,5 +430,27 @@ contract PowerTokenTests is TestUtils {
 
         assertEq(powerToken1_.balanceOf(attacker), 5000);
         assertEq(powerToken1_.balanceOf(victim), 5000);
+    }
+
+    function test_syncBootstraps() external {
+        _warpToNextTransferEpoch();
+
+        vm.expectEmit();
+        emit IERC20.Transfer(
+            _powerToken.bootstrapToken(),
+            _initialAccounts[0],
+            _powerToken.balanceOf(_initialAccounts[0])
+        );
+
+        vm.expectEmit();
+        emit IERC5805.DelegateVotesChanged(_initialAccounts[0], 0, _powerToken.balanceOf(_initialAccounts[0]));
+
+        vm.expectEmit();
+        emit IEpochBasedInflationaryVoteToken.Sync(_initialAccounts[0], _currentEpoch());
+
+        _powerToken.sync(_initialAccounts[0], _currentEpoch());
+
+        assertEq(_powerToken.lastSyncs(_initialAccounts[0], 0), _powerToken.bootstrapEpoch());
+        assertEq(_powerToken.lastSyncs(_initialAccounts[0], 1), _currentEpoch());
     }
 }

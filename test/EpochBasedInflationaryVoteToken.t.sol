@@ -2,14 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../lib/forge-std/src/Test.sol";
-
-import { PureEpochs } from "../src/libs/PureEpochs.sol";
-
 import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBasedInflationaryVoteTokenHarness.sol";
-import { Invariants } from "./utils/Invariants.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract EpochBasedInflationaryVoteTokenTests is TestUtils {
@@ -263,7 +258,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         _vote.transfer(_bob, 500);
     }
 
-    function test_UsersVoteInflationUpgradeOnDelegation() external {
+    function test_usersVoteInflationUpgradeOnDelegation() external {
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
@@ -301,7 +296,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 1_440);
     }
 
-    function test_UsersVoteInflationWorksWithTransfer() external {
+    function test_usersVoteInflationWorksWithTransfer() external {
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
@@ -328,7 +323,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.getVotes(_carol), 500);
     }
 
-    function test_VotingPowerForDelegates() external {
+    function test_votingPowerForDelegates() external {
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
@@ -379,7 +374,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.getVotes(_bob), _vote.balanceOf(_bob));
     }
 
-    function test_UsersVoteInflationForMultipleEpochsWithRedelegation() external {
+    function test_usersVoteInflationForMultipleEpochsWithRedelegation() external {
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
@@ -437,7 +432,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_carol), 1_152);
     }
 
-    function test_UsersVoteInflationForMultipleEpochsWithTransfers() external {
+    function test_usersVoteInflationForMultipleEpochsWithTransfers() external {
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
@@ -512,6 +507,56 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.balanceOf(_bob), 1_440);
         assertEq(_vote.balanceOf(_carol), 0);
+    }
+
+    function test_sync_futureEpoch() external {
+        uint16 currentEpoch_ = _currentEpoch();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEpochBasedInflationaryVoteToken.FutureEpoch.selector,
+                currentEpoch_,
+                currentEpoch_ + 1
+            )
+        );
+
+        _vote.sync(_alice, currentEpoch_ + 1);
+    }
+
+    function test_sync() external {
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, 1_000);
+
+        uint16 lastSync_ = _currentEpoch();
+
+        vm.prank(_alice);
+        _vote.delegate(_bob);
+
+        _warpToNextVoteEpoch();
+
+        _vote.markParticipation(_bob);
+
+        _warpToNextVoteEpoch();
+
+        _vote.markParticipation(_bob);
+
+        _warpToNextVoteEpoch();
+
+        _vote.markParticipation(_bob);
+
+        _warpToNextTransferEpoch();
+
+        assertEq(_vote.lastSyncs(_alice, 0), lastSync_);
+
+        uint16 currentEpoch_ = _currentEpoch();
+
+        vm.expectEmit();
+        emit IEpochBasedInflationaryVoteToken.Sync(_alice, currentEpoch_);
+
+        _vote.sync(_alice, currentEpoch_);
+
+        assertEq(_vote.lastSyncs(_alice, 1), currentEpoch_);
     }
 
     function test_scenario1() external {

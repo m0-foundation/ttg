@@ -47,4 +47,8 @@ contract PowerTokenHarness is PowerToken {
     function internalNextCashToken() external view returns (address nextCashToken_) {
         return _nextCashToken;
     }
+
+    function lastSyncs(address account_, uint256 index_) external view returns (uint16) {
+        return _lastSyncs[account_][index_].startingEpoch;
+    }
 }

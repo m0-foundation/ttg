@@ -25,7 +25,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     uint40 internal constant _AUCTION_PERIODS = 100;
 
     /// @inheritdoc IPowerToken
-    uint240 public constant INITIAL_SUPPLY = 10_000;
+    uint240 public constant INITIAL_SUPPLY = 10_000; // NOTE: Consider math overflows when changing this value.
 
     /// @inheritdoc IPowerToken
     address public immutable bootstrapToken;
@@ -60,7 +60,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     /// @dev The next target supply of the token.
     uint240 internal _nextTargetSupply = INITIAL_SUPPLY;
 
-    /// @notice Reverts if the caller is not the Standard Governor.
+    /// @dev Reverts if the caller is not the Standard Governor.
     modifier onlyStandardGovernor() {
         _revertIfNotStandardGovernor();
         _;
@@ -277,44 +277,21 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @param newDelegatee_ The address of the account receiving voting power.
      */
     function _delegate(address delegator_, address newDelegatee_) internal override {
-        _bootstrap(delegator_);
-
-        if (delegator_ != newDelegatee_) _bootstrap(newDelegatee_);
+        if (delegator_ != newDelegatee_) _sync(newDelegatee_, _clock());
 
         super._delegate(delegator_, newDelegatee_);
     }
 
     /**
-     * @dev   Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
-     * @param delegatee_ The address of the account being marked as having participated.
+     * @dev   Syncs `account_` so that its balance Snap array in storage, reflects their unrealized inflation.
+     * @param account_ The address of the account to sync.
+     * @param epoch_   The latest epoch to sync to.
      */
-    function _markParticipation(address delegatee_) internal override {
-        _bootstrap(delegatee_);
-        super._markParticipation(delegatee_);
-    }
+    function _sync(address account_, uint16 epoch_) internal override {
+        if (epoch_ < bootstrapEpoch) revert SyncBeforeBootstrap(bootstrapEpoch, epoch_);
 
-    /**
-     * @dev   Mint `amount_` tokens to `recipient_`.
-     * @param recipient_ The address of the account to mint tokens to.
-     * @param amount_    The amount of tokens to mint.
-     */
-    function _mint(address recipient_, uint256 amount_) internal override {
-        _bootstrap(recipient_);
-        super._mint(recipient_, amount_);
-    }
-
-    /**
-     * @dev   Transfers `amount_` tokens from `sender_` to `recipient_`.
-     * @param sender_    The address of the account to transfer tokens from.
-     * @param recipient_ The address of the account to transfer tokens to.
-     * @param amount_    The amount of tokens to transfer.
-     */
-    function _transfer(address sender_, address recipient_, uint256 amount_) internal override {
-        _bootstrap(sender_);
-
-        if (sender_ != recipient_) _bootstrap(recipient_);
-
-        super._transfer(sender_, recipient_, amount_);
+        _bootstrap(account_);
+        super._sync(account_, epoch_);
     }
 
     /******************************************************************************************************************\
@@ -328,15 +305,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @return The balance of `account_` plus any inflation that is unrealized before `epoch_`.
      */
     function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
-        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
-        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
-
-        // If no snaps, return the bootstrap balance at the bootstrap epoch.
-        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
-        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
-        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
-
-        return super._getBalance(account_, epoch_);
+        return _getInternalOrBootstrap(account_, epoch_, super._getBalance);
     }
 
     /**
@@ -349,15 +318,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address account_,
         uint16 epoch_
     ) internal view override returns (uint240) {
-        // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
-        if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
-
-        // If no snaps, return the bootstrap balance at the bootstrap epoch.
-        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
-        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
-        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
-
-        return super._getBalanceWithoutUnrealizedInflation(account_, epoch_);
+        return _getInternalOrBootstrap(account_, epoch_, super._getBalanceWithoutUnrealizedInflation);
     }
 
     /**
@@ -393,16 +354,33 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @dev    Returns the amount of votes of `account_` plus any inflation that should be realized at `epoch_`.
      * @param  account_ The account to get the votes for.
      * @param  epoch_   The epoch to get the votes at.
-     * @return The balance of votes of `account_` plus any inflation that should be realized at `epoch_`.
+     * @return The votes of `account_` at `epoch_`.
      */
     function _getVotes(address account_, uint16 epoch_) internal view override returns (uint240) {
+        return _getInternalOrBootstrap(account_, epoch_, super._getVotes);
+    }
+
+    /**
+     * @dev    Returns the amount of balance/votes for `account_` at clock value `epoch_`.
+     * @param  account_ The account to get the balance/votes for.
+     * @param  epoch_   The epoch to get the balance/votes at.
+     * @param  getter_  An internal view function that returns the balance/votes that are internally tracked.
+     * @return The balance/votes of `account_` (plus any inflation that should be realized) at `epoch_`.
+     */
+    function _getInternalOrBootstrap(
+        address account_,
+        uint16 epoch_,
+        function(address, uint16) internal view returns (uint240) getter_
+    ) internal view returns (uint240) {
         // For epochs less than or equal to the bootstrap epoch, return the bootstrap balance at that epoch.
         if (epoch_ <= bootstrapEpoch) return _getBootstrapBalance(account_, epoch_);
 
-        // If no snaps, return the bootstrap balance at the bootstrap epoch and unrealized inflation at the epoch.
-        if (_votingPowers[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
+        // If no syncs, return the bootstrap balance at the bootstrap epoch.
+        // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
+        //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
+        if (_lastSyncs[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
 
-        return super._getVotes(account_, epoch_);
+        return getter_(account_, epoch_);
     }
 
     /**

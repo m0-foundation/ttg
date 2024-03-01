@@ -22,6 +22,35 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
     /// @notice Revert message when trying to perform an action not allowed during designated voting epochs.
     error VoteEpoch();
 
+    /**
+     * @notice Revert message when the proposed epoch is larger than the current epoch.
+     * @param  currentEpoch The current epoch clock value.
+     * @param  epoch        The handled epoch clock value.
+     */
+    error FutureEpoch(uint16 currentEpoch, uint16 epoch);
+
+    /******************************************************************************************************************\
+    |                                                      Events                                                      |
+    \******************************************************************************************************************/
+
+    /**
+     * @notice Emitted when `account` is manually synced to `epoch`, not inclusively.
+     * @param  account The address of an account that is synced.
+     * @param  epoch   The epoch up to which the account is synced, not inclusively.
+     */
+    event Sync(address indexed account, uint16 epoch);
+
+    /******************************************************************************************************************\
+    |                                      External/Public Interactive Functions                                       |
+    \******************************************************************************************************************/
+
+    /**
+     * @dev   Syncs `account` so that its balance Snap array in storage, reflects their unrealized inflation.
+     * @param account The address of the account to sync.
+     * @param epoch   The latest epoch to sync to, not inclusive.
+     */
+    function sync(address account, uint256 epoch) external;
+
     /******************************************************************************************************************\
     |                                               View/Pure Functions                                                |
     \******************************************************************************************************************/

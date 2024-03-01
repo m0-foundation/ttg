@@ -79,6 +79,13 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Revert message when the buy order has zero maximum and minimum amounts.
     error ZeroPurchaseAmount();
 
+    /**
+     * @notice Revert message when trying to sync to an epoch that is before the bootstrap epoch.
+     * @param  bootstrapEpoch The bootstrap epoch.
+     * @param  epoch          The epoch attempting to be synced to, not inclusively.
+     */
+    error SyncBeforeBootstrap(uint16 bootstrapEpoch, uint16 epoch);
+
     /******************************************************************************************************************\
     |                                              Interactive Functions                                               |
     \******************************************************************************************************************/

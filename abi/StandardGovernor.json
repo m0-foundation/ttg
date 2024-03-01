@@ -65,7 +65,33 @@
   },
   {
     "type": "function",
+    "name": "BALLOTS_WITH_REASON_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "BALLOT_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "BALLOT_WITH_REASON_TYPEHASH",
     "inputs": [],
     "outputs": [
       {
@@ -271,9 +297,92 @@
         "internalType": "uint8"
       },
       {
-        "name": "",
+        "name": "reason_",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weight_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "castVoteWithReasonBySig",
+    "inputs": [
+      {
+        "name": "voter_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "proposalId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "support_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "reason_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "signature_",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weight_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "castVoteWithReasonBySig",
+    "inputs": [
+      {
+        "name": "proposalId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "support_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "reason_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "v_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "s_",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "outputs": [
@@ -384,6 +493,118 @@
   },
   {
     "type": "function",
+    "name": "castVotesWithReason",
+    "inputs": [
+      {
+        "name": "proposalIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "supportList_",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      },
+      {
+        "name": "reasonList_",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weight_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "castVotesWithReasonBySig",
+    "inputs": [
+      {
+        "name": "voter_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "proposalIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "supportList_",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      },
+      {
+        "name": "reasonList_",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "signature_",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weight_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "castVotesWithReasonBySig",
+    "inputs": [
+      {
+        "name": "proposalIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "supportList_",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      },
+      {
+        "name": "reasonList_",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "v_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "r_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "s_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "weight_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "clock",
     "inputs": [],
     "outputs": [
@@ -391,6 +612,49 @@
         "name": "",
         "type": "uint48",
         "internalType": "uint48"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "eip712Domain",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "fields_",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      },
+      {
+        "name": "name_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "version_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyingContract_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "salt_",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "extensions_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
@@ -468,6 +732,35 @@
   },
   {
     "type": "function",
+    "name": "getBallotWithReasonDigest",
+    "inputs": [
+      {
+        "name": "proposalId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "support_",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "reason_",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getBallotsDigest",
     "inputs": [
       {
@@ -479,6 +772,35 @@
         "name": "supportList_",
         "type": "uint8[]",
         "internalType": "uint8[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBallotsWithReasonDigest",
+    "inputs": [
+      {
+        "name": "proposalIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "supportList_",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      },
+      {
+        "name": "reasonList_",
+        "type": "string[]",
+        "internalType": "string[]"
       }
     ],
     "outputs": [
@@ -530,6 +852,30 @@
         "name": "proposer_",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProposalFee",
+    "inputs": [
+      {
+        "name": "proposalId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "cashToken_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "fee_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -1105,6 +1451,12 @@
   },
   {
     "type": "event",
+    "name": "EIP712DomainChanged",
+    "inputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "HasVotedOnAllProposals",
     "inputs": [
       {
@@ -1278,6 +1630,27 @@
   },
   {
     "type": "error",
+    "name": "ArrayLengthMismatch",
+    "inputs": [
+      {
+        "name": "length1",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "length2",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "EmptyProposalIdsArray",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ExecutionFailed",
     "inputs": [
       {
@@ -1316,11 +1689,6 @@
   {
     "type": "error",
     "name": "InvalidEmergencyGovernorAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidEpoch",
     "inputs": []
   },
   {
@@ -1430,7 +1798,7 @@
   },
   {
     "type": "error",
-    "name": "ProposalNotActive",
+    "name": "ProposalInactive",
     "inputs": [
       {
         "name": "state",

@@ -59,6 +59,21 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     }
 
     /******************************************************************************************************************\
+    |                                      External/Public Interactive Functions                                       |
+    \******************************************************************************************************************/
+
+    /// @inheritdoc IEpochBasedInflationaryVoteToken
+    function sync(address account_, uint256 epoch_) external {
+        uint16 safeEpoch_ = UIntMath.safe16(epoch_);
+
+        if (safeEpoch_ > _clock()) revert FutureEpoch(_clock(), safeEpoch_);
+
+        _sync(account_, safeEpoch_);
+
+        emit Sync(account_, safeEpoch_);
+    }
+
+    /******************************************************************************************************************\
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
@@ -77,7 +92,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param newDelegatee_ The address of the account receiving voting power.
      */
     function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVoteEpoch {
-        _sync(delegator_);
+        _sync(delegator_, _clock());
         super._delegate(delegator_, newDelegatee_);
     }
 
@@ -85,12 +100,15 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @dev   Allows for the inflation of a delegatee's voting power (and total supply) up to one time per epoch.
      * @param delegatee_ The address of the account being marked as having participated.
      */
-    function _markParticipation(address delegatee_) internal virtual onlyDuringVoteEpoch {
-        if (!_update(_participations[delegatee_])) revert AlreadyParticipated(); // Revert if could not update.
+    function _markParticipation(address delegatee_) internal onlyDuringVoteEpoch {
+        uint16 currentEpoch_ = _clock();
 
-        _sync(delegatee_);
+        // Revert if could not update, as it means the delegatee has already participated in this epoch.
+        if (!_update(_participations[delegatee_], currentEpoch_)) revert AlreadyParticipated();
 
-        uint240 inflation_ = _getInflation(_getVotes(delegatee_, _clock()));
+        _sync(delegatee_, currentEpoch_);
+
+        uint240 inflation_ = _getInflation(_getVotes(delegatee_, currentEpoch_));
 
         // NOTE: Cannot sync here because it would prevent `delegatee_` from getting inflation if their delegatee votes.
         // NOTE: Don't need to sync here because participating has no effect on the balance of `delegatee_`.
@@ -103,19 +121,20 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param recipient_ The address of the account to mint tokens to.
      * @param amount_    The amount of tokens to mint.
      */
-    function _mint(address recipient_, uint256 amount_) internal virtual override notDuringVoteEpoch {
-        _sync(recipient_);
+    function _mint(address recipient_, uint256 amount_) internal override notDuringVoteEpoch {
+        _sync(recipient_, _clock());
         super._mint(recipient_, amount_);
     }
 
     /**
      * @dev   Syncs `account_` so that its balance Snap array in storage, reflects their unrealized inflation.
      * @param account_ The address of the account to sync.
+     * @param epoch_   The latest epoch to sync to, not inclusive.
      */
-    function _sync(address account_) internal {
-        // Realized the account's unrealized inflation since its last sync, and update its last sync.
-        _addBalance(account_, _getUnrealizedInflation(account_, _clock()));
-        _update(_lastSyncs[account_]);
+    function _sync(address account_, uint16 epoch_) internal virtual {
+        // Realized the account's unrealized inflation since its last sync, to `epoch_`, and update its last sync.
+        _addBalance(account_, _getUnrealizedInflation(account_, epoch_));
+        _update(_lastSyncs[account_], epoch_);
     }
 
     /**
@@ -124,14 +143,10 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param recipient_ The address of the account to transfer tokens to.
      * @param amount_    The amount of tokens to transfer.
      */
-    function _transfer(
-        address sender_,
-        address recipient_,
-        uint256 amount_
-    ) internal virtual override notDuringVoteEpoch {
-        _sync(sender_);
+    function _transfer(address sender_, address recipient_, uint256 amount_) internal override notDuringVoteEpoch {
+        _sync(sender_, _clock());
 
-        if (recipient_ != sender_) _sync(recipient_);
+        if (recipient_ != sender_) _sync(recipient_, _clock());
 
         super._transfer(sender_, recipient_, amount_);
     }
@@ -139,16 +154,16 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     /**
      * @dev    Update a storage VoidSnap array to contain the current epoch as the latest snap.
      * @param  voidSnaps_ The storage pointer to a VoidSnap array to update.
+     * @param  epoch_     The epoch to write as the latest element of the VoidSnap array.
      * @return updated_   Whether the VoidSnap array was updated, and thus did not already contain the current epoch.
      */
-    function _update(VoidSnap[] storage voidSnaps_) internal returns (bool updated_) {
-        uint16 currentEpoch_ = _clock();
+    function _update(VoidSnap[] storage voidSnaps_, uint16 epoch_) internal returns (bool updated_) {
         uint256 length_ = voidSnaps_.length;
 
         unchecked {
             // If this will be the first or a new VoidSnap, just push it onto the array.
-            if (updated_ = ((length_ == 0) || (currentEpoch_ > _unsafeAccess(voidSnaps_, length_ - 1).startingEpoch))) {
-                voidSnaps_.push(VoidSnap(currentEpoch_));
+            if (updated_ = ((length_ == 0) || (epoch_ > _unsafeAccess(voidSnaps_, length_ - 1).startingEpoch))) {
+                voidSnaps_.push(VoidSnap(epoch_));
             }
         }
     }
