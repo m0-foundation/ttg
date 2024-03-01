@@ -13,7 +13,7 @@ interface IPowerBootstrapToken {
      * @param  accountsLength The length of the accounts array.
      * @param  balancesLength The length of the balances array.
      */
-    error LengthMismatch(uint256 accountsLength, uint256 balancesLength);
+    error ArrayLengthMismatch(uint256 accountsLength, uint256 balancesLength);
 
     /// @notice Revert message when the total supply is larger than `type(uint240).max`, rendering the contract
     ///         incompatible as a bootstrap token for the PowerToken.

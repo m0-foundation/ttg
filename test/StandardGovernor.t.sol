@@ -13,7 +13,9 @@ import { TestUtils } from "./utils/TestUtils.sol";
 contract StandardGovernorTests is TestUtils {
     uint256 internal constant _ONE = 10_000;
 
-    address internal _alice = makeAddr("alice");
+    address internal _alice;
+    uint256 internal _aliceKey;
+
     address internal _bob = makeAddr("bob");
     address internal _emergencyGovernor = makeAddr("emergencyGovernor");
     address internal _vault = makeAddr("vault");
@@ -33,6 +35,8 @@ contract StandardGovernorTests is TestUtils {
     address internal _account1 = makeAddr("account1");
 
     function setUp() external {
+        (_alice, _aliceKey) = makeAddrAndKey("alice");
+
         _cashToken = new MockERC20();
         _powerToken = new MockPowerToken();
         _zeroToken = new MockZeroToken();
@@ -151,6 +155,119 @@ contract StandardGovernorTests is TestUtils {
             address(0),
             _proposalFee,
             _maxTotalZeroRewardPerActiveEpoch
+        );
+    }
+
+    /* ============ typeHashes ============ */
+    function test_ballotTypeHash() external {
+        assertEq(_standardGovernor.BALLOT_TYPEHASH(), keccak256("Ballot(uint256 proposalId,uint8 support)"));
+    }
+
+    function test_ballotWithReasonTypeHash() external {
+        assertEq(
+            _standardGovernor.BALLOT_WITH_REASON_TYPEHASH(),
+            keccak256("BallotWithReason(uint256 proposalId,uint8 support,string reason)")
+        );
+    }
+
+    function test_ballotsTypeHash() external {
+        assertEq(_standardGovernor.BALLOTS_TYPEHASH(), keccak256("Ballots(uint256[] proposalIds,uint8[] supportList)"));
+    }
+
+    function test_ballotsWithReasonTypeHash() external {
+        assertEq(
+            _standardGovernor.BALLOTS_WITH_REASON_TYPEHASH(),
+            keccak256("BallotsWithReason(uint256[] proposalIds,uint8[] supportList,string[] reasonList)")
+        );
+    }
+
+    /* ============ ballotDigests ============ */
+    function test_getBallotDigest() external {
+        uint256 proposalId_ = 1;
+        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
+
+        assertEq(
+            _standardGovernor.getBallotDigest(proposalId_, support_),
+            _standardGovernor.getDigest(
+                keccak256(abi.encode(_standardGovernor.BALLOT_TYPEHASH(), proposalId_, support_))
+            )
+        );
+    }
+
+    function test_getBallotsDigest() external {
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = 1;
+        proposalIds_[1] = 2;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        assertEq(
+            _standardGovernor.getBallotsDigest(proposalIds_, supportList_),
+            _standardGovernor.getDigest(
+                keccak256(
+                    abi.encode(
+                        _standardGovernor.BALLOTS_TYPEHASH(),
+                        keccak256(abi.encodePacked(proposalIds_)),
+                        keccak256(abi.encodePacked(supportList_))
+                    )
+                )
+            )
+        );
+    }
+
+    function test_getBallotWithReasonDigest() external {
+        uint256 proposalId_ = 1;
+        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
+        string memory reason_ = "Yes";
+
+        assertEq(
+            _standardGovernor.getBallotWithReasonDigest(proposalId_, support_, reason_),
+            _standardGovernor.getDigest(
+                keccak256(
+                    abi.encode(
+                        _standardGovernor.BALLOT_WITH_REASON_TYPEHASH(),
+                        proposalId_,
+                        support_,
+                        keccak256(bytes(reason_))
+                    )
+                )
+            )
+        );
+    }
+
+    function test_getBallotsWithReasonDigest() external {
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = 1;
+        proposalIds_[1] = 2;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        string[] memory reasonList_ = new string[](2);
+        reasonList_[0] = "First proposal - Yes";
+        reasonList_[1] = "Second proposal - Yes";
+
+        bytes memory reasonBytes_;
+
+        for (uint256 index_; index_ < reasonList_.length; ++index_) {
+            reasonBytes_ = abi.encodePacked(reasonBytes_, bytes(reasonList_[index_]));
+        }
+
+        assertEq(
+            _standardGovernor.getBallotsWithReasonDigest(proposalIds_, supportList_, reasonList_),
+            _standardGovernor.getDigest(
+                keccak256(
+                    abi.encode(
+                        _standardGovernor.BALLOTS_WITH_REASON_TYPEHASH(),
+                        keccak256(abi.encodePacked(proposalIds_)),
+                        keccak256(abi.encodePacked(supportList_)),
+                        keccak256(reasonBytes_)
+                    )
+                )
+            )
         );
     }
 
@@ -304,6 +421,131 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.numberOfProposalsVotedOnAt(_alice, currentEpoch), 3);
     }
 
+    /* ============ castVoteBySig ============ */
+    function test_castVoteBySig() external {
+        uint256 proposalId_ = 1;
+        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
+
+        _standardGovernor.setProposal(proposalId_, _standardGovernor.clock());
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, proposalId_, support_, _votePower, "");
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVoteBySig(
+                _alice,
+                proposalId_,
+                support_,
+                _getSignature(_standardGovernor.getBallotDigest(proposalId_, support_), _aliceKey)
+            ),
+            _votePower
+        );
+    }
+
+    function test_castVoteBySig_vrs() external {
+        uint256 proposalId_ = 1;
+        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
+
+        _standardGovernor.setProposal(proposalId_, _standardGovernor.clock());
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
+            _aliceKey,
+            _standardGovernor.getBallotDigest(proposalId_, support_)
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, proposalId_, support_, _votePower, "");
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVoteBySig(proposalId_, support_, v_, r_, s_), _votePower);
+    }
+
+    /* ============ castVoteWithReason ============ */
+    function test_castVoteWithReason() external {
+        uint256 proposalId_ = 1;
+        string memory reason_ = "Yes";
+
+        _standardGovernor.setProposal(proposalId_, _standardGovernor.clock());
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, proposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, reason_);
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVoteWithReason(proposalId_, uint8(IBatchGovernor.VoteType.Yes), reason_),
+            _votePower
+        );
+    }
+
+    /* ============ castVoteWithReasonBySig ============ */
+    function test_castVoteWithReasonBySig() external {
+        uint256 proposalId_ = 1;
+        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
+        string memory reason_ = "Yes";
+
+        _standardGovernor.setProposal(proposalId_, _standardGovernor.clock());
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, proposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, reason_);
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVoteWithReasonBySig(
+                _alice,
+                proposalId_,
+                uint8(IBatchGovernor.VoteType.Yes),
+                reason_,
+                _getSignature(_standardGovernor.getBallotWithReasonDigest(proposalId_, support_, reason_), _aliceKey)
+            ),
+            _votePower
+        );
+    }
+
+    function test_castVoteWithReasonBySig_vrs() external {
+        uint256 proposalId_ = 1;
+        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
+        string memory reason_ = "Yes";
+
+        _standardGovernor.setProposal(proposalId_, _standardGovernor.clock());
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
+            _aliceKey,
+            _standardGovernor.getBallotWithReasonDigest(proposalId_, support_, reason_)
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, proposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, reason_);
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVoteWithReasonBySig(
+                proposalId_,
+                uint8(IBatchGovernor.VoteType.Yes),
+                reason_,
+                v_,
+                r_,
+                s_
+            ),
+            _votePower
+        );
+    }
+
     /* ============ castVotes ============ */
     function test_castVotes() external {
         uint256 firstProposalId_ = 1;
@@ -379,7 +621,7 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.castVotes(secondBatchOfProposalIds_, secondBatchOfSupports_), _votePower);
     }
 
-    function test_castVotes_invalidSupportLength() external {
+    function test_castVotes_arrayLengthMismatch() external {
         uint256 firstProposalId_ = 1;
         uint256 secondProposalId_ = 2;
 
@@ -387,24 +629,328 @@ contract StandardGovernorTests is TestUtils {
         proposalIds_[0] = firstProposalId_;
         proposalIds_[1] = secondProposalId_;
 
-        uint8[] memory supports_ = new uint8[](1);
-        supports_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        uint8[] memory supportList_ = new uint8[](1);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
 
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.InvalidSupportLength.selector, 2, 1));
+        string[] memory reasonList_ = new string[](2);
+        reasonList_[0] = "";
+        reasonList_[1] = "";
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1, 2));
 
         vm.prank(_alice);
-        _standardGovernor.castVotes(proposalIds_, supports_);
+        _standardGovernor.castVotes(proposalIds_, supportList_);
     }
 
-    function test_castVotes_invalidSupportLength_zeroLength() external {
+    function test_castVotes_emptyProposalIdsArray() external {
         uint256[] memory proposalIds_ = new uint256[](0);
+        uint8[] memory supportList_ = new uint8[](0);
 
-        uint8[] memory supports_ = new uint8[](0);
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.InvalidSupportLength.selector, 0, 0));
+        vm.expectRevert(IBatchGovernor.EmptyProposalIdsArray.selector);
 
         vm.prank(_alice);
-        _standardGovernor.castVotes(proposalIds_, supports_);
+        _standardGovernor.castVotes(proposalIds_, supportList_);
+    }
+
+    /* ============ castVotesBySig ============ */
+    function test_castVotesBySig() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
+        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, firstProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, secondProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch_);
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVotesBySig(
+                _alice,
+                proposalIds_,
+                supportList_,
+                _getSignature(_standardGovernor.getBallotsDigest(proposalIds_, supportList_), _aliceKey)
+            ),
+            _votePower
+        );
+    }
+
+    function test_castVotesBySig_vrs() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
+        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
+            _aliceKey,
+            _standardGovernor.getBallotsDigest(proposalIds_, supportList_)
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, firstProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_alice, secondProposalId_, uint8(IBatchGovernor.VoteType.Yes), _votePower, "");
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch_);
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVotesBySig(proposalIds_, supportList_, v_, r_, s_), _votePower);
+    }
+
+    /* ============ castVotesWithReason ============ */
+    function test_castVotesWithReason() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
+        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        string[] memory reasonList_ = new string[](2);
+        reasonList_[0] = "First proposal - Yes";
+        reasonList_[1] = "Second proposal - Yes";
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(
+            _alice,
+            firstProposalId_,
+            uint8(IBatchGovernor.VoteType.Yes),
+            _votePower,
+            reasonList_[0]
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(
+            _alice,
+            secondProposalId_,
+            uint8(IBatchGovernor.VoteType.Yes),
+            _votePower,
+            reasonList_[1]
+        );
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch_);
+
+        vm.prank(_alice);
+        assertEq(_standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_), _votePower);
+    }
+
+    function test_castVotesWithReason_arrayLengthMismatch() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
+        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supportList_ = new uint8[](1);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+
+        string[] memory reasonList_ = new string[](2);
+        reasonList_[0] = "";
+        reasonList_[1] = "";
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 1, 2));
+
+        vm.prank(_alice);
+        _standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_);
+
+        supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        reasonList_ = new string[](1);
+        reasonList_[0] = "";
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ArrayLengthMismatch.selector, 2, 2, 1));
+
+        vm.prank(_alice);
+        _standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_);
+    }
+
+    function test_castVotesWithReason_emptyProposalIdsArray() external {
+        uint256[] memory proposalIds_ = new uint256[](0);
+        uint8[] memory supportList_ = new uint8[](0);
+        string[] memory reasonList_ = new string[](0);
+
+        vm.expectRevert(IBatchGovernor.EmptyProposalIdsArray.selector);
+
+        vm.prank(_alice);
+        _standardGovernor.castVotesWithReason(proposalIds_, supportList_, reasonList_);
+    }
+
+    /* ============ castVotesWithReasonBySig ============ */
+    function test_castVotesWithReasonBySig() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
+        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        string[] memory reasonList_ = new string[](2);
+        reasonList_[0] = "First proposal - Yes";
+        reasonList_[1] = "Second proposal - Yes";
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(
+            _alice,
+            firstProposalId_,
+            uint8(IBatchGovernor.VoteType.Yes),
+            _votePower,
+            reasonList_[0]
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(
+            _alice,
+            secondProposalId_,
+            uint8(IBatchGovernor.VoteType.Yes),
+            _votePower,
+            reasonList_[1]
+        );
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch_);
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVotesWithReasonBySig(
+                _alice,
+                proposalIds_,
+                supportList_,
+                reasonList_,
+                _getSignature(
+                    _standardGovernor.getBallotsWithReasonDigest(proposalIds_, supportList_, reasonList_),
+                    _aliceKey
+                )
+            ),
+            _votePower
+        );
+    }
+
+    function test_castVotesWithReasonBySig_vrs() external {
+        uint256 firstProposalId_ = 1;
+        uint256 secondProposalId_ = 2;
+        uint256 currentEpoch_ = _standardGovernor.clock();
+
+        _standardGovernor.setProposal(firstProposalId_, currentEpoch_);
+        _standardGovernor.setProposal(secondProposalId_, currentEpoch_);
+        _standardGovernor.setNumberOfProposals(currentEpoch_, 2);
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
+
+        uint256[] memory proposalIds_ = new uint256[](2);
+        proposalIds_[0] = firstProposalId_;
+        proposalIds_[1] = secondProposalId_;
+
+        uint8[] memory supportList_ = new uint8[](2);
+        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
+        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
+
+        string[] memory reasonList_ = new string[](2);
+        reasonList_[0] = "First proposal - Yes";
+        reasonList_[1] = "Second proposal - Yes";
+
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
+            _aliceKey,
+            _standardGovernor.getBallotsWithReasonDigest(proposalIds_, supportList_, reasonList_)
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(
+            _alice,
+            firstProposalId_,
+            uint8(IBatchGovernor.VoteType.Yes),
+            _votePower,
+            reasonList_[0]
+        );
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(
+            _alice,
+            secondProposalId_,
+            uint8(IBatchGovernor.VoteType.Yes),
+            _votePower,
+            reasonList_[1]
+        );
+
+        vm.expectEmit();
+        emit IStandardGovernor.HasVotedOnAllProposals(_alice, currentEpoch_);
+
+        vm.prank(_alice);
+        assertEq(
+            _standardGovernor.castVotesWithReasonBySig(proposalIds_, supportList_, reasonList_, v_, r_, s_),
+            _votePower
+        );
     }
 
     /* ============ propose ============ */

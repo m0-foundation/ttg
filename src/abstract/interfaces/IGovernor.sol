@@ -119,16 +119,52 @@ interface IGovernor is IERC6372, IERC712 {
     ) external returns (uint256 weight);
 
     /**
-     * @notice Allows the caller to cast a vote on a proposal with id `proposalId`.
+     * @notice Allows the caller to cast a vote with reason on a proposal with id `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
      * @param  support    The type of support to cast for the proposal.
-     * @param  reason     The string of the reason the caller has cast their vote, if any.
+     * @param  reason     The reason for which the caller casts their vote, if any.
      * @return weight     The number of votes cast.
      */
     function castVoteWithReason(
         uint256 proposalId,
         uint8 support,
         string calldata reason
+    ) external returns (uint256 weight);
+
+    /**
+     * @notice Allows a signer to cast a vote with reason on a proposal with id `proposalId` via an ECDSA secp256k1 signature.
+     * @param  proposalId The unique identifier for the proposal.
+     * @param  support    The type of support to cast for the proposal.
+     * @param  reason     The reason for which the caller casts their vote, if any.
+     * @param  v          An ECDSA secp256k1 signature parameter.
+     * @param  r          An ECDSA secp256k1 signature parameter.
+     * @param  s          An ECDSA secp256k1 signature parameter.
+     * @return weight     The number of votes cast.
+     */
+    function castVoteWithReasonBySig(
+        uint256 proposalId,
+        uint8 support,
+        string calldata reason,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 weight);
+
+    /**
+     * @notice Allows `voter` to cast a vote with reason on a proposal with id `proposalId` via an arbitrary signature.
+     * @param  voter      The address of the account that casting their vote, and purported the have signed.
+     * @param  proposalId The unique identifier for the proposal.
+     * @param  support    The type of support to cast for the proposal.
+     * @param  reason     The reason for which the caller casts their vote, if any.
+     * @param  signature  An arbitrary signature.
+     * @return weight     The number of votes cast.
+     */
+    function castVoteWithReasonBySig(
+        address voter,
+        uint256 proposalId,
+        uint8 support,
+        string calldata reason,
+        bytes memory signature
     ) external returns (uint256 weight);
 
     /**
@@ -257,4 +293,7 @@ interface IGovernor is IERC6372, IERC712 {
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the castVoteBySig function.
     function BALLOT_TYPEHASH() external pure returns (bytes32);
+
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVoteWithReasonBySig` function.
+    function BALLOT_WITH_REASON_TYPEHASH() external pure returns (bytes32);
 }

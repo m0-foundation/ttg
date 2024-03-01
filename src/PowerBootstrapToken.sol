@@ -24,7 +24,7 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
         uint256 accountsLength_ = initialAccounts_.length;
         uint256 balancesLength_ = initialBalances_.length;
 
-        if (accountsLength_ != balancesLength_) revert LengthMismatch(accountsLength_, balancesLength_);
+        if (accountsLength_ != balancesLength_) revert ArrayLengthMismatch(accountsLength_, balancesLength_);
 
         uint256 totalSupply_;
 

@@ -75,7 +75,7 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ castVotes ============ */
-    function testFuzz_castVotes(uint numberOfProposals) external {
+    function testFuzz_castVotes(uint256 numberOfProposals) external {
         numberOfProposals = uint8(bound(numberOfProposals, 1, type(uint8).max));
 
         uint256[] memory proposalIds_ = new uint256[](numberOfProposals);

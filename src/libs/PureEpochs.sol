@@ -15,10 +15,6 @@ library PureEpochs {
         return uint16(((block.timestamp - _MERGE_TIMESTAMP) / _EPOCH_PERIOD) + 1); // Epoch at `_MERGE_TIMESTAMP` is 1.
     }
 
-    function timeElapsedInCurrentEpoch() internal view returns (uint40 time_) {
-        return uint40(block.timestamp) - getTimestampOfEpochStart(currentEpoch());
-    }
-
     function timeRemainingInCurrentEpoch() internal view returns (uint40 time_) {
         return getTimestampOfEpochEnd(currentEpoch()) - uint40(block.timestamp);
     }

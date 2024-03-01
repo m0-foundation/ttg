@@ -29,6 +29,14 @@ contract StandardGovernorHarness is StandardGovernor {
         )
     {}
 
+    function getDigest(bytes32 internalDigest_) external view returns (bytes32) {
+        return _getDigest(internalDigest_);
+    }
+
+    function getReasonListHash(string[] calldata reasonList_) internal pure returns (bytes32) {
+        return _getReasonListHash(reasonList_);
+    }
+
     function revertIfInvalidCalldata(bytes memory callData_) external pure {
         return _revertIfInvalidCalldata(callData_);
     }

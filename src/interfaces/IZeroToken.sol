@@ -21,7 +21,7 @@ interface IZeroToken is IEpochBasedVoteToken {
      * @param  accountsLength The length of the accounts array.
      * @param  balancesLength The length of the balances array.
      */
-    error LengthMismatch(uint256 accountsLength, uint256 balancesLength);
+    error ArrayLengthMismatch(uint256 accountsLength, uint256 balancesLength);
 
     /// @notice Revert message when the caller is not the Standard Governor.
     error NotStandardGovernor();
