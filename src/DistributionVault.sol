@@ -76,7 +76,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     ) external returns (uint256) {
         unchecked {
             // Nonce realistically cannot overflow.
-            bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, nonces[account_]++, deadline_);
+            uint256 nonce_ = nonces[account_]++;
+            bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_);
 
             _revertIfInvalidSignature(account_, digest_, v_, r_, s_);
         }
