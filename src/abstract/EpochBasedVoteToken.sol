@@ -194,6 +194,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     function _mint(address recipient_, uint256 amount_) internal virtual {
         _revertIfInvalidRecipient(recipient_);
+
         if (amount_ == 0) revert InsufficientAmount(amount_);
 
         emit Transfer(address(0), recipient_, amount_);
@@ -395,9 +396,11 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
         // has the account applicable to `epoch_`. If we exhaust the array, then the delegatee is an account itself.
         while (index_ > 0) {
-            AccountSnap storage accountSnap_ = _unsafeAccess(delegateeSnaps_, --index_);
+            unchecked {
+                AccountSnap storage accountSnap_ = _unsafeAccess(delegateeSnaps_, --index_);
 
-            if (accountSnap_.startingEpoch <= epoch_) return _getDefaultIfZero(accountSnap_.account, account_);
+                if (accountSnap_.startingEpoch <= epoch_) return _getDefaultIfZero(accountSnap_.account, account_);
+            }
         }
 
         return account_;
@@ -426,9 +429,11 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
         // has the amount applicable to `epoch_`. If we exhaust the array, then the amount is 0.
         while (index_ > 0) {
-            AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, --index_);
+            unchecked {
+                AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, --index_);
 
-            if (amountSnap_.startingEpoch <= epoch_) return amountSnap_.amount;
+                if (amountSnap_.startingEpoch <= epoch_) return amountSnap_.amount;
+            }
         }
 
         return 0;

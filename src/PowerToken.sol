@@ -254,13 +254,12 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @param account_ The account to bootstrap.
      */
     function _bootstrap(address account_) internal {
-        if (_lastSyncs[account_].length != 0) return; // Skip if the account already has synced (and thus bootstrapped).
+        if (_balances[account_].length != 0) return; // Skip if the account already has synced (and thus bootstrapped).
 
         uint240 bootstrapBalance_ = _getBootstrapBalance(account_, bootstrapEpoch);
 
         _balances[account_].push(AmountSnap(bootstrapEpoch, bootstrapBalance_));
         _votingPowers[account_].push(AmountSnap(bootstrapEpoch, bootstrapBalance_));
-        _lastSyncs[account_].push(VoidSnap(bootstrapEpoch));
 
         if (bootstrapBalance_ == 0) return;
 
@@ -378,7 +377,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         // If no syncs, return the bootstrap balance at the bootstrap epoch.
         // NOTE: There cannot yet be any unrealized inflation after the bootstrap epoch since receiving, sending,
         //       delegating, or having participation marked would have resulted in a `_bootstrap`, and thus some snaps.
-        if (_lastSyncs[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
+        if (_balances[account_].length == 0) return _getBootstrapBalance(account_, bootstrapEpoch);
 
         return getter_(account_, epoch_);
     }
@@ -390,8 +389,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @return The epoch of the last sync of `account_` at or before `epoch_`.
      */
     function _getLastSync(address account_, uint16 epoch_) internal view override returns (uint16) {
-        // If there are no LastSync snaps, return the bootstrap epoch.
-        return (_lastSyncs[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
+        // If there are no balance snaps, return the bootstrap epoch.
+        return (_balances[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
     }
 
     /// @dev Returns the target supply of the token at the current epoch.

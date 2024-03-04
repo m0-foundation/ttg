@@ -450,7 +450,7 @@ contract PowerTokenTests is TestUtils {
 
         _powerToken.sync(_initialAccounts[0], _currentEpoch());
 
-        assertEq(_powerToken.lastSyncs(_initialAccounts[0], 0), _powerToken.bootstrapEpoch());
-        assertEq(_powerToken.lastSyncs(_initialAccounts[0], 1), _currentEpoch());
+        assertEq(_powerToken.getBalanceSnapStartingEpoch(_initialAccounts[0], 0), _powerToken.bootstrapEpoch());
+        assertEq(_powerToken.getBalanceSnapStartingEpoch(_initialAccounts[0], 1), _currentEpoch());
     }
 }

@@ -28,8 +28,6 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
     mapping(address delegatee => VoidSnap[] participationSnaps) internal _participations;
 
-    mapping(address account => VoidSnap[] lastSyncSnaps) internal _lastSyncs;
-
     modifier notDuringVoteEpoch() {
         _revertIfInVoteEpoch();
         _;
@@ -134,7 +132,6 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     function _sync(address account_, uint16 epoch_) internal virtual {
         // Realized the account's unrealized inflation since its last sync, to `epoch_`, and update its last sync.
         _addBalance(account_, _getUnrealizedInflation(account_, epoch_));
-        _update(_lastSyncs[account_], epoch_);
     }
 
     /**
@@ -219,18 +216,20 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @return The epoch of the last sync of `account_` at or before `epoch_`.
      */
     function _getLastSync(address account_, uint16 epoch_) internal view virtual returns (uint16) {
-        uint256 index_ = _lastSyncs[account_].length;
+        if (epoch_ == 0) revert EpochZero();
+
+        AmountSnap[] storage amountSnaps_ = _balances[account_];
+
+        uint256 index_ = amountSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
         // is the most recent to `epoch_`, so return its startingEpoch. If we exhaust the array, then it's 0.
         while (index_ > 0) {
             unchecked {
-                --index_;
+                uint16 snapStartingEpoch_ = _unsafeAccess(amountSnaps_, --index_).startingEpoch;
+
+                if (snapStartingEpoch_ <= epoch_) return snapStartingEpoch_;
             }
-
-            uint16 snapStartingEpoch_ = _unsafeAccess(_lastSyncs[account_], index_).startingEpoch;
-
-            if (snapStartingEpoch_ <= epoch_) return snapStartingEpoch_;
         }
 
         return 0;
@@ -243,9 +242,11 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @return Whether `delegatee_` has participated during the clock value `epoch_`.
      */
     function _hasParticipatedAt(address delegatee_, uint16 epoch_) internal view returns (bool) {
+        if (epoch_ == 0) revert EpochZero();
+
         VoidSnap[] storage voidSnaps_ = _participations[delegatee_];
 
-        uint256 index_ = voidSnaps_.length;
+        uint256 index_ = voidSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`.
         // If this snap's startingEpoch is equal to `epoch_`, it means the delegatee did participate in `epoch_`.
@@ -253,14 +254,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         // If we exhaust the array, then the delegatee never participated in any epoch prior to `epoch_`.
         while (index_ > 0) {
             unchecked {
-                --index_;
+                uint16 snapStartingEpoch_ = _unsafeAccess(voidSnaps_, --index_).startingEpoch;
+
+                if (snapStartingEpoch_ > epoch_) continue;
+
+                return snapStartingEpoch_ == epoch_;
             }
-
-            uint16 snapStartingEpoch_ = _unsafeAccess(voidSnaps_, index_).startingEpoch;
-
-            if (snapStartingEpoch_ > epoch_) continue;
-
-            return snapStartingEpoch_ == epoch_;
         }
 
         return false;

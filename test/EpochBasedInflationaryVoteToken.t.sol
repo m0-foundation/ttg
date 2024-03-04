@@ -528,7 +528,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _vote.mint(_alice, 1_000);
 
-        uint16 lastSync_ = _currentEpoch();
+        uint16 lastBalanceUpdate_ = _currentEpoch();
 
         vm.prank(_alice);
         _vote.delegate(_bob);
@@ -547,7 +547,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextTransferEpoch();
 
-        assertEq(_vote.lastSyncs(_alice, 0), lastSync_);
+        assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 0), lastBalanceUpdate_);
 
         uint16 currentEpoch_ = _currentEpoch();
 
@@ -556,7 +556,7 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _vote.sync(_alice, currentEpoch_);
 
-        assertEq(_vote.lastSyncs(_alice, 1), currentEpoch_);
+        assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 1), currentEpoch_);
     }
 
     function test_scenario1() external {
