@@ -11,6 +11,27 @@ import { MockERC20, MockPowerToken, MockRegistrar, MockZeroToken } from "./utils
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract StandardGovernorTests is TestUtils {
+    struct FiveProposalIds {
+        uint256 proposalId1;
+        uint256 proposalId2;
+        uint256 proposalId3;
+        uint256 proposalId4;
+        uint256 proposalId5;
+    }
+
+    struct FiveSupports {
+        uint8 support1;
+        uint8 support2;
+        uint8 support3;
+        uint8 support4;
+        uint8 support5;
+    }
+
+    struct TwoReasons {
+        bytes32 reason1;
+        bytes32 reason2;
+    }
+
     uint256 internal constant _ONE = 10_000;
 
     address internal _alice;
@@ -194,6 +215,45 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
+    function test_proposalIdsHash() external {
+        // NOTE: as mentioned in EIP-712:
+        // The array values are encoded as the `keccak256` hash of the concatenated `encodeData` of their contents
+        // (i.e. the encoding of `SomeType[5]` is identical to that of a struct containing five members of type `SomeType`).
+        uint256[] memory proposalIds_ = new uint256[](5);
+        proposalIds_[0] = 1;
+        proposalIds_[1] = 2;
+        proposalIds_[2] = 3;
+        proposalIds_[3] = 4;
+        proposalIds_[4] = 5;
+
+        assertEq(
+            keccak256(
+                abi.encode(
+                    FiveProposalIds(proposalIds_[0], proposalIds_[1], proposalIds_[2], proposalIds_[3], proposalIds_[4])
+                )
+            ),
+            keccak256(abi.encodePacked(proposalIds_))
+        );
+    }
+
+    function test_supportListHash() external {
+        uint8[] memory supportList_ = new uint8[](5);
+        supportList_[0] = 1;
+        supportList_[1] = 2;
+        supportList_[2] = 3;
+        supportList_[3] = 4;
+        supportList_[4] = 5;
+
+        assertEq(
+            keccak256(
+                abi.encode(
+                    FiveSupports(supportList_[0], supportList_[1], supportList_[2], supportList_[3], supportList_[4])
+                )
+            ),
+            keccak256(abi.encodePacked(supportList_))
+        );
+    }
+
     function test_getBallotsDigest() external {
         uint256[] memory proposalIds_ = new uint256[](2);
         proposalIds_[0] = 1;
@@ -237,6 +297,28 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
+    function test_getReasonListHash() external {
+        string[] memory reasonList1_ = new string[](2);
+        reasonList1_[0] = "12";
+        reasonList1_[1] = "3";
+
+        string[] memory reasonList2_ = new string[](2);
+        reasonList2_[0] = "1";
+        reasonList2_[1] = "23";
+
+        // NOTE: as mentioned in EIP-712:
+        // The dynamic values `bytes` and `string` are encoded as a `keccak256` hash of their contents.
+        assertEq(
+            keccak256(abi.encode(TwoReasons(keccak256(bytes(reasonList1_[0])), keccak256(bytes(reasonList1_[1]))))),
+            _standardGovernor.getReasonListHash(reasonList1_)
+        );
+
+        assertNotEq(
+            _standardGovernor.getReasonListHash(reasonList1_),
+            _standardGovernor.getReasonListHash(reasonList2_)
+        );
+    }
+
     function test_getBallotsWithReasonDigest() external {
         uint256[] memory proposalIds_ = new uint256[](2);
         proposalIds_[0] = 1;
@@ -250,12 +332,6 @@ contract StandardGovernorTests is TestUtils {
         reasonList_[0] = "First proposal - Yes";
         reasonList_[1] = "Second proposal - Yes";
 
-        bytes memory reasonBytes_;
-
-        for (uint256 index_; index_ < reasonList_.length; ++index_) {
-            reasonBytes_ = abi.encodePacked(reasonBytes_, bytes(reasonList_[index_]));
-        }
-
         assertEq(
             _standardGovernor.getBallotsWithReasonDigest(proposalIds_, supportList_, reasonList_),
             _standardGovernor.getDigest(
@@ -264,7 +340,7 @@ contract StandardGovernorTests is TestUtils {
                         _standardGovernor.BALLOTS_WITH_REASON_TYPEHASH(),
                         keccak256(abi.encodePacked(proposalIds_)),
                         keccak256(abi.encodePacked(supportList_)),
-                        keccak256(reasonBytes_)
+                        _standardGovernor.getReasonListHash(reasonList_)
                     )
                 )
             )
