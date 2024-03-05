@@ -220,7 +220,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         AmountSnap[] storage amountSnaps_ = _balances[account_];
 
-        uint256 index_ = amountSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds
+        uint256 index_ = amountSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`. This snap
         // is the most recent to `epoch_`, so return its startingEpoch. If we exhaust the array, then it's 0.
@@ -246,7 +246,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         VoidSnap[] storage voidSnaps_ = _participations[delegatee_];
 
-        uint256 index_ = voidSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds
+        uint256 index_ = voidSnaps_.length; // NOTE: `index_` starts out as length, and would be out of bounds.
 
         // Keep going back until we find the first snap with a startingEpoch less than or equal to `epoch_`.
         // If this snap's startingEpoch is equal to `epoch_`, it means the delegatee did participate in `epoch_`.

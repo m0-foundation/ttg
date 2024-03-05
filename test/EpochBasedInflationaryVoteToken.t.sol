@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.23;
 
+import { IEpochBasedVoteToken } from "../src/abstract/interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBasedInflationaryVoteTokenHarness.sol";
@@ -557,6 +558,50 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         _vote.sync(_alice, currentEpoch_);
 
         assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 1), currentEpoch_);
+    }
+
+    function test_getLastSync() external {
+        _vote.pushBalance(_alice, 2, 50);
+        _vote.pushBalance(_alice, 4, 12);
+        _vote.pushBalance(_alice, 9, 93);
+
+        assertEq(_vote.getLastSync(_alice, 1), 0);
+        assertEq(_vote.getLastSync(_alice, 2), 2);
+        assertEq(_vote.getLastSync(_alice, 3), 2);
+        assertEq(_vote.getLastSync(_alice, 4), 4);
+        assertEq(_vote.getLastSync(_alice, 5), 4);
+        assertEq(_vote.getLastSync(_alice, 6), 4);
+        assertEq(_vote.getLastSync(_alice, 7), 4);
+        assertEq(_vote.getLastSync(_alice, 8), 4);
+        assertEq(_vote.getLastSync(_alice, 9), 9);
+        assertEq(_vote.getLastSync(_alice, 10), 9);
+    }
+
+    function test_getLastSync_zeroEpoch() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.getLastSync(_alice, 0);
+    }
+
+    function test_hasParticipatedAt() external {
+        _vote.pushParticipation(_alice, 2);
+        _vote.pushParticipation(_alice, 4);
+        _vote.pushParticipation(_alice, 9);
+
+        assertEq(_vote.hasParticipatedAt(_alice, 1), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 2), true);
+        assertEq(_vote.hasParticipatedAt(_alice, 3), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 4), true);
+        assertEq(_vote.hasParticipatedAt(_alice, 5), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 6), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 7), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 8), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 9), true);
+        assertEq(_vote.hasParticipatedAt(_alice, 10), false);
+    }
+
+    function test_hasParticipatedAt_zeroEpoch() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.hasParticipatedAt(_alice, 0);
     }
 
     function test_scenario1() external {
