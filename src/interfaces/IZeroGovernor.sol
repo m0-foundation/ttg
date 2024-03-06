@@ -4,11 +4,18 @@ pragma solidity 0.8.23;
 
 import { IThresholdGovernor } from "../abstract/interfaces/IThresholdGovernor.sol";
 
-/// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
+/**
+ * @title  An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
+ * @author M^0 Labs
+ */
 interface IZeroGovernor is IThresholdGovernor {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
+
+    /**
+     * @notice Emitted upon contract deployment, once the set of allowed cash tokens is finalized.
+     * @param  allowedCashTokens An array of addressed that are allowed as cash tokens.
+     */
+    event AllowedCashTokensSet(address[] allowedCashTokens);
 
     /**
      * @notice Emitted upon a Reset, resulting in a new Standard Governor, Emergency Governor, and Power Token.
@@ -24,15 +31,7 @@ interface IZeroGovernor is IThresholdGovernor {
         address powerToken
     );
 
-    /**
-     * @notice Emitted upon contract deployment, once the set of allowed cash tokens is finalized.
-     * @param  allowedCashTokens An array of addressed that are allowed as cash tokens.
-     */
-    event AllowedCashTokensSet(address[] allowedCashTokens);
-
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the Cash Token specified is not in the allowed set.
     error InvalidCashToken();
@@ -66,9 +65,7 @@ interface IZeroGovernor is IThresholdGovernor {
      */
     error UnexpectedStandardGovernorDeployed(address expected, address deployed);
 
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ Proposal Functions ============ */
 
     /**
      * @notice One of the valid proposals. Reset the Standard Governor, Emergency Governor, and Power Token to the
@@ -104,9 +101,7 @@ interface IZeroGovernor is IThresholdGovernor {
      */
     function setZeroProposalThresholdRatio(uint16 newThresholdRatio) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns whether `token` is an allowed Cash Token of the system, as a parameter in setCashToken proposal.

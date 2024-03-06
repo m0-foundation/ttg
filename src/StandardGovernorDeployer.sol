@@ -8,7 +8,13 @@ import { IDeployer, IStandardGovernorDeployer } from "./interfaces/IStandardGove
 
 import { StandardGovernor } from "./StandardGovernor.sol";
 
+/**
+ * @title  A Deterministic deployer of Standard Governor contracts using CREATE.
+ * @author M^0 Labs
+ */
 contract StandardGovernorDeployer is IStandardGovernorDeployer {
+    /* ============ Variables ============ */
+
     /// @inheritdoc IStandardGovernorDeployer
     address public immutable registrar;
 
@@ -27,11 +33,15 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
     /// @inheritdoc IDeployer
     uint256 public nonce;
 
+    /* ============ Modifiers ============ */
+
     /// @dev Throws if called by any contract other than the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new StandardGovernorDeployer contract.
@@ -46,6 +56,8 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
         if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
     }
+
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IStandardGovernorDeployer
     function deploy(
@@ -74,6 +86,8 @@ contract StandardGovernorDeployer is IStandardGovernorDeployer {
                 )
             );
     }
+
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IDeployer
     function nextDeploy() external view returns (address) {

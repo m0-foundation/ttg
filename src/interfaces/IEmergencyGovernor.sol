@@ -4,11 +4,12 @@ pragma solidity 0.8.23;
 
 import { IThresholdGovernor } from "../abstract/interfaces/IThresholdGovernor.sol";
 
-/// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
+/**
+ * @title  An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
+ * @author M^0 Labs
+ */
 interface IEmergencyGovernor is IThresholdGovernor {
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the Registrar specified in the constructor is address(0).
     error InvalidRegistrarAddress();
@@ -22,9 +23,7 @@ interface IEmergencyGovernor is IThresholdGovernor {
     /// @notice Revert message when the caller is not the Zero Governor.
     error NotZeroGovernor();
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Sets the threshold ratio to use going forward for newly created proposals.
@@ -32,9 +31,7 @@ interface IEmergencyGovernor is IThresholdGovernor {
      */
     function setThresholdRatio(uint16 newThresholdRatio) external;
 
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ Proposal Functions ============ */
 
     /**
      * @notice One of the valid proposals. Adds `account` to `list` at the Registrar.
@@ -71,9 +68,7 @@ interface IEmergencyGovernor is IThresholdGovernor {
      */
     function setStandardProposalFee(uint256 newProposalFee) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @notice Returns the address of the Registrar.
     function registrar() external view returns (address);

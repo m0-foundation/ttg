@@ -5,13 +5,12 @@ pragma solidity 0.8.23;
 import { IEpochBasedVoteToken } from "../abstract/interfaces/IEpochBasedVoteToken.sol";
 
 /**
- * @title An instance of an EpochBasedVoteToken delegating minting control to a Standard Governor, and enabling
- *        range queries for past balances, voting powers, delegations, and  total supplies.
+ * @title  An instance of an EpochBasedVoteToken delegating minting control to a Standard Governor,
+ *         and enabling range queries for past balances, voting powers, delegations, and  total supplies.
+ * @author M^0 Labs
  */
 interface IZeroToken is IEpochBasedVoteToken {
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the Standard Governor Deployer specified in the constructor is address(0).
     error InvalidStandardGovernorDeployerAddress();
@@ -29,9 +28,7 @@ interface IZeroToken is IEpochBasedVoteToken {
     /// @notice Revert message when the start of an inclusive range query is larger than the end.
     error StartEpochAfterEndEpoch();
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Mints `amount` token to `recipient`.
@@ -40,12 +37,11 @@ interface IZeroToken is IEpochBasedVoteToken {
      */
     function mint(address recipient, uint256 amount) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
-     * @notice Returns an array of token balances of `account` between `startEpoch` and `endEpoch` past inclusive clocks.
+     * @notice Returns an array of token balances of `account`
+     *         between `startEpoch` and `endEpoch` past inclusive clocks.
      * @param  account    The address of some account.
      * @param  startEpoch The starting epoch number as a clock value.
      * @param  endEpoch   The ending epoch number as a clock value.

@@ -6,12 +6,13 @@ import { IStatefulERC712 } from "../../../lib/common/src/interfaces/IStatefulERC
 
 import { IERC6372 } from "./IERC6372.sol";
 
-/// @title Voting with voting weight tracking and delegation support.
-/// @dev   The interface as defined by EIP-5805: https://eips.ethereum.org/EIPS/eip-5805
+/**
+ * @title  Voting with voting weight tracking and delegation support.
+ * @author M^0 Labs
+ * @dev    The interface as defined by EIP-5805: https://eips.ethereum.org/EIPS/eip-5805
+ */
 interface IERC5805 is IStatefulERC712, IERC6372 {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when `delegator` changes its voting power delegation from `fromDelegatee` to `toDelegatee`.
@@ -29,9 +30,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
      */
     event DelegateVotesChanged(address indexed delegatee, uint256 previousBalance, uint256 newBalance);
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /**
      * @notice Revert message when a query for past values is for a timepoint greater or equal to the current clock.
@@ -40,9 +39,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
      */
     error NotPastTimepoint(uint48 timepoint, uint48 clock);
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Allows a calling account to change its voting power delegation to `delegatee`.
@@ -60,9 +57,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
      */
     function delegateBySig(address delegatee, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the delegateBySig function.
     function DELEGATION_TYPEHASH() external view returns (bytes32);

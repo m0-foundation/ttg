@@ -4,20 +4,19 @@ pragma solidity 0.8.23;
 
 import { IGovernor } from "./IGovernor.sol";
 
-/// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
+/**
+ * @title  Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
+ * @author M^0 Labs
+ */
 interface IBatchGovernor is IGovernor {
-    /******************************************************************************************************************\
-    |                                                      Enums                                                       |
-    \******************************************************************************************************************/
+    /* ============ Enums ============ */
 
     enum VoteType {
         No,
         Yes
     }
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when a voter is trying to vote on a proposal they already voted on.
     error AlreadyVoted();
@@ -76,9 +75,7 @@ interface IBatchGovernor is IGovernor {
      */
     error ProposalInactive(ProposalState state);
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Allows the caller to cast votes on multiple proposals.
@@ -167,9 +164,7 @@ interface IBatchGovernor is IGovernor {
         bytes memory signature
     ) external returns (uint256 weight);
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns the ballot digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
@@ -191,7 +186,8 @@ interface IBatchGovernor is IGovernor {
     ) external view returns (bytes32);
 
     /**
-     * @notice Returns the ballot with reason digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @notice Returns the ballot with reason digest to be signed, via EIP-712,
+     *         given an internal digest (i.e. hash struct).
      * @param  proposalId The unique proposal ID being voted on.
      * @param  support    The type of support to cast for the proposal.
      * @param  reason     The reason for which the caller casts their vote, if any.
@@ -204,7 +200,8 @@ interface IBatchGovernor is IGovernor {
     ) external view returns (bytes32);
 
     /**
-     * @notice Returns the ballots with reason digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @notice Returns the ballots with reason digest to be signed, via EIP-712,
+     *         given an internal digest (i.e. hash struct).
      * @param  proposalIds The list of unique proposal IDs being voted on.
      * @param  supportList The list of support type per proposal IDs to cast.
      * @param  reasonList  The list of reason per proposal IDs to cast.
@@ -226,10 +223,10 @@ interface IBatchGovernor is IGovernor {
     /// @notice Returns the EIP-5805 token contact used for determine voting power and total supplies.
     function voteToken() external view returns (address);
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVotesBySig` function.
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for `castVotesBySig` function.
     function BALLOTS_TYPEHASH() external pure returns (bytes32);
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVotesWithReasonBySig` function.
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for `castVotesWithReasonBySig` function.
     function BALLOTS_WITH_REASON_TYPEHASH() external pure returns (bytes32);
 
     /// @notice Returns the value used as 100%, to be used to correctly ascertain the threshold ratio.

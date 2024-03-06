@@ -13,12 +13,19 @@ import { EpochBasedVoteToken } from "./EpochBasedVoteToken.sol";
 //       can assume that total supply is the sum of all voting powers, thus tracking the deltas of the
 //       `DelegateVotesChanged` events will suffice.
 
-/// @title Extension for an EpochBasedVoteToken token that allows for inflating tokens and voting power.
+/**
+ * @title  Extension for an EpochBasedVoteToken token that allows for inflating tokens and voting power.
+ * @author M^0 Labs
+ */
 abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVoteToken, EpochBasedVoteToken {
+    /* ============ Structs ============ */
+
     /// @dev A 32-byte struct containing a starting epoch that merely marks that something occurred in this epoch.
     struct VoidSnap {
         uint16 startingEpoch;
     }
+
+    /* ============ Variables ============ */
 
     /// @inheritdoc IEpochBasedInflationaryVoteToken
     uint16 public constant ONE = 10_000; // 100% in basis points.
@@ -26,7 +33,10 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     /// @inheritdoc IEpochBasedInflationaryVoteToken
     uint16 public immutable participationInflation; // In basis points.
 
+    /// @dev The participation snaps for each delegatee.
     mapping(address delegatee => VoidSnap[] participationSnaps) internal _participations;
+
+    /* ============ Modifiers ============ */
 
     modifier notDuringVoteEpoch() {
         _revertIfInVoteEpoch();
@@ -37,6 +47,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         _revertIfNotInVoteEpoch();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new EpochBasedInflationaryVoteToken contract.
@@ -56,9 +68,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         participationInflation = participationInflation_;
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IEpochBasedInflationaryVoteToken
     function sync(address account_) external {
@@ -67,18 +77,14 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         emit Sync(account_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IEpochBasedInflationaryVoteToken
     function hasParticipatedAt(address delegatee_, uint256 epoch_) external view returns (bool) {
         return _hasParticipatedAt(delegatee_, UIntMath.safe16(epoch_));
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev   Delegate voting power from `delegator_` to `newDelegatee_`.
@@ -160,9 +166,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         }
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the balance of `account_` plus any inflation that in unrealized before `epoch_`.

@@ -6,11 +6,12 @@ import { IERC712 } from "../../../lib/common/src/interfaces/IERC712.sol";
 
 import { IERC6372 } from "./IERC6372.sol";
 
-/// @title Minimal OpenZeppelin-style, Tally-compatible governor.
+/**
+ * @title  Minimal OpenZeppelin-style, Tally-compatible governor.
+ * @author M^0 Labs
+ */
 interface IGovernor is IERC6372, IERC712 {
-    /******************************************************************************************************************\
-    |                                                      Enums                                                       |
-    \******************************************************************************************************************/
+    /* ============ Enums ============ */
 
     /**
      * @notice Proposal state.
@@ -34,9 +35,7 @@ interface IGovernor is IERC6372, IERC712 {
         Executed
     }
 
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when a proposal has been created.
@@ -78,9 +77,7 @@ interface IGovernor is IERC6372, IERC712 {
      */
     event VoteCast(address indexed voter, uint256 proposalId, uint8 support, uint256 weight, string reason);
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Allows the caller to cast a vote on a proposal with id `proposalId`.
@@ -136,7 +133,8 @@ interface IGovernor is IERC6372, IERC712 {
     ) external returns (uint256 weight);
 
     /**
-     * @notice Allows a signer to cast a vote with reason on a proposal with id `proposalId` via an ECDSA secp256k1 signature.
+     * @notice Allows a signer to cast a vote with reason on a proposal with id `proposalId`
+     *         via an ECDSA secp256k1 signature.
      * @param  proposalId The unique identifier for the proposal.
      * @param  support    The type of support to cast for the proposal.
      * @param  reason     The reason for which the caller casts their vote, if any.
@@ -201,9 +199,7 @@ interface IGovernor is IERC6372, IERC712 {
         string memory description
     ) external returns (uint256 proposalId);
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice module:voting
@@ -295,9 +291,9 @@ interface IGovernor is IERC6372, IERC712 {
     /// @notice Returns the number of clock values between the vote start and vote end.
     function votingPeriod() external view returns (uint256);
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVoteBySig` function.
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for `castVoteBySig` function.
     function BALLOT_TYPEHASH() external pure returns (bytes32);
 
-    /// @notice Returns the EIP712 typehash used in the encoding of the digest for the `castVoteWithReasonBySig` function.
+    /// @notice Returns the EIP712 typehash used in the encoding of the digest for `castVoteWithReasonBySig` function.
     function BALLOT_WITH_REASON_TYPEHASH() external pure returns (bytes32);
 }

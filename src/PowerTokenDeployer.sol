@@ -7,8 +7,13 @@ import { IDeployer, IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer
 
 import { PowerToken } from "./PowerToken.sol";
 
-/// @title A Deterministic deployer of Power Token contracts using CREATE.
+/**
+ * @title  A Deterministic deployer of Power Token contracts using CREATE.
+ * @author M^0 Labs
+ */
 contract PowerTokenDeployer is IPowerTokenDeployer {
+    /* ============ Variables ============ */
+
     /// @inheritdoc IPowerTokenDeployer
     address public immutable vault;
 
@@ -21,11 +26,15 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
     /// @inheritdoc IDeployer
     uint256 public nonce;
 
+    /* ============ Modifiers ============ */
+
     /// @dev Throws if called by any account other than the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new PowerTokenDeployer contract.
@@ -36,6 +45,8 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((vault = vault_) == address(0)) revert InvalidVaultAddress();
     }
+
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Deploys a new PowerToken contract.

@@ -10,18 +10,25 @@ import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeploye
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
 /**
- * @title An instance of an EpochBasedVoteToken delegating minting control to a Standard Governor, and enabling
- *        range queries for past balances, voting powers, delegations, and  total supplies.
+ * @title  An instance of an EpochBasedVoteToken delegating minting control to a Standard Governor,
+ *         and enabling range queries for past balances, voting powers, delegations, and  total supplies.
+ * @author M^0 Labs
  */
 contract ZeroToken is IZeroToken, EpochBasedVoteToken {
+    /* ============ Variables ============ */
+
     /// @inheritdoc IZeroToken
     address public immutable standardGovernorDeployer;
+
+    /* ============ Modifiers ============ */
 
     /// @dev Revert if the caller is not the Standard Governor.
     modifier onlyStandardGovernor() {
         if (msg.sender != standardGovernor()) revert NotStandardGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new ZeroToken contract.
@@ -48,18 +55,14 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         }
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IZeroToken
     function mint(address recipient_, uint256 amount_) external onlyStandardGovernor {
         _mint(recipient_, amount_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IZeroToken
     function pastBalancesOf(
@@ -88,9 +91,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the values of `amountSnaps_` between `startEpoch_` and `endEpoch_`.

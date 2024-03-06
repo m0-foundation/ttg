@@ -17,10 +17,13 @@ import { IPowerToken } from "./interfaces/IPowerToken.sol";
 // NOTE: Bootstrapping only works with a bootstrap token that supports the same PureEpochs as the clock mode.
 
 /**
- * @title An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor, and enabling
- *        auctioning of the unowned inflated supply.
+ * @title  An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor,
+ *         and enabling auctioning of the unowned inflated supply.
+ * @author M^0 Labs
  */
 contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
+    /* ============ Variables ============ */
+
     /// @dev The number of auction periods in an epoch.
     uint40 internal constant _AUCTION_PERIODS = 100;
 
@@ -60,11 +63,15 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     /// @dev The next target supply of the token.
     uint240 internal _nextTargetSupply = INITIAL_SUPPLY;
 
+    /* ============ Modifiers ============ */
+
     /// @dev Reverts if the caller is not the Standard Governor.
     modifier onlyStandardGovernor() {
         _revertIfNotStandardGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new Power Token contract.
@@ -99,9 +106,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         emit Transfer(address(0), bootstrapToken_, INITIAL_SUPPLY);
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IPowerToken
     function buy(
@@ -178,9 +183,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         emit NextCashTokenSet(targetEpoch_, _nextCashToken);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IPowerToken
     function amountToAuction() public view returns (uint240) {
@@ -245,9 +248,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         return _getTargetSupply();
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev   Bootstrap the account's balance and voting power from the bootstrap token.
@@ -290,9 +291,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         super._sync(account_);
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the balance of `account_` plus any inflation that is unrealized before `epoch_`.
@@ -318,7 +317,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /**
-     * @dev    This is the portion of the initial supply commensurate with the account's portion of the bootstrap supply.
+     * @dev    This is the portion of the initial supply commensurate with
+     *         the account's portion of the bootstrap supply.
      * @param  account_ The account to get the bootstrap balance for.
      * @param  epoch_   The epoch to get the bootstrap balance at.
      * @return The bootstrap balance of `account_` at `epoch_`.

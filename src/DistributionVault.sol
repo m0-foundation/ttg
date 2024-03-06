@@ -15,8 +15,13 @@ import { IERC6372 } from "./abstract/interfaces/IERC6372.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 import { IDistributionVault } from "./interfaces/IDistributionVault.sol";
 
-/// @title A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
+/**
+ * @title  A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
+ * @author M^0 Labs
+ */
 contract DistributionVault is IDistributionVault, StatefulERC712 {
+    /* ============ Variables ============ */
+
     /**
      * @dev The scale to apply when accumulating an account's claimable token, per epoch, before dividing.
      *      It is arbitrarily set to `1e9`. The smaller it is, the more dust will accumulate in the contract.
@@ -25,6 +30,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
      */
     uint256 internal constant _GRANULARITY = 1e9;
 
+    // solhint-disable-next-line max-line-length
     // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
     /// @inheritdoc IDistributionVault
     bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
@@ -40,6 +46,8 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     /// @inheritdoc IDistributionVault
     mapping(address token => mapping(uint256 epoch => mapping(address account => bool claimed))) public hasClaimed;
 
+    /* ============ Constructor ============ */
+
     /**
      * @notice Constructs a new DistributionVault contract.
      * @param  zeroToken_ The address of the Zero Token contract.
@@ -48,9 +56,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         if ((zeroToken = zeroToken_) == address(0)) revert InvalidZeroTokenAddress();
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IDistributionVault
     function claim(
@@ -133,9 +139,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         }
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IDistributionVault
     function name() external view returns (string memory) {
@@ -207,9 +211,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         }
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev    Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.

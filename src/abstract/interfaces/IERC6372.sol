@@ -3,8 +3,9 @@
 pragma solidity 0.8.23;
 
 /**
- * @title Contract clock properties.
- * @dev   The interface as defined by EIP-6372: https://eips.ethereum.org/EIPS/eip-6372
+ * @title  Contract clock properties.
+ * @author M^0 Labs
+ * @dev    The interface as defined by EIP-6372: https://eips.ethereum.org/EIPS/eip-6372
  */
 interface IERC6372 {
     /// @notice Returns a machine-readable string description of the clock the contract is operating on.

@@ -13,12 +13,19 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
-/// @title An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
+/**
+ * @title  An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
+ * @author M^0 Labs
+ */
 contract StandardGovernor is IStandardGovernor, BatchGovernor {
+    /* ============ Structs ============ */
+
     struct ProposalFeeInfo {
         address cashToken;
         uint256 fee;
     }
+
+    /* ============ Variables ============ */
 
     /// @inheritdoc IStandardGovernor
     address public immutable emergencyGovernor;
@@ -53,6 +60,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     /// @dev The amount of proposals a voter has voted on per epoch.
     mapping(address voter => mapping(uint256 epoch => uint256 count)) public numberOfProposalsVotedOnAt;
 
+    /* ============ Modifiers ============ */
+
     /// @dev Revert if the caller is not the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
@@ -64,6 +73,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         if (msg.sender != address(this) && msg.sender != emergencyGovernor) revert NotSelfOrEmergencyGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new StandardGovernor contract.
@@ -100,9 +111,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         maxTotalZeroRewardPerActiveEpoch = maxTotalZeroRewardPerActiveEpoch_;
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IGovernor
     function execute(
@@ -184,9 +193,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         _transfer(cashToken_, vault, proposalFee_);
     }
 
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ Proposal Functions ============ */
 
     /// @inheritdoc IStandardGovernor
     function addToList(bytes32 list_, address account_) external onlySelf {
@@ -214,9 +221,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         _setProposalFee(newProposalFee_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IStandardGovernor
     function getProposal(
@@ -241,6 +246,14 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
         proposer_ = proposal_.proposer;
+    }
+
+    /// @inheritdoc IStandardGovernor
+    function getProposalFee(uint256 proposalId_) external view returns (address cashToken_, uint256 fee_) {
+        ProposalFeeInfo storage proposalFee_ = _proposalFees[proposalId_];
+
+        cashToken_ = proposalFee_.cashToken;
+        fee_ = proposalFee_.fee;
     }
 
     /// @inheritdoc IStandardGovernor
@@ -282,17 +295,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         }
     }
 
-    /// @inheritdoc IStandardGovernor
-    function getProposalFee(uint256 proposalId_) external view returns (address cashToken_, uint256 fee_) {
-        ProposalFeeInfo storage proposalFee_ = _proposalFees[proposalId_];
-
-        cashToken_ = proposalFee_.cashToken;
-        fee_ = proposalFee_.fee;
-    }
-
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev    Cast votes on several proposals for `voter_`.
@@ -426,9 +429,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         if (!ERC20Helper.transfer(token_, to_, amount_)) revert TransferFailed();
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.

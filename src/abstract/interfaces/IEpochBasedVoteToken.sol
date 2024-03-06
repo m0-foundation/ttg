@@ -6,18 +6,17 @@ import { IERC20Extended } from "../../../lib/common/src/interfaces/IERC20Extende
 
 import { IERC5805 } from "./IERC5805.sol";
 
-/// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
+/**
+ * @title  Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
+ * @author M^0 Labs
+ */
 interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the provided epoch is zero.
     error EpochZero();
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Changes the voting power delegation for `account` to `delegatee`.
@@ -35,9 +34,7 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
         bytes memory signature
     ) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).

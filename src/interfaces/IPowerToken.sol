@@ -5,13 +5,12 @@ pragma solidity 0.8.23;
 import { IEpochBasedInflationaryVoteToken } from "../abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 /**
- * @title An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor, and enabling
- *        auctioning of the unowned inflated supply.
+ * @title  An instance of an EpochBasedInflationaryVoteToken delegating control to a Standard Governor,
+ *         and enabling auctioning of the unowned inflated supply.
+ * @author M^0 Labs
  */
 interface IPowerToken is IEpochBasedInflationaryVoteToken {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when `buyer` has bought `amount` tokens from the auction, as a total cash token value of `cost`.
@@ -35,9 +34,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     event TargetSupplyInflated(uint16 indexed targetEpoch, uint240 indexed targetSupply);
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the total supply of the bootstrap token is larger than `type(uint240).max`.
     error BootstrapSupplyTooLarge();
@@ -86,9 +83,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     error SyncBeforeBootstrap(uint16 bootstrapEpoch, uint16 epoch);
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Allows a caller to buy `amount` tokens from the auction.
@@ -121,9 +116,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     function setNextCashToken(address nextCashToken) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @notice Returns the amount of tokens that can be bought in the auction.
     function amountToAuction() external view returns (uint240);

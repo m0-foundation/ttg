@@ -8,17 +8,31 @@ import { IEmergencyGovernor } from "./interfaces/IEmergencyGovernor.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "./interfaces/IStandardGovernor.sol";
 
-/// @title An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
+/**
+ * @title  An instance of a ThresholdGovernor with a unique and limited set of possible proposals.
+ * @author M^0 Labs
+ */
 contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
+    /* ============ Variables ============ */
+
+    /// @inheritdoc IEmergencyGovernor
     address public immutable registrar;
+
+    /// @inheritdoc IEmergencyGovernor
     address public immutable standardGovernor;
+
+    /// @inheritdoc IEmergencyGovernor
     address public immutable zeroGovernor;
+
+    /* ============ Modifiers ============ */
 
     /// @dev Throws if called by any account other than the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new Emergency Governor contract.
@@ -40,18 +54,14 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IEmergencyGovernor
     function setThresholdRatio(uint16 newThresholdRatio_) external onlyZeroGovernor {
         _setThresholdRatio(newThresholdRatio_);
     }
 
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ Proposal Functions ============ */
 
     /// @inheritdoc IEmergencyGovernor
     function addToList(bytes32 list_, address account_) external onlySelf {
@@ -79,9 +89,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         IStandardGovernor(standardGovernor).setProposalFee(newProposalFee_);
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev   Adds `account_` to `list_` at the Registrar.
@@ -101,9 +109,7 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
         IRegistrar(registrar).removeFromList(list_, account_);
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev   All proposals target this contract itself, and must call one of the listed functions to be valid.

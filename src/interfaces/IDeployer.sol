@@ -2,12 +2,11 @@
 
 pragma solidity 0.8.23;
 
-/// @title A Deterministic deployer of contracts using CREATE.
+/**
+ * @title  A Deterministic deployer of contracts using CREATE.
+ * @author M^0 Labs
+ */
 interface IDeployer {
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
-
     /// @notice Returns the nonce used to pre deterministically compute the address of the next deployed contract.
     function nonce() external view returns (uint256);
 

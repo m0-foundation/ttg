@@ -2,11 +2,12 @@
 
 pragma solidity 0.8.23;
 
-/// @title A token implementing the minimal interface to e used to bootstrap a Power Token contract.
+/**
+ * @title  A token implementing the minimal interface to e used to bootstrap a Power Token contract.
+ * @author M^0 Labs
+ */
 interface IPowerBootstrapToken {
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /**
      * @notice Revert message when the length of some accounts array does not equal the length of some balances array.
@@ -19,9 +20,7 @@ interface IPowerBootstrapToken {
     ///         incompatible as a bootstrap token for the PowerToken.
     error TotalSupplyTooLarge();
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns the token balance of `account` at a past clock value `epoch`.

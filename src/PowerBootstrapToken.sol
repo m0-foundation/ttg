@@ -6,14 +6,21 @@ import { IPowerBootstrapToken } from "./interfaces/IPowerBootstrapToken.sol";
 
 // NOTE: This is a production-ready example of a token that can be used to bootstrap the PowerToken for the first time.
 
-/// @title A token implementing the minimal interface to be used to bootstrap a Power Token contract.
-/// @dev   The timepoints queried is ignored as this token is not time-dependent.
+/**
+ * @title  A token implementing the minimal interface to be used to bootstrap a Power Token contract.
+ * @dev    The timepoints queried is ignored as this token is not time-dependent.
+ * @author M^0 Labs
+ */
 contract PowerBootstrapToken is IPowerBootstrapToken {
+    /* ============ Variables ============ */
+
     /// @dev The total supply of token.
     uint256 internal immutable _totalSupply;
 
     /// @dev Mapping to keep track of token balances per account.
     mapping(address account => uint256 balance) internal _balances;
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new PowerBootstrapToken contract.
@@ -36,6 +43,8 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
 
         _totalSupply = totalSupply_;
     }
+
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IPowerBootstrapToken
     function pastBalanceOf(address account_, uint256) external view returns (uint256) {

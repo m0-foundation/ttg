@@ -11,8 +11,13 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 import { IERC6372 } from "./interfaces/IERC6372.sol";
 import { IGovernor } from "./interfaces/IGovernor.sol";
 
-/// @title Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
+/**
+ * @title  Extension for Governor with specialized strict proposal parameters, vote batching, and an epoch clock.
+ * @author M^0 Labs
+ */
 abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
+    /* ============ Structs ============ */
+
     /**
      * @notice Proposal struct for storing all relevant proposal information.
      * @param  voteStart      The epoch at which voting begins, inclusively.
@@ -35,6 +40,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         // 3rd slot
         uint256 yesWeight;
     }
+
+    /* ============ Variables ============ */
 
     /// @dev Length constant for calldata with no argument.
     uint256 internal constant _SELECTOR_PLUS_0_ARGS = 4;
@@ -77,10 +84,14 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     /// @inheritdoc IGovernor
     mapping(uint256 proposalId => mapping(address voter => bool hasVoted)) public hasVoted;
 
+    /* ============ Modifiers ============ */
+
     modifier onlySelf() {
         _revertIfNotSelf();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Construct a new BatchGovernor contract.
@@ -91,9 +102,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IGovernor
     function castVote(uint256 proposalId_, uint8 support_) external returns (uint256 weight_) {
@@ -280,9 +289,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         return _castVotes(voter_, proposalIds_, supportList_, reasonList_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IGovernor
     function hashProposal(
@@ -393,9 +400,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         return _votingPeriod();
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev    Cast votes on several proposals for `voter_`.
@@ -507,6 +512,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
         emit ProposalExecuted(proposalId_);
 
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success_, bytes memory data_) = address(this).call(callData_);
 
         if (!success_) revert ExecutionFailed(data_);
@@ -576,7 +582,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     ) internal returns (uint256 proposalId_) {
         if (msg.value != 0) revert InvalidValue();
 
-        if (earliestVoteStart_ == 0) revert InvalidVoteStart(); // Non-existent proposals have a default vote start of 0.
+        // Non-existent proposals have a default vote start of 0
+        if (earliestVoteStart_ == 0) revert InvalidVoteStart();
 
         while (latestVoteStart_ >= earliestVoteStart_) {
             // `proposalId_` will be 0 if no proposal exists for `callData_` and `latestVoteStart_`, or if the proposal
@@ -593,9 +600,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         revert ProposalCannotBeExecuted(); // No proposal matching the criteria was found/executed.
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /// @dev Returns the current timepoint according to the mode the contract is operating on.
     function _clock() internal view returns (uint16) {
@@ -650,7 +655,8 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @dev    Returns the ballot with reason digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @dev    Returns the ballot with reason digest to be signed, via EIP-712,
+     *         given an internal digest (i.e. hash struct).
      * @param  proposalId_ The unique proposal ID being voted on.
      * @param  support_    The type of support to cast for the proposal.
      * @param  reason_     The reason for which the caller casts their vote, if any.

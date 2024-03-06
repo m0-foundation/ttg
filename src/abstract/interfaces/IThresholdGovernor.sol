@@ -4,11 +4,12 @@ pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "./IBatchGovernor.sol";
 
-/// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
+/**
+ * @title  Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
+ * @author M^0 Labs
+ */
 interface IThresholdGovernor is IBatchGovernor {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when the threshold ratio is set.
@@ -16,16 +17,12 @@ interface IThresholdGovernor is IBatchGovernor {
      */
     event ThresholdRatioSet(uint16 thresholdRatio);
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when trying to set the threshold ratio above 100% or below 2.71%.
     error InvalidThresholdRatio(uint256 thresholdRatio, uint256 minThresholdRatio, uint256 maxThresholdRatio);
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns all data of a proposal with identifier `proposalId`.
