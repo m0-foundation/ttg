@@ -73,6 +73,16 @@ contract PowerTokenTests is TestUtils {
         }
     }
 
+    function test_constructor_events() external {
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_bootstrapToken), _powerToken.INITIAL_SUPPLY());
+
+        vm.expectEmit();
+        emit IPowerToken.Tagline("With great $POWER comes great responsibility.");
+
+        new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(_cashToken), _vault);
+    }
+
     function test_constructor_invalidBootstrapTokenAddress() external {
         vm.expectRevert(IPowerToken.InvalidBootstrapTokenAddress.selector);
         new PowerTokenHarness(address(0), _standardGovernor, address(_cashToken), _vault);

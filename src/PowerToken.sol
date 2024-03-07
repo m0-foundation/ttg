@@ -13,6 +13,18 @@ import { EpochBasedInflationaryVoteToken } from "./abstract/EpochBasedInflationa
 
 import { IPowerToken } from "./interfaces/IPowerToken.sol";
 
+/*
+
+██████╗  ██████╗ ██╗    ██╗███████╗██████╗     ████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗
+██╔══██╗██╔═══██╗██║    ██║██╔════╝██╔══██╗    ╚══██╔══╝██╔═══██╗██║ ██╔╝██╔════╝████╗  ██║
+██████╔╝██║   ██║██║ █╗ ██║█████╗  ██████╔╝       ██║   ██║   ██║█████╔╝ █████╗  ██╔██╗ ██║
+██╔═══╝ ██║   ██║██║███╗██║██╔══╝  ██╔══██╗       ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║
+██║     ╚██████╔╝╚███╔███╔╝███████╗██║  ██║       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║
+╚═╝      ╚═════╝  ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝
+                                                                                           
+
+*/
+
 // NOTE: Balances and voting powers are bootstrapped from the bootstrap token, but delegations are not.
 // NOTE: Bootstrapping only works with a bootstrap token that supports the same PureEpochs as the clock mode.
 
@@ -104,6 +116,8 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         // NOTE: For event continuity, the initial supply is dispersed among holders of the bootstrap token.
         emit Transfer(address(0), bootstrapToken_, INITIAL_SUPPLY);
+
+        emit Tagline("With great $POWER comes great responsibility.");
     }
 
     /* ============ Interactive Functions ============ */

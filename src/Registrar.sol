@@ -8,6 +8,18 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
+/*
+
+████████╗████████╗ ██████╗     ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗██████╗  █████╗ ██████╗ 
+╚══██╔══╝╚══██╔══╝██╔════╝     ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
+   ██║      ██║   ██║  ███╗    ██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   ██████╔╝███████║██████╔╝
+   ██║      ██║   ██║   ██║    ██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══██╗██╔══██║██╔══██╗
+   ██║      ██║   ╚██████╔╝    ██║  ██║███████╗╚██████╔╝██║███████║   ██║   ██║  ██║██║  ██║██║  ██║
+   ╚═╝      ╚═╝    ╚═════╝     ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
+                                                                                                    
+
+*/
+
 /**
  * @title  A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
  * @author M^0 Labs

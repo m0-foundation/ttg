@@ -34,6 +34,12 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
      */
     event TargetSupplyInflated(uint16 indexed targetEpoch, uint240 indexed targetSupply);
 
+    /**
+     * @notice Emitted in the constructor at deployment.
+     * @param  tagline The tagline of the contract.
+     */
+    event Tagline(string tagline);
+
     /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the total supply of the bootstrap token is larger than `type(uint240).max`.

@@ -9,6 +9,18 @@ import { EpochBasedVoteToken } from "./abstract/EpochBasedVoteToken.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroToken } from "./interfaces/IZeroToken.sol";
 
+/*
+
+███████╗███████╗██████╗  ██████╗     ████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗
+╚══███╔╝██╔════╝██╔══██╗██╔═══██╗    ╚══██╔══╝██╔═══██╗██║ ██╔╝██╔════╝████╗  ██║
+  ███╔╝ █████╗  ██████╔╝██║   ██║       ██║   ██║   ██║█████╔╝ █████╗  ██╔██╗ ██║
+ ███╔╝  ██╔══╝  ██╔══██╗██║   ██║       ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║
+███████╗███████╗██║  ██║╚██████╔╝       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║
+╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝        ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝
+                                                                                 
+
+*/
+
 /**
  * @title  An instance of an EpochBasedVoteToken delegating minting control to a Standard Governor,
  *         and enabling range queries for past balances, voting powers, delegations, and  total supplies.
