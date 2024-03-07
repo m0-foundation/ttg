@@ -146,7 +146,7 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     /// @notice Returns the address of the Standard Governor.
     function standardGovernor() external view returns (address);
 
-    //// @notice Returns the target supply, which helps determine the amount of tokens up for auction.
+    /// @notice Returns the target supply, which helps determine the amount of tokens up for auction.
     function targetSupply() external view returns (uint256);
 
     /// @notice Returns the address of the Vault.

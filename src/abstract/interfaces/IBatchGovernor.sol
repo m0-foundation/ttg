@@ -11,6 +11,11 @@ import { IGovernor } from "./IGovernor.sol";
 interface IBatchGovernor is IGovernor {
     /* ============ Enums ============ */
 
+    /**
+     * @notice The type of support to cast for a proposal.
+     * @param  No  The voter does not support the proposal.
+     * @param  Yes The voter supports the proposal.
+     */
     enum VoteType {
         No,
         Yes
@@ -104,6 +109,7 @@ interface IBatchGovernor is IGovernor {
 
     /**
      * @notice Allows a signer to cast votes on multiple proposals via an arbitrary signature.
+     * @param voter        The address of the account casting the votes.
      * @param  proposalIds The list of unique proposal IDs being voted on.
      * @param  supportList The list of support type per proposal IDs to cast.
      * @param  signature   An arbitrary signature
@@ -150,6 +156,7 @@ interface IBatchGovernor is IGovernor {
 
     /**
      * @notice Allows a signer to cast votes with reason on multiple proposals via an arbitrary signature.
+     * @param  voter       The address of the account casting the votes.
      * @param  proposalIds The list of unique proposal IDs being voted on.
      * @param  supportList The list of support type per proposal IDs to cast.
      * @param  reasonList  The list of reason per proposal IDs to cast.

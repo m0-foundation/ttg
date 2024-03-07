@@ -50,6 +50,7 @@ interface IERC5805 is IStatefulERC712, IERC6372 {
     /**
      * @notice Changes the signing account's voting power delegation to `delegatee`.
      * @param  delegatee The address of the account the signing account's voting power will be delegated to.
+     * @param  nonce     The nonce of the account delegating.
      * @param  expiry    The last block number where the signature is still valid.
      * @param  v         A signature parameter.
      * @param  r         A signature parameter.

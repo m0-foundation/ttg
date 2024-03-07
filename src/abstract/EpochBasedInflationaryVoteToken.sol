@@ -33,16 +33,18 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     /// @inheritdoc IEpochBasedInflationaryVoteToken
     uint16 public immutable participationInflation; // In basis points.
 
-    /// @dev The participation snaps for each delegatee.
+    /// @dev A mapping of delegatees to their participation snaps, marking epochs in which they have participated.
     mapping(address delegatee => VoidSnap[] participationSnaps) internal _participations;
 
     /* ============ Modifiers ============ */
 
+    /// @dev Reverts if the current epoch is a voting epoch.
     modifier notDuringVoteEpoch() {
         _revertIfInVoteEpoch();
         _;
     }
 
+    /// @dev Reverts if the current epoch is not a voting epoch.
     modifier onlyDuringVoteEpoch() {
         _revertIfNotInVoteEpoch();
         _;

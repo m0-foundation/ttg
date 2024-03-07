@@ -20,6 +20,11 @@ import { IZeroToken } from "./interfaces/IZeroToken.sol";
 contract StandardGovernor is IStandardGovernor, BatchGovernor {
     /* ============ Structs ============ */
 
+    /**
+     * @notice The proposal fee info.
+     * @param cashToken The address of the cash token used to pay the fee.
+     * @param fee       The amount of the fee per proposal.
+     */
     struct ProposalFeeInfo {
         address cashToken;
         uint256 fee;

@@ -79,6 +79,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     /// @inheritdoc IBatchGovernor
     address public immutable voteToken;
 
+    /// @dev The list of proposals per proposal ID.
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
 
     /// @inheritdoc IGovernor
@@ -86,6 +87,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
     /* ============ Modifiers ============ */
 
+    /// @dev Reverts if the caller is not the contract itself.
     modifier onlySelf() {
         _revertIfNotSelf();
         _;

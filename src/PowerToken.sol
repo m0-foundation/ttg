@@ -405,7 +405,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /// @dev Returns the target supply of the token at the current epoch.
-    function _getTargetSupply() internal view returns (uint240 targetSupply_) {
+    function _getTargetSupply() internal view returns (uint240) {
         return _clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 

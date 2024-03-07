@@ -38,6 +38,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     /// @inheritdoc IDistributionVault
     address public immutable zeroToken;
 
+    /// @dev The last recorded balance per token.
     mapping(address token => uint256 balance) internal _lastTokenBalances;
 
     /// @inheritdoc IDistributionVault

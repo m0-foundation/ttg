@@ -169,7 +169,7 @@ interface IStandardGovernor is IBatchGovernor {
     function getProposalFee(uint256 proposalId) external view returns (address cashToken, uint256 amount);
 
     /// @notice Returns the maximum amount of Zero Token that can be rewarded to all vote casters per active epoch.
-    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
+    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256);
 
     /**
      * @notice Returns the number of proposals at epoch `epoch`.

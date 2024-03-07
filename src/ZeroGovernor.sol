@@ -147,14 +147,17 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
     /* ============ Internal Interactive Functions ============ */
 
     /**
-     * @dev   Deploys the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts.
-     * @param emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
-     * @param powerTokenDeployer_              The address of the Power Token Deployer contract.
-     * @param standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
-     * @param bootstrapToken_                  The address of a token to bootstrap the new Power Token.
-     * @param cashToken_                       The address of the Cash Token contract.
-     * @param emergencyProposalThresholdRatio_ The threshold ratio for the Emergency Governor.
-     * @param proposalFee_                     The proposal fee for the Standard Governor.
+     * @dev    Deploys the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts.
+     * @param  emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
+     * @param  powerTokenDeployer_              The address of the Power Token Deployer contract.
+     * @param  standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
+     * @param  bootstrapToken_                  The address of a token to bootstrap the new Power Token.
+     * @param  cashToken_                       The address of the Cash Token contract.
+     * @param  emergencyProposalThresholdRatio_ The threshold ratio for the Emergency Governor.
+     * @param  proposalFee_                     The proposal fee for the Standard Governor.
+     * @return standardGovernor_                The address of the deployed Standard Governor contract.
+     * @return emergencyGovernor_               The address of the deployed Emergency Governor contract.
+     * @return powerToken_                      The address of the deployed Power Token contract.
      */
     function _deployEphemeralContracts(
         address emergencyGovernorDeployer_,
