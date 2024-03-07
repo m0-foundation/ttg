@@ -61,14 +61,10 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
     \******************************************************************************************************************/
 
     /// @inheritdoc IEpochBasedInflationaryVoteToken
-    function sync(address account_, uint256 epoch_) external {
-        uint16 safeEpoch_ = UIntMath.safe16(epoch_);
+    function sync(address account_) external {
+        _sync(account_);
 
-        if (safeEpoch_ > _clock()) revert FutureEpoch(_clock(), safeEpoch_);
-
-        _sync(account_, safeEpoch_);
-
-        emit Sync(account_, safeEpoch_);
+        emit Sync(account_);
     }
 
     /******************************************************************************************************************\
@@ -90,7 +86,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param newDelegatee_ The address of the account receiving voting power.
      */
     function _delegate(address delegator_, address newDelegatee_) internal virtual override notDuringVoteEpoch {
-        _sync(delegator_, _clock());
+        _sync(delegator_);
         super._delegate(delegator_, newDelegatee_);
     }
 
@@ -104,7 +100,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
         // Revert if could not update, as it means the delegatee has already participated in this epoch.
         if (!_update(_participations[delegatee_], currentEpoch_)) revert AlreadyParticipated();
 
-        _sync(delegatee_, currentEpoch_);
+        _sync(delegatee_);
 
         uint240 inflation_ = _getInflation(_getVotes(delegatee_, currentEpoch_));
 
@@ -120,18 +116,17 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param amount_    The amount of tokens to mint.
      */
     function _mint(address recipient_, uint256 amount_) internal override notDuringVoteEpoch {
-        _sync(recipient_, _clock());
+        _sync(recipient_);
         super._mint(recipient_, amount_);
     }
 
     /**
      * @dev   Syncs `account_` so that its balance Snap array in storage, reflects their unrealized inflation.
      * @param account_ The address of the account to sync.
-     * @param epoch_   The latest epoch to sync to, not inclusive.
      */
-    function _sync(address account_, uint16 epoch_) internal virtual {
-        // Realized the account's unrealized inflation since its last sync, to `epoch_`, and update its last sync.
-        _addBalance(account_, _getUnrealizedInflation(account_, epoch_));
+    function _sync(address account_) internal virtual {
+        // Realized the account's unrealized inflation since its last sync.
+        _addBalance(account_, _getUnrealizedInflation(account_, _clock()));
     }
 
     /**
@@ -141,9 +136,9 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param amount_    The amount of tokens to transfer.
      */
     function _transfer(address sender_, address recipient_, uint256 amount_) internal override notDuringVoteEpoch {
-        _sync(sender_, _clock());
+        _sync(sender_);
 
-        if (recipient_ != sender_) _sync(recipient_, _clock());
+        if (recipient_ != sender_) _sync(recipient_);
 
         super._transfer(sender_, recipient_, amount_);
     }

@@ -276,7 +276,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @param newDelegatee_ The address of the account receiving voting power.
      */
     function _delegate(address delegator_, address newDelegatee_) internal override {
-        if (delegator_ != newDelegatee_) _sync(newDelegatee_, _clock());
+        if (delegator_ != newDelegatee_) _sync(newDelegatee_);
 
         super._delegate(delegator_, newDelegatee_);
     }
@@ -284,13 +284,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     /**
      * @dev   Syncs `account_` so that its balance Snap array in storage, reflects their unrealized inflation.
      * @param account_ The address of the account to sync.
-     * @param epoch_   The latest epoch to sync to.
      */
-    function _sync(address account_, uint16 epoch_) internal override {
-        if (epoch_ < bootstrapEpoch) revert SyncBeforeBootstrap(bootstrapEpoch, epoch_);
-
+    function _sync(address account_) internal override {
         _bootstrap(account_);
-        super._sync(account_, epoch_);
+        super._sync(account_);
     }
 
     /******************************************************************************************************************\

@@ -510,20 +510,6 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_carol), 0);
     }
 
-    function test_sync_futureEpoch() external {
-        uint16 currentEpoch_ = _currentEpoch();
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEpochBasedInflationaryVoteToken.FutureEpoch.selector,
-                currentEpoch_,
-                currentEpoch_ + 1
-            )
-        );
-
-        _vote.sync(_alice, currentEpoch_ + 1);
-    }
-
     function test_sync() external {
         _warpToNextTransferEpoch();
 
@@ -550,14 +536,12 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 0), lastBalanceUpdate_);
 
-        uint16 currentEpoch_ = _currentEpoch();
-
         vm.expectEmit();
-        emit IEpochBasedInflationaryVoteToken.Sync(_alice, currentEpoch_);
+        emit IEpochBasedInflationaryVoteToken.Sync(_alice);
 
-        _vote.sync(_alice, currentEpoch_);
+        _vote.sync(_alice);
 
-        assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 1), currentEpoch_);
+        assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 1), _currentEpoch());
     }
 
     function test_getLastSync() external {

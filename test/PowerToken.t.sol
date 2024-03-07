@@ -446,9 +446,9 @@ contract PowerTokenTests is TestUtils {
         emit IERC5805.DelegateVotesChanged(_initialAccounts[0], 0, _powerToken.balanceOf(_initialAccounts[0]));
 
         vm.expectEmit();
-        emit IEpochBasedInflationaryVoteToken.Sync(_initialAccounts[0], _currentEpoch());
+        emit IEpochBasedInflationaryVoteToken.Sync(_initialAccounts[0]);
 
-        _powerToken.sync(_initialAccounts[0], _currentEpoch());
+        _powerToken.sync(_initialAccounts[0]);
 
         assertEq(_powerToken.getBalanceSnapStartingEpoch(_initialAccounts[0], 0), _powerToken.bootstrapEpoch());
         assertEq(_powerToken.getBalanceSnapStartingEpoch(_initialAccounts[0], 1), _currentEpoch());

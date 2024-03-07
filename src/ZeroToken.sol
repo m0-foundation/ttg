@@ -116,24 +116,16 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         // Keep going back as long as the epoch is greater or equal to the previous AmountSnap's startingEpoch.
         while (snapIndex_ > 0) {
             unchecked {
-                --snapIndex_;
-            }
+                AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, --snapIndex_);
 
-            AmountSnap storage amountSnap_ = _unsafeAccess(amountSnaps_, snapIndex_);
+                uint256 snapStartingEpoch_ = amountSnap_.startingEpoch;
 
-            uint256 snapStartingEpoch_ = amountSnap_.startingEpoch;
+                // Keep checking if the AmountSnap's startingEpoch is applicable to the current and decrementing epoch.
+                while (snapStartingEpoch_ <= endEpoch_) {
+                    values_[--epochsIndex_] = amountSnap_.amount;
 
-            // Keep checking if the AmountSnap's startingEpoch is applicable to the current and decrementing epoch.
-            while (snapStartingEpoch_ <= endEpoch_) {
-                unchecked {
-                    --epochsIndex_;
-                }
+                    if (epochsIndex_ == 0) return values_;
 
-                values_[epochsIndex_] = amountSnap_.amount;
-
-                if (epochsIndex_ == 0) return values_;
-
-                unchecked {
                     --endEpoch_;
                 }
             }
