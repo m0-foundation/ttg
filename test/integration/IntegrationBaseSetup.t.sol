@@ -53,6 +53,7 @@ abstract contract IntegrationBaseSetup is TestUtils {
 
     uint256 internal _initialZeroAccountsLength = _initialZeroAccounts.length;
     uint256 internal _cashToken1MaxAmount = type(uint256).max / _initialZeroAccountsLength;
+    uint256 internal _cashToken2MaxAmount = type(uint256).max / _initialZeroAccountsLength;
 
     uint256 internal _standardProposalFee = 1e18;
 
@@ -85,12 +86,19 @@ abstract contract IntegrationBaseSetup is TestUtils {
         for (uint256 i; i < _initialZeroAccounts.length; i++) {
             address account_ = _initialZeroAccounts[i];
             _cashToken1.mint(account_, _cashToken1MaxAmount);
+            _cashToken2.mint(account_, _cashToken2MaxAmount);
 
             vm.prank(account_);
             _cashToken1.approve(address(_standardGovernor), _cashToken1MaxAmount);
 
             vm.prank(account_);
             _cashToken1.approve(address(_powerToken), _cashToken1MaxAmount);
+
+            vm.prank(account_);
+            _cashToken2.approve(address(_standardGovernor), _cashToken2MaxAmount);
+
+            vm.prank(account_);
+            _cashToken2.approve(address(_powerToken), _cashToken2MaxAmount);
         }
     }
 }
