@@ -24,6 +24,7 @@ interface IPowerTokenDeployer is IDeployer {
 
     /**
      * @notice Deploys a new instance of a Power Token.
+     * @dev    Callable only by the Zero Governor.
      * @param  bootstrapToken   The address of some token to bootstrap from.
      * @param  standardGovernor The address of some Standard Governor.
      * @param  cashToken        The address of some Cash Token.

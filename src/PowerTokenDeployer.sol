@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+
 pragma solidity 0.8.23;
 
 import { ContractHelper } from "../lib/common/src/ContractHelper.sol";
@@ -26,14 +27,6 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
     /// @inheritdoc IDeployer
     uint256 public nonce;
 
-    /* ============ Modifiers ============ */
-
-    /// @dev Throws if called by any account other than the Zero Governor.
-    modifier onlyZeroGovernor() {
-        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
-        _;
-    }
-
     /* ============ Constructor ============ */
 
     /**
@@ -48,18 +41,10 @@ contract PowerTokenDeployer is IPowerTokenDeployer {
 
     /* ============ Interactive Functions ============ */
 
-    /**
-     * @notice Deploys a new PowerToken contract.
-     * @param  bootstrapToken_   The address of the BootstrapToken contract.
-     * @param  standardGovernor_ The address of the StandardGovernor contract.
-     * @param  cashToken_        The address of the CashToken contract.
-     * @return The address of the deployed PowerToken contract.
-     */
-    function deploy(
-        address bootstrapToken_,
-        address standardGovernor_,
-        address cashToken_
-    ) external onlyZeroGovernor returns (address) {
+    /// @inheritdoc IPowerTokenDeployer
+    function deploy(address bootstrapToken_, address standardGovernor_, address cashToken_) external returns (address) {
+        if (msg.sender != zeroGovernor) revert NotZeroGovernor();
+
         unchecked {
             ++nonce;
         }
