@@ -1094,11 +1094,6 @@
         "name": "account_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "epoch_",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -1512,12 +1507,6 @@
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "epoch",
-        "type": "uint16",
-        "indexed": false,
-        "internalType": "uint16"
       }
     ],
     "anonymous": false

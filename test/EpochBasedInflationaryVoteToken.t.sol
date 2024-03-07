@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.23;
 
+import { IEpochBasedVoteToken } from "../src/abstract/interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
 import { EpochBasedInflationaryVoteTokenHarness as Vote } from "./utils/EpochBasedInflationaryVoteTokenHarness.sol";
@@ -509,26 +510,12 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_carol), 0);
     }
 
-    function test_sync_futureEpoch() external {
-        uint16 currentEpoch_ = _currentEpoch();
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEpochBasedInflationaryVoteToken.FutureEpoch.selector,
-                currentEpoch_,
-                currentEpoch_ + 1
-            )
-        );
-
-        _vote.sync(_alice, currentEpoch_ + 1);
-    }
-
     function test_sync() external {
         _warpToNextTransferEpoch();
 
         _vote.mint(_alice, 1_000);
 
-        uint16 lastSync_ = _currentEpoch();
+        uint16 lastBalanceUpdate_ = _currentEpoch();
 
         vm.prank(_alice);
         _vote.delegate(_bob);
@@ -547,16 +534,58 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextTransferEpoch();
 
-        assertEq(_vote.lastSyncs(_alice, 0), lastSync_);
-
-        uint16 currentEpoch_ = _currentEpoch();
+        assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 0), lastBalanceUpdate_);
 
         vm.expectEmit();
-        emit IEpochBasedInflationaryVoteToken.Sync(_alice, currentEpoch_);
+        emit IEpochBasedInflationaryVoteToken.Sync(_alice);
 
-        _vote.sync(_alice, currentEpoch_);
+        _vote.sync(_alice);
 
-        assertEq(_vote.lastSyncs(_alice, 1), currentEpoch_);
+        assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 1), _currentEpoch());
+    }
+
+    function test_getLastSync() external {
+        _vote.pushBalance(_alice, 2, 50);
+        _vote.pushBalance(_alice, 4, 12);
+        _vote.pushBalance(_alice, 9, 93);
+
+        assertEq(_vote.getLastSync(_alice, 1), 0);
+        assertEq(_vote.getLastSync(_alice, 2), 2);
+        assertEq(_vote.getLastSync(_alice, 3), 2);
+        assertEq(_vote.getLastSync(_alice, 4), 4);
+        assertEq(_vote.getLastSync(_alice, 5), 4);
+        assertEq(_vote.getLastSync(_alice, 6), 4);
+        assertEq(_vote.getLastSync(_alice, 7), 4);
+        assertEq(_vote.getLastSync(_alice, 8), 4);
+        assertEq(_vote.getLastSync(_alice, 9), 9);
+        assertEq(_vote.getLastSync(_alice, 10), 9);
+    }
+
+    function test_getLastSync_zeroEpoch() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.getLastSync(_alice, 0);
+    }
+
+    function test_hasParticipatedAt() external {
+        _vote.pushParticipation(_alice, 2);
+        _vote.pushParticipation(_alice, 4);
+        _vote.pushParticipation(_alice, 9);
+
+        assertEq(_vote.hasParticipatedAt(_alice, 1), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 2), true);
+        assertEq(_vote.hasParticipatedAt(_alice, 3), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 4), true);
+        assertEq(_vote.hasParticipatedAt(_alice, 5), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 6), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 7), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 8), false);
+        assertEq(_vote.hasParticipatedAt(_alice, 9), true);
+        assertEq(_vote.hasParticipatedAt(_alice, 10), false);
+    }
+
+    function test_hasParticipatedAt_zeroEpoch() external {
+        vm.expectRevert(IEpochBasedVoteToken.EpochZero.selector);
+        _vote.hasParticipatedAt(_alice, 0);
     }
 
     function test_scenario1() external {
