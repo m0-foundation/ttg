@@ -691,13 +691,14 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
      * @return The hash of the reason list.
      */
     function _getReasonListHash(string[] calldata reasonList_) internal pure returns (bytes32) {
-        bytes memory reasonBytes_;
+        uint256 reasonListLength_ = reasonList_.length;
+        bytes32[] memory reasonListBytes_ = new bytes32[](reasonListLength_);
 
-        for (uint256 index_; index_ < reasonList_.length; ++index_) {
-            reasonBytes_ = abi.encodePacked(reasonBytes_, bytes(reasonList_[index_]));
+        for (uint256 index_; index_ < reasonListLength_; ++index_) {
+            reasonListBytes_[index_] = keccak256(bytes(reasonList_[index_]));
         }
 
-        return keccak256(reasonBytes_);
+        return keccak256(abi.encodePacked(reasonListBytes_));
     }
 
     /**
