@@ -2,11 +2,12 @@
 
 pragma solidity 0.8.23;
 
-/// @title A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
+/**
+ * @title  A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
+ * @author M^0 Labs
+ */
 interface IRegistrar {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when `account` is added to `list`.
@@ -29,9 +30,7 @@ interface IRegistrar {
      */
     event KeySet(bytes32 indexed key, bytes32 indexed value);
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
     error InvalidEmergencyGovernorDeployerAddress();
@@ -54,9 +53,7 @@ interface IRegistrar {
     /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
     error NotStandardOrEmergencyGovernor();
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Adds `account` to `list`.
@@ -79,9 +76,7 @@ interface IRegistrar {
      */
     function setKey(bytes32 key, bytes32 value) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns the value of `key`.

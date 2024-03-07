@@ -6,17 +6,21 @@ import { StatefulERC712 } from "../../lib/common/src/StatefulERC712.sol";
 
 import { IERC5805 } from "./interfaces/IERC5805.sol";
 
+/**
+ * @title  Voting with voting weight tracking and delegation support.
+ * @author M^0 Labs
+ */
 abstract contract ERC5805 is IERC5805, StatefulERC712 {
+    /* ============ Variables ============ */
+
     /**
      * @inheritdoc IERC5805
-     * @dev Keeping this constant, despite `delegateBySig` parameter name differences, to ensure max EIP-5805 compatibility.
+     * @dev Keeping this constant, despite `delegateBySig` param name differences, to ensure max EIP-5805 compatibility.
      *      keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")
      */
     bytes32 public constant DELEGATION_TYPEHASH = 0xe48329057bfd03d55e49b547132e39cffd9c1820ad7b9d4c5307691425d15adf;
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IERC5805
     function delegate(address delegatee_) external {
@@ -40,9 +44,7 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
         _delegate(signer_, delegatee_);
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev   Reverts if a given `nonce_` is reused for `account_`, then increments the nonce in storage.
@@ -64,9 +66,7 @@ abstract contract ERC5805 is IERC5805, StatefulERC712 {
      */
     function _delegate(address delegator_, address newDelegatee_) internal virtual;
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).

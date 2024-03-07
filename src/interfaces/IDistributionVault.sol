@@ -5,11 +5,12 @@ pragma solidity 0.8.23;
 import { IStatefulERC712 } from "../../lib/common/src/interfaces/IStatefulERC712.sol";
 import { IERC6372 } from "../abstract/interfaces/IERC6372.sol";
 
-/// @title A contract enabling pro rate distribution of arbitrary tokens to holders of the Zero Token.
+/**
+ * @title  A contract enabling pro rata distribution of arbitrary tokens to holders of the Zero Token.
+ * @author M^0 Labs
+ */
 interface IDistributionVault is IERC6372, IStatefulERC712 {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when `account` claims `token` distribution between inclusive epochs `startEpoch` and `endEpoch`.
@@ -29,9 +30,10 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      */
     event Distribution(address indexed token, uint256 indexed epoch, uint256 amount);
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Custom Errors ============ */
+
+    /// @notice Revert message when the destination address is address(0).
+    error InvalidDestinationAddress();
 
     /// @notice Revert message when the Zero Token address set at deployment is address(0).
     error InvalidZeroTokenAddress();
@@ -43,18 +45,13 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      */
     error NotPastTimepoint(uint256 timepoint, uint256 clock);
 
-    /// @notice Revert message when a token transfer, from this contract, fails.
-    error TransferFailed();
-
     /// @notice Revert message when the start epoch is greater than the end epoch.
     error StartEpochAfterEndEpoch(uint256 startEpoch, uint256 endEpoch);
 
-    /// @notice Revert message when the destination address is address(0).
-    error InvalidDestinationAddress();
+    /// @notice Revert message when a token transfer, from this contract, fails.
+    error TransferFailed();
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Allows a caller to claim `token` distribution between inclusive epochs `startEpoch` and `endEpoch`.
@@ -124,9 +121,7 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      */
     function distribute(address token) external returns (uint256 amount);
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for the claimBySig function.
     function CLAIM_TYPEHASH() external view returns (bytes32);

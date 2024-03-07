@@ -4,11 +4,12 @@ pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "../abstract/interfaces/IBatchGovernor.sol";
 
-/// @title An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
+/**
+ * @title  An instance of a BatchGovernor with a unique and limited set of possible proposals with proposal fees.
+ * @author M^0 Labs
+ */
 interface IStandardGovernor is IBatchGovernor {
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
 
     /**
      * @notice Emitted when the cash token is set to `cashToken`.
@@ -24,12 +25,6 @@ interface IStandardGovernor is IBatchGovernor {
     event HasVotedOnAllProposals(address indexed voter, uint256 indexed currentEpoch);
 
     /**
-     * @notice Emitted when the proposal fee is set to `proposalFee`.
-     * @param  proposalFee The amount of cash token required onwards to create proposals.
-     */
-    event ProposalFeeSet(uint256 proposalFee);
-
-    /**
      * @notice Emitted when the proposal fee for the proposal, with identifier `proposalFee`, is sent to the vault.
      * @param  proposalId The unique identifier of the proposal.
      * @param  cashToken  The address of the cash token for this particular proposal fee.
@@ -37,9 +32,13 @@ interface IStandardGovernor is IBatchGovernor {
      */
     event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 amount);
 
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /**
+     * @notice Emitted when the proposal fee is set to `proposalFee`.
+     * @param  proposalFee The amount of cash token required onwards to create proposals.
+     */
+    event ProposalFeeSet(uint256 proposalFee);
+
+    /* ============ Custom Errors ============ */
 
     /**
      * @notice Revert message when the proposal fee for a yet defeated or yet expired proposal is trying to be moved.
@@ -80,9 +79,7 @@ interface IStandardGovernor is IBatchGovernor {
     /// @notice Revert message when a token transferFrom fails.
     error TransferFromFailed();
 
-    /******************************************************************************************************************\
-    |                                              Interactive Functions                                               |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @notice Sends the proposal fee for proposal `proposalId` to the vault, if it is Defeated or Expired.
@@ -97,9 +94,7 @@ interface IStandardGovernor is IBatchGovernor {
      */
     function setCashToken(address newCashToken, uint256 newProposalFee) external;
 
-    /******************************************************************************************************************\
-    |                                                Proposal Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ Proposal Functions ============ */
 
     /**
      * @notice One of the valid proposals. Adds `account` to `list` at the Registrar.
@@ -136,9 +131,7 @@ interface IStandardGovernor is IBatchGovernor {
      */
     function setProposalFee(uint256 newProposalFee) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @notice Returns the required amount of cashToken it costs an account to create a proposal.
     function proposalFee() external view returns (uint256);
@@ -176,7 +169,7 @@ interface IStandardGovernor is IBatchGovernor {
     function getProposalFee(uint256 proposalId) external view returns (address cashToken, uint256 amount);
 
     /// @notice Returns the maximum amount of Zero Token that can be rewarded to all vote casters per active epoch.
-    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256 reward);
+    function maxTotalZeroRewardPerActiveEpoch() external view returns (uint256);
 
     /**
      * @notice Returns the number of proposals at epoch `epoch`.

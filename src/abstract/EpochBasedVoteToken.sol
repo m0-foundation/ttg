@@ -15,8 +15,13 @@ import { IEpochBasedVoteToken } from "./interfaces/IEpochBasedVoteToken.sol";
 
 import { ERC5805 } from "./ERC5805.sol";
 
-/// @title Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
+/**
+ * @title  Extension for an ERC5805 token that uses epochs as its clock mode and delegation via IERC1271.
+ * @author M^0 Labs
+ */
 abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Extended {
+    /* ============ Structs ============ */
+
     /// @dev A 32-byte struct containing a starting epoch and an address that is valid until the next AccountSnap.
     struct AccountSnap {
         uint16 startingEpoch;
@@ -28,6 +33,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         uint16 startingEpoch;
         uint240 amount;
     }
+
+    /* ============ Variables ============ */
 
     /// @dev Store the total supply per epoch.
     AmountSnap[] internal _totalSupplies;
@@ -41,6 +48,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
     /// @dev Store the voting power per epoch per delegatee.
     mapping(address delegatee => AmountSnap[] votingPowerSnaps) internal _votingPowers;
 
+    /* ============ Constructor ============ */
+
     /**
      * @notice Constructs a new EpochBasedVoteToken contract.
      * @param  name_     The name of the token.
@@ -49,9 +58,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      */
     constructor(string memory name_, string memory symbol_, uint8 decimals_) ERC20Extended(name_, symbol_, decimals_) {}
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IEpochBasedVoteToken
     function delegateBySig(
@@ -67,9 +74,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         _delegate(account_, delegatee_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IERC20
     function balanceOf(address account_) external view returns (uint256) {
@@ -142,9 +147,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         return "mode=epoch";
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev   Add `amount_` to the balance of `account_`, using unchecked math.
@@ -357,9 +360,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         emit DelegateVotesChanged(delegatee_, oldAmount_, newAmount_);
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the current timepoint according to the mode the contract is operating on.

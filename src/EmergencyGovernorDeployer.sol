@@ -8,8 +8,13 @@ import { IDeployer, IEmergencyGovernorDeployer } from "./interfaces/IEmergencyGo
 
 import { EmergencyGovernor } from "./EmergencyGovernor.sol";
 
-/// @title A Deterministic deployer of Emergency Governor contracts using CREATE.
+/**
+ * @title  A Deterministic deployer of Emergency Governor contracts using CREATE.
+ * @author M^0 Labs
+ */
 contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
+    /* ============ Variables ============ */
+
     /// @inheritdoc IEmergencyGovernorDeployer
     address public immutable registrar;
 
@@ -22,11 +27,15 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     /// @inheritdoc IDeployer
     uint256 public nonce;
 
+    /* ============ Modifiers ============ */
+
     /// @dev Throws if called by any contract other than the Zero Governor.
     modifier onlyZeroGovernor() {
         if (msg.sender != zeroGovernor) revert NotZeroGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new EmergencyGovernorDeployer contract.
@@ -37,6 +46,8 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
     }
+
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IEmergencyGovernorDeployer
     function deploy(
@@ -53,6 +64,8 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
                 new EmergencyGovernor(powerToken_, zeroGovernor, registrar, standardGovernor_, thresholdRatio_)
             );
     }
+
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IDeployer
     function nextDeploy() external view returns (address) {

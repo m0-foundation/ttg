@@ -8,8 +8,25 @@ import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
-/// @title A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
+/*
+
+████████╗████████╗ ██████╗     ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗██████╗  █████╗ ██████╗ 
+╚══██╔══╝╚══██╔══╝██╔════╝     ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
+   ██║      ██║   ██║  ███╗    ██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   ██████╔╝███████║██████╔╝
+   ██║      ██║   ██║   ██║    ██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══██╗██╔══██║██╔══██╗
+   ██║      ██║   ╚██████╔╝    ██║  ██║███████╗╚██████╔╝██║███████║   ██║   ██║  ██║██║  ██║██║  ██║
+   ╚═╝      ╚═╝    ╚═════╝     ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
+                                                                                                    
+
+*/
+
+/**
+ * @title  A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
+ * @author M^0 Labs
+ */
 contract Registrar is IRegistrar {
+    /* ============ Variables ============ */
+
     /// @inheritdoc IRegistrar
     address public immutable emergencyGovernorDeployer;
 
@@ -31,11 +48,15 @@ contract Registrar is IRegistrar {
     /// @dev A mapping of keys to values.
     mapping(bytes32 key => bytes32 value) internal _valueAt;
 
+    /* ============ Modifiers ============ */
+
     /// @dev Revert if the caller is not the Standard Governor nor the Emergency Governor.
     modifier onlyStandardOrEmergencyGovernor() {
         _revertIfNotStandardOrEmergencyGovernor();
         _;
     }
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Constructs a new Registrar contract.
@@ -62,9 +83,7 @@ contract Registrar is IRegistrar {
             revert InvalidVaultAddress();
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IRegistrar
     function addToList(bytes32 list_, address account_) external onlyStandardOrEmergencyGovernor {
@@ -85,9 +104,7 @@ contract Registrar is IRegistrar {
         emit KeySet(key_, _valueAt[_getValueKey(key_)] = value_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IRegistrar
     function get(bytes32 key_) external view returns (bytes32) {
@@ -132,9 +149,7 @@ contract Registrar is IRegistrar {
         return IStandardGovernorDeployer(standardGovernorDeployer).lastDeploy();
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal View/Pure Functions                                            |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /// @dev Reverts if the caller is not the Standard Governor nor the Emergency Governor.
     function _revertIfNotStandardOrEmergencyGovernor() internal view {

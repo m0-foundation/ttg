@@ -4,14 +4,30 @@ pragma solidity 0.8.23;
 
 import { IEpochBasedVoteToken } from "./IEpochBasedVoteToken.sol";
 
-/// @title Extension for an EpochBasedVoteToken token that allows for inflating tokens and voting power.
+/**
+ * @title  Extension for an EpochBasedVoteToken token that allows for inflating tokens and voting power.
+ * @author M^0 Labs
+ */
 interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
-    /******************************************************************************************************************\
-    |                                                      Errors                                                      |
-    \******************************************************************************************************************/
+    /* ============ Events ============ */
+
+    /**
+     * @notice Emitted when `account` is manually synced.
+     * @param  account The address of an account that is synced.
+     */
+    event Sync(address indexed account);
+
+    /* ============ Custom Errors ============ */
 
     /// @notice Revert message when trying to mark an account as participated in an epoch where it already participated.
     error AlreadyParticipated();
+
+    /**
+     * @notice Revert message when the proposed epoch is larger than the current epoch.
+     * @param  currentEpoch The current epoch clock value.
+     * @param  epoch        The handled epoch clock value.
+     */
+    error FutureEpoch(uint16 currentEpoch, uint16 epoch);
 
     /// @notice Revert message when trying to construct contact with inflation above 100%.
     error InflationTooHigh();
@@ -22,26 +38,7 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
     /// @notice Revert message when trying to perform an action not allowed during designated voting epochs.
     error VoteEpoch();
 
-    /**
-     * @notice Revert message when the proposed epoch is larger than the current epoch.
-     * @param  currentEpoch The current epoch clock value.
-     * @param  epoch        The handled epoch clock value.
-     */
-    error FutureEpoch(uint16 currentEpoch, uint16 epoch);
-
-    /******************************************************************************************************************\
-    |                                                      Events                                                      |
-    \******************************************************************************************************************/
-
-    /**
-     * @notice Emitted when `account` is manually synced.
-     * @param  account The address of an account that is synced.
-     */
-    event Sync(address indexed account);
-
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /**
      * @dev   Syncs `account` so that its balance Snap array in storage, reflects their unrealized inflation.
@@ -49,9 +46,7 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
      */
     function sync(address account) external;
 
-    /******************************************************************************************************************\
-    |                                               View/Pure Functions                                                |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /**
      * @notice Returns whether `delegatee` has participated in voting during clock value `epoch`.

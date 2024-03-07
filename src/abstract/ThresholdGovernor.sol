@@ -9,13 +9,20 @@ import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
 import { BatchGovernor } from "./BatchGovernor.sol";
 
-/// @title Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
+/**
+ * @title  Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
+ * @author M^0 Labs
+ */
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
+    /* ============ Variables ============ */
+
     /// @dev The minimum allowed threshold ratio.
     uint16 internal constant _MIN_THRESHOLD_RATIO = 271;
 
     /// @inheritdoc IThresholdGovernor
     uint16 public thresholdRatio;
+
+    /* ============ Constructor ============ */
 
     /**
      * @notice Construct a new ThresholdGovernor contract.
@@ -27,9 +34,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         _setThresholdRatio(thresholdRatio_);
     }
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IGovernor
     function execute(
@@ -54,9 +59,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         (proposalId_, ) = _propose(targets_, values_, callDatas_, description_);
     }
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     /// @inheritdoc IThresholdGovernor
     function getProposal(
@@ -129,9 +132,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         return ProposalState.Defeated;
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     /**
      * @dev   Creates a new proposal with the given parameters.
@@ -161,9 +162,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         emit ThresholdRatioSet(thresholdRatio = newThresholdRatio_);
     }
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
 
     /**
      * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.
