@@ -1282,6 +1282,19 @@
   },
   {
     "type": "event",
+    "name": "AllowedCashTokensSet",
+    "inputs": [
+      {
+        "name": "allowedCashTokens",
+        "type": "address[]",
+        "indexed": false,
+        "internalType": "address[]"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "EIP712DomainChanged",
     "inputs": [],
     "anonymous": false

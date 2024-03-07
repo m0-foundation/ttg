@@ -73,6 +73,8 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
             _allowedCashTokens[allowedCashToken_] = true;
         }
 
+        emit AllowedCashTokensSet(allowedCashTokens_);
+
         // Deploy the ephemeral `standardGovernor`, `emergencyGovernor`, and `powerToken` contracts, where:
         // - the token to bootstrap the `powerToken` balances and voting powers is defined in the constructor
         // - the starting cash token is the first token in the `_allowedCashTokens` array
