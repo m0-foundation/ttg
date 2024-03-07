@@ -24,6 +24,12 @@ interface IZeroGovernor is IThresholdGovernor {
         address powerToken
     );
 
+    /**
+     * @notice Emitted upon contract deployment, once the set of allowed cash tokens is finalized.
+     * @param  allowedCashTokens An array of addressed that are allowed as cash tokens.
+     */
+    event AllowedCashTokensSet(address[] allowedCashTokens);
+
     /******************************************************************************************************************\
     |                                                      Errors                                                      |
     \******************************************************************************************************************/
