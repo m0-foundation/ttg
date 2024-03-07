@@ -22,6 +22,13 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
     /// @notice Revert message when trying to mark an account as participated in an epoch where it already participated.
     error AlreadyParticipated();
 
+    /**
+     * @notice Revert message when the proposed epoch is larger than the current epoch.
+     * @param  currentEpoch The current epoch clock value.
+     * @param  epoch        The handled epoch clock value.
+     */
+    error FutureEpoch(uint16 currentEpoch, uint16 epoch);
+
     /// @notice Revert message when trying to construct contact with inflation above 100%.
     error InflationTooHigh();
 
@@ -30,13 +37,6 @@ interface IEpochBasedInflationaryVoteToken is IEpochBasedVoteToken {
 
     /// @notice Revert message when trying to perform an action not allowed during designated voting epochs.
     error VoteEpoch();
-
-    /**
-     * @notice Revert message when the proposed epoch is larger than the current epoch.
-     * @param  currentEpoch The current epoch clock value.
-     * @param  epoch        The handled epoch clock value.
-     */
-    error FutureEpoch(uint16 currentEpoch, uint16 epoch);
 
     /* ============ Interactive Functions ============ */
 

@@ -32,6 +32,9 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
 
     /* ============ Custom Errors ============ */
 
+    /// @notice Revert message when the destination address is address(0).
+    error InvalidDestinationAddress();
+
     /// @notice Revert message when the Zero Token address set at deployment is address(0).
     error InvalidZeroTokenAddress();
 
@@ -42,14 +45,11 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      */
     error NotPastTimepoint(uint256 timepoint, uint256 clock);
 
-    /// @notice Revert message when a token transfer, from this contract, fails.
-    error TransferFailed();
-
     /// @notice Revert message when the start epoch is greater than the end epoch.
     error StartEpochAfterEndEpoch(uint256 startEpoch, uint256 endEpoch);
 
-    /// @notice Revert message when the destination address is address(0).
-    error InvalidDestinationAddress();
+    /// @notice Revert message when a token transfer, from this contract, fails.
+    error TransferFailed();
 
     /* ============ Interactive Functions ============ */
 

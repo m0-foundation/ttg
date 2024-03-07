@@ -26,6 +26,12 @@ interface IBatchGovernor is IGovernor {
     /// @notice Revert message when a voter is trying to vote on a proposal they already voted on.
     error AlreadyVoted();
 
+    /// @notice Revert message when input arrays do not match in length.
+    error ArrayLengthMismatch(uint256 length1, uint256 length2);
+
+    /// @notice Revert message when the proposal IDs array is empty.
+    error EmptyProposalIdsArray();
+
     /**
      * @notice Revert message when execution of a proposal fails.
      * @param  data The revert data returned due to the failed execution.
@@ -47,20 +53,14 @@ interface IBatchGovernor is IGovernor {
     /// @notice Revert message when a proposal value is not 0 ETH.
     error InvalidValue();
 
-    /// @notice Revert message when a an invalid vote start is detected.
-    error InvalidVoteStart();
-
     /// @notice Revert message when a proposal's values array is not of length 1.
     error InvalidValuesLength();
 
+    /// @notice Revert message when a an invalid vote start is detected.
+    error InvalidVoteStart();
+
     /// @notice Revert message when the vote token specified in the constructor is address(0).
     error InvalidVoteTokenAddress();
-
-    /// @notice Revert message when input arrays do not match in length.
-    error ArrayLengthMismatch(uint256 length1, uint256 length2);
-
-    /// @notice Revert message when the proposal IDs array is empty.
-    error EmptyProposalIdsArray();
 
     /// @notice Revert message when the caller of a governance-controlled function is not this governor itself.
     error NotSelf();

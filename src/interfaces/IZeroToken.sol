@@ -12,15 +12,15 @@ import { IEpochBasedVoteToken } from "../abstract/interfaces/IEpochBasedVoteToke
 interface IZeroToken is IEpochBasedVoteToken {
     /* ============ Custom Errors ============ */
 
-    /// @notice Revert message when the Standard Governor Deployer specified in the constructor is address(0).
-    error InvalidStandardGovernorDeployerAddress();
-
     /**
      * @notice Revert message when the length of some accounts array does not equal the length of some balances array.
      * @param  accountsLength The length of the accounts array.
      * @param  balancesLength The length of the balances array.
      */
     error ArrayLengthMismatch(uint256 accountsLength, uint256 balancesLength);
+
+    /// @notice Revert message when the Standard Governor Deployer specified in the constructor is address(0).
+    error InvalidStandardGovernorDeployerAddress();
 
     /// @notice Revert message when the caller is not the Standard Governor.
     error NotStandardGovernor();

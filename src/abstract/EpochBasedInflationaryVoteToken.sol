@@ -174,7 +174,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @dev    Returns the balance of `account_` plus any inflation that in unrealized before `epoch_`.
      * @param  account_ The account to get the balance for.
      * @param  epoch_   The epoch to get the balance at.
-     * @return The balance of `account_` plus any inflation that in unrealized before `epoch_`.
+     * @return The balance of `account_` plus any inflation that is unrealized before `epoch_`.
      */
     function _getBalance(address account_, uint16 epoch_) internal view virtual override returns (uint240) {
         unchecked {

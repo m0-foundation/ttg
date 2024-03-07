@@ -25,18 +25,18 @@ interface IStandardGovernor is IBatchGovernor {
     event HasVotedOnAllProposals(address indexed voter, uint256 indexed currentEpoch);
 
     /**
-     * @notice Emitted when the proposal fee is set to `proposalFee`.
-     * @param  proposalFee The amount of cash token required onwards to create proposals.
-     */
-    event ProposalFeeSet(uint256 proposalFee);
-
-    /**
      * @notice Emitted when the proposal fee for the proposal, with identifier `proposalFee`, is sent to the vault.
      * @param  proposalId The unique identifier of the proposal.
      * @param  cashToken  The address of the cash token for this particular proposal fee.
      * @param  amount     The amount of cash token of the proposal fee.
      */
     event ProposalFeeSentToVault(uint256 indexed proposalId, address indexed cashToken, uint256 amount);
+
+    /**
+     * @notice Emitted when the proposal fee is set to `proposalFee`.
+     * @param  proposalFee The amount of cash token required onwards to create proposals.
+     */
+    event ProposalFeeSet(uint256 proposalFee);
 
     /* ============ Custom Errors ============ */
 

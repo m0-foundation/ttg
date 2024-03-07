@@ -28,17 +28,17 @@ interface IPowerToken is IEpochBasedInflationaryVoteToken {
     event NextCashTokenSet(uint16 indexed startingEpoch, address indexed nextCashToken);
 
     /**
+     * @notice Emitted in the constructor at deployment.
+     * @param  tagline The tagline of the contract.
+     */
+    event Tagline(string tagline);
+
+    /**
      * @notice Emitted when the target supply is queued to become `targetSupply` at the start of epoch `targetEpoch`.
      * @param  targetEpoch  The epoch number as a clock value in which the new target supply takes effect.
      * @param  targetSupply The target supply taking effect at `startingEpoch`.
      */
     event TargetSupplyInflated(uint16 indexed targetEpoch, uint240 indexed targetSupply);
-
-    /**
-     * @notice Emitted in the constructor at deployment.
-     * @param  tagline The tagline of the contract.
-     */
-    event Tagline(string tagline);
 
     /* ============ Custom Errors ============ */
 
