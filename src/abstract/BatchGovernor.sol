@@ -335,7 +335,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
     /// @inheritdoc IGovernor
     function COUNTING_MODE() external pure returns (string memory) {
-        return "support=for,against&quorum=for";
+        return "support=against,for&quorum=for";
     }
 
     /// @inheritdoc IGovernor
