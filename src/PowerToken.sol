@@ -301,6 +301,9 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @param account_ The address of the account to sync.
      */
     function _sync(address account_) internal override {
+        // NOTE: Skip if the account is zero address.
+        if (account_ == address(0)) return;
+
         _bootstrap(account_);
         super._sync(account_);
     }
