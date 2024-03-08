@@ -181,13 +181,15 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param newDelegatee_ The address of the account receiving voting power.
      */
     function _delegate(address delegator_, address newDelegatee_) internal virtual override {
-        address oldDelegatee_ = _setDelegatee(delegator_, newDelegatee_);
+        // `delegatee_` will be `delegator_` (the default) if `delegatee_` was passed in as `address(0)`.
+        address newNonZeroDelegatee_ = _getDefaultIfZero(newDelegatee_, delegator_);
+        address oldDelegatee_ = _setDelegatee(delegator_, newNonZeroDelegatee_);
         uint240 votingPower_ = _getBalance(delegator_, _clock());
 
         if (votingPower_ == 0) return;
 
         _removeVotingPower(oldDelegatee_, votingPower_);
-        _addVotingPower(_getDefaultIfZero(newDelegatee_, delegator_), votingPower_);
+        _addVotingPower(newNonZeroDelegatee_, votingPower_);
     }
 
     /**
@@ -234,9 +236,6 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @return oldDelegatee_ The address of the previous delegatee of `delegator_`.
      */
     function _setDelegatee(address delegator_, address delegatee_) internal returns (address oldDelegatee_) {
-        // `delegatee_` will be `delegator_` (the default) if `delegatee_` was passed in as `address(0)`.
-        delegatee_ = _getDefaultIfZero(delegatee_, delegator_);
-
         uint16 currentEpoch_ = _clock();
         AccountSnap[] storage delegateeSnaps_ = _delegatees[delegator_];
         uint256 length_ = delegateeSnaps_.length;
