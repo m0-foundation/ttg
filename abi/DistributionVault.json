@@ -295,6 +295,11 @@
     "name": "getClaimDigest",
     "inputs": [
       {
+        "name": "account_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "token_",
         "type": "address",
         "internalType": "address"
