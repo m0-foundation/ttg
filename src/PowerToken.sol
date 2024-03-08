@@ -116,8 +116,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         // NOTE: For event continuity, the initial supply is dispersed among holders of the bootstrap token.
         emit Transfer(address(0), bootstrapToken_, INITIAL_SUPPLY);
-
-        emit Tagline("With great $POWER comes great responsibility.");
     }
 
     /* ============ Interactive Functions ============ */
@@ -315,19 +313,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      */
     function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
         return _getInternalOrBootstrap(account_, epoch_, super._getBalance);
-    }
-
-    /**
-     * @dev    Returns the balance of `account_` at `epoch_` without any unrealized inflation.
-     * @param  account_ The account to get the balance for.
-     * @param  epoch_   The epoch to get the balance at.
-     * @return The balance of `account_` at `epoch` without any unrealized inflation.
-     */
-    function _getBalanceWithoutUnrealizedInflation(
-        address account_,
-        uint16 epoch_
-    ) internal view override returns (uint240) {
-        return _getInternalOrBootstrap(account_, epoch_, super._getBalanceWithoutUnrealizedInflation);
     }
 
     /**
