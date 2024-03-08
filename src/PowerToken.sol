@@ -318,19 +318,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     }
 
     /**
-     * @dev    Returns the balance of `account_` at `epoch_` without any unrealized inflation.
-     * @param  account_ The account to get the balance for.
-     * @param  epoch_   The epoch to get the balance at.
-     * @return The balance of `account_` at `epoch` without any unrealized inflation.
-     */
-    function _getBalanceWithoutUnrealizedInflation(
-        address account_,
-        uint16 epoch_
-    ) internal view override returns (uint240) {
-        return _getInternalOrBootstrap(account_, epoch_, super._getBalanceWithoutUnrealizedInflation);
-    }
-
-    /**
      * @dev    This is the portion of the initial supply commensurate with
      *         the account's portion of the bootstrap supply.
      * @param  account_ The account to get the bootstrap balance for.
