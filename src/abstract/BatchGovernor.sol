@@ -159,7 +159,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         address voter_,
         uint256 proposalId_,
         uint8 support_,
-        bytes calldata signature_
+        bytes memory signature_
     ) external returns (uint256 weight_) {
         _revertIfInvalidSignature(voter_, _getBallotDigest(proposalId_, support_), signature_);
 
