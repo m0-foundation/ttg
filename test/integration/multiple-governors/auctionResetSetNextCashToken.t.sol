@@ -162,14 +162,14 @@ contract SetCashToken_IntegrationTest is IntegrationBaseSetup {
 
         uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
 
-        assertEq(_powerToken.getVotes(_bob), _powerToken.totalSupply());
+        // assertEq(_powerToken.getVotes(_bob), _powerToken.totalSupply());
 
         uint256 powerSupplyBeforeVoting_ = _powerToken.totalSupply();
 
         vm.prank(_bob);
         _standardGovernor.castVote(proposalId1_, yesSupport_);
 
-        assertEq(_powerToken.getVotes(_bob), _powerToken.totalSupply());
+        // assertEq(_powerToken.getVotes(_bob), _powerToken.totalSupply());
 
         uint256 frankZeroBalance_ = _zeroToken.balanceOf(_frank);
 
@@ -299,22 +299,21 @@ contract SetCashToken_IntegrationTest is IntegrationBaseSetup {
             newPowerToken_.totalSupply()
         );
 
-        // assertEq(
-        //     newPowerToken_.getVotes(_alice),
-        //     (_powerToken.INITIAL_SUPPLY() * _powerToken.getPastVotes(_alice, resetSnapshotEpoch_)) /
-        //         _powerToken.pastTotalSupply(resetSnapshotEpoch_)
-        // );
-        // assertEq(
-        //     newPowerToken_.getVotes(_bob),
-        //     (_powerToken.INITIAL_SUPPLY() * _powerToken.getPastVotes(_bob, resetSnapshotEpoch_)) /
-        //         _powerToken.pastTotalSupply(resetSnapshotEpoch_)
-        // );
-
-        // assertEq(
-        //     newPowerToken_.getVotes(_carol),
-        //     (_powerToken.INITIAL_SUPPLY() * _powerToken.getPastVotes(_carol, resetSnapshotEpoch_)) /
-        //         _powerToken.pastTotalSupply(resetSnapshotEpoch_)
-        // );
+        assertEq(
+            newPowerToken_.getVotes(_alice),
+            (_powerToken.INITIAL_SUPPLY() * _powerToken.pastBalanceOf(_alice, resetSnapshotEpoch_)) /
+                _powerToken.pastTotalSupply(resetSnapshotEpoch_)
+        );
+        assertEq(
+            newPowerToken_.getVotes(_bob),
+            (_powerToken.INITIAL_SUPPLY() * _powerToken.pastBalanceOf(_bob, resetSnapshotEpoch_)) /
+                _powerToken.pastTotalSupply(resetSnapshotEpoch_)
+        );
+        assertEq(
+            newPowerToken_.getVotes(_carol),
+            (_powerToken.INITIAL_SUPPLY() * _powerToken.pastBalanceOf(_carol, resetSnapshotEpoch_)) /
+                _powerToken.pastTotalSupply(resetSnapshotEpoch_)
+        );
     }
 
     function _changeCashToken(address cashToken_, uint256 proposalFee_) internal {

@@ -20,7 +20,7 @@ library Invariants {
         console2.log("totalVotingPower_", totalVotingPower_);
         console2.log("totalSupply_", totalSupply_);
 
-        success_ = totalVotingPower_ <= totalSupply_;
+        success_ = totalVotingPower_ >= totalSupply_;
     }
 
     // Invariant 2: Sum of all account balances is equal to total supply.

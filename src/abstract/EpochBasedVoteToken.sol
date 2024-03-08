@@ -160,7 +160,16 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param amount_ The amount to add to the total supply.
      */
     function _addTotalSupply(uint240 amount_) internal {
-        _update(_totalSupplies, _add, amount_); // Update total supply using `_add` operation.
+        _addTotalSupply(amount_, _clock());
+    }
+
+    /**
+     * @dev   Add `amount_` to the total supply, using checked math.
+     * @param amount_ The amount to add to the total supply.
+     * @param epoch_  The epoch to add the total supply at.
+     */
+    function _addTotalSupply(uint240 amount_, uint16 epoch_) internal {
+        _update(_totalSupplies, _add, amount_, epoch_); // Update total supply using `_add` operation.
     }
 
     /**
@@ -292,21 +301,22 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
      * @param  amountSnaps_ The storage pointer to an AmountSnap array to update.
      * @param  operation_   The operation to perform on the old and new amounts.
      * @param  amount_      The amount to update the Snap by.
+     * @param  epoch_       The epoch to update the Snap at.
      * @return oldAmount_   The previous latest amount of the Snap array.
      * @return newAmount_   The new latest amount of the Snap array.
      */
     function _update(
         AmountSnap[] storage amountSnaps_,
         function(uint240, uint240) internal pure returns (uint240) operation_,
-        uint240 amount_
+        uint240 amount_,
+        uint16 epoch_
     ) internal returns (uint240 oldAmount_, uint240 newAmount_) {
-        uint16 currentEpoch_ = _clock();
         uint256 length_ = amountSnaps_.length;
 
         // If this will be the first AmountSnap, we can just push it onto the empty array.
         if (length_ == 0) {
             // NOTE: `operation_(0, amount_)` is necessary for almost all operations other than setting or adding.
-            amountSnaps_.push(AmountSnap(currentEpoch_, operation_(0, amount_)));
+            amountSnaps_.push(AmountSnap(epoch_, operation_(0, amount_)));
 
             return (0, amount_); // In this case, the old amount was 0.
         }
@@ -320,8 +330,8 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
         // If the current epoch is greater than the last AmountSnap's startingEpoch, we can push a new
         // AmountSnap onto the array, else we can just update the last AmountSnap's amount.
-        if (currentEpoch_ > lastAmountSnap_.startingEpoch) {
-            amountSnaps_.push(AmountSnap(currentEpoch_, newAmount_));
+        if (epoch_ > lastAmountSnap_.startingEpoch) {
+            amountSnaps_.push(AmountSnap(epoch_, newAmount_));
         } else {
             lastAmountSnap_.amount = newAmount_;
         }
@@ -338,7 +348,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         function(uint240, uint240) internal pure returns (uint240) operation_,
         uint240 amount_
     ) internal {
-        _update(_balances[account_], operation_, amount_);
+        _update(_balances[account_], operation_, amount_, _clock());
     }
 
     /**
@@ -352,7 +362,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
         function(uint240, uint240) internal pure returns (uint240) operation_,
         uint240 amount_
     ) internal {
-        (uint240 oldAmount_, uint240 newAmount_) = _update(_votingPowers[delegatee_], operation_, amount_);
+        (uint240 oldAmount_, uint240 newAmount_) = _update(_votingPowers[delegatee_], operation_, amount_, _clock());
 
         emit DelegateVotesChanged(delegatee_, oldAmount_, newAmount_);
     }

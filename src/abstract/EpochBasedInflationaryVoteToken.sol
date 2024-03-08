@@ -106,7 +106,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         // NOTE: Cannot sync here because it would prevent `delegatee_` from getting inflation if their delegatee votes.
         // NOTE: Don't need to sync here because participating has no effect on the balance of `delegatee_`.
-        _addTotalSupply(inflation_);
+        _addTotalSupply(inflation_, _clock() + 1);
         _addVotingPower(delegatee_, inflation_);
     }
 
