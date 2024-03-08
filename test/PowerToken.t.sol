@@ -77,9 +77,6 @@ contract PowerTokenTests is TestUtils {
         vm.expectEmit();
         emit IERC20.Transfer(address(0), address(_bootstrapToken), _powerToken.INITIAL_SUPPLY());
 
-        vm.expectEmit();
-        emit IPowerToken.Tagline("With great $POWER comes great responsibility.");
-
         new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(_cashToken), _vault);
     }
 
