@@ -1513,6 +1513,19 @@
   },
   {
     "type": "event",
+    "name": "Tagline",
+    "inputs": [
+      {
+        "name": "tagline",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "TargetSupplyInflated",
     "inputs": [
       {

@@ -151,6 +151,7 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
 
     /**
      * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
+     * @param  account     The purported address of the signing account.
      * @param  token       The address of the token being claimed.
      * @param  startEpoch  The starting epoch number as a clock value.
      * @param  endEpoch    The ending epoch number as a clock value.
@@ -160,6 +161,7 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
      * @return The digest to be signed.
      */
     function getClaimDigest(
+        address account,
         address token,
         uint256 startEpoch,
         uint256 endEpoch,

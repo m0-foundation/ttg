@@ -31,9 +31,9 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     uint256 internal constant _GRANULARITY = 1e9;
 
     // solhint-disable-next-line max-line-length
-    // keccak256("Claim(address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
+    // keccak256("Claim(address account,address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)")
     /// @inheritdoc IDistributionVault
-    bytes32 public constant CLAIM_TYPEHASH = 0x8ef9cf97bc3ef1919633bb182b1a99bc91c2fa874c3ae8681d86bbffd5539a84;
+    bytes32 public constant CLAIM_TYPEHASH = 0x4b4633c3c305de33d5d9cf70f2712f26961648cd68d020c2556a9e43be58051d;
 
     /// @inheritdoc IDistributionVault
     address public immutable zeroToken;
@@ -82,11 +82,18 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         bytes32 s_
     ) external returns (uint256) {
         unchecked {
-            // Nonce realistically cannot overflow.
-            uint256 nonce_ = nonces[account_]++;
-            bytes32 digest_ = getClaimDigest(token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_);
+            // NOTE: Need to cache to avoid stack too deep error.
+            uint256 nonce_ = nonces[account_];
 
-            _revertIfInvalidSignature(account_, digest_, v_, r_, s_);
+            _revertIfInvalidSignature(
+                account_,
+                getClaimDigest(account_, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_),
+                v_,
+                r_,
+                s_
+            );
+
+            nonces[account_] = nonce_ + 1; // Nonce realistically cannot overflow.
         }
 
         _revertIfExpired(deadline_);
@@ -105,17 +112,16 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
         bytes memory signature_
     ) external returns (uint256) {
         unchecked {
-            // Nonce realistically cannot overflow.
-            bytes32 digest_ = getClaimDigest(
-                token_,
-                startEpoch_,
-                endEpoch_,
-                destination_,
-                nonces[account_]++,
-                deadline_
+            // NOTE: Need to cache to avoid stack too deep error.
+            uint256 nonce_ = nonces[account_];
+
+            _revertIfInvalidSignature(
+                account_,
+                getClaimDigest(account_, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_),
+                signature_
             );
 
-            _revertIfInvalidSignature(account_, digest_, signature_);
+            nonces[account_] = nonce_ + 1; // Nonce realistically cannot overflow.
         }
 
         _revertIfExpired(deadline_);
@@ -154,6 +160,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
     /// @inheritdoc IDistributionVault
     function getClaimDigest(
+        address account_,
         address token_,
         uint256 startEpoch_,
         uint256 endEpoch_,
@@ -163,7 +170,18 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     ) public view returns (bytes32) {
         return
             _getDigest(
-                keccak256(abi.encode(CLAIM_TYPEHASH, token_, startEpoch_, endEpoch_, destination_, nonce_, deadline_))
+                keccak256(
+                    abi.encode(
+                        CLAIM_TYPEHASH,
+                        account_,
+                        token_,
+                        startEpoch_,
+                        endEpoch_,
+                        destination_,
+                        nonce_,
+                        deadline_
+                    )
+                )
             );
     }
 
@@ -216,7 +234,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
     /**
      * @dev    Allows a caller to claim `token_` distribution between inclusive epochs `startEpoch` and `endEpoch`.
-     * @param  account_    The address of the account claiming the token.
+     * @param  account_     The address of the account claiming the token.
      * @param  token_       The address of the token being claimed.
      * @param  startEpoch_  The starting epoch number as a clock value.
      * @param  endEpoch_    The ending epoch number as a clock value.

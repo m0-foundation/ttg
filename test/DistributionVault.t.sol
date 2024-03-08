@@ -3,6 +3,7 @@
 pragma solidity 0.8.23;
 
 import { IERC712 } from "../lib/common/src/interfaces/IERC712.sol";
+import { ERC1271WalletMock } from "../lib/common/test/utils/ERC1271WalletMock.sol";
 
 import { IDistributionVault } from "../src/interfaces/IDistributionVault.sol";
 import { DistributionVault } from "../src/DistributionVault.sol";
@@ -41,6 +42,16 @@ contract DistributionVaultTests is TestUtils {
     function test_constructor_invalidZeroTokenAddress() external {
         vm.expectRevert(IDistributionVault.InvalidZeroTokenAddress.selector);
         new DistributionVault(address(0));
+    }
+
+    /* ============ CLAIM_TYPEHASH ============ */
+    function test_claimTypeHash() external {
+        assertEq(
+            _vault.CLAIM_TYPEHASH(),
+            keccak256(
+                "Claim(address account,address token,uint256 startEpoch,uint256 endEpoch,address destination,uint256 nonce,uint256 deadline)"
+            )
+        );
     }
 
     /* ============ distribution ============ */
@@ -129,6 +140,7 @@ contract DistributionVaultTests is TestUtils {
 
         // Some token are claimed for Account 1 by bytes signature.
         bytes32 digest_ = _vault.getClaimDigest(
+            _accounts[1],
             address(_token1),
             startEpoch_,
             midEpoch_,
@@ -151,6 +163,7 @@ contract DistributionVaultTests is TestUtils {
 
         // Rest of token are claimed for Account 1 by vrs signature.
         digest_ = _vault.getClaimDigest(
+            _accounts[1],
             address(_token1),
             midEpoch_,
             endEpoch_,
@@ -218,6 +231,7 @@ contract DistributionVaultTests is TestUtils {
         uint256 endEpoch_ = startEpoch_;
 
         bytes32 digest_ = _vault.getClaimDigest(
+            _accounts[0],
             address(_token1),
             startEpoch_,
             endEpoch_,
@@ -238,13 +252,14 @@ contract DistributionVaultTests is TestUtils {
         );
     }
 
-    function test_claimBySig_replayAttack() external {
+    function test_claimBySig_replayAttack_differentAccount() external {
         uint256 startEpoch_ = _currentEpoch();
         uint256 endEpoch_ = startEpoch_;
 
         _warpToNextEpoch();
 
         bytes32 digest_ = _vault.getClaimDigest(
+            _accounts[0],
             address(_token1),
             startEpoch_,
             endEpoch_,
@@ -263,9 +278,10 @@ contract DistributionVaultTests is TestUtils {
             _getSignature(digest_, _makeKey("account1"))
         );
 
-        // Can reuse digest since account is not part of the digest.
-        // Effectively sending their claimable tokens to account 1.
-        // It only works because both accounts have the same nonce.
+        vm.expectRevert(IERC712.SignerMismatch.selector);
+
+        // Can't reuse digest since account is part of the digest
+        // and we are claiming for `_accounts[1]` instead of `_accounts[0]`.
         _vault.claimBySig(
             _accounts[1], // different account
             address(_token1),
@@ -274,33 +290,39 @@ contract DistributionVaultTests is TestUtils {
             _accounts[0],
             block.timestamp + 1 days,
             _getSignature(digest_, _makeKey("account2"))
+        );
+    }
+
+    function test_claimBySig_replayAttack_differentNonce() external {
+        uint256 startEpoch_ = _currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
+
+        _warpToNextEpoch();
+
+        bytes32 digest_ = _vault.getClaimDigest(
+            _accounts[0],
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            _vault.nonces(_accounts[0]),
+            block.timestamp + 1 days
+        );
+
+        _vault.claimBySig(
+            _accounts[0], // for
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0], // destination
+            block.timestamp + 1 days,
+            _getSignature(digest_, _makeKey("account1"))
         );
 
         vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the nonce is now different from the one used in the digest.
         _vault.claimBySig(
-            _accounts[1],
-            address(_token1),
-            startEpoch_,
-            endEpoch_,
-            _accounts[0],
-            block.timestamp + 1 days,
-            _getSignature(digest_, _makeKey("account2"))
-        );
-
-        _warpToNextEpoch();
-
-        digest_ = _vault.getClaimDigest(
-            address(_token1),
-            startEpoch_,
-            endEpoch_,
-            _accounts[0],
-            _vault.nonces(_accounts[0]),
-            block.timestamp + 1 days
-        );
-
-        _vault.claimBySig(
             _accounts[0],
             address(_token1),
             startEpoch_,
@@ -308,24 +330,47 @@ contract DistributionVaultTests is TestUtils {
             _accounts[0],
             block.timestamp + 1 days,
             _getSignature(digest_, _makeKey("account1"))
+        );
+    }
+
+    function test_claimBySig_replayAttack_differentDestination() external {
+        uint256 startEpoch_ = _currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
+
+        _warpToNextEpoch();
+
+        bytes32 digest_ = _vault.getClaimDigest(
+            _accounts[0],
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            _accounts[0],
+            _vault.nonces(_accounts[0]),
+            block.timestamp + 1 days
         );
 
         vm.expectRevert(IERC712.SignerMismatch.selector);
 
         // Reverts here since the destination is different from the one used in the digest.
         _vault.claimBySig(
-            _accounts[1], // different account
+            _accounts[0],
             address(_token1),
             startEpoch_,
             endEpoch_,
             _accounts[1], // different destination
             block.timestamp + 1 days,
-            _getSignature(digest_, _makeKey("account2"))
+            _getSignature(digest_, _makeKey("account1"))
         );
+    }
+
+    function test_claimBySig_replayAttack_differentSigner() external {
+        uint256 startEpoch_ = _currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
 
         _warpToNextEpoch();
 
-        digest_ = _vault.getClaimDigest(
+        bytes32 digest_ = _vault.getClaimDigest(
+            _accounts[0],
             address(_token1),
             startEpoch_,
             endEpoch_,
@@ -334,27 +379,69 @@ contract DistributionVaultTests is TestUtils {
             block.timestamp + 1 days
         );
 
-        _vault.claimBySig(
-            _accounts[0],
-            address(_token1),
-            startEpoch_,
-            endEpoch_,
-            _accounts[0],
-            block.timestamp + 1 days,
-            _getSignature(digest_, _makeKey("account1"))
-        );
-
         vm.expectRevert(IERC712.SignerMismatch.selector);
 
-        // Reverts here since the account signing is different from the passed account.
+        // Reverts here since the account signing is different
+        // from the account we are claiming for and the one specified in the digest.
         _vault.claimBySig(
             _accounts[0], // same account
             address(_token1),
             startEpoch_,
             endEpoch_,
-            _accounts[1],
+            _accounts[0], // same destination
             block.timestamp + 1 days,
             _getSignature(digest_, _makeKey("account2")) // different signer
+        );
+    }
+
+    function test_claimBySig_replayAttack_eip1272() external {
+        // Refer to the following article to understand the attack vector:
+        // https://mirror.xyz/curiousapple.eth/pFqAdW2LiJ-6S4sg_u1z08k4vK6BCJ33LcyXpnNb8yU
+        uint256 startEpoch_ = _currentEpoch();
+        uint256 endEpoch_ = startEpoch_;
+
+        // Both smart accounts are owned by the same user.
+        address smartAccount1_ = address(new ERC1271WalletMock(_accounts[0]));
+        address smartAccount2_ = address(new ERC1271WalletMock(_accounts[0]));
+
+        _warpToNextEpoch();
+
+        bytes32 digest_ = _vault.getClaimDigest(
+            smartAccount1_,
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            smartAccount1_,
+            _vault.nonces(smartAccount1_),
+            block.timestamp + 1 days
+        );
+
+        bytes memory replayableSignature_ = _getSignature(digest_, _makeKey("account1"));
+
+        // Successfully claims for `smartAccount1_` since `_accounts[0]` is the owner.
+        _vault.claimBySig(
+            smartAccount1_, // same account
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            smartAccount1_, // same destination
+            block.timestamp + 1 days,
+            replayableSignature_ // signed by same owner
+        );
+
+        vm.expectRevert(IERC712.SignerMismatch.selector);
+
+        // Reverts here despite `smartAccount2_` being owned by the same user
+        // since the account is part of the digest and we are claiming
+        // for `smartAccount2_` instead of `smartAccount1_`.
+        _vault.claimBySig(
+            smartAccount2_, // different account
+            address(_token1),
+            startEpoch_,
+            endEpoch_,
+            smartAccount1_, // same destination
+            block.timestamp + 1 days,
+            replayableSignature_ // signed by the same owner
         );
     }
 }
