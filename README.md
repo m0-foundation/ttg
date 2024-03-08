@@ -1,6 +1,6 @@
 # TTG (Two Token Governance)
 
-A TTG, "Simple Participation Optimized Governance," is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A TTG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
+A TTG, "Two Token Governance" is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A TTG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
 
 ## Development
 
