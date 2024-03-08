@@ -15,8 +15,8 @@ contract EpochBasedVoteTokenHarness is EpochBasedVoteToken {
         _balances[account_].push(AmountSnap(uint16(startingEpoch_), uint240(balance_)));
     }
 
-    function pushDelegatee(address account_, uint256 startingEpoch_, address delegatee) external {
-        _delegatees[account_].push(AccountSnap(uint16(startingEpoch_), delegatee));
+    function pushDelegatee(address account_, uint256 startingEpoch_, address delegatee_) external {
+        _delegatees[account_].push(AccountSnap(uint16(startingEpoch_), _getDefaultIfZero(delegatee_, account_)));
     }
 
     function pushVotes(address account_, uint256 startingEpoch_, uint256 votingPower) external {

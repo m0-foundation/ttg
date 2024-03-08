@@ -256,8 +256,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
         AccountSnap storage latestDelegateeSnap_ = _unsafeAccess(delegateeSnaps_, length_);
 
-        // `oldDelegatee_` will be `delegator_` (the default) if it was retrieved as `address(0)`.
-        oldDelegatee_ = _getDefaultIfZero(latestDelegateeSnap_.account, delegator_);
+        oldDelegatee_ = latestDelegateeSnap_.account;
 
         emit DelegateChanged(delegator_, oldDelegatee_, delegatee_);
 
@@ -400,7 +399,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
             unchecked {
                 AccountSnap storage accountSnap_ = _unsafeAccess(delegateeSnaps_, --index_);
 
-                if (accountSnap_.startingEpoch <= epoch_) return _getDefaultIfZero(accountSnap_.account, account_);
+                if (accountSnap_.startingEpoch <= epoch_) return accountSnap_.account;
             }
         }
 
