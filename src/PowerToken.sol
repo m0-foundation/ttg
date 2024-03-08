@@ -21,7 +21,7 @@ import { IPowerToken } from "./interfaces/IPowerToken.sol";
 ██╔═══╝ ██║   ██║██║███╗██║██╔══╝  ██╔══██╗       ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║
 ██║     ╚██████╔╝╚███╔███╔╝███████╗██║  ██║       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║
 ╚═╝      ╚═════╝  ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝
-                                                                                           
+
 
 */
 
@@ -112,10 +112,14 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
         _bootstrapSupply = uint240(bootstrapSupply_);
 
-        _addTotalSupply(INITIAL_SUPPLY);
+        // Any bootstrap token owned by the bootstrap token itself is considered unowned, and will not be included in
+        // the first total supply snap. Effectively, this means the unowned token will immediately be up for auction.
+        uint240 ownedSupply_ = INITIAL_SUPPLY - _getBootstrapBalance(bootstrapToken_, bootstrapEpoch_);
+
+        _addTotalSupply(ownedSupply_);
 
         // NOTE: For event continuity, the initial supply is dispersed among holders of the bootstrap token.
-        emit Transfer(address(0), bootstrapToken_, INITIAL_SUPPLY);
+        emit Transfer(address(0), bootstrapToken_, ownedSupply_);
 
         emit Tagline("With great $POWER comes great responsibility.");
     }
@@ -201,9 +205,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     /// @inheritdoc IPowerToken
     function amountToAuction() public view returns (uint240) {
-        if (_isVotingEpoch(_clock())) return 0; // No auction during voting epochs.
-
-        uint240 targetSupply_ = _getTargetSupply();
+        uint240 targetSupply_ = uint240(targetSupply());
         uint240 totalSupply_ = _getTotalSupply(_clock());
 
         unchecked {
@@ -259,7 +261,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
 
     /// @inheritdoc IPowerToken
     function targetSupply() public view returns (uint256) {
-        return _getTargetSupply();
+        return _clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
     /* ============ Internal Interactive Functions ============ */
@@ -301,9 +303,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @param account_ The address of the account to sync.
      */
     function _sync(address account_) internal override {
-        // NOTE: Skip if the account is zero address.
-        if (account_ == address(0)) return;
-
         _bootstrap(account_);
         super._sync(account_);
     }
@@ -314,10 +313,17 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
      * @dev    Returns the balance of `account_` plus any inflation that is unrealized before `epoch_`.
      * @param  account_ The account to get the balance for.
      * @param  epoch_   The epoch to get the balance at.
-     * @return The balance of `account_` plus any inflation that is unrealized before `epoch_`.
+     * @return balance_ The balance of `account_` plus any inflation that is unrealized before `epoch_`.
      */
-    function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240) {
-        return _getInternalOrBootstrap(account_, epoch_, super._getBalance);
+    function _getBalance(address account_, uint16 epoch_) internal view override returns (uint240 balance_) {
+        // NOTE: The bootstrap token's bootstrap balance was considered unowned, and ignored in the constructor.
+        if (account_ == bootstrapToken) return super._getBalance(bootstrapToken, epoch_);
+
+        balance_ = _getInternalOrBootstrap(account_, epoch_, super._getBalance);
+
+        if (account_ == address(this)) {
+            balance_ += amountToAuction(); // Assume all unauctioned supply is owned by the contract itself.
+        }
     }
 
     /**
@@ -392,11 +398,6 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     function _getLastSync(address account_, uint16 epoch_) internal view override returns (uint16) {
         // If there are no balance snaps, return the bootstrap epoch.
         return (_balances[account_].length == 0) ? bootstrapEpoch : super._getLastSync(account_, epoch_);
-    }
-
-    /// @dev Returns the target supply of the token at the current epoch.
-    function _getTargetSupply() internal view returns (uint240) {
-        return _clock() >= _nextTargetSupplyStartingEpoch ? _nextTargetSupply : _targetSupply;
     }
 
     /// @dev Reverts if the caller is not the Standard Governor.

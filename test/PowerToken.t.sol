@@ -176,28 +176,95 @@ contract PowerTokenTests is TestUtils {
     }
 
     function test_amountToAuction() external {
-        uint256 inflation_;
-
-        assertEq(_powerToken.amountToAuction(), inflation_);
+        uint256 amountToAuction_;
 
         for (uint256 index_; index_ < 10; ++index_) {
+            assertEq(_powerToken.amountToAuction(), amountToAuction_);
+
             _warpToNextTransferEpoch();
 
             // During transfer epochs, the next voting epoch is the current epoch + 1.
             vm.prank(_standardGovernor);
             _powerToken.markNextVotingEpochAsActive();
 
-            assertEq(_powerToken.amountToAuction(), inflation_);
+            assertEq(_powerToken.amountToAuction(), amountToAuction_);
 
             _warpToNextVoteEpoch();
 
-            inflation_ = inflation_ + (_powerToken.INITIAL_SUPPLY() + inflation_) / 10;
+            amountToAuction_ += (_powerToken.INITIAL_SUPPLY() + amountToAuction_) / 10;
 
             // During voting epochs, the next voting epoch is the current epoch + 2.
             vm.prank(_standardGovernor);
             _powerToken.markNextVotingEpochAsActive();
+        }
+    }
 
-            assertEq(_powerToken.amountToAuction(), 0);
+    function test_amountToAuction_afterReset() external {
+        PowerTokenHarness powerToken2_ = new PowerTokenHarness(
+            address(_powerToken),
+            _standardGovernor,
+            address(_cashToken),
+            _vault
+        );
+
+        uint256 amountToAuction_;
+
+        for (uint256 index_; index_ < 10; ++index_) {
+            assertEq(powerToken2_.amountToAuction(), amountToAuction_);
+
+            _warpToNextTransferEpoch();
+
+            // During transfer epochs, the next voting epoch is the current epoch + 1.
+            vm.prank(_standardGovernor);
+            powerToken2_.markNextVotingEpochAsActive();
+
+            assertEq(powerToken2_.amountToAuction(), amountToAuction_);
+
+            _warpToNextVoteEpoch();
+
+            amountToAuction_ += (powerToken2_.INITIAL_SUPPLY() + amountToAuction_) / 10;
+
+            // During voting epochs, the next voting epoch is the current epoch + 2.
+            vm.prank(_standardGovernor);
+            powerToken2_.markNextVotingEpochAsActive();
+        }
+    }
+
+    function test_amountToAuction_afterResetWithUnauctionAmount() external {
+        _warpToNextTransferEpoch();
+
+        vm.prank(makeAddr("account1"));
+        _powerToken.transfer(address(_powerToken), 500);
+
+        _warpToNextVoteEpoch();
+
+        PowerTokenHarness powerToken2_ = new PowerTokenHarness(
+            address(_powerToken),
+            _standardGovernor,
+            address(_cashToken),
+            _vault
+        );
+
+        uint256 amountToAuction_;
+
+        for (uint256 index_; index_ < 2; ++index_) {
+            assertEq(powerToken2_.amountToAuction(), amountToAuction_ + 500);
+
+            _warpToNextTransferEpoch();
+
+            // During transfer epochs, the next voting epoch is the current epoch + 1.
+            vm.prank(_standardGovernor);
+            powerToken2_.markNextVotingEpochAsActive();
+
+            assertEq(powerToken2_.amountToAuction(), amountToAuction_ + 500);
+
+            _warpToNextVoteEpoch();
+
+            amountToAuction_ += (powerToken2_.INITIAL_SUPPLY() + amountToAuction_) / 10;
+
+            // During voting epochs, the next voting epoch is the current epoch + 2.
+            vm.prank(_standardGovernor);
+            powerToken2_.markNextVotingEpochAsActive();
         }
     }
 
@@ -211,7 +278,7 @@ contract PowerTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
-        vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, 1));
+        vm.expectRevert(IEpochBasedInflationaryVoteToken.VoteEpoch.selector);
         vm.prank(_account);
         _powerToken.buy(1, 1, _account, _currentEpoch());
     }
@@ -462,5 +529,76 @@ contract PowerTokenTests is TestUtils {
 
         assertEq(_powerToken.getBalanceSnapStartingEpoch(_initialAccounts[0], 0), _powerToken.bootstrapEpoch());
         assertEq(_powerToken.getBalanceSnapStartingEpoch(_initialAccounts[0], 1), _currentEpoch());
+    }
+
+    /* ============ balanceOf ============ */
+    function test_balanceOf_self() external {
+        _warpToNextTransferEpoch();
+
+        assertEq(_powerToken.balanceOf(address(_powerToken)), 0);
+
+        vm.prank(makeAddr("account1"));
+        _powerToken.transfer(address(_powerToken), 500);
+
+        assertEq(_powerToken.balanceOf(address(_powerToken)), 500);
+    }
+
+    function test_balanceOf_self_onlyAmountToAuction() external {
+        _warpToNextTransferEpoch();
+
+        assertEq(_powerToken.balanceOf(address(_powerToken)), 0);
+
+        vm.prank(_standardGovernor);
+        _powerToken.markNextVotingEpochAsActive();
+
+        _warpToNextVoteEpoch();
+
+        assertEq(_powerToken.amountToAuction(), 1_000);
+        assertEq(_powerToken.balanceOf(address(_powerToken)), 1_000);
+
+        _warpToNextEpoch();
+
+        assertEq(_powerToken.amountToAuction(), 1_000);
+        assertEq(_powerToken.balanceOf(address(_powerToken)), 1_000);
+
+        _warpToNextEpoch();
+
+        assertEq(_powerToken.amountToAuction(), 1_000);
+        assertEq(_powerToken.balanceOf(address(_powerToken)), 1_000);
+    }
+
+    function test_balanceOf_self_unownedBootstrapSupply() external {
+        MockBootstrapToken bootstrapToken_ = new MockBootstrapToken();
+
+        bootstrapToken_.setTotalSupply(16_000_000 * 1e6);
+
+        for (uint256 index_; index_ < _initialAccounts.length; ++index_) {
+            bootstrapToken_.setBalance(_initialAccounts[index_], _initialAmounts[index_]);
+        }
+
+        bootstrapToken_.setBalance(address(bootstrapToken_), 1_000_000 * 1e6);
+
+        PowerTokenHarness powerToken_ = new PowerTokenHarness(
+            address(bootstrapToken_),
+            _standardGovernor,
+            address(_cashToken),
+            _vault
+        );
+
+        assertEq(powerToken_.amountToAuction(), 625);
+        assertEq(powerToken_.balanceOf(address(powerToken_)), 625);
+        assertEq(powerToken_.balanceOf(address(bootstrapToken_)), 0);
+
+        _warpToNextEpoch();
+
+        assertEq(powerToken_.amountToAuction(), 625);
+        assertEq(powerToken_.balanceOf(address(powerToken_)), 625);
+        assertEq(powerToken_.balanceOf(address(bootstrapToken_)), 0);
+
+        _warpToNextEpoch();
+
+        assertEq(powerToken_.amountToAuction(), 625);
+        assertEq(powerToken_.balanceOf(address(powerToken_)), 625);
+        assertEq(powerToken_.balanceOf(address(bootstrapToken_)), 0);
     }
 }

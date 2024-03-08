@@ -22,14 +22,17 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
 
         uint8 noSupport_ = uint8(IBatchGovernor.VoteType.No);
 
+        assertEq(_powerToken.amountToAuction(), 1_000); // alice, bob, and carol's inflation is up for auction
+
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId1_, noSupport_);
+
+        assertEq(_powerToken.amountToAuction(), 450); // bob and carol's inflation is up for auction
 
         vm.prank(_bob);
         _standardGovernor.castVote(proposalId1_, noSupport_);
 
-        // Carol misses her inflation
-        assertEq(_powerToken.amountToAuction(), 0); // nothing to auction yet
+        assertEq(_powerToken.amountToAuction(), 200); // carol inflation is up for auction
 
         _warpToNextEpoch();
 

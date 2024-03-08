@@ -83,22 +83,19 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.balanceOf(_alice), _getInflatedAmount(_getInflatedAmount(aliceBalance_)));
         assertEq(_powerToken.balanceOf(_carol), _getInflatedAmount(_getInflatedAmount(carolBalance_)));
 
+        uint256 expectedAmountToAuction_ = _getInflatedAmount(_getInflatedAmount(bobBalance_)) -
+            _getInflatedAmount(bobBalance_);
+
         // Bobs inflation is up for auction
-        assertEq(
-            _powerToken.amountToAuction(),
-            _getInflatedAmount(_getInflatedAmount(bobBalance_)) - _getInflatedAmount(bobBalance_)
-        );
+        assertEq(_powerToken.amountToAuction(), expectedAmountToAuction_);
 
         _warpToNextEpoch(); // voting epoch
 
-        assertEq(_powerToken.amountToAuction(), 0);
+        assertEq(_powerToken.amountToAuction(), expectedAmountToAuction_);
 
         _warpToNextEpoch(); // transfer epoch
 
-        assertEq(
-            _powerToken.amountToAuction(),
-            _getInflatedAmount(_getInflatedAmount(bobBalance_)) - _getInflatedAmount(bobBalance_)
-        );
+        assertEq(_powerToken.amountToAuction(), expectedAmountToAuction_);
     }
 
     function test_powerInflation_selfDelegationOnlyTransfersAndRedelegations() external {
