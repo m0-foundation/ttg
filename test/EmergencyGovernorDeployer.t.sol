@@ -26,14 +26,14 @@ contract EmergencyGovernorDeployerTests is Test {
 
     function test_deployAddress_notZeroGovernor() external {
         vm.expectRevert(IEmergencyGovernorDeployer.NotZeroGovernor.selector);
-        _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), 1);
+        _deployer.deploy(makeAddr("token"), makeAddr("standardGovernor"), 1);
     }
 
     function test_deployAddress() external {
         address nextDeploy_ = _deployer.nextDeploy();
 
         vm.prank(_zeroGovernor);
-        address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), 8000);
+        address deployed_ = _deployer.deploy(makeAddr("token"), makeAddr("standardGovernor"), 8000);
 
         assertEq(deployed_, nextDeploy_);
     }

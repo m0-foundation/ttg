@@ -12,11 +12,11 @@ import { TestUtils } from "./utils/TestUtils.sol";
 contract BatchGovernorTests is TestUtils {
     BatchGovernorHarness internal _batchGovernor;
 
-    MockEpochBasedVoteToken internal _voteToken;
+    MockEpochBasedVoteToken internal _token;
 
     function setUp() external {
-        _voteToken = new MockEpochBasedVoteToken();
-        _batchGovernor = new BatchGovernorHarness("BatchGovernor", address(_voteToken));
+        _token = new MockEpochBasedVoteToken();
+        _batchGovernor = new BatchGovernorHarness("BatchGovernor", address(_token));
     }
 
     function test_tryExecute_invalidValue() external {

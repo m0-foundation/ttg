@@ -228,7 +228,7 @@ interface IBatchGovernor is IGovernor {
     function hashProposal(bytes memory callData) external view returns (uint256);
 
     /// @notice Returns the EIP-5805 token contact used for determine voting power and total supplies.
-    function voteToken() external view returns (address);
+    function token() external view returns (address);
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for `castVotesBySig` function.
     function BALLOTS_TYPEHASH() external pure returns (bytes32);

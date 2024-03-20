@@ -27,10 +27,10 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     /**
      * @notice Construct a new ThresholdGovernor contract.
      * @param  name_           The name of the contract. Used to compute EIP712 domain separator.
-     * @param  voteToken_      The address of the token used to vote.
+     * @param  token_          The address of the token used to vote.
      * @param  thresholdRatio_ The ratio of yes votes votes required for a proposal to succeed.
      */
-    constructor(string memory name_, address voteToken_, uint16 thresholdRatio_) BatchGovernor(name_, voteToken_) {
+    constructor(string memory name_, address token_, uint16 thresholdRatio_) BatchGovernor(name_, token_) {
         _setThresholdRatio(thresholdRatio_);
     }
 

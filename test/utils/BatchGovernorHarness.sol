@@ -7,7 +7,7 @@ import { BatchGovernor } from "../../src/abstract/BatchGovernor.sol";
 contract BatchGovernorHarness is BatchGovernor {
     mapping(uint256 proposalId => ProposalState state) internal _states;
 
-    constructor(string memory name_, address voteToken_) BatchGovernor(name_, voteToken_) {}
+    constructor(string memory name_, address token_) BatchGovernor(name_, token_) {}
 
     /******************************************************************************************************************\
     |                                      External/Public Interactive Functions                                       |

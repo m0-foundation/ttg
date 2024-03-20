@@ -6,7 +6,7 @@ import { StandardGovernor, BatchGovernor } from "../../src/StandardGovernor.sol"
 
 contract StandardGovernorHarness is StandardGovernor {
     constructor(
-        address voteToken_,
+        address token_,
         address emergencyGovernor_,
         address zeroGovernor_,
         address cashToken_,
@@ -17,7 +17,7 @@ contract StandardGovernorHarness is StandardGovernor {
         uint256 maxTotalZeroRewardPerActiveEpoch_
     )
         StandardGovernor(
-            voteToken_,
+            token_,
             emergencyGovernor_,
             zeroGovernor_,
             cashToken_,

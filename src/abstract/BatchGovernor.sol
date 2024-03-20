@@ -77,7 +77,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         0xa891f76027ef63a24501b9dd3b0c779b49ad26d2328e9d423640209d1ad4fcc4;
 
     /// @inheritdoc IBatchGovernor
-    address public immutable voteToken;
+    address public immutable token;
 
     /// @dev The list of proposals per proposal ID.
     mapping(uint256 proposalId => Proposal proposal) internal _proposals;
@@ -97,11 +97,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
     /**
      * @notice Construct a new BatchGovernor contract.
-     * @param  name_      The name of the contract. Used to compute EIP712 domain separator.
-     * @param  voteToken_ The address of the token used to vote.
+     * @param  name_  The name of the contract. Used to compute EIP712 domain separator.
+     * @param  token_ The address of the token used to vote.
      */
-    constructor(string memory name_, address voteToken_) ERC712Extended(name_) {
-        if ((voteToken = voteToken_) == address(0)) revert InvalidVoteTokenAddress();
+    constructor(string memory name_, address token_) ERC712Extended(name_) {
+        if ((token = token_) == address(0)) revert InvalidVoteTokenAddress();
     }
 
     /* ============ Interactive Functions ============ */
@@ -386,7 +386,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
     /// @inheritdoc IGovernor
     function getVotes(address account_, uint256 timepoint_) public view returns (uint256) {
-        return IEpochBasedVoteToken(voteToken).getPastVotes(account_, timepoint_);
+        return IEpochBasedVoteToken(token).getPastVotes(account_, timepoint_);
     }
 
     /// @inheritdoc IGovernor
@@ -615,7 +615,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
      * @return The vote token's total supply at the `timepoint` clock value.
      */
     function _getTotalSupply(uint16 timepoint_) internal view returns (uint256) {
-        return IEpochBasedVoteToken(voteToken).pastTotalSupply(timepoint_);
+        return IEpochBasedVoteToken(token).pastTotalSupply(timepoint_);
     }
 
     /// @dev Returns the timepoint at which voting would start for a proposal created in current timepoint.

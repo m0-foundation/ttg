@@ -83,7 +83,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /**
      * @notice Constructs a new StandardGovernor contract.
-     * @param  voteToken_                        The address of the Vote Token contract.
+     * @param  token_                            The address of the Vote Token contract.
      * @param  emergencyGovernor_                The address of the Emergency Governor contract.
      * @param  zeroGovernor_                     The address of the Zero Governor contract.
      * @param  cashToken_                        The address of the Cash Token contract.
@@ -94,7 +94,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
      * @param  maxTotalZeroRewardPerActiveEpoch_ The maximum amount of zero tokens to reward per active epoch.
      */
     constructor(
-        address voteToken_,
+        address token_,
         address emergencyGovernor_,
         address zeroGovernor_,
         address cashToken_,
@@ -103,7 +103,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         address zeroToken_,
         uint256 proposalFee_,
         uint256 maxTotalZeroRewardPerActiveEpoch_
-    ) BatchGovernor("StandardGovernor", voteToken_) {
+    ) BatchGovernor("StandardGovernor", token_) {
         if ((emergencyGovernor = emergencyGovernor_) == address(0)) revert InvalidEmergencyGovernorAddress();
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
@@ -153,7 +153,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         // If this is the first proposal for the `voteStart_` epoch, inflate its target total supply of `PowerToken`.
         if (++numberOfProposalsAt[voteStart_] == 1) {
-            IPowerToken(voteToken).markNextVotingEpochAsActive();
+            IPowerToken(token).markNextVotingEpochAsActive();
         }
 
         uint256 proposalFee_ = proposalFee;
@@ -171,7 +171,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
     function setCashToken(address newCashToken_, uint256 newProposalFee_) external onlyZeroGovernor {
         _setCashToken(newCashToken_);
 
-        IPowerToken(voteToken).setNextCashToken(newCashToken_);
+        IPowerToken(token).setNextCashToken(newCashToken_);
 
         _setProposalFee(newProposalFee_);
     }
@@ -371,7 +371,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
         emit HasVotedOnAllProposals(voter_, currentEpoch_);
 
-        IPowerToken(voteToken).markParticipation(voter_);
+        IPowerToken(token).markParticipation(voter_);
 
         uint256 reward_ = (maxTotalZeroRewardPerActiveEpoch * weight_) / _getTotalSupply(currentEpoch_ - 1);
 

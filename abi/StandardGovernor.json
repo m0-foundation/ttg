@@ -3,7 +3,7 @@
     "type": "constructor",
     "inputs": [
       {
-        "name": "voteToken_",
+        "name": "token_",
         "type": "address",
         "internalType": "address"
       },
@@ -1360,7 +1360,7 @@
   },
   {
     "type": "function",
-    "name": "vault",
+    "name": "token",
     "inputs": [],
     "outputs": [
       {
@@ -1373,7 +1373,7 @@
   },
   {
     "type": "function",
-    "name": "voteToken",
+    "name": "vault",
     "inputs": [],
     "outputs": [
       {

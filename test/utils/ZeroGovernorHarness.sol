@@ -6,7 +6,7 @@ import { ZeroGovernor } from "../../src/ZeroGovernor.sol";
 
 contract ZeroGovernorHarness is ZeroGovernor {
     constructor(
-        address voteToken_,
+        address token_,
         address emergencyGovernorDeployer_,
         address powerTokenDeployer_,
         address standardGovernorDeployer_,
@@ -17,7 +17,7 @@ contract ZeroGovernorHarness is ZeroGovernor {
         address[] memory allowedCashTokens_
     )
         ZeroGovernor(
-            voteToken_,
+            token_,
             emergencyGovernorDeployer_,
             powerTokenDeployer_,
             standardGovernorDeployer_,

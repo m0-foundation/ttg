@@ -37,7 +37,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
 
     /**
      * @notice Construct a new ZeroGovernor contract.
-     * @param  voteToken_                       The address of the token used to vote.
+     * @param  token_                           The address of the token used to vote.
      * @param  emergencyGovernorDeployer_       The address of the Emergency Governor Deployer contract.
      * @param  powerTokenDeployer_              The address of the Power Token Deployer contract.
      * @param  standardGovernorDeployer_        The address of the Standard Governor Deployer contract.
@@ -48,7 +48,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
      * @param  allowedCashTokens_               The set of allowed cash tokens.
      */
     constructor(
-        address voteToken_,
+        address token_,
         address emergencyGovernorDeployer_,
         address powerTokenDeployer_,
         address standardGovernorDeployer_,
@@ -57,7 +57,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         uint16 emergencyProposalThresholdRatio_,
         uint16 zeroProposalThresholdRatio_,
         address[] memory allowedCashTokens_
-    ) ThresholdGovernor("ZeroGovernor", voteToken_, zeroProposalThresholdRatio_) {
+    ) ThresholdGovernor("ZeroGovernor", token_, zeroProposalThresholdRatio_) {
         if ((emergencyGovernorDeployer = emergencyGovernorDeployer_) == address(0)) {
             revert InvalidEmergencyGovernorDeployerAddress();
         }
@@ -102,12 +102,12 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
 
     /// @inheritdoc IZeroGovernor
     function resetToPowerHolders() external onlySelf {
-        _resetContracts(IStandardGovernor(standardGovernor()).voteToken());
+        _resetContracts(IStandardGovernor(standardGovernor()).token());
     }
 
     /// @inheritdoc IZeroGovernor
     function resetToZeroHolders() external onlySelf {
-        _resetContracts(voteToken);
+        _resetContracts(token);
     }
 
     /// @inheritdoc IZeroGovernor

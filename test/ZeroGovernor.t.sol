@@ -74,7 +74,7 @@ contract ZeroGovernorTests is TestUtils {
     }
 
     function test_initialState() external {
-        assertEq(_zeroGovernor.voteToken(), address(_zeroToken));
+        assertEq(_zeroGovernor.token(), address(_zeroToken));
         assertEq(_zeroGovernor.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_zeroGovernor.powerTokenDeployer(), address(_powerTokenDeployer));
         assertEq(_zeroGovernor.standardGovernorDeployer(), address(_standardGovernorDeployer));

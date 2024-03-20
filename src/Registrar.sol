@@ -10,13 +10,13 @@ import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
 /*
 
-████████╗████████╗ ██████╗     ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗██████╗  █████╗ ██████╗ 
+████████╗████████╗ ██████╗     ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗██████╗  █████╗ ██████╗
 ╚══██╔══╝╚══██╔══╝██╔════╝     ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
    ██║      ██║   ██║  ███╗    ██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   ██████╔╝███████║██████╔╝
    ██║      ██║   ██║   ██║    ██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══██╗██╔══██║██╔══██╗
    ██║      ██║   ╚██████╔╝    ██║  ██║███████╗╚██████╔╝██║███████║   ██║   ██║  ██║██║  ██║██║  ██║
    ╚═╝      ╚═╝    ╚═════╝     ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
-                                                                                                    
+
 
 */
 
@@ -77,7 +77,7 @@ contract Registrar is IRegistrar {
 
         if (standardGovernorDeployer_ == address(0)) revert InvalidStandardGovernorDeployerAddress();
 
-        if ((zeroToken = zeroGovernorInstance_.voteToken()) == address(0)) revert InvalidVoteTokenAddress();
+        if ((zeroToken = zeroGovernorInstance_.token()) == address(0)) revert InvalidVoteTokenAddress();
 
         if ((vault = IStandardGovernorDeployer(standardGovernorDeployer_).vault()) == address(0))
             revert InvalidVaultAddress();

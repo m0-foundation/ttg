@@ -20,7 +20,7 @@ abstract contract ResetIntegrationBaseSetup is IntegrationBaseSetup {
         IEmergencyGovernor emergencyGovernor_,
         address[] memory powerUsers_
     ) internal {
-        IERC20 powerToken_ = IERC20(standardGovernor_.voteToken());
+        IERC20 powerToken_ = IERC20(standardGovernor_.token());
 
         _warpToNextTransferEpoch();
 

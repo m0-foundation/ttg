@@ -166,7 +166,7 @@ contract MockRegistrar {
 
 contract MockStandardGovernor {
     address public cashToken;
-    address public voteToken;
+    address public token;
 
     uint256 public proposalFee;
 
@@ -176,8 +176,8 @@ contract MockStandardGovernor {
 
     function setCashToken(address, uint256) external {}
 
-    function setVoteToken(address voteToken_) external {
-        voteToken = voteToken_;
+    function setVoteToken(address token_) external {
+        token = token_;
     }
 
     function setProposalFee(uint256 proposalFee_) external {
@@ -225,7 +225,7 @@ contract MockZeroGovernor {
     address public emergencyGovernorDeployer;
     address public powerTokenDeployer;
     address public standardGovernorDeployer;
-    address public voteToken;
+    address public token;
 
     function setEmergencyGovernorDeployer(address emergencyGovernorDeployer_) external {
         emergencyGovernorDeployer = emergencyGovernorDeployer_;
@@ -239,7 +239,7 @@ contract MockZeroGovernor {
         standardGovernorDeployer = standardGovernorDeployer_;
     }
 
-    function setVoteToken(address voteToken_) external {
-        voteToken = voteToken_;
+    function setVoteToken(address token_) external {
+        token = token_;
     }
 }

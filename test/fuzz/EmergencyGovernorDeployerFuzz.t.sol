@@ -35,9 +35,9 @@ contract EmergencyGovernorDeployerTests is Test {
                     ONE
                 )
             );
-            _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);
+            _deployer.deploy(makeAddr("token"), makeAddr("standardGovernor"), thresholdRatio_);
         } else {
-            address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);
+            address deployed_ = _deployer.deploy(makeAddr("token"), makeAddr("standardGovernor"), thresholdRatio_);
             assertEq(deployed_, nextDeploy_);
         }
     }

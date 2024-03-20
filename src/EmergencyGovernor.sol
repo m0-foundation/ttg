@@ -36,19 +36,19 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
 
     /**
      * @notice Constructs a new Emergency Governor contract.
-     * @param  voteToken_        The address of the Vote Token contract.
+     * @param  token_            The address of the Vote Token contract.
      * @param  zeroGovernor_     The address of the Zero Governor contract.
      * @param  registrar_        The address of the Registrar contract.
      * @param  standardGovernor_ The address of the StandardGovernor contract.
      * @param  thresholdRatio_   The initial threshold ratio.
      */
     constructor(
-        address voteToken_,
+        address token_,
         address zeroGovernor_,
         address registrar_,
         address standardGovernor_,
         uint16 thresholdRatio_
-    ) ThresholdGovernor("EmergencyGovernor", voteToken_, thresholdRatio_) {
+    ) ThresholdGovernor("EmergencyGovernor", token_, thresholdRatio_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
