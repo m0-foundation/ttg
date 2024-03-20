@@ -145,6 +145,7 @@ interface IStandardGovernor is IBatchGovernor {
      * @return noVotes    The amount of votes cast against the proposal.
      * @return yesVotes   The amount of votes cast for the proposal.
      * @return proposer   The address of the account that created the proposal.
+     * @return quorum     The number of votes required to meet quorum.
      */
     function getProposal(
         uint256 proposalId
@@ -157,7 +158,8 @@ interface IStandardGovernor is IBatchGovernor {
             ProposalState state,
             uint256 noVotes,
             uint256 yesVotes,
-            address proposer
+            address proposer,
+            uint256 quorum
         );
 
     /**

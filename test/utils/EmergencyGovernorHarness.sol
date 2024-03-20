@@ -10,8 +10,8 @@ contract EmergencyGovernorHarness is EmergencyGovernor {
         address zeroGovernor_,
         address registrar_,
         address standardGovernor_,
-        uint16 thresholdRatio_
-    ) EmergencyGovernor(voteToken_, zeroGovernor_, registrar_, standardGovernor_, thresholdRatio_) {}
+        uint256 quorumNumerator_
+    ) EmergencyGovernor(voteToken_, zeroGovernor_, registrar_, standardGovernor_, quorumNumerator_) {}
 
     function revertIfInvalidCalldata(bytes memory callData_) external pure {
         _revertIfInvalidCalldata(callData_);

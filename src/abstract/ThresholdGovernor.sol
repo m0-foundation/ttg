@@ -2,36 +2,37 @@
 
 pragma solidity 0.8.23;
 
-import { UIntMath } from "../../lib/common/src/libs/UIntMath.sol";
-
 import { IGovernor } from "./interfaces/IGovernor.sol";
 import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
 import { BatchGovernor } from "./BatchGovernor.sol";
 
 /**
- * @title  Extension for BatchGovernor with a threshold ratio used to determine quorum and yes-threshold requirements.
+ * @title  Extension for BatchGovernor with a quorum ratio used to determine quorum and yes-threshold requirements.
  * @author M^0 Labs
  */
 abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     /* ============ Variables ============ */
 
-    /// @dev The minimum allowed threshold ratio.
-    uint16 internal constant _MIN_THRESHOLD_RATIO = 271;
+    /// @dev The minimum allowed quorum numerator.
+    uint16 internal constant _MIN_QUORUM_NUMERATOR = 271;
 
-    /// @inheritdoc IThresholdGovernor
-    uint16 public thresholdRatio;
+    /// @dev The denominator used to compute quorum (100% in basis points).
+    uint16 internal constant _QUORUM_DENOMINATOR = 10_000;
+
+    /// @dev The quorum numerator used to compute quorum.
+    uint16 internal _quorumNumerator;
 
     /* ============ Constructor ============ */
 
     /**
      * @notice Construct a new ThresholdGovernor contract.
-     * @param  name_           The name of the contract. Used to compute EIP712 domain separator.
-     * @param  voteToken_      The address of the token used to vote.
-     * @param  thresholdRatio_ The ratio of yes votes votes required for a proposal to succeed.
+     * @param  name_            The name of the contract. Used to compute EIP712 domain separator.
+     * @param  voteToken_       The address of the token used to vote.
+     * @param  quorumNumerator_ The numerator used to compute the yes quorum required for a proposal to succeed.
      */
-    constructor(string memory name_, address voteToken_, uint16 thresholdRatio_) BatchGovernor(name_, voteToken_) {
-        _setThresholdRatio(thresholdRatio_);
+    constructor(string memory name_, address voteToken_, uint256 quorumNumerator_) BatchGovernor(name_, voteToken_) {
+        _setQuorumNumerator(quorumNumerator_);
     }
 
     /* ============ Interactive Functions ============ */
@@ -61,6 +62,11 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
     /* ============ View/Pure Functions ============ */
 
+    /// @inheritdoc IGovernor
+    function COUNTING_MODE() external pure returns (string memory) {
+        return "support=against,for&quorum=for&success=quorum";
+    }
+
     /// @inheritdoc IThresholdGovernor
     function getProposal(
         uint256 proposalId_
@@ -74,7 +80,8 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
             uint256 noVotes_,
             uint256 yesVotes_,
             address proposer_,
-            uint16 thresholdRatio_
+            uint256 quorum_,
+            uint16 quorumNumerator_
         )
     {
         Proposal storage proposal_ = _proposals[proposalId_];
@@ -85,19 +92,31 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
         proposer_ = proposal_.proposer;
-        thresholdRatio_ = proposal_.thresholdRatio;
+        quorum_ = _getQuorum(proposal_.voteStart, proposal_.quorumNumerator);
+        quorumNumerator_ = proposal_.quorumNumerator;
+    }
+
+    /// @inheritdoc IThresholdGovernor
+    function proposalQuorum(uint256 proposalId) external view returns (uint256) {
+        Proposal storage proposal_ = _proposals[proposalId];
+
+        return _getQuorum(proposal_.voteStart, proposal_.quorumNumerator);
     }
 
     /// @inheritdoc IGovernor
-    function quorum() external view returns (uint256 quorum_) {
-        // NOTE: This will only be correct for the first epoch of a proposals lifetime.
-        return (thresholdRatio * _getTotalSupply(_clock() - 1)) / ONE;
+    function quorum() external view returns (uint256) {
+        // NOTE: This only provides the quorum required for a proposal created at this moment.
+        return _getQuorum(_clock(), _quorumNumerator);
     }
 
-    /// @inheritdoc IGovernor
-    function quorum(uint256 timepoint_) external view returns (uint256 quorum_) {
-        // NOTE: This will only be correct for the first epoch of a proposals lifetime.
-        return (thresholdRatio * _getTotalSupply(UIntMath.safe16(timepoint_) - 1)) / ONE;
+    /// @inheritdoc IThresholdGovernor
+    function quorumNumerator() external view returns (uint256) {
+        return _quorumNumerator;
+    }
+
+    /// @inheritdoc IThresholdGovernor
+    function quorumDenominator() external pure returns (uint256) {
+        return _QUORUM_DENOMINATOR;
     }
 
     /// @inheritdoc IGovernor
@@ -117,15 +136,18 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         // The proposal will expire once the voting period closes.
         if (totalSupply_ == 0) return isVotingOpen_ ? ProposalState.Active : ProposalState.Expired;
 
-        uint16 thresholdRatio_ = proposal_.thresholdRatio;
+        uint16 quorumNumerator_ = proposal_.quorumNumerator;
 
         // If proposal is currently succeeding, it has either succeeded or expired.
-        if (proposal_.yesWeight * ONE >= thresholdRatio_ * totalSupply_) {
+        if (proposal_.yesWeight * _QUORUM_DENOMINATOR >= quorumNumerator_ * totalSupply_) {
             return isVotingOpen_ ? ProposalState.Succeeded : ProposalState.Expired;
         }
 
         // If proposal can succeed while voting is open, it is active.
-        if (((totalSupply_ - proposal_.noWeight) * ONE >= thresholdRatio_ * totalSupply_) && isVotingOpen_) {
+        if (
+            ((totalSupply_ - proposal_.noWeight) * _QUORUM_DENOMINATOR >= quorumNumerator_ * totalSupply_) &&
+            isVotingOpen_
+        ) {
             return ProposalState.Active;
         }
 
@@ -144,25 +166,36 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
             voteStart: voteStart_,
             executed: false,
             proposer: msg.sender,
-            thresholdRatio: thresholdRatio,
-            quorumRatio: 0,
+            quorumNumerator: _quorumNumerator,
             noWeight: 0,
             yesWeight: 0
         });
     }
 
     /**
-     * @dev   Set the threshold ratio to be applied to determine the threshold/quorum for a proposal.
-     * @param newThresholdRatio_ The new threshold ratio.
+     * @dev   Set the quorum numerator to be used to compute the threshold/quorum for a proposal.
+     * @param newQuorumNumerator_ The new quorum numerator.
      */
-    function _setThresholdRatio(uint16 newThresholdRatio_) internal {
-        if (newThresholdRatio_ > ONE || newThresholdRatio_ < _MIN_THRESHOLD_RATIO)
-            revert InvalidThresholdRatio(newThresholdRatio_, _MIN_THRESHOLD_RATIO, ONE);
+    function _setQuorumNumerator(uint256 newQuorumNumerator_) internal {
+        if (newQuorumNumerator_ > _QUORUM_DENOMINATOR || newQuorumNumerator_ < _MIN_QUORUM_NUMERATOR)
+            revert InvalidQuorumNumerator(newQuorumNumerator_, _MIN_QUORUM_NUMERATOR, _QUORUM_DENOMINATOR);
 
-        emit ThresholdRatioSet(thresholdRatio = newThresholdRatio_);
+        emit QuorumNumeratorUpdated(_quorumNumerator, newQuorumNumerator_);
+
+        _quorumNumerator = uint16(newQuorumNumerator_);
     }
 
     /* ============ Internal View/Pure Functions ============ */
+
+    /**
+     * @dev    Returns the quorum given a snapshot and quorum numerator.
+     * @param  voteStart_       The epoch at which the proposal will start collecting votes.
+     * @param  quorumNumerator_ The quorum numerator.
+     * @return quorum_          The quorum of yes voted needed for a successful proposal.
+     */
+    function _getQuorum(uint16 voteStart_, uint16 quorumNumerator_) internal view returns (uint256 quorum_) {
+        return (quorumNumerator_ * _getTotalSupply(voteStart_ - 1)) / _QUORUM_DENOMINATOR;
+    }
 
     /**
      * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.

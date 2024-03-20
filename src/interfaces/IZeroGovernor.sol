@@ -90,16 +90,16 @@ interface IZeroGovernor is IThresholdGovernor {
     function setCashToken(address newCashToken, uint256 newProposalFee) external;
 
     /**
-     * @notice One of the valid proposals. Sets the threshold ratio for Emergency Governor proposals.
-     * @param  newThresholdRatio The new threshold ratio.
+     * @notice One of the valid proposals. Sets the quorum numerator for Emergency Governor proposals.
+     * @param  newQuorumNumerator The new quorum numerator.
      */
-    function setEmergencyProposalThresholdRatio(uint16 newThresholdRatio) external;
+    function setEmergencyProposalQuorumNumerator(uint256 newQuorumNumerator) external;
 
     /**
-     * @notice One of the valid proposals. Sets the threshold ratio for this governor's proposals.
-     * @param  newThresholdRatio The new threshold ratio.
+     * @notice One of the valid proposals. Sets the quorum numerator for this governor's proposals.
+     * @param  newQuorumNumerator The new quorum numerator.
      */
-    function setZeroProposalThresholdRatio(uint16 newThresholdRatio) external;
+    function setZeroProposalQuorumNumerator(uint256 newQuorumNumerator) external;
 
     /* ============ View/Pure Functions ============ */
 

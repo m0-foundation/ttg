@@ -40,7 +40,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
         _jumpEpochs(2);
@@ -53,7 +53,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             abi.encode(0)
         );
 
-        (, , IGovernor.ProposalState expiredState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState expiredState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(expiredState_), 6);
     }
 
@@ -84,12 +84,12 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
         _jumpEpochs(2);
 
-        (, , IGovernor.ProposalState expiredState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState expiredState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(expiredState_), 6);
     }
 
@@ -122,7 +122,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_eve);
         _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
         uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
@@ -132,7 +132,7 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         _jumpEpochs(3);
 
-        (, , IGovernor.ProposalState defeatedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState defeatedState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(defeatedState_), 3);
     }
 
@@ -158,10 +158,10 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
 
-        (, , , uint256 noVotes_, uint256 yesVotes_, , uint256 thresholdRatio_) = _zeroGovernor.getProposal(proposalId_);
+        (, , , uint256 noVotes_, uint256 yesVotes_, , uint256 quorum_, ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(noVotes_, 0);
         assertEq(yesVotes_, daveZeroWeight_);
-        assertEq(thresholdRatio_, 6000);
+        assertEq(quorum_, 60_000_000e6);
 
         assertEq(uint256(_zeroGovernor.state(proposalId_)), 4); // proposal has Succeeded
 

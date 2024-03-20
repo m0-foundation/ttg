@@ -12,8 +12,8 @@ contract ZeroGovernorHarness is ZeroGovernor {
         address standardGovernorDeployer_,
         address bootstrapToken_,
         uint256 standardProposalFee_,
-        uint16 emergencyProposalThresholdRatio_,
-        uint16 zeroProposalThresholdRatio_,
+        uint256 emergencyProposalQuorumNumerator_,
+        uint256 zeroProposalQuorumNumerator_,
         address[] memory allowedCashTokens_
     )
         ZeroGovernor(
@@ -23,11 +23,30 @@ contract ZeroGovernorHarness is ZeroGovernor {
             standardGovernorDeployer_,
             bootstrapToken_,
             standardProposalFee_,
-            emergencyProposalThresholdRatio_,
-            zeroProposalThresholdRatio_,
+            emergencyProposalQuorumNumerator_,
+            zeroProposalQuorumNumerator_,
             allowedCashTokens_
         )
     {}
+
+    function setProposal(
+        uint256 proposalId_,
+        uint256 voteStart_,
+        bool executed_,
+        address proposer_,
+        uint256 quorumNumerator_,
+        uint256 noWeight_,
+        uint256 yesWeight_
+    ) external {
+        _proposals[proposalId_] = Proposal({
+            voteStart: uint16(voteStart_),
+            executed: executed_,
+            proposer: proposer_,
+            quorumNumerator: uint16(quorumNumerator_),
+            noWeight: noWeight_,
+            yesWeight: yesWeight_
+        });
+    }
 
     function revertIfInvalidCalldata(bytes memory callData_) external pure {
         _revertIfInvalidCalldata(callData_);

@@ -8,7 +8,7 @@ import { IEmergencyGovernorDeployer } from "../../src/interfaces/IEmergencyGover
 
 import { EmergencyGovernorDeployer } from "../../src/EmergencyGovernorDeployer.sol";
 
-import { IThresholdGovernor } from "src/abstract/interfaces/IThresholdGovernor.sol";
+import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGovernor.sol";
 
 contract EmergencyGovernorDeployerTests is Test {
     address internal _registrar = makeAddr("registrar");
@@ -20,24 +20,24 @@ contract EmergencyGovernorDeployerTests is Test {
         _deployer = new EmergencyGovernorDeployer(_zeroGovernor, _registrar);
     }
 
-    function testFuzz_deployAddress(uint16 thresholdRatio_) external {
-        uint16 _MIN_THRESHOLD_RATIO = 271;
-        uint256 ONE = 10_000;
+    function testFuzz_deployAddress(uint256 quorumNumerator_) external {
+        uint256 minQuorumNumerator = 271;
+        uint256 quorumDenominator = 10_000;
         address nextDeploy_ = _deployer.nextDeploy();
 
         vm.prank(_zeroGovernor);
-        if (thresholdRatio_ < _MIN_THRESHOLD_RATIO || thresholdRatio_ > ONE) {
+        if (quorumNumerator_ < minQuorumNumerator || quorumNumerator_ > quorumDenominator) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IThresholdGovernor.InvalidThresholdRatio.selector,
-                    thresholdRatio_,
-                    _MIN_THRESHOLD_RATIO,
-                    ONE
+                    IThresholdGovernor.InvalidQuorumNumerator.selector,
+                    quorumNumerator_,
+                    minQuorumNumerator,
+                    quorumDenominator
                 )
             );
-            _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);
+            _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), quorumNumerator_);
         } else {
-            address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);
+            address deployed_ = _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), quorumNumerator_);
             assertEq(deployed_, nextDeploy_);
         }
     }

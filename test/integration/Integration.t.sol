@@ -59,7 +59,7 @@ contract IntegrationTests is TestUtils {
         _registrar = IRegistrar(registrar_);
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         IPowerToken powerToken_ = IPowerToken(_registrar.powerToken());
         uint256 initialPowerTotalSupply_;
 

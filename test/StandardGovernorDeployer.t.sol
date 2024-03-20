@@ -20,7 +20,7 @@ contract StandardGovernorDeployerTests is Test {
         _deployer = new StandardGovernorDeployer(_zeroGovernor, _registrar, _vault, _zeroToken);
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_deployer.registrar(), _registrar);
         assertEq(_deployer.vault(), _vault);
         assertEq(_deployer.zeroGovernor(), _zeroGovernor);

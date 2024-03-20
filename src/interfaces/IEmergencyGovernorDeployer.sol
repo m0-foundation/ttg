@@ -26,10 +26,10 @@ interface IEmergencyGovernorDeployer is IDeployer {
      * @notice Deploys a new instance of an Emergency Governor.
      * @param  powerToken       The address of some Power Token that will be used by voters.
      * @param  standardGovernor The address of some Standard Governor.
-     * @param  thresholdRatio   The threshold ratio to use for proposals.
+     * @param  quorumNumerator  The quorum numerator to use for proposals.
      * @return The address of the deployed Emergency Governor.
      */
-    function deploy(address powerToken, address standardGovernor, uint16 thresholdRatio) external returns (address);
+    function deploy(address powerToken, address standardGovernor, uint256 quorumNumerator) external returns (address);
 
     /* ============ View/Pure Functions ============ */
 

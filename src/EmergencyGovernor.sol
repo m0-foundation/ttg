@@ -40,15 +40,15 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
      * @param  zeroGovernor_     The address of the Zero Governor contract.
      * @param  registrar_        The address of the Registrar contract.
      * @param  standardGovernor_ The address of the StandardGovernor contract.
-     * @param  thresholdRatio_   The initial threshold ratio.
+     * @param  quorumNumerator_  The numerator defining the percentage of yes votes needed for a passed proposal.
      */
     constructor(
         address voteToken_,
         address zeroGovernor_,
         address registrar_,
         address standardGovernor_,
-        uint16 thresholdRatio_
-    ) ThresholdGovernor("EmergencyGovernor", voteToken_, thresholdRatio_) {
+        uint256 quorumNumerator_
+    ) ThresholdGovernor("EmergencyGovernor", voteToken_, quorumNumerator_) {
         if ((zeroGovernor = zeroGovernor_) == address(0)) revert InvalidZeroGovernorAddress();
         if ((registrar = registrar_) == address(0)) revert InvalidRegistrarAddress();
         if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
@@ -57,8 +57,8 @@ contract EmergencyGovernor is IEmergencyGovernor, ThresholdGovernor {
     /* ============ Interactive Functions ============ */
 
     /// @inheritdoc IEmergencyGovernor
-    function setThresholdRatio(uint16 newThresholdRatio_) external onlyZeroGovernor {
-        _setThresholdRatio(newThresholdRatio_);
+    function setQuorumNumerator(uint256 newQuorumNumerator_) external onlyZeroGovernor {
+        _setQuorumNumerator(newQuorumNumerator_);
     }
 
     /* ============ Proposal Functions ============ */

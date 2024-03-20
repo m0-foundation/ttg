@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
-import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
+import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
+import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
 
 import { MockBootstrapToken, MockEmergencyGovernor, MockEmergencyGovernorDeployer } from "./utils/Mocks.sol";
@@ -16,8 +16,8 @@ contract ZeroGovernorTests is TestUtils {
     address internal _cashToken1 = makeAddr("cashToken1");
     address internal _cashToken2 = makeAddr("cashToken2");
 
-    uint16 internal _emergencyProposalThresholdRatio = 9_000; // 90%
-    uint16 internal _zeroProposalThresholdRatio = 6_000; // 60%
+    uint256 internal _emergencyProposalQuorumNumerator = 9_000; // 90%
+    uint256 internal _zeroProposalQuorumNumerator = 6_000; // 60%
 
     address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
 
@@ -45,7 +45,7 @@ contract ZeroGovernorTests is TestUtils {
         _zeroToken.setTotalSupply(1);
         _powerToken.setTotalSupply(1);
 
-        _emergencyGovernor.setThresholdRatio(1);
+        _emergencyGovernor.setQuorumNumerator(1);
         _emergencyGovernorDeployer.setNextDeploy(address(_emergencyGovernor));
 
         _powerTokenDeployer.setNextDeploy(address(_powerToken));
@@ -64,7 +64,7 @@ contract ZeroGovernorTests is TestUtils {
             address(_bootstrapToken),
             1,
             1,
-            _zeroProposalThresholdRatio,
+            _zeroProposalQuorumNumerator,
             _allowedCashTokens
         );
 
@@ -73,12 +73,13 @@ contract ZeroGovernorTests is TestUtils {
         _emergencyGovernorDeployer.setLastDeploy(address(_emergencyGovernor));
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_zeroGovernor.voteToken(), address(_zeroToken));
         assertEq(_zeroGovernor.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_zeroGovernor.powerTokenDeployer(), address(_powerTokenDeployer));
         assertEq(_zeroGovernor.standardGovernorDeployer(), address(_standardGovernorDeployer));
-        assertEq(_zeroGovernor.thresholdRatio(), _zeroProposalThresholdRatio);
+        assertEq(_zeroGovernor.quorumDenominator(), 10_000);
+        assertEq(_zeroGovernor.quorumNumerator(), _zeroProposalQuorumNumerator);
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken1), true);
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken2), true);
         assertEq(_zeroGovernor.emergencyGovernor(), address(_emergencyGovernor));
@@ -96,7 +97,7 @@ contract ZeroGovernorTests is TestUtils {
             address(_bootstrapToken),
             1,
             1,
-            _zeroProposalThresholdRatio,
+            _zeroProposalQuorumNumerator,
             _allowedCashTokens
         );
     }
@@ -111,7 +112,7 @@ contract ZeroGovernorTests is TestUtils {
             address(_bootstrapToken),
             1,
             1,
-            _zeroProposalThresholdRatio,
+            _zeroProposalQuorumNumerator,
             _allowedCashTokens
         );
     }
@@ -126,7 +127,7 @@ contract ZeroGovernorTests is TestUtils {
             address(_bootstrapToken),
             1,
             1,
-            _zeroProposalThresholdRatio,
+            _zeroProposalQuorumNumerator,
             _allowedCashTokens
         );
     }
@@ -141,7 +142,7 @@ contract ZeroGovernorTests is TestUtils {
             address(_bootstrapToken),
             1,
             1,
-            _zeroProposalThresholdRatio,
+            _zeroProposalQuorumNumerator,
             new address[](0)
         );
     }
@@ -156,7 +157,7 @@ contract ZeroGovernorTests is TestUtils {
             address(_bootstrapToken),
             1,
             1,
-            _zeroProposalThresholdRatio,
+            _zeroProposalQuorumNumerator,
             new address[](1)
         );
     }
@@ -165,6 +166,40 @@ contract ZeroGovernorTests is TestUtils {
     function test_getProposal_proposalDoesNotExist() external {
         vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
         _zeroGovernor.getProposal(0);
+    }
+
+    function test_getProposal() external {
+        _zeroToken.setTotalSupply(1_000_000);
+
+        _zeroGovernor.setProposal({
+            proposalId_: 1,
+            voteStart_: _currentEpoch(),
+            executed_: false,
+            proposer_: address(1),
+            quorumNumerator_: 4_000,
+            noWeight_: 111,
+            yesWeight_: 222
+        });
+
+        (
+            uint48 voteStart_,
+            uint48 voteEnd_,
+            IGovernor.ProposalState state_,
+            uint256 noVotes_,
+            uint256 yesVotes_,
+            address proposer_,
+            uint256 quorum_,
+            uint16 quorumNumerator_
+        ) = _zeroGovernor.getProposal(1);
+
+        assertEq(voteStart_, _currentEpoch());
+        assertEq(voteEnd_, _currentEpoch() + 1);
+        assertEq(uint8(state_), uint8(IGovernor.ProposalState.Active));
+        assertEq(noVotes_, 111);
+        assertEq(yesVotes_, 222);
+        assertEq(proposer_, address(1));
+        assertEq(quorum_, 400_000);
+        assertEq(quorumNumerator_, 4_000);
     }
 
     /* ============ resetToPowerHolders ============ */
@@ -244,37 +279,39 @@ contract ZeroGovernorTests is TestUtils {
         _zeroGovernor.setCashToken(address(0), 1e18);
     }
 
-    /* ============ setEmergencyProposalThresholdRatio ============ */
-    function test_setEmergencyProposalThresholdRatio() external {
-        vm.expectCall(address(_emergencyGovernor), abi.encodeCall(_emergencyGovernor.setThresholdRatio, (100)));
+    /* ============ setEmergencyProposalQuorumNumerator ============ */
+    function test_setEmergencyProposalQuorumNumerator() external {
+        vm.expectCall(address(_emergencyGovernor), abi.encodeCall(_emergencyGovernor.setQuorumNumerator, (100)));
 
         vm.prank(address(_zeroGovernor));
-        _zeroGovernor.setEmergencyProposalThresholdRatio(100);
+        _zeroGovernor.setEmergencyProposalQuorumNumerator(100);
     }
 
-    function test_setEmergencyProposalThresholdRatio_notZeroGovernor() external {
+    function test_setEmergencyProposalQuorumNumerator_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
-        _zeroGovernor.setEmergencyProposalThresholdRatio(_emergencyProposalThresholdRatio);
+        _zeroGovernor.setEmergencyProposalQuorumNumerator(_emergencyProposalQuorumNumerator);
     }
 
-    /* ============ setZeroProposalThresholdRatio ============ */
-    function test_setZeroProposalThresholdRatio_notZeroGovernor() external {
+    /* ============ setZeroProposalQuorumNumerator ============ */
+    function test_setZeroProposalQuorumNumerator_notZeroGovernor() external {
         vm.expectRevert(IBatchGovernor.NotSelf.selector);
-        _zeroGovernor.setZeroProposalThresholdRatio(_zeroProposalThresholdRatio);
+        _zeroGovernor.setZeroProposalQuorumNumerator(_zeroProposalQuorumNumerator);
     }
 
-    function test_setZeroProposalThresholdRatio_invalidThresholdRatioAboveOne() external {
+    function test_setZeroProposalQuorumNumerator_invalidQuorumNumeratorAboveOne() external {
         vm.prank(address(_zeroGovernor));
 
-        vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidThresholdRatio.selector, 10_001, 271, 10_000));
-        _zeroGovernor.setZeroProposalThresholdRatio(10_001);
+        vm.expectRevert(
+            abi.encodeWithSelector(IThresholdGovernor.InvalidQuorumNumerator.selector, 10_001, 271, 10_000)
+        );
+        _zeroGovernor.setZeroProposalQuorumNumerator(10_001);
     }
 
-    function test_setZeroProposalThresholdRatio_invalidThresholdRatioBelowMin() external {
+    function test_setZeroProposalQuorumNumerator_invalidQuorumNumeratorBelowMin() external {
         vm.prank(address(_zeroGovernor));
 
-        vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidThresholdRatio.selector, 1, 271, 10_000));
-        _zeroGovernor.setZeroProposalThresholdRatio(1);
+        vm.expectRevert(abi.encodeWithSelector(IThresholdGovernor.InvalidQuorumNumerator.selector, 1, 271, 10_000));
+        _zeroGovernor.setZeroProposalQuorumNumerator(1);
     }
 
     /* ============ revertIfInvalidCalldata ============ */
@@ -304,17 +341,20 @@ contract ZeroGovernorTests is TestUtils {
         );
     }
 
-    function test_revertIfInvalidCalldata_setEmergencyProposalThresholdRatio() external {
+    function test_revertIfInvalidCalldata_setEmergencyProposalQuorumNumerator() external {
         vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
         _zeroGovernor.revertIfInvalidCalldata(
-            abi.encodePacked(abi.encodeCall(_zeroGovernor.setEmergencyProposalThresholdRatio, (1000)), "randomCalldata")
+            abi.encodePacked(
+                abi.encodeCall(_zeroGovernor.setEmergencyProposalQuorumNumerator, (1000)),
+                "randomCalldata"
+            )
         );
     }
 
-    function test_revertIfInvalidCalldata_setZeroProposalThresholdRatio() external {
+    function test_revertIfInvalidCalldata_setZeroProposalQuorumNumerator() external {
         vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
         _zeroGovernor.revertIfInvalidCalldata(
-            abi.encodePacked(abi.encodeCall(_zeroGovernor.setZeroProposalThresholdRatio, (1000)), "randomCalldata")
+            abi.encodePacked(abi.encodeCall(_zeroGovernor.setZeroProposalQuorumNumerator, (1000)), "randomCalldata")
         );
     }
 

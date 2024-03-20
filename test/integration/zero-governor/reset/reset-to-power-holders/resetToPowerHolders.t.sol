@@ -51,7 +51,7 @@ contract ResetToPowerHolders_IntegrationTest is ResetIntegrationBaseSetup {
         vm.prank(_dave);
         _zeroGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState activeState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
 
         assertEq(uint256(activeState_), 1);
 
@@ -65,7 +65,7 @@ contract ResetToPowerHolders_IntegrationTest is ResetIntegrationBaseSetup {
         vm.prank(_dave);
         assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
 
-        (, , IGovernor.ProposalState succeededState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState succeededState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 
         IPowerToken nextPowerToken_ = IPowerToken(IPowerTokenDeployer(_registrar.powerTokenDeployer()).nextDeploy());
@@ -102,7 +102,7 @@ contract ResetToPowerHolders_IntegrationTest is ResetIntegrationBaseSetup {
         assertEq(nextPowerToken_.balanceOf(_eve), 0);
         assertEq(nextPowerToken_.balanceOf(_frank), 0);
 
-        (, , IGovernor.ProposalState executedState_, , , , ) = _zeroGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState executedState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(executedState_), 7);
 
         assertEq(IStandardGovernor(nextStandardGovernor_).cashToken(), _standardGovernor.cashToken());

@@ -26,10 +26,10 @@ interface IEmergencyGovernor is IThresholdGovernor {
     /* ============ Interactive Functions ============ */
 
     /**
-     * @notice Sets the threshold ratio to use going forward for newly created proposals.
-     * @param  newThresholdRatio The new threshold ratio.
+     * @notice Sets the quorum numerator to use going forward for newly created proposals.
+     * @param  newQuorumNumerator The new quorum numerator.
      */
-    function setThresholdRatio(uint16 newThresholdRatio) external;
+    function setQuorumNumerator(uint256 newQuorumNumerator) external;
 
     /* ============ Proposal Functions ============ */
 

@@ -32,7 +32,7 @@ contract DistributionVaultTests is TestUtils {
     }
 
     /* ============ constructor ============ */
-    function test_constructor() external {
+    function test_constructor() external view {
         assertEq(_vault.zeroToken(), address(_baseToken));
         assertEq(_vault.name(), "DistributionVault");
         assertEq(_vault.CLOCK_MODE(), "mode=epoch");
@@ -45,7 +45,7 @@ contract DistributionVaultTests is TestUtils {
     }
 
     /* ============ CLAIM_TYPEHASH ============ */
-    function test_claimTypeHash() external {
+    function test_claimTypeHash() external view {
         assertEq(
             _vault.CLAIM_TYPEHASH(),
             keccak256(
@@ -201,7 +201,7 @@ contract DistributionVaultTests is TestUtils {
         _vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_);
     }
 
-    function test_getClaimable_startEpochSameAsEndEpoch() external {
+    function test_getClaimable_startEpochSameAsEndEpoch() external view {
         uint256 startEpoch_ = _currentEpoch() - 1;
         uint256 endEpoch_ = startEpoch_;
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 0);

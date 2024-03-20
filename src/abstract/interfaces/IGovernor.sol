@@ -272,13 +272,6 @@ interface IGovernor is IERC6372, IERC712 {
     function quorum() external view returns (uint256);
 
     /**
-     * @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed at `timepoint`.
-     * @param  timepoint The point in time, according to the clock mode the contract is operating on.
-     * @return The quorum value at `timepoint`.
-     */
-    function quorum(uint256 timepoint) external view returns (uint256);
-
-    /**
      * @notice Returns the state of a proposal with identifier `proposalId`.
      * @param  proposalId The unique identifier for the proposal.
      * @return The state of the proposal.

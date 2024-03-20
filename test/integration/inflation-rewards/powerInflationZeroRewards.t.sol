@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../../../lib/forge-std/src/Test.sol";
-
 import { IntegrationBaseSetup, IBatchGovernor, IGovernor } from "../IntegrationBaseSetup.t.sol";
 
 contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {

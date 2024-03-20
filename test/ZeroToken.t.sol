@@ -39,7 +39,7 @@ contract ZeroTokenTests is TestUtils {
         _zeroToken = new ZeroTokenHarness(_standardGovernorDeployer, _initialAccounts, _initialAmounts);
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_zeroToken.standardGovernorDeployer(), _standardGovernorDeployer);
 
         for (uint256 index_; index_ < _initialAccounts.length; index_++) {

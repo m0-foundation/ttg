@@ -2,48 +2,45 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IBatchGovernor, IGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IntegrationBaseSetup, IBatchGovernor } from "../../IntegrationBaseSetup.t.sol";
 
-contract SetZeroAndEmergencyThresholds_IntegrationTest is IntegrationBaseSetup {
-    function test_zeroGovernorProposal_setZeroAndEmergencyThresholds() external {
+contract SetZeroAndEmergencyQuorums_IntegrationTest is IntegrationBaseSetup {
+    function test_zeroGovernorProposal_setZeroAndEmergencyQuorums() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_zeroGovernor);
 
         uint256[] memory values_ = new uint256[](1);
 
-        bytes[] memory zeroThresholdCallDatas_ = new bytes[](1);
-        zeroThresholdCallDatas_[0] = abi.encodeWithSelector(
-            _zeroGovernor.setZeroProposalThresholdRatio.selector,
-            5_000
-        );
+        bytes[] memory zeroQuorumCallDatas_ = new bytes[](1);
+        zeroQuorumCallDatas_[0] = abi.encodeWithSelector(_zeroGovernor.setZeroProposalQuorumNumerator.selector, 5_000);
 
-        bytes[] memory emergencyThresholdCallDatas_ = new bytes[](1);
-        emergencyThresholdCallDatas_[0] = abi.encodeWithSelector(
-            _zeroGovernor.setEmergencyProposalThresholdRatio.selector,
+        bytes[] memory emergencyQuorumCallDatas_ = new bytes[](1);
+        emergencyQuorumCallDatas_[0] = abi.encodeWithSelector(
+            _zeroGovernor.setEmergencyProposalQuorumNumerator.selector,
             7_000
         );
 
-        string memory zeroThresholdDescription_ = "Update zero threshold";
-        string memory emergencyThresholdDescription_ = "Update emergency threshold";
+        string memory zeroQuorumDescription_ = "Update zero quorum numerator";
+        string memory emergencyQuorumDescription_ = "Update emergency quorum numerator";
 
         _warpToNextEpoch();
 
-        // Proposal to change zero threshold
+        // Proposal to change zero quorum
         vm.prank(_dave);
         uint256 zeroProposalId_ = _zeroGovernor.propose(
             targets_,
             values_,
-            zeroThresholdCallDatas_,
-            zeroThresholdDescription_
+            zeroQuorumCallDatas_,
+            zeroQuorumDescription_
         );
 
-        // Proposal to change emergency threshold
+        // Proposal to change emergency quorum
         vm.prank(_dave);
         uint256 emergencyProposalId_ = _zeroGovernor.propose(
             targets_,
             values_,
-            emergencyThresholdCallDatas_,
-            emergencyThresholdDescription_
+            emergencyQuorumCallDatas_,
+            emergencyQuorumDescription_
         );
 
         uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
@@ -68,18 +65,18 @@ contract SetZeroAndEmergencyThresholds_IntegrationTest is IntegrationBaseSetup {
         _zeroGovernor.execute(
             targets_,
             values_,
-            emergencyThresholdCallDatas_,
-            keccak256(bytes(emergencyThresholdDescription_))
+            emergencyQuorumCallDatas_,
+            keccak256(bytes(emergencyQuorumDescription_))
         );
 
         vm.prank(_dave);
-        _zeroGovernor.execute(targets_, values_, zeroThresholdCallDatas_, keccak256(bytes(zeroThresholdDescription_)));
+        _zeroGovernor.execute(targets_, values_, zeroQuorumCallDatas_, keccak256(bytes(zeroQuorumDescription_)));
 
         assertEq(uint256(_zeroGovernor.state(zeroProposalId_)), 7); // Executed
         assertEq(uint256(_zeroGovernor.state(emergencyProposalId_)), 7); // Executed
 
-        // Aftermath of the thresholds change
-        assertEq(_emergencyGovernor.thresholdRatio(), 7_000);
-        assertEq(_zeroGovernor.thresholdRatio(), 5_000);
+        // Aftermath of the quorums change
+        assertEq(_emergencyGovernor.quorumNumerator(), 7_000);
+        assertEq(_zeroGovernor.quorumNumerator(), 5_000);
     }
 }

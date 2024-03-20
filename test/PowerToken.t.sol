@@ -54,7 +54,7 @@ contract PowerTokenTests is TestUtils {
         _powerToken = new PowerTokenHarness(address(_bootstrapToken), _standardGovernor, address(_cashToken), _vault);
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_powerToken.bootstrapToken(), address(_bootstrapToken));
         assertEq(_powerToken.cashToken(), address(_cashToken));
         assertEq(_powerToken.standardGovernor(), _standardGovernor);

@@ -61,8 +61,7 @@ contract StandardGovernorHarness is StandardGovernor {
             voteStart: uint16(voteStart_),
             executed: executed_,
             proposer: proposer_,
-            thresholdRatio: 0,
-            quorumRatio: 0,
+            quorumNumerator: 0,
             noWeight: noWeight_,
             yesWeight: yesWeight_
         });

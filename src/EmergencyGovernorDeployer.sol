@@ -53,7 +53,7 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
     function deploy(
         address powerToken_,
         address standardGovernor_,
-        uint16 thresholdRatio_
+        uint256 quorumNumerator_
     ) external onlyZeroGovernor returns (address) {
         unchecked {
             ++nonce;
@@ -61,7 +61,7 @@ contract EmergencyGovernorDeployer is IEmergencyGovernorDeployer {
 
         return
             lastDeploy = address(
-                new EmergencyGovernor(powerToken_, zeroGovernor, registrar, standardGovernor_, thresholdRatio_)
+                new EmergencyGovernor(powerToken_, zeroGovernor, registrar, standardGovernor_, quorumNumerator_)
             );
     }
 

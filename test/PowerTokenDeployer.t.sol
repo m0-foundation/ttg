@@ -24,7 +24,7 @@ contract DeployerTests is Test {
         _bootstrapToken.setTotalSupply(1);
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_powerTokenDeployer.vault(), _vault);
         assertEq(_powerTokenDeployer.zeroGovernor(), _zeroGovernor);
         assertEq(_powerTokenDeployer.nonce(), 0);

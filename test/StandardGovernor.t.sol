@@ -76,7 +76,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_standardGovernor.emergencyGovernor(), address(_emergencyGovernor));
         assertEq(_standardGovernor.vault(), _vault);
         assertEq(_standardGovernor.zeroGovernor(), _zeroGovernor);
@@ -180,22 +180,22 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ typeHashes ============ */
-    function test_ballotTypeHash() external {
+    function test_ballotTypeHash() external view {
         assertEq(_standardGovernor.BALLOT_TYPEHASH(), keccak256("Ballot(uint256 proposalId,uint8 support)"));
     }
 
-    function test_ballotWithReasonTypeHash() external {
+    function test_ballotWithReasonTypeHash() external view {
         assertEq(
             _standardGovernor.BALLOT_WITH_REASON_TYPEHASH(),
             keccak256("BallotWithReason(uint256 proposalId,uint8 support,string reason)")
         );
     }
 
-    function test_ballotsTypeHash() external {
+    function test_ballotsTypeHash() external view {
         assertEq(_standardGovernor.BALLOTS_TYPEHASH(), keccak256("Ballots(uint256[] proposalIds,uint8[] supportList)"));
     }
 
-    function test_ballotsWithReasonTypeHash() external {
+    function test_ballotsWithReasonTypeHash() external view {
         assertEq(
             _standardGovernor.BALLOTS_WITH_REASON_TYPEHASH(),
             keccak256("BallotsWithReason(uint256[] proposalIds,uint8[] supportList,string[] reasonList)")
@@ -203,7 +203,7 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ ballotDigests ============ */
-    function test_getBallotDigest() external {
+    function test_getBallotDigest() external view {
         uint256 proposalId_ = 1;
         uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
 
@@ -215,7 +215,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_proposalIdsHash() external {
+    function test_proposalIdsHash() external pure {
         // NOTE: as mentioned in EIP-712:
         // The array values are encoded as the `keccak256` hash of the concatenated `encodeData` of their contents
         // (i.e. the encoding of `SomeType[5]` is identical to that of a struct containing five members of type `SomeType`).
@@ -236,7 +236,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_supportListHash() external {
+    function test_supportListHash() external pure {
         uint8[] memory supportList_ = new uint8[](5);
         supportList_[0] = 1;
         supportList_[1] = 2;
@@ -254,7 +254,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_getBallotsDigest() external {
+    function test_getBallotsDigest() external view {
         uint256[] memory proposalIds_ = new uint256[](2);
         proposalIds_[0] = 1;
         proposalIds_[1] = 2;
@@ -277,7 +277,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_getBallotWithReasonDigest() external {
+    function test_getBallotWithReasonDigest() external view {
         uint256 proposalId_ = 1;
         uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
         string memory reason_ = "Yes";
@@ -297,7 +297,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_getReasonListHash() external {
+    function test_getReasonListHash() external view {
         string[] memory reasonList1_ = new string[](2);
         reasonList1_[0] = "12";
         reasonList1_[1] = "3";
@@ -319,7 +319,7 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    function test_getBallotsWithReasonDigest() external {
+    function test_getBallotsWithReasonDigest() external view {
         uint256[] memory proposalIds_ = new uint256[](2);
         proposalIds_[0] = 1;
         proposalIds_[1] = 2;
@@ -1274,9 +1274,8 @@ contract StandardGovernorTests is TestUtils {
 
     /* ============ View Functions ============ */
 
-    function test_quorum() external {
+    function test_quorum() external view {
         assertEq(_standardGovernor.quorum(), 1);
-        assertEq(_standardGovernor.quorum(1), 1);
     }
 
     function test_votingDelay() external {
@@ -1287,7 +1286,7 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.votingDelay(), 1);
     }
 
-    function test_votingPeriod() external {
+    function test_votingPeriod() external view {
         assertEq(_standardGovernor.votingPeriod(), 0);
     }
 

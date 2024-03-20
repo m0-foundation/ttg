@@ -20,7 +20,7 @@ contract ERC5805Tests is TestUtils {
     }
 
     /* ============ DELEGATION_TYPEHASH ============ */
-    function test_delegateTypehash() external {
+    function test_delegateTypehash() external view {
         assertEq(
             _erc5805.DELEGATION_TYPEHASH(),
             keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)")

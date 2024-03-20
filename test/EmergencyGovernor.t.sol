@@ -28,8 +28,8 @@ contract EmergencyGovernorTests is TestUtils {
 
     address internal _account1 = makeAddr("account1");
 
-    uint16 internal _emergencyProposalThresholdRatio = 9_000; // 90%
-    uint16 internal _zeroProposalThresholdRatio = 6_000; // 60%
+    uint256 internal _emergencyProposalQuorumNumerator = 9_000; // 90%
+    uint256 internal _zeroProposalQuorumNumerator = 6_000; // 60%
 
     address[] internal _allowedCashTokens = [_cashToken1, _cashToken2];
 
@@ -76,8 +76,8 @@ contract EmergencyGovernorTests is TestUtils {
             address(_standardGovernorDeployer),
             address(_bootstrapToken),
             1,
-            1,
-            _zeroProposalThresholdRatio,
+            _emergencyProposalQuorumNumerator,
+            _zeroProposalQuorumNumerator,
             _allowedCashTokens
         );
 
@@ -86,7 +86,7 @@ contract EmergencyGovernorTests is TestUtils {
             address(_zeroGovernor),
             address(_registrar),
             address(_standardGovernor),
-            _emergencyProposalThresholdRatio
+            _emergencyProposalQuorumNumerator
         );
 
         _standardGovernorDeployer.setLastDeploy(address(_standardGovernor));
@@ -94,12 +94,13 @@ contract EmergencyGovernorTests is TestUtils {
         _emergencyGovernorDeployer.setLastDeploy(address(_emergencyGovernor));
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_emergencyGovernor.voteToken(), address(_powerToken));
         assertEq(_emergencyGovernor.zeroGovernor(), address(_zeroGovernor));
         assertEq(_emergencyGovernor.registrar(), address(_registrar));
         assertEq(_emergencyGovernor.standardGovernor(), address(_standardGovernor));
-        assertEq(_emergencyGovernor.thresholdRatio(), _emergencyProposalThresholdRatio);
+        assertEq(_emergencyGovernor.quorumDenominator(), 10_000);
+        assertEq(_emergencyGovernor.quorumNumerator(), _emergencyProposalQuorumNumerator);
     }
 
     /* ============ constructor ============ */
@@ -110,7 +111,7 @@ contract EmergencyGovernorTests is TestUtils {
             address(0),
             address(_registrar),
             address(_standardGovernor),
-            _emergencyProposalThresholdRatio
+            _emergencyProposalQuorumNumerator
         );
     }
 
@@ -121,7 +122,7 @@ contract EmergencyGovernorTests is TestUtils {
             address(_zeroGovernor),
             address(0),
             address(_standardGovernor),
-            _emergencyProposalThresholdRatio
+            _emergencyProposalQuorumNumerator
         );
     }
 
@@ -132,22 +133,22 @@ contract EmergencyGovernorTests is TestUtils {
             address(_zeroGovernor),
             address(_registrar),
             address(0),
-            _emergencyProposalThresholdRatio
+            _emergencyProposalQuorumNumerator
         );
     }
 
-    /* ============ setThresholdRatio ============ */
-    function test_setThresholdRatio() external {
+    /* ============ setQuorumNumerator ============ */
+    function test_setQuorumNumerator() external {
         vm.expectEmit();
-        emit IThresholdGovernor.ThresholdRatioSet(8000);
+        emit IThresholdGovernor.QuorumNumeratorUpdated(_emergencyProposalQuorumNumerator, 8000);
 
         vm.prank(address(_zeroGovernor));
-        _emergencyGovernor.setThresholdRatio(8000);
+        _emergencyGovernor.setQuorumNumerator(8000);
     }
 
-    function test_setThresholdRatio_notZeroGovernor() external {
+    function test_setQuorumNumerator_notZeroGovernor() external {
         vm.expectRevert(IEmergencyGovernor.NotZeroGovernor.selector);
-        _emergencyGovernor.setThresholdRatio(_emergencyProposalThresholdRatio);
+        _emergencyGovernor.setQuorumNumerator(_emergencyProposalQuorumNumerator);
     }
 
     /* ============ addToList ============ */

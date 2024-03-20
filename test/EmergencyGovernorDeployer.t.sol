@@ -18,7 +18,7 @@ contract EmergencyGovernorDeployerTests is Test {
         _deployer = new EmergencyGovernorDeployer(_zeroGovernor, _registrar);
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_deployer.registrar(), _registrar);
         assertEq(_deployer.zeroGovernor(), _zeroGovernor);
         assertEq(_deployer.nonce(), 0);

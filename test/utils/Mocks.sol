@@ -37,10 +37,10 @@ contract MockCashToken {
 }
 
 contract MockEmergencyGovernor {
-    uint16 public thresholdRatio;
+    uint256 public quorumNumerator;
 
-    function setThresholdRatio(uint16 thresholdRatio_) external {
-        thresholdRatio = thresholdRatio_;
+    function setQuorumNumerator(uint256 quorumNumerator_) external {
+        quorumNumerator = quorumNumerator_;
     }
 }
 
@@ -56,7 +56,7 @@ contract MockEmergencyGovernorDeployer {
         nextDeploy = nextDeploy_;
     }
 
-    function deploy(address, address, uint16) external view returns (address deployed_) {
+    function deploy(address, address, uint256) external view returns (address deployed_) {
         return nextDeploy;
     }
 }
