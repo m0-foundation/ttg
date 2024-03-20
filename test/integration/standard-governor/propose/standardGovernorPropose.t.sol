@@ -49,19 +49,19 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         _standardGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState pendingState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState pendingState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(pendingState_), 0);
         assertEq(uint256(_standardGovernor.state(proposalId_)), 0);
 
         _warpToNextVoteEpoch();
 
-        (, , IGovernor.ProposalState activeState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
         assertEq(uint256(_standardGovernor.state(proposalId_)), 1);
 
         _warpToNextEpoch();
 
-        (, , IGovernor.ProposalState defeatedState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState defeatedState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(defeatedState_), 3);
         assertEq(uint256(_standardGovernor.state(proposalId_)), 3);
     }
@@ -99,12 +99,12 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         _standardGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState pendingState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState pendingState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(pendingState_), 0);
 
         _warpToNextVoteEpoch();
 
-        (, , IGovernor.ProposalState activeState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
         uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
@@ -141,12 +141,12 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         _warpToNextEpoch();
 
-        (, , IGovernor.ProposalState succeededState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState succeededState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 
         _warpToNextEpoch();
 
-        (, , IGovernor.ProposalState expiredState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState expiredState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(expiredState_), 6);
 
         uint256 vaultCashBalanceBefore_ = _cashToken1.balanceOf(address(_vault));
@@ -190,12 +190,12 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         _standardGovernor.propose(targets_, values_, callDatas_, description_);
 
-        (, , IGovernor.ProposalState pendingState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState pendingState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(pendingState_), 0);
 
         _warpToNextVoteEpoch();
 
-        (, , IGovernor.ProposalState activeState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState activeState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(activeState_), 1);
 
         uint8 yesSupport_ = uint8(IBatchGovernor.VoteType.Yes);
@@ -232,7 +232,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         _warpToNextEpoch();
 
-        (, , IGovernor.ProposalState succeededState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState succeededState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 
         vm.expectEmit();
@@ -252,7 +252,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         assertFalse(_registrar.listContains("MintersList", _dave));
         assertTrue(_registrar.listContains("MintersList", _eve));
 
-        (, , IGovernor.ProposalState executedState_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState executedState_, , , , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(uint256(executedState_), 7);
     }
 
@@ -330,7 +330,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         // Alice received no ZERO rewards
         assertEq(_zeroToken.balanceOf(_alice), (1_000e6 * aliceVotingPower_) / 100);
 
-        (, , , uint256 noVotes_, uint256 yesVotes_, ) = _standardGovernor.getProposal(proposalId_);
+        (, , , uint256 noVotes_, uint256 yesVotes_, , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(yesVotes_, 0);
         assertEq(noVotes_, 0);
         assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));
@@ -389,7 +389,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         // Carol received ZERO rewards since he has 20% voting power as self-delegatee.
         assertEq(_zeroToken.balanceOf(_carol), (5_000_000e6 * 20) / 100);
 
-        (, , , noVotes_, yesVotes_, ) = _standardGovernor.getProposal(proposalId_);
+        (, , , noVotes_, yesVotes_, , ) = _standardGovernor.getProposal(proposalId_);
         assertEq(yesVotes_, bobVotingPower_);
         assertEq(noVotes_, carolVotingPower_);
         assertEq(uint256(_standardGovernor.state(proposalId_)), uint256(IGovernor.ProposalState.Active));

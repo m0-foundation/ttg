@@ -8,7 +8,7 @@ import { IEmergencyGovernorDeployer } from "../../src/interfaces/IEmergencyGover
 
 import { EmergencyGovernorDeployer } from "../../src/EmergencyGovernorDeployer.sol";
 
-import { IThresholdGovernor } from "src/abstract/interfaces/IThresholdGovernor.sol";
+import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGovernor.sol";
 
 contract EmergencyGovernorDeployerTests is Test {
     address internal _registrar = makeAddr("registrar");
@@ -21,18 +21,18 @@ contract EmergencyGovernorDeployerTests is Test {
     }
 
     function testFuzz_deployAddress(uint16 thresholdRatio_) external {
-        uint16 _MIN_THRESHOLD_RATIO = 271;
-        uint256 ONE = 10_000;
+        uint16 minThresholdRatio = 271;
+        uint256 one = 10_000;
         address nextDeploy_ = _deployer.nextDeploy();
 
         vm.prank(_zeroGovernor);
-        if (thresholdRatio_ < _MIN_THRESHOLD_RATIO || thresholdRatio_ > ONE) {
+        if (thresholdRatio_ < minThresholdRatio || thresholdRatio_ > one) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IThresholdGovernor.InvalidThresholdRatio.selector,
                     thresholdRatio_,
-                    _MIN_THRESHOLD_RATIO,
-                    ONE
+                    minThresholdRatio,
+                    one
                 )
             );
             _deployer.deploy(makeAddr("voteToken"), makeAddr("standardGovernor"), thresholdRatio_);

@@ -22,8 +22,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /**
      * @notice The proposal fee info.
-     * @param cashToken The address of the cash token used to pay the fee.
-     * @param fee       The amount of the fee per proposal.
+     * @param  cashToken The address of the cash token used to pay the fee.
+     * @param  fee       The amount of the fee per proposal.
      */
     struct ProposalFeeInfo {
         address cashToken;
@@ -228,6 +228,11 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /* ============ View/Pure Functions ============ */
 
+    /// @inheritdoc IGovernor
+    function COUNTING_MODE() external pure returns (string memory) {
+        return "support=against,for&quorum=for&success=standard";
+    }
+
     /// @inheritdoc IStandardGovernor
     function getProposal(
         uint256 proposalId_
@@ -240,7 +245,8 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
             ProposalState state_,
             uint256 noVotes_,
             uint256 yesVotes_,
-            address proposer_
+            address proposer_,
+            uint256 quorum_
         )
     {
         Proposal storage proposal_ = _proposals[proposalId_];
@@ -251,6 +257,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
         proposer_ = proposal_.proposer;
+        quorum_ = 1;
     }
 
     /// @inheritdoc IStandardGovernor
@@ -268,11 +275,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /// @inheritdoc IGovernor
     function quorum() external pure returns (uint256) {
-        return 1;
-    }
-
-    /// @inheritdoc IGovernor
-    function quorum(uint256) external pure returns (uint256) {
         return 1;
     }
 
@@ -391,7 +393,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
             executed: false,
             proposer: msg.sender,
             thresholdRatio: 0,
-            quorumRatio: 0,
             noWeight: 0,
             yesWeight: 0
         });

@@ -214,7 +214,7 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // Active immediately
 
-        (, , , uint256 noVotes, uint256 yesVotes, , ) = _emergencyGovernor.getProposal(proposalId_);
+        (, , , uint256 noVotes, uint256 yesVotes, , , ) = _emergencyGovernor.getProposal(proposalId_);
 
         vm.prank(_alice);
         _emergencyGovernor.castVote(proposalId_, yesSupport_);
@@ -222,7 +222,7 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_bob);
         _emergencyGovernor.castVote(proposalId_, yesSupport_);
 
-        (, , , noVotes, yesVotes, , ) = _emergencyGovernor.getProposal(proposalId_);
+        (, , , noVotes, yesVotes, , , ) = _emergencyGovernor.getProposal(proposalId_);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 4);
     }

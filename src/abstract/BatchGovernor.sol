@@ -23,8 +23,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
      * @param  voteStart      The epoch at which voting begins, inclusively.
      * @param  executed       Whether or not the proposal has been executed.
      * @param  proposer       The address of the proposer.
-     * @param  thresholdRatio The ratio of yes votes required for a proposal to succeed.
-     * @param  quorumRatio    The ratio of total votes required for a proposal to succeed.
+     * @param  thresholdRatio The ratio of yes votes required for a proposal to meet quorum and succeed.
      * @param  noWeight       The total number of votes against the proposal.
      * @param  yesWeight      The total number of votes for the proposal.
      */
@@ -34,7 +33,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         bool executed;
         address proposer;
         uint16 thresholdRatio;
-        uint16 quorumRatio;
         // 2nd slot
         uint256 noWeight;
         // 3rd slot
@@ -54,9 +52,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
     /// @dev Length constant for calldata with three arguments.
     uint256 internal constant _SELECTOR_PLUS_3_ARGS = 100;
-
-    /// @inheritdoc IBatchGovernor
-    uint256 public constant ONE = 10_000;
 
     // keccak256("Ballot(uint256 proposalId,uint8 support)")
     /// @inheritdoc IGovernor
@@ -334,11 +329,6 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /// @inheritdoc IGovernor
-    function COUNTING_MODE() external pure returns (string memory) {
-        return "support=against,for&quorum=for";
-    }
-
-    /// @inheritdoc IGovernor
     function proposalThreshold() external pure returns (uint256) {
         return 0;
     }
@@ -610,7 +600,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
     }
 
     /**
-     * @dev    Returns the vote token's total supply at `timepoint`.
+     * @dev    Returns the vote token's total supply at `timepoint_`.
      * @param  timepoint_ The clock value at which to query the vote token's total supply.
      * @return The vote token's total supply at the `timepoint` clock value.
      */

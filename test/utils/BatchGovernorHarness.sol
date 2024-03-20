@@ -33,7 +33,6 @@ contract BatchGovernorHarness is BatchGovernor {
         bool executed_,
         address proposer_,
         uint256 thresholdRatio_,
-        uint256 quorumRatio_,
         uint256 noWeight_,
         uint256 yesWeight_
     ) external returns (uint256 proposalId_) {
@@ -44,7 +43,6 @@ contract BatchGovernorHarness is BatchGovernor {
             executed: executed_,
             proposer: proposer_,
             thresholdRatio: uint16(thresholdRatio_),
-            quorumRatio: uint16(quorumRatio_),
             noWeight: noWeight_,
             yesWeight: yesWeight_
         });
@@ -68,9 +66,11 @@ contract BatchGovernorHarness is BatchGovernor {
     |                                       External/Public View/Pure Functions                                        |
     \******************************************************************************************************************/
 
-    function quorum() external view returns (uint256) {}
+    function COUNTING_MODE() external pure returns (string memory) {
+        return "";
+    }
 
-    function quorum(uint256 timepoint_) external view returns (uint256) {}
+    function quorum() external view returns (uint256) {}
 
     function state(uint256 proposalId_) public view override returns (ProposalState) {
         return _states[proposalId_];

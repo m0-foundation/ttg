@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IBatchGovernor, IGovernor, IZeroGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IntegrationBaseSetup, IBatchGovernor } from "../../IntegrationBaseSetup.t.sol";
 
 contract SetZeroAndEmergencyThresholds_IntegrationTest is IntegrationBaseSetup {
     function test_zeroGovernorProposal_setZeroAndEmergencyThresholds() external {
