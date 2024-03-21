@@ -6,9 +6,6 @@ on:
       - main
   pull_request:
 
-env:
-  FOUNDRY_PROFILE: ci
-
 permissions: write-all
 
 jobs:
@@ -16,14 +13,12 @@ jobs:
     name: Code Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Install lcov
         uses: hrishikesh-kadam/setup-lcov@v1
