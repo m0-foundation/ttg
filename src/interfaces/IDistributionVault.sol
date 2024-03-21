@@ -115,11 +115,11 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     ) external returns (uint256 claimed);
 
     /**
-     * @notice Allows for the `token` distribution of an unaccounted for balance of the token.
-     * @param  token  The address of the token being distributed.
-     * @return amount The total amount of additional token accounted in this distribution event.
+     * @notice Distributes the unaccounted balance of `token`.
+     * @param  token The address of the token being distributed.
+     * @return The total amount of additional tokens accounted in this distribution event.
      */
-    function distribute(address token) external returns (uint256 amount);
+    function distribute(address token) external returns (uint256);
 
     /* ============ View/Pure Functions ============ */
 
