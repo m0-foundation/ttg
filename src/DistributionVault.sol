@@ -132,17 +132,14 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
     /// @inheritdoc IDistributionVault
     function distribute(address token_) external returns (uint256 amount_) {
         uint256 currentEpoch_ = clock();
-        uint256 lastTokenBalance_ = _lastTokenBalances[token_];
-
-        // Determine the additional balance of `token_` that is not accounted for in `lastTokenBalance_`.
-        amount_ = IERC20(token_).balanceOf(address(this)) - lastTokenBalance_;
+        amount_ = getDistributable(token_);
 
         emit Distribution(token_, currentEpoch_, amount_);
 
         unchecked {
             // NOTE: Can be done unchecked because a token's total supply fits in a `uint256`.
             distributionOfAt[token_][currentEpoch_] += amount_; // Add to the distribution for the current epoch.
-            _lastTokenBalances[token_] = lastTokenBalance_ + amount_; // Track this contract's latest balance.
+            _lastTokenBalances[token_] += amount_; // Track this contract's latest balance.
         }
     }
 
@@ -228,6 +225,11 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
             // Divide the accumulated amount by `_GRANULARITY` to get the actual claimable amount.
             return claimable_ / _GRANULARITY;
         }
+    }
+
+    /// @inheritdoc IDistributionVault
+    function getDistributable(address token_) public view returns (uint256) {
+        return IERC20(token_).balanceOf(address(this)) - _lastTokenBalances[token_];
     }
 
     /* ============ Internal Interactive Functions ============ */

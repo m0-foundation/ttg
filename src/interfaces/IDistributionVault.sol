@@ -171,6 +171,13 @@ interface IDistributionVault is IERC6372, IStatefulERC712 {
     ) external view returns (bytes32);
 
     /**
+     * @notice Returns the additional balance of `token_` that is not yet distributed.
+     * @param  token The address of some token.
+     * @return The total amount of token owned by the vault that is yet to be distributed.
+     */
+    function getDistributable(address token) external view returns (uint256);
+
+    /**
      * @notice Returns whether `account` has already claimed their `token` distribution for `epoch`.
      * @param  token   The address of some token.
      * @param  account The address of some account.

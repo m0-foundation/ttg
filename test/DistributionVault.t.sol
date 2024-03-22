@@ -6,13 +6,13 @@ import { IERC712 } from "../lib/common/src/interfaces/IERC712.sol";
 import { ERC1271WalletMock } from "../lib/common/test/utils/ERC1271WalletMock.sol";
 
 import { IDistributionVault } from "../src/interfaces/IDistributionVault.sol";
-import { DistributionVault } from "../src/DistributionVault.sol";
 
+import { DistributionVaultHarness } from "./utils/DistributionVaultHarness.sol";
 import { MockERC20, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract DistributionVaultTests is TestUtils {
-    DistributionVault internal _vault;
+    DistributionVaultHarness internal _vault;
     MockERC20 internal _token1;
     MockERC20 internal _token2;
     MockERC20 internal _token3;
@@ -28,7 +28,7 @@ contract DistributionVaultTests is TestUtils {
         _token3 = new MockERC20();
 
         _baseToken = new MockEpochBasedVoteToken();
-        _vault = new DistributionVault(address(_baseToken));
+        _vault = new DistributionVaultHarness(address(_baseToken));
     }
 
     /* ============ constructor ============ */
@@ -41,7 +41,7 @@ contract DistributionVaultTests is TestUtils {
 
     function test_constructor_invalidZeroTokenAddress() external {
         vm.expectRevert(IDistributionVault.InvalidZeroTokenAddress.selector);
-        new DistributionVault(address(0));
+        new DistributionVaultHarness(address(0));
     }
 
     /* ============ CLAIM_TYPEHASH ============ */
@@ -189,6 +189,17 @@ contract DistributionVaultTests is TestUtils {
         // Check that the claimable funds tokens have zeroed.
         assertEq(_vault.getClaimable(address(_token1), _accounts[0], startEpoch_, endEpoch_), 0);
         assertEq(_vault.getClaimable(address(_token1), _accounts[1], startEpoch_, endEpoch_), 0);
+    }
+
+    /* ============ getDistributable ============ */
+    function test_getDistributable() external {
+        assertEq(_vault.getDistributable(address(_token1)), 0);
+
+        _token1.setBalance(address(_vault), 1_000_000);
+        assertEq(_vault.getDistributable(address(_token1)), 1_000_000);
+
+        _vault.setLastBalance(address(_token1), 600_000);
+        assertEq(_vault.getDistributable(address(_token1)), 400_000);
     }
 
     /* ============ getClaimable ============ */
