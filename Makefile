@@ -5,9 +5,6 @@
 # dapp deps
 update:; forge update
 
-# coverage report
-coverage :; forge coverage --report lcov && lcov --remove ./lcov.info -o ./lcov.info 'script/*' 'test/*' && genhtml lcov.info --branch-coverage --output-dir coverage
-
 # Deployment helpers
 deploy-local :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --rpc-url "http://127.0.0.1:8545" --broadcast -v
 deploy-sepolia :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --rpc-url sepolia --broadcast -vvv
@@ -33,8 +30,11 @@ integration:
 invariant:
 	@./test.sh -d test/invariant -p $(profile)
 
+coverage:
+	FOUNDRY_PROFILE=$(profile) forge coverage --no-match-path 'test/invariant/**/*.sol' --no-match-test 'testFuzz_full' --report lcov && lcov --extract lcov.info -o lcov.info 'src/*' && genhtml lcov.info -o coverage
+
 gas-report:
-	forge test --gas-report > gasreport.ansi
+	FOUNDRY_PROFILE=$(profile) forge test --gas-report > gasreport.ansi
 
 sizes:
 	@./build.sh -p production -s
