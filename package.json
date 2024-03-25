@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "SPOG contract ABIs",
   "main": "index.js",
-  "author": "mZero Labs <contact@m0.xyz>",
+  "author": "M^0 Labs <contact@m0.xyz>",
   "license": "GPL-3.0",
   "scripts": {
     "coverage": "make -B coverage",
