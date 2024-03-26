@@ -11,7 +11,7 @@ import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 contract TestUtils is Test {
-    uint256 internal immutable START_BLOCK_TIMESTAMP = block.timestamp;
+    uint256 internal immutable START_BLOCK_TIMESTAMP = vm.getBlockTimestamp();
 
     // Tests start at a voting epoch, at epoch 165
     uint256 internal immutable START_EPOCH =
@@ -58,7 +58,7 @@ contract TestUtils is Test {
     }
 
     function _jumpSeconds(uint256 seconds_) internal {
-        vm.warp(block.timestamp + seconds_);
+        vm.warp(vm.getBlockTimestamp() + seconds_);
     }
 
     function _getInflationReward(IPowerToken powerToken_, uint256 powerWeight_) internal view returns (uint256) {
