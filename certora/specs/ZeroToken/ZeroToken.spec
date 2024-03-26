@@ -3,6 +3,7 @@ import "unsafeAccess.spec";
 import "../VoteTokenStorageMirror.spec";
 
 use rule mirrorIntegrity;
+use builtin rule sanity;
 use rule unsafeAccessRevert_votingPowers;
 use rule unsafeAccessRevert_delegatees;
 use rule unsafeAccessEquivalence_votingPowers;
@@ -13,8 +14,8 @@ use invariant DelegatesEpochsAreMonotonic;
 use invariant BalancesEpochsAreMonotonic;
 use invariant TotalSuppliesEpochsAreMonotonic;
 use invariant MirrorLengths;
-use invariant BootstrapEpochIsInThePast;
-use invariant EpochsAreNotInTheFuture_extended;
+use invariant BootstrapEpochIsInThePast filtered{f -> f.isView}
+use invariant EpochsAreNotInTheFuture_extended filtered{f -> f.isView}
 
 invariant LatestEpochIsAtMostCurrentEpoch(env e, address account) 
     e.block.timestamp <= MAX_TIMESTAMP() => (

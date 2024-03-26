@@ -2,6 +2,7 @@ import "setup.spec";
 import "../VoteTokenStorageMirror.spec";
 
 use rule mirrorIntegrity;
+use builtin rule sanity;
 use invariant FutureEpochsAreNullified;
 use invariant EpochsAreNotInTheFuture;
 use invariant DelegatesEpochsAreMonotonic;

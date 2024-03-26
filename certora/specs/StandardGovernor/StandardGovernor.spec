@@ -1,6 +1,8 @@
 import "setup.spec";
 import "PowerTokenMock.spec";
 
+use builtin rule sanity;
+
 /// @title Any query of the past total supply / past votes satisfies epoch < current epoch = clock()
 rule pastEpochIsNeverCurrentEpoch(method f) filtered{f -> !f.isView} {
     env e;
