@@ -66,7 +66,7 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
 
         assertEq(
             _powerToken.getCost(totalSupply_),
-            _divideUp(totalSupply_, (PureEpochs._EPOCH_PERIOD / 100) * totalSupply_)
+            _divideUp(totalSupply_, (PureEpochs.EPOCH_PERIOD / 100) * totalSupply_)
         );
 
         vm.prank(_dave);

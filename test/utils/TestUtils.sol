@@ -15,7 +15,7 @@ contract TestUtils is Test {
 
     // Tests start at a voting epoch, at epoch 165
     uint256 internal immutable START_EPOCH =
-        ((START_BLOCK_TIMESTAMP - PureEpochs._MERGE_TIMESTAMP) / PureEpochs._EPOCH_PERIOD) + 1;
+        ((START_BLOCK_TIMESTAMP - PureEpochs.STARTING_TIMESTAMP) / PureEpochs.EPOCH_PERIOD) + 1;
 
     function _currentEpoch() internal view returns (uint16) {
         return PureEpochs.currentEpoch();
@@ -42,7 +42,7 @@ contract TestUtils is Test {
     }
 
     function _getTimestampOfEpochStart(uint16 epoch) internal pure returns (uint40 timestamp_) {
-        return PureEpochs._MERGE_TIMESTAMP + (epoch - 1) * PureEpochs._EPOCH_PERIOD;
+        return PureEpochs.STARTING_TIMESTAMP + (epoch - 1) * PureEpochs.EPOCH_PERIOD;
     }
 
     function _warpToEpoch(uint256 epoch_) internal {

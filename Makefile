@@ -2,23 +2,37 @@
 # (-include to ignore error if it does not exist)
 -include .env
 
-# dapp deps
-update:; forge update
+profile ?=default
+
+# Coverage report
+coverage:
+	FOUNDRY_PROFILE=$(profile) forge coverage --no-match-path 'test/invariant/**/*.sol' --no-match-test 'testFuzz_full' --report lcov && lcov --extract lcov.info -o lcov.info 'src/*' && genhtml lcov.info -o coverage
+
+coverage-summary:
+	FOUNDRY_PROFILE=$(profile) forge coverage --no-match-path 'test/invariant/**/*.sol' --report summary
 
 # Deployment helpers
-deploy-local :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --rpc-url "http://127.0.0.1:8545" --broadcast -v
-deploy-sepolia :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --rpc-url sepolia --broadcast -vvv
+deploy:
+	FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --skip src --skip test --rpc-url mainnet --broadcast -vvv
+
+deploy-sepolia:
+	FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --skip src --skip test --rpc-url sepolia --broadcast -vvv
+
+deploy-local:
+	FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --skip src --skip test --rpc-url localhost --broadcast -v
 
 # Run slither
-slither :; FOUNDRY_PROFILE=production forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json .
+slither:
+	FOUNDRY_PROFILE=production forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json .
 
 # Common tasks
-profile ?=default
+update:
+	forge update
 
 build:
 	@./build.sh -p production
 
-test:
+tests:
 	@./test.sh -p $(profile)
 
 fuzz:
@@ -30,15 +44,14 @@ integration:
 invariant:
 	@./test.sh -d test/invariant -p $(profile)
 
-coverage:
-	FOUNDRY_PROFILE=$(profile) forge coverage --no-match-path 'test/invariant/**/*.sol' --no-match-test 'testFuzz_full' --report lcov && lcov --extract lcov.info -o lcov.info 'src/*' && genhtml lcov.info -o coverage
-
 gas-report:
-	FOUNDRY_PROFILE=$(profile) forge test --gas-report > gasreport.ansi
+	FOUNDRY_PROFILE=$(profile) forge test --no-match-path 'test/invariant/*' --gas-report > gasreport.ansi
+
+gas-report-hardhat:
+	npx hardhat test
 
 sizes:
 	@./build.sh -p production -s
 
 clean:
-	forge clean && rm -rf ./abi && rm -rf ./bytecode && rm -rf ./types
-
+	forge clean

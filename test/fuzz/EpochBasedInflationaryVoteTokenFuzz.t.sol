@@ -41,7 +41,7 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
             assertTrue(Invariants.checkInvariant1(_accounts, address(_vote)), "Invariant 1 Failed.");
             assertTrue(Invariants.checkInvariant2(_accounts, address(_vote)), "Invariant 2 Failed.");
 
-            uint256 seconds_ = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % PureEpochs._EPOCH_PERIOD) / 2;
+            uint256 seconds_ = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % PureEpochs.EPOCH_PERIOD) / 2;
 
             _jumpSeconds(seconds_);
 
