@@ -5,9 +5,6 @@
 # dapp deps
 update:; forge update
 
-# coverage report
-coverage :; forge coverage --report lcov && lcov --remove ./lcov.info -o ./lcov.info 'script/*' 'test/*' && genhtml lcov.info --branch-coverage --output-dir coverage
-
 # Deployment helpers
 deploy-local :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --rpc-url "http://127.0.0.1:8545" --broadcast -v
 deploy-sepolia :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --rpc-url sepolia --broadcast -vvv
@@ -16,8 +13,32 @@ deploy-sepolia :; FOUNDRY_PROFILE=production forge script script/Deploy.s.sol --
 slither :; FOUNDRY_PROFILE=production forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --sarif results.sarif --config-file slither.config.json .
 
 # Common tasks
-build :; @./build.sh -p production
-tests :; @./test.sh -p default
-gas :; @./test.sh -p production -g
-sizes :; @./build.sh -p production -s
-clean :; forge clean && rm -rf ./abi && rm -rf ./bytecode && rm -rf ./types
+profile ?=default
+
+build:
+	@./build.sh -p production
+
+test:
+	@./test.sh -p $(profile)
+
+fuzz:
+	@./test.sh -t testFuzz -p $(profile)
+
+integration:
+	@./test.sh -d test/integration -p $(profile)
+
+invariant:
+	@./test.sh -d test/invariant -p $(profile)
+
+coverage:
+	FOUNDRY_PROFILE=$(profile) forge coverage --no-match-path 'test/invariant/**/*.sol' --no-match-test 'testFuzz_full' --report lcov && lcov --extract lcov.info -o lcov.info 'src/*' && genhtml lcov.info -o coverage
+
+gas-report:
+	FOUNDRY_PROFILE=$(profile) forge test --gas-report > gasreport.ansi
+
+sizes:
+	@./build.sh -p production -s
+
+clean:
+	forge clean && rm -rf ./abi && rm -rf ./bytecode && rm -rf ./types
+
