@@ -53,7 +53,7 @@ contract RegistrarTests is Test {
         _registrar = new Registrar(address(_zeroGovernor));
     }
 
-    function test_initialState() external {
+    function test_initialState() external view {
         assertEq(_registrar.standardGovernorDeployer(), address(_standardGovernorDeployer));
         assertEq(_registrar.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_registrar.powerTokenDeployer(), address(_powerTokenDeployer));
@@ -63,6 +63,9 @@ contract RegistrarTests is Test {
         assertEq(_registrar.standardGovernor(), address(_standardGovernor));
         assertEq(_registrar.emergencyGovernor(), address(_emergencyGovernor));
         assertEq(_registrar.powerToken(), _powerToken);
+        assertEq(_registrar.clock(), 21);
+        assertEq(_registrar.clockStartingTimestamp(), 1_663_224_162);
+        assertEq(_registrar.clockPeriod(), 15 days);
     }
 
     /* ============ constructor ============ */
