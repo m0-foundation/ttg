@@ -40,7 +40,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     uint40 internal constant _AUCTION_PERIODS = 100;
 
     /// @inheritdoc IPowerToken
-    uint240 public constant INITIAL_SUPPLY = 10_000; // NOTE: Consider math overflows when changing this value.
+    uint240 public constant INITIAL_SUPPLY = 1_000_000;
 
     /// @inheritdoc IPowerToken
     address public immutable bootstrapToken;
