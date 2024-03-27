@@ -134,21 +134,21 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_alice);
         _emergencyGovernor.castVote(proposalId_, yesSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // still Active
 
         vm.prank(_carol);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // still Active
 
         vm.prank(_bob);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 3); // proposal is Defeated
     }
@@ -178,7 +178,7 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_bob);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 3); // proposal is Defeated
     }

@@ -75,7 +75,7 @@ contract PowerTokenTests is TestUtils {
     function testFuzz_buy(uint240 minAmount_, uint240 maxAmount_, uint40 auctionPeriod) external {
         minAmount_ = uint240(bound(minAmount_, 1, type(uint240).max));
         maxAmount_ = uint240(bound(maxAmount_, 1, type(uint240).max));
-        auctionPeriod = uint40(bound(auctionPeriod, 0, PureEpochs._EPOCH_PERIOD));
+        auctionPeriod = uint40(bound(auctionPeriod, 0, PureEpochs.EPOCH_PERIOD));
         vm.assume(maxAmount_ > minAmount_);
 
         vm.expectRevert(abi.encodeWithSelector(IPowerToken.InsufficientAuctionSupply.selector, 0, minAmount_));

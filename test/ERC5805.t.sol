@@ -30,7 +30,7 @@ contract ERC5805Tests is TestUtils {
     /* ============ delegate ============ */
     function test_delegateBySig_incrementNonce() external {
         address delegatee_ = address(this);
-        uint256 expiry_ = block.timestamp + 1;
+        uint256 expiry_ = vm.getBlockTimestamp() + 1;
         uint256 nonce_ = 0;
 
         (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
@@ -47,7 +47,7 @@ contract ERC5805Tests is TestUtils {
 
     function test_delegateBySig_invalidNonce() external {
         address delegatee_ = address(this);
-        uint256 expiry_ = block.timestamp + 1;
+        uint256 expiry_ = vm.getBlockTimestamp() + 1;
         uint256 nonce_ = 1;
 
         (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(

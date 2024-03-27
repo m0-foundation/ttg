@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { DeployBase } from "../../script/DeployBase.s.sol";
+import { DeployBase } from "../../script/DeployBase.sol";
 
 import { IBatchGovernor } from "../../src/abstract/interfaces/IBatchGovernor.sol";
 import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
@@ -20,8 +20,6 @@ import { TestUtils } from "../utils/TestUtils.sol";
 
 /// @notice Common setup for integration tests
 abstract contract IntegrationBaseSetup is TestUtils {
-    address internal _deployer = makeAddr("deployer");
-
     IRegistrar internal _registrar;
 
     IPowerToken _powerToken;
@@ -45,13 +43,13 @@ abstract contract IntegrationBaseSetup is TestUtils {
     address internal _eve = makeAddr("eve");
     address internal _frank = makeAddr("frank");
 
-    address[] internal _initialPowerAccounts = [_alice, _bob, _carol];
-    uint256[] internal _initialPowerBalances = [55, 25, 20];
+    address[][2] internal _initialAccounts = [[_alice, _bob, _carol], [_dave, _eve, _frank]];
+    uint256[][2] internal _initialBalances = [
+        [uint256(55), 25, 20],
+        [uint256(60_000_000e6), 30_000_000e6, 10_000_000e6]
+    ];
 
-    address[] internal _initialZeroAccounts = [_dave, _eve, _frank];
-    uint256[] internal _initialZeroBalances = [60_000_000e6, 30_000_000e6, 10_000_000e6];
-
-    uint256 internal _initialZeroAccountsLength = _initialZeroAccounts.length;
+    uint256 internal _initialZeroAccountsLength = _initialAccounts[1].length;
     uint256 internal _cashToken1MaxAmount = type(uint256).max / _initialZeroAccountsLength;
 
     uint256 internal _standardProposalFee = 1e18;
@@ -61,12 +59,12 @@ abstract contract IntegrationBaseSetup is TestUtils {
     function setUp() external {
         _deploy = new DeployBase();
 
+        // NOTE: Using `DeployBase` as a contract instead of a script, means that the deployer is `_deploy` itself.
         address registrar_ = _deploy.deploy(
-            _deployer,
-            _initialPowerAccounts,
-            _initialPowerBalances,
-            _initialZeroAccounts,
-            _initialZeroBalances,
+            address(_deploy),
+            1,
+            _initialAccounts,
+            _initialBalances,
             _standardProposalFee,
             _allowedCashTokens
         );
@@ -82,8 +80,8 @@ abstract contract IntegrationBaseSetup is TestUtils {
 
         _vault = IDistributionVault(_standardGovernor.vault());
 
-        for (uint256 i; i < _initialZeroAccounts.length; i++) {
-            address account_ = _initialZeroAccounts[i];
+        for (uint256 i; i < _initialZeroAccountsLength; i++) {
+            address account_ = _initialAccounts[1][i];
             _cashToken1.mint(account_, _cashToken1MaxAmount);
 
             vm.prank(account_);
