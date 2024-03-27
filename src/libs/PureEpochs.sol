@@ -11,7 +11,7 @@ library PureEpochs {
     /* ============ Variables ============ */
 
     /// @notice The timestamp of the start of Epoch 1.
-    uint40 internal constant STARTING_TIMESTAMP = 1_663_224_162;
+    uint40 internal constant STARTING_TIMESTAMP = 1_663_224_162; // The Merge block.
 
     /// @notice The approximate target of seconds an epoch should endure.
     uint40 internal constant EPOCH_PERIOD = 15 days;

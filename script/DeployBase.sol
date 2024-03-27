@@ -17,6 +17,16 @@ contract DeployBase {
     uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 8_000; // 80%
     uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 6_000; // 60%
 
+    /**
+     * @dev    Deploys TTG.
+     * @param  deployer_            The address of the account deploying the contracts.
+     * @param  deployerNonce_       The current nonce of the deployer.
+     * @param  initialAccounts_     An array of [Power token holders, Zero token holders].
+     * @param  initialBalances_     An array of [Power token balances, Zero token balances].
+     * @param  standardProposalFee_ The starting proposal fee for the Standard Governor.
+     * @param  allowedCashTokens_   An array of tokens that can be used as cash tokens.
+     * @return registrar_           The address of the deployed Registrar.
+     */
     function deploy(
         address deployer_,
         uint256 deployerNonce_,
