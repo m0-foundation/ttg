@@ -61,10 +61,6 @@ contract TestUtils is Test {
         vm.warp(vm.getBlockTimestamp() + seconds_);
     }
 
-    function _getInflationReward(IPowerToken powerToken_, uint256 powerWeight_) internal view returns (uint256) {
-        return (powerWeight_ * powerToken_.participationInflation()) / powerToken_.ONE();
-    }
-
     function _getNextTargetSupply(IPowerToken powerToken_) internal view returns (uint240) {
         uint256 _targetSupply = powerToken_.targetSupply();
         return uint240(_targetSupply + (_targetSupply * powerToken_.participationInflation()) / powerToken_.ONE());

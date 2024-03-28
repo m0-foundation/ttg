@@ -457,9 +457,6 @@ contract PowerTokenTests is TestUtils {
         emit IERC5805.DelegateVotesChanged(_initialAccounts[0], 0, _powerToken.balanceOf(_initialAccounts[0]));
 
         vm.expectEmit();
-        emit IERC20.Transfer(address(_powerToken), _initialAccounts[0], 0);
-
-        vm.expectEmit();
         emit IEpochBasedInflationaryVoteToken.Sync(_initialAccounts[0]);
 
         _powerToken.sync(_initialAccounts[0]);
