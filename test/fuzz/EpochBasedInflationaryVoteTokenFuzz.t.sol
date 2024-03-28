@@ -37,6 +37,8 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
     /// forge-config: default.fuzz.runs = 10
     /// forge-config: ci.fuzz.runs = 10
     function testFuzz_full(uint256 seed_) external {
+        vm.skip(false);
+
         for (uint256 index_; index_ < 1000; ++index_) {
             assertTrue(Invariants.checkInvariant1(_accounts, address(_vote)), "Invariant 1 Failed.");
             assertTrue(Invariants.checkInvariant2(_accounts, address(_vote)), "Invariant 2 Failed.");
