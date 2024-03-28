@@ -132,107 +132,254 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     }
 
     function test_inflationFromVotingPowerInPreviousEpoch_selfDelegation() external {
+        uint256 balance_ = 1_000;
+
         _warpToNextTransferEpoch();
 
-        _vote.mint(_alice, 1_000);
+        _vote.mint(_alice, balance_);
 
-        assertEq(_vote.balanceOf(_alice), 1_000);
-        assertEq(_vote.getVotes(_alice), 1_000);
+        assertEq(_vote.balanceOf(_alice), balance_);
+        assertEq(_vote.getVotes(_alice), balance_);
 
         _warpToNextVoteEpoch();
 
-        assertEq(_vote.balanceOf(_alice), 1_000);
-        assertEq(_vote.getVotes(_alice), 1_000);
+        assertEq(_vote.balanceOf(_alice), balance_);
+        assertEq(_vote.getVotes(_alice), balance_);
 
         _vote.markParticipation(_alice);
 
-        assertEq(_vote.balanceOf(_alice), 1_000);
-        assertEq(_vote.getVotes(_alice), 1_200);
+        uint256 balanceWithInflation_ = balance_ + _vote.getInflation(balance_); // 1_200
+
+        assertEq(_vote.balanceOf(_alice), balance_);
+        assertEq(_vote.getVotes(_alice), balanceWithInflation_);
 
         _warpToNextTransferEpoch();
 
-        assertEq(_vote.balanceOf(_alice), 1_200);
-        assertEq(_vote.getVotes(_alice), 1_200);
+        assertEq(_vote.balanceOf(_alice), balanceWithInflation_);
+        assertEq(_vote.getVotes(_alice), balanceWithInflation_);
+
+        uint256 transferAmount_ = 500;
+        uint256 aliceBalanceAfterTransfer_ = balanceWithInflation_ - transferAmount_; // 700
 
         vm.prank(_alice);
-        _vote.transfer(_bob, 500);
+        _vote.transfer(_bob, transferAmount_);
 
-        assertEq(_vote.balanceOf(_alice), 700);
-        assertEq(_vote.getVotes(_alice), 700);
+        assertEq(_vote.balanceOf(_alice), aliceBalanceAfterTransfer_);
+        assertEq(_vote.getVotes(_alice), aliceBalanceAfterTransfer_);
 
-        assertEq(_vote.balanceOf(_bob), 500);
-        assertEq(_vote.getVotes(_bob), 500);
+        assertEq(_vote.balanceOf(_bob), transferAmount_);
+        assertEq(_vote.getVotes(_bob), transferAmount_);
 
         _warpToNextTransferEpoch();
         _warpToNextTransferEpoch();
         _warpToNextTransferEpoch();
 
-        assertEq(_vote.balanceOf(_alice), 700);
-        assertEq(_vote.getVotes(_alice), 700);
+        assertEq(_vote.balanceOf(_alice), aliceBalanceAfterTransfer_);
+        assertEq(_vote.getVotes(_alice), aliceBalanceAfterTransfer_);
 
-        assertEq(_vote.balanceOf(_bob), 500);
-        assertEq(_vote.getVotes(_bob), 500);
+        assertEq(_vote.balanceOf(_bob), transferAmount_);
+        assertEq(_vote.getVotes(_bob), transferAmount_);
     }
 
     function test_inflationFromVotingPowerInPreviousEpoch_delegated() external {
+        uint256 balance_ = 1_000;
+
         _warpToNextTransferEpoch();
 
-        _vote.mint(_alice, 1_000);
+        _vote.mint(_alice, balance_);
 
         vm.prank(_alice);
         _vote.delegate(_bob);
 
-        assertEq(_vote.balanceOf(_alice), 1_000);
+        assertEq(_vote.balanceOf(_alice), balance_);
         assertEq(_vote.getVotes(_alice), 0);
 
         assertEq(_vote.balanceOf(_bob), 0);
-        assertEq(_vote.getVotes(_bob), 1_000);
+        assertEq(_vote.getVotes(_bob), balance_);
 
         _warpToNextVoteEpoch();
 
-        assertEq(_vote.balanceOf(_alice), 1_000);
+        assertEq(_vote.balanceOf(_alice), balance_);
         assertEq(_vote.getVotes(_alice), 0);
 
         assertEq(_vote.balanceOf(_bob), 0);
-        assertEq(_vote.getVotes(_bob), 1_000);
+        assertEq(_vote.getVotes(_bob), balance_);
 
         _vote.markParticipation(_bob);
 
-        assertEq(_vote.balanceOf(_alice), 1_000);
+        uint256 balanceWithInflation_ = balance_ + _vote.getInflation(balance_); // 1_200
+
+        assertEq(_vote.balanceOf(_alice), balance_);
         assertEq(_vote.getVotes(_alice), 0);
 
         assertEq(_vote.balanceOf(_bob), 0);
-        assertEq(_vote.getVotes(_bob), 1_200);
+        assertEq(_vote.getVotes(_bob), balanceWithInflation_);
 
         _warpToNextTransferEpoch();
 
-        assertEq(_vote.balanceOf(_alice), 1_200);
+        assertEq(_vote.balanceOf(_alice), balanceWithInflation_);
         assertEq(_vote.getVotes(_alice), 0);
 
         assertEq(_vote.balanceOf(_bob), 0);
-        assertEq(_vote.getVotes(_bob), 1_200);
+        assertEq(_vote.getVotes(_bob), balanceWithInflation_);
+
+        uint256 transferAmount_ = 500;
+        uint256 aliceBalanceAfterTransfer_ = balanceWithInflation_ - transferAmount_; // 700
 
         vm.prank(_alice);
-        _vote.transfer(_bob, 500);
+        _vote.transfer(_bob, transferAmount_);
 
         vm.prank(_alice);
         _vote.delegate(_alice);
 
-        assertEq(_vote.balanceOf(_alice), 700);
-        assertEq(_vote.getVotes(_alice), 700);
+        assertEq(_vote.balanceOf(_alice), aliceBalanceAfterTransfer_);
+        assertEq(_vote.getVotes(_alice), aliceBalanceAfterTransfer_);
 
-        assertEq(_vote.balanceOf(_bob), 500);
-        assertEq(_vote.getVotes(_bob), 500);
+        assertEq(_vote.balanceOf(_bob), transferAmount_);
+        assertEq(_vote.getVotes(_bob), transferAmount_);
 
         _warpToNextTransferEpoch();
         _warpToNextTransferEpoch();
         _warpToNextTransferEpoch();
 
-        assertEq(_vote.balanceOf(_alice), 700);
-        assertEq(_vote.getVotes(_alice), 700);
+        assertEq(_vote.balanceOf(_alice), aliceBalanceAfterTransfer_);
+        assertEq(_vote.getVotes(_alice), aliceBalanceAfterTransfer_);
 
-        assertEq(_vote.balanceOf(_bob), 500);
-        assertEq(_vote.getVotes(_bob), 500);
+        assertEq(_vote.balanceOf(_bob), transferAmount_);
+        assertEq(_vote.getVotes(_bob), transferAmount_);
+    }
+
+    function test_inflationFromVotingPowerInPreviousEpochs_multipleDelegatees() external {
+        uint256 balance_ = 1_000;
+
+        _warpToNextTransferEpoch();
+
+        _vote.mint(_alice, balance_);
+
+        vm.prank(_alice);
+        _vote.delegate(_bob); // First delegation to Bob in first transfer epoch
+
+        assertEq(_vote.balanceOf(_alice), balance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), balance_);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        _warpToNextVoteEpoch();
+
+        assertEq(_vote.balanceOf(_alice), balance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), balance_);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        // Bob votes in the first voting epoch
+        _vote.markParticipation(_bob);
+
+        uint256 balanceWithInflation_ = balance_ + _vote.getInflation(balance_); // 1_200
+
+        assertEq(_vote.balanceOf(_alice), balance_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), balanceWithInflation_);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        _warpToNextTransferEpoch();
+
+        assertEq(_vote.balanceOf(_alice), balanceWithInflation_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), balanceWithInflation_);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), 0);
+
+        vm.prank(_alice);
+        _vote.delegate(_carol); // Second delegation to Carol in second transfer epoch
+
+        assertEq(_vote.balanceOf(_alice), balanceWithInflation_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), balanceWithInflation_);
+
+        _warpToNextVoteEpoch();
+
+        assertEq(_vote.balanceOf(_alice), balanceWithInflation_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), balanceWithInflation_);
+
+        // Carol votes in the second voting epoch
+        _vote.markParticipation(_carol);
+
+        uint256 previousBalanceWithInflation_ = balanceWithInflation_;
+        balanceWithInflation_ = balanceWithInflation_ + _vote.getInflation(balanceWithInflation_); // 1_440
+
+        assertEq(_vote.balanceOf(_alice), previousBalanceWithInflation_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), balanceWithInflation_);
+
+        _warpToNextTransferEpoch();
+
+        assertEq(_vote.balanceOf(_alice), balanceWithInflation_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), 0);
+        assertEq(_vote.getVotes(_bob), 0);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), balanceWithInflation_);
+
+        uint256 transferAmount_ = 500;
+        uint256 aliceBalanceAfterTransfer_ = balanceWithInflation_ - transferAmount_; // 940
+
+        vm.prank(_alice);
+        _vote.transfer(_bob, transferAmount_); // Alice transfers 500 tokens to Bob in the third transfer epoch
+
+        assertEq(_vote.balanceOf(_alice), aliceBalanceAfterTransfer_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), transferAmount_);
+        assertEq(_vote.getVotes(_bob), transferAmount_);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), aliceBalanceAfterTransfer_);
+
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+        _warpToNextTransferEpoch();
+
+        assertEq(_vote.balanceOf(_alice), aliceBalanceAfterTransfer_);
+        assertEq(_vote.getVotes(_alice), 0);
+
+        assertEq(_vote.balanceOf(_bob), transferAmount_);
+        assertEq(_vote.getVotes(_bob), transferAmount_);
+
+        assertEq(_vote.balanceOf(_carol), 0);
+        assertEq(_vote.getVotes(_carol), aliceBalanceAfterTransfer_);
     }
 
     function test_noDelegationsDuringVotingEpoch() external {

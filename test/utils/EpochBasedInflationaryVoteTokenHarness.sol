@@ -32,6 +32,10 @@ contract EpochBasedInflationaryVoteTokenHarness is EpochBasedInflationaryVoteTok
         return _balances[account_][index_].startingEpoch;
     }
 
+    function getInflation(uint256 amount_) external view returns (uint240) {
+        return _getInflation(uint240(amount_));
+    }
+
     function getLastSync(address account_, uint256 epoch_) external view returns (uint16) {
         return _getLastSync(account_, uint16(epoch_));
     }
