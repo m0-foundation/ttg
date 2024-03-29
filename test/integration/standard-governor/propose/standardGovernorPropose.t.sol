@@ -6,14 +6,10 @@ import { IERC20 } from "../../../../lib/common/src/interfaces/IERC20.sol";
 
 import { IERC5805 } from "../../../../src/abstract/interfaces/IERC5805.sol";
 
-import {
-    IntegrationBaseSetup,
-    IBatchGovernor,
-    IGovernor,
-    IPowerToken,
-    IRegistrar,
-    IStandardGovernor
-} from "../../IntegrationBaseSetup.t.sol";
+import { IGovernor } from "../../../../src/abstract/interfaces/IGovernor.sol";
+import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
+
+import { IntegrationBaseSetup, IPowerToken, IRegistrar, IStandardGovernor } from "../../IntegrationBaseSetup.t.sol";
 
 contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     function test_standardGovernorPropose_proposalPendingActiveDefeated() external {

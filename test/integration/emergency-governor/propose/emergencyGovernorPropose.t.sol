@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IBatchGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     // NOTE: Use actors with the following POWER balances:

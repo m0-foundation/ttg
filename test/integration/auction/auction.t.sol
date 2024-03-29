@@ -4,7 +4,9 @@ pragma solidity 0.8.23;
 
 import { PureEpochs } from "../../../src/libs/PureEpochs.sol";
 
-import { IntegrationBaseSetup, IBatchGovernor } from "../IntegrationBaseSetup.t.sol";
+import { IBatchGovernor } from "../../../src/abstract/interfaces/IBatchGovernor.sol";
+
+import { IntegrationBaseSetup } from "../IntegrationBaseSetup.t.sol";
 
 contract Auction_IntegrationTest is IntegrationBaseSetup {
     function test_auction_multipleEpochs() external {

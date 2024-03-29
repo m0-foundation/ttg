@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IBatchGovernor, IGovernor } from "../IntegrationBaseSetup.t.sol";
+import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
+
+import { IntegrationBaseSetup } from "../IntegrationBaseSetup.t.sol";
 
 contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
     /* ============ Power Inflation ============ */

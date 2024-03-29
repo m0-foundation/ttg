@@ -4,10 +4,11 @@ pragma solidity 0.8.23;
 
 import { IERC20 } from "../../../../lib/common/src/interfaces/IERC20.sol";
 
+import { IGovernor } from "../../../../src/abstract/interfaces/IGovernor.sol";
+import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
+
 import {
     IntegrationBaseSetup,
-    IBatchGovernor,
-    IGovernor,
     IZeroGovernor,
     IEmergencyGovernor,
     IStandardGovernor

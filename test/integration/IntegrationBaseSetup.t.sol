@@ -4,13 +4,10 @@ pragma solidity 0.8.23;
 
 import { DeployBase } from "../../script/DeployBase.sol";
 
-import { IBatchGovernor } from "../../src/abstract/interfaces/IBatchGovernor.sol";
 import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
-import { IGovernor } from "../../src/abstract/interfaces/IGovernor.sol";
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IRegistrar } from "../../src/interfaces/IRegistrar.sol";
 import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
-import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 import { IDistributionVault } from "../../src/interfaces/IDistributionVault.sol";
@@ -22,12 +19,12 @@ import { TestUtils } from "../utils/TestUtils.sol";
 abstract contract IntegrationBaseSetup is TestUtils {
     IRegistrar internal _registrar;
 
-    IPowerToken _powerToken;
-    IZeroToken _zeroToken;
+    IPowerToken internal _powerToken;
+    IZeroToken internal _zeroToken;
 
-    IEmergencyGovernor _emergencyGovernor;
-    IStandardGovernor _standardGovernor;
-    IZeroGovernor _zeroGovernor;
+    IEmergencyGovernor internal _emergencyGovernor;
+    IStandardGovernor internal _standardGovernor;
+    IZeroGovernor internal _zeroGovernor;
 
     IDistributionVault internal _vault;
 
