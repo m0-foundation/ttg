@@ -5,13 +5,12 @@ pragma solidity 0.8.23;
 import { IntegrationBaseSetup, IBatchGovernor, IGovernor } from "../IntegrationBaseSetup.t.sol";
 
 contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
-    // _alice = 55;
-    // _bob  = 25;
-    // _carol = 20;
+    /* ============ Power Inflation ============ */
+
     function test_powerInflation_selfDelegationOnlyNoTransfersOrRedelegations() external {
-        uint256 aliceBalance_ = _powerToken.balanceOf(_alice);
-        uint256 bobBalance_ = _powerToken.balanceOf(_bob);
-        uint256 carolBalance_ = _powerToken.balanceOf(_carol);
+        uint256 aliceBalance_ = _powerToken.balanceOf(_alice); // 55
+        uint256 bobBalance_ = _powerToken.balanceOf(_bob); // 25
+        uint256 carolBalance_ = _powerToken.balanceOf(_carol); // 20
 
         _warpToNextTransferEpoch();
 
@@ -255,6 +254,53 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.balanceOf(_dave), 105_000);
     }
 
+    // TODO: should be an invariant test
+    function test_powerInflation_balancesSumEqualVotingPowerSum() external {
+        _warpToNextTransferEpoch();
+
+        vm.prank(_alice);
+        _powerToken.delegate(_bob);
+
+        uint256 proposalId_ = _createStandardProposal("key1", "value1");
+
+        _warpToNextVoteEpoch();
+
+        vm.prank(_bob);
+        _standardGovernor.castVote(proposalId_, 1);
+
+        vm.prank(_carol);
+        _standardGovernor.castVote(proposalId_, 1);
+
+        _warpToNextTransferEpoch();
+
+        uint256 totalSupply_ = _powerToken.balanceOf(_alice) +
+            _powerToken.balanceOf(_bob) +
+            _powerToken.balanceOf(_carol);
+
+        uint256 totalVotingPower_ = _powerToken.getVotes(_alice) +
+            _powerToken.getVotes(_bob) +
+            _powerToken.getVotes(_carol);
+
+        assertEq(totalSupply_, totalVotingPower_);
+
+        vm.prank(_alice);
+        _powerToken.delegate(address(0));
+
+        uint256 aliceBalanceBefore_ = _powerToken.balanceOf(_alice);
+        uint256 bobBalance_ = _powerToken.balanceOf(_bob);
+
+        vm.prank(_bob);
+        _powerToken.transfer(_alice, bobBalance_);
+
+        assertEq(_powerToken.balanceOf(_bob), 0);
+        assertEq(_powerToken.getVotes(_bob), 0);
+
+        assertEq(_powerToken.balanceOf(_alice), aliceBalanceBefore_ + bobBalance_);
+        assertEq(_powerToken.getVotes(_alice), aliceBalanceBefore_ + bobBalance_);
+    }
+
+    /* ============ Zero Rewards ============ */
+
     function test_zeroRewards_multipleDelegatesTransfersAndRedelegations() external {
         _warpToNextTransferEpoch();
 
@@ -302,6 +348,8 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.getVotes(_carol), 220_000);
         assertEq(_zeroToken.balanceOf(_carol), 925_925_925925); // (5_000_000e6 * 200) / 1080
     }
+
+    /* ============ Helpers ============ */
 
     function _createStandardProposal(bytes32 key_, bytes32 value_) internal returns (uint256 proposalId_) {
         address[] memory targets_ = new address[](1);
