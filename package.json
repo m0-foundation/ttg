@@ -3,15 +3,21 @@
   "version": "1.0.0",
   "description": "SPOG contract ABIs",
   "main": "index.js",
-  "author": "mZero Labs <contact@m0.xyz>",
+  "author": "M^0 Labs <contact@m0.xyz>",
   "license": "GPL-3.0",
   "scripts": {
-    "coverage": "forge coverage --report lcov && lcov --extract lcov.info -o lcov.info 'src/*' && genhtml lcov.info -o coverage",
+    "coverage": "make -B coverage",
+    "coverage-summary": "make -B coverage-summary",
     "doc": "forge doc --serve --port 4000",
     "prettier": "prettier --write 'script/**/*.sol' 'src/**/*.sol' 'test/**/*.sol'",
     "slither": "forge build --build-info --skip '*/test/**' --skip '*/script/**' --force && slither --compile-force-framework foundry --ignore-compile --config-file slither.config.json --fail-high .",
     "solhint": "solhint -f stylish 'src/**/*.sol'",
-    "solhint-fix": "solhint --fix 'src/**/*.sol'"
+    "solhint-fix": "solhint --fix 'src/**/*.sol'",
+    "test": "make -B test",
+    "test-gas": "make -B gas-report",
+    "test-fuzz": "make -B fuzz",
+    "test-integration": "make -B integration",
+    "test-invariant": "make -B invariant"
   },
   "devDependencies": {
     "prettier": "^3.0.0",

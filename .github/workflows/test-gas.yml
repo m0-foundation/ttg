@@ -1,4 +1,4 @@
-name: Forge Test
+name: Forge Tests Gas Report
 
 on:
   push:
@@ -6,17 +6,14 @@ on:
       - main
   pull_request:
 
-env:
-  FOUNDRY_PROFILE: ci
-
 permissions: write-all
 
 jobs:
   check:
-    name: Foundry project
+    name: Gas report
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -29,8 +26,8 @@ jobs:
           make sizes
         id: build
 
-      - name: Run Forge tests
-        run: forge test --gas-report > gasreport.ansi
+      - name: Run Forge tests with gas report
+        run: make gas-report profile=ci
         env:
           # make fuzzing semi-deterministic to avoid noisy gas cost estimation
           # due to non-deterministic fuzzing (but still use pseudo-random fuzzing seeds)
@@ -39,8 +36,6 @@ jobs:
 
       - name: Compare gas reports
         uses: Rubilmax/foundry-gas-diff@v3.16
-        with:
-          ignore: test/**/*
         id: gas_diff
 
       - name: Add gas diff to sticky comment

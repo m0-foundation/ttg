@@ -134,21 +134,21 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_alice);
         _emergencyGovernor.castVote(proposalId_, yesSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // still Active
 
         vm.prank(_carol);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 1); // still Active
 
         vm.prank(_bob);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 3); // proposal is Defeated
     }
@@ -178,7 +178,7 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_bob);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
 
         assertEq(uint256(_emergencyGovernor.state(proposalId_)), 3); // proposal is Defeated
     }
@@ -193,9 +193,9 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
             string memory description_
         ) = _getRemoveFromAndAddToListProposeParams();
 
-        assertEq(_powerToken.getPastVotes(_alice, _currentEpoch() - 1), 5500);
-        assertEq(_powerToken.getPastVotes(_bob, _currentEpoch() - 1), 2500);
-        assertEq(_powerToken.getPastVotes(_carol, _currentEpoch() - 1), 2000);
+        assertEq(_powerToken.getPastVotes(_alice, _currentEpoch() - 1), 550_000);
+        assertEq(_powerToken.getPastVotes(_bob, _currentEpoch() - 1), 250_000);
+        assertEq(_powerToken.getPastVotes(_carol, _currentEpoch() - 1), 200_000);
 
         vm.prank(_alice);
         _powerToken.transfer(_bob, 0);
@@ -203,9 +203,9 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_bob);
         _powerToken.transfer(_carol, 0);
 
-        assertEq(_powerToken.getPastVotes(_alice, _currentEpoch() - 1), 5500);
-        assertEq(_powerToken.getPastVotes(_bob, _currentEpoch() - 1), 2500);
-        assertEq(_powerToken.getPastVotes(_carol, _currentEpoch() - 1), 2000);
+        assertEq(_powerToken.getPastVotes(_alice, _currentEpoch() - 1), 550_000);
+        assertEq(_powerToken.getPastVotes(_bob, _currentEpoch() - 1), 250_000);
+        assertEq(_powerToken.getPastVotes(_carol, _currentEpoch() - 1), 200_000);
 
         vm.prank(_dave);
         uint256 proposalId_ = _emergencyGovernor.propose(targets_, values_, callDatas_, description_);

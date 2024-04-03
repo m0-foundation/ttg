@@ -2,11 +2,13 @@
 
 pragma solidity 0.8.23;
 
+import { IERC6372 } from "../abstract/interfaces/IERC6372.sol";
+
 /**
  * @title  A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
  * @author M^0 Labs
  */
-interface IRegistrar {
+interface IRegistrar is IERC6372 {
     /* ============ Events ============ */
 
     /**
@@ -77,6 +79,12 @@ interface IRegistrar {
     function setKey(bytes32 key, bytes32 value) external;
 
     /* ============ View/Pure Functions ============ */
+
+    /// @notice Returns the starting timestamp of Epoch 1.
+    function clockStartingTimestamp() external pure returns (uint256);
+
+    /// @notice Returns the period/duration, in seconds, of an epoch.
+    function clockPeriod() external pure returns (uint256);
 
     /**
      * @notice Returns the value of `key`.

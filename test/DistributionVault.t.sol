@@ -146,7 +146,7 @@ contract DistributionVaultTests is TestUtils {
             midEpoch_,
             _accounts[1],
             _vault.nonces(_accounts[1]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         bytes memory claimSignature_ = _getSignature(digest_, _makeKey("account2"));
@@ -157,7 +157,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             midEpoch_,
             _accounts[1], // destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             claimSignature_
         );
 
@@ -169,7 +169,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             _accounts[1],
             _vault.nonces(_accounts[1]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(_makeKey("account2"), digest_);
@@ -180,7 +180,7 @@ contract DistributionVaultTests is TestUtils {
             midEpoch_,
             endEpoch_,
             _accounts[1], // destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             v_,
             r_,
             s_
@@ -237,7 +237,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             address(0),
             _vault.nonces(_accounts[0]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         vm.expectRevert(IDistributionVault.InvalidDestinationAddress.selector);
@@ -247,7 +247,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             address(0),
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account1"))
         );
     }
@@ -265,7 +265,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             _accounts[0],
             _vault.nonces(_accounts[0]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         _vault.claimBySig(
@@ -274,7 +274,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             _accounts[0], // destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account1"))
         );
 
@@ -288,7 +288,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             _accounts[0],
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account2"))
         );
     }
@@ -306,7 +306,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             _accounts[0],
             _vault.nonces(_accounts[0]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         _vault.claimBySig(
@@ -315,7 +315,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             _accounts[0], // destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account1"))
         );
 
@@ -328,7 +328,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             _accounts[0],
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account1"))
         );
     }
@@ -346,7 +346,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             _accounts[0],
             _vault.nonces(_accounts[0]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         vm.expectRevert(IERC712.SignerMismatch.selector);
@@ -358,7 +358,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             _accounts[1], // different destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account1"))
         );
     }
@@ -376,7 +376,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             _accounts[0],
             _vault.nonces(_accounts[0]),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         vm.expectRevert(IERC712.SignerMismatch.selector);
@@ -389,7 +389,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             _accounts[0], // same destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             _getSignature(digest_, _makeKey("account2")) // different signer
         );
     }
@@ -413,7 +413,7 @@ contract DistributionVaultTests is TestUtils {
             endEpoch_,
             smartAccount1_,
             _vault.nonces(smartAccount1_),
-            block.timestamp + 1 days
+            vm.getBlockTimestamp() + 1 days
         );
 
         bytes memory replayableSignature_ = _getSignature(digest_, _makeKey("account1"));
@@ -425,7 +425,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             smartAccount1_, // same destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             replayableSignature_ // signed by same owner
         );
 
@@ -440,7 +440,7 @@ contract DistributionVaultTests is TestUtils {
             startEpoch_,
             endEpoch_,
             smartAccount1_, // same destination
-            block.timestamp + 1 days,
+            vm.getBlockTimestamp() + 1 days,
             replayableSignature_ // signed by the same owner
         );
     }
