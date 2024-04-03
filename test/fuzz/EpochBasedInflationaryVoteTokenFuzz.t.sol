@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../../lib/forge-std/src/Test.sol";
-
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 import { IEpochBasedInflationaryVoteToken } from "../../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
@@ -36,21 +34,18 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
         _vote = new Vote("Vote Epoch Token", "VOTE", 0, _participationInflation);
     }
 
+    /// forge-config: default.fuzz.runs = 10
+    /// forge-config: ci.fuzz.runs = 10
     function testFuzz_full(uint256 seed_) external {
         vm.skip(false);
 
         for (uint256 index_; index_ < 1000; ++index_) {
-            // console2.log(" ");
-
             assertTrue(Invariants.checkInvariant1(_accounts, address(_vote)), "Invariant 1 Failed.");
             assertTrue(Invariants.checkInvariant2(_accounts, address(_vote)), "Invariant 2 Failed.");
 
-            uint256 seconds_ = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % PureEpochs._EPOCH_PERIOD) / 2;
+            uint256 seconds_ = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % PureEpochs.EPOCH_PERIOD) / 2;
 
-            // console2.log("advance", seconds_, block.timestamp + seconds_);
             _jumpSeconds(seconds_);
-
-            // console2.log("Epoch", PureEpochs.currentEpoch());
 
             address account1_ = _accounts[((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % _accounts.length)];
             address account2_;
@@ -64,15 +59,11 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
             if (PureEpochs.currentEpoch() % 2 == 1) {
                 if (!_vote.hasParticipatedAt(account1_, PureEpochs.currentEpoch())) {
                     // 30% chance
-                    // console2.log("markParticipation", account1_);
-
                     _vote.markParticipation(account1_);
                 }
 
                 if (!_vote.hasParticipatedAt(account2_, PureEpochs.currentEpoch())) {
                     // 30% chance
-                    // console2.log("markParticipation", account2_);
-
                     _vote.markParticipation(account2_);
                 }
             } else {
@@ -86,8 +77,6 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
 
                     amount_ = amount_ >= account1Balance_ ? account1Balance_ : amount_; // 50% chance of entire balance,
 
-                    // console2.log("transfer", account1_, account2_, amount_);
-
                     vm.prank(account1_);
                     _vote.transfer(account2_, amount_);
 
@@ -98,8 +87,6 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
                     // 10% chance
                     uint256 amount_ = ((seed_ = uint256(keccak256(abi.encodePacked(seed_)))) % 100) + 1;
 
-                    // console2.log("mint", account1_, amount_);
-
                     _vote.mint(account1_, amount_);
 
                     continue;
@@ -107,8 +94,6 @@ contract EpochBasedInflationaryVoteTokenFuzzTests is TestUtils {
 
                 if (_vote.delegates(account1_) != account2_) {
                     // 50% chance
-                    // console2.log("delegate", account1_, account2_);
-
                     vm.prank(account1_);
                     _vote.delegate(account2_);
 

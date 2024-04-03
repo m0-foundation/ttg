@@ -13,7 +13,7 @@ import { IStandardGovernorDeployer } from "../../src/interfaces/IStandardGoverno
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 
-import { DeployBase } from "../../script/DeployBase.s.sol";
+import { DeployBase } from "../../script/DeployBase.sol";
 
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
@@ -21,8 +21,6 @@ import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
 
 contract IntegrationTests is TestUtils {
-    address internal _deployer = makeAddr("deployer");
-
     IRegistrar internal _registrar;
 
     ERC20ExtendedHarness internal _cashToken1 = new ERC20ExtendedHarness("Cash Token 1", "CASH1", 6);
@@ -37,13 +35,9 @@ contract IntegrationTests is TestUtils {
     address internal _eve = makeAddr("eve");
     address internal _frank = makeAddr("frank");
 
-    address[] internal _initialPowerAccounts = [_alice, _bob, _carol];
+    address[][2] internal _initialAccounts = [[_alice, _bob, _carol], [_dave, _eve, _frank]];
 
-    uint256[] internal _initialPowerBalances = [55, 25, 20];
-
-    address[] internal _initialZeroAccounts = [_dave, _eve, _frank];
-
-    uint256[] internal _initialZeroBalances = [60_000_000, 30_000_000, 10_000_000];
+    uint256[][2] internal _initialBalances = [[uint256(55), 25, 20], [uint256(60_000_000), 30_000_000, 10_000_000]];
 
     uint256 internal _standardProposalFee = 1_000;
 
@@ -52,12 +46,12 @@ contract IntegrationTests is TestUtils {
     function setUp() external {
         _deploy = new DeployBase();
 
+        // NOTE: Using `DeployBase` as a contract instead of a script, means that the deployer is `_deploy` itself.
         address registrar_ = _deploy.deploy(
-            _deployer,
-            _initialPowerAccounts,
-            _initialPowerBalances,
-            _initialZeroAccounts,
-            _initialZeroBalances,
+            address(_deploy),
+            1,
+            _initialAccounts,
+            _initialBalances,
             _standardProposalFee,
             _allowedCashTokens
         );
@@ -69,21 +63,21 @@ contract IntegrationTests is TestUtils {
         IPowerToken powerToken_ = IPowerToken(_registrar.powerToken());
         uint256 initialPowerTotalSupply_;
 
-        for (uint256 index_; index_ < _initialPowerBalances.length; ++index_) {
-            initialPowerTotalSupply_ += _initialPowerBalances[index_];
+        for (uint256 index_; index_ < _initialBalances[0].length; ++index_) {
+            initialPowerTotalSupply_ += _initialBalances[0][index_];
         }
 
-        for (uint256 index_; index_ < _initialPowerAccounts.length; ++index_) {
+        for (uint256 index_; index_ < _initialAccounts[0].length; ++index_) {
             assertEq(
-                powerToken_.balanceOf(_initialPowerAccounts[index_]),
-                (_initialPowerBalances[index_] * powerToken_.INITIAL_SUPPLY()) / initialPowerTotalSupply_
+                powerToken_.balanceOf(_initialAccounts[0][index_]),
+                (_initialBalances[0][index_] * powerToken_.INITIAL_SUPPLY()) / initialPowerTotalSupply_
             );
         }
 
         IZeroToken zeroToken_ = IZeroToken(_registrar.zeroToken());
 
-        for (uint256 index_; index_ < _initialZeroAccounts.length; ++index_) {
-            assertEq(zeroToken_.balanceOf(_initialZeroAccounts[index_]), _initialZeroBalances[index_]);
+        for (uint256 index_; index_ < _initialAccounts[1].length; ++index_) {
+            assertEq(zeroToken_.balanceOf(_initialAccounts[1][index_]), _initialBalances[1][index_]);
         }
     }
 
@@ -121,7 +115,7 @@ contract IntegrationTests is TestUtils {
         vm.prank(_alice);
         uint256 weight_ = standardGovernor_.castVote(proposalId_, 1);
 
-        assertEq(weight_, 5_500);
+        assertEq(weight_, 550_000);
 
         _warpToNextTransferEpoch();
 
@@ -153,10 +147,10 @@ contract IntegrationTests is TestUtils {
         uint256 proposalId_ = emergencyGovernor_.propose(targets_, values_, callDatas_, description_);
 
         vm.prank(_alice);
-        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 5_500);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 550_000);
 
         vm.prank(_bob);
-        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 2_500);
+        assertEq(emergencyGovernor_.castVote(proposalId_, 1), 250_000);
 
         emergencyGovernor_.execute(targets_, values_, callDatas_, bytes32(0));
 

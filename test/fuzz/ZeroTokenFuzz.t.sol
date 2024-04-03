@@ -51,8 +51,8 @@ contract ZeroTokenFuzzTests is TestUtils {
         _warpToEpoch(currentEpoch_);
 
         firstPushEpoch = bound(firstPushEpoch, 1, currentEpoch_ - 1);
-        secondPushEpoch = bound(secondPushEpoch, 1, currentEpoch_ - 1);
-        thirdPushEpoch = bound(thirdPushEpoch, 1, currentEpoch_ - 1);
+        secondPushEpoch = bound(secondPushEpoch, 1, firstPushEpoch);
+        thirdPushEpoch = bound(thirdPushEpoch, 1, secondPushEpoch);
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         thirdValuePushed = bound(thirdValuePushed, 0, type(uint128).max);
@@ -88,7 +88,7 @@ contract ZeroTokenFuzzTests is TestUtils {
         _warpToEpoch(currentEpoch_);
 
         firstPushEpoch = bound(firstPushEpoch, 1, currentEpoch_ - 1);
-        secondPushEpoch = bound(secondPushEpoch, 1, currentEpoch_);
+        secondPushEpoch = bound(secondPushEpoch, 1, firstPushEpoch);
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
 
@@ -120,7 +120,7 @@ contract ZeroTokenFuzzTests is TestUtils {
         _warpToEpoch(currentEpoch_);
 
         firstPushEpoch = bound(firstPushEpoch, 1, currentEpoch_ - 1);
-        secondPushEpoch = bound(secondPushEpoch, 1, currentEpoch_);
+        secondPushEpoch = bound(secondPushEpoch, 1, firstPushEpoch);
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         vm.assume(firstPushEpoch > secondPushEpoch);
@@ -149,8 +149,8 @@ contract ZeroTokenFuzzTests is TestUtils {
         uint256 currentEpoch_ = _zeroToken.clock();
 
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 3));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
-        thirdPushEpoch = uint8(bound(thirdPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
+        thirdPushEpoch = uint8(bound(thirdPushEpoch, 1, secondPushEpoch));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         thirdValuePushed = bound(thirdValuePushed, 0, type(uint128).max);
@@ -179,7 +179,7 @@ contract ZeroTokenFuzzTests is TestUtils {
     ) external {
         uint256 currentEpoch_ = _zeroToken.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 3));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         vm.assume(firstPushEpoch > secondPushEpoch);
@@ -205,7 +205,7 @@ contract ZeroTokenFuzzTests is TestUtils {
     ) external {
         uint256 currentEpoch_ = _zeroToken.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 3));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
         vm.assume(firstPushEpoch > secondPushEpoch);

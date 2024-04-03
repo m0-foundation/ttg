@@ -33,11 +33,11 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
 
         _warpToNextEpoch();
 
-        assertEq(_powerToken.amountToAuction(), 200); // carol inflation is up for auction
+        assertEq(_powerToken.amountToAuction(), 20_000); // carol inflation is up for auction
 
         _warpToNextTransferEpoch();
 
-        assertEq(_powerToken.amountToAuction(), 200); // carol inflation is up for auction
+        assertEq(_powerToken.amountToAuction(), 20_000); // carol inflation is up for auction
 
         uint256 totalSupply_ = _powerToken.pastTotalSupply(_currentEpoch() - 1);
 
@@ -47,17 +47,17 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
         uint256 evePowerBalanceBefore_ = _powerToken.balanceOf(_eve);
 
         vm.prank(_dave);
-        (uint256 purchaseAmount_, uint256 purchaseCost_) = _powerToken.buy(200, 200, _eve, _currentEpoch());
+        (uint256 purchaseAmount_, uint256 purchaseCost_) = _powerToken.buy(20_000, 20_000, _eve, _currentEpoch());
 
         uint256 daveCashBalanceAfter_ = _cashToken1.balanceOf(_dave);
         uint256 evePowerBalanceAfter_ = _powerToken.balanceOf(_eve);
 
-        assertEq(purchaseAmount_, 200);
+        assertEq(purchaseAmount_, 20_000);
         assertEq(daveCashBalanceBefore_, daveCashBalanceAfter_ + purchaseCost_);
         assertEq(evePowerBalanceBefore_, evePowerBalanceAfter_ - purchaseAmount_);
 
-        assertEq(purchaseAmount_, 200);
-        assertEq(purchaseCost_, _powerToken.getCost(200));
+        assertEq(purchaseAmount_, 20_000);
+        assertEq(purchaseCost_, _powerToken.getCost(20_000));
 
         assertEq(_powerToken.amountToAuction(), 0); // nothing to auction after purchase
 
@@ -66,7 +66,7 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
 
         assertEq(
             _powerToken.getCost(totalSupply_),
-            _divideUp(totalSupply_, (PureEpochs._EPOCH_PERIOD / 100) * totalSupply_)
+            _divideUp(totalSupply_, (PureEpochs.EPOCH_PERIOD / 100) * totalSupply_)
         );
 
         vm.prank(_dave);
@@ -74,12 +74,12 @@ contract Auction_IntegrationTest is IntegrationBaseSetup {
 
         _warpToNextVoteEpoch();
 
-        assertEq(_powerToken.getVotes(_eve), 200);
+        assertEq(_powerToken.getVotes(_eve), 20_000);
 
         vm.prank(_eve);
         uint256 eveWeight_ = _standardGovernor.castVote(proposalId2_, noSupport_);
 
-        assertEq(eveWeight_, 200);
+        assertEq(eveWeight_, 20_000);
     }
 
     function _getSetKeyProposeParams()

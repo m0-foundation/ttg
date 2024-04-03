@@ -101,7 +101,7 @@ contract PowerTokenTests is TestUtils {
     }
 
     function test_getCost() external {
-        uint256 halfAnAuctionPeriod_ = PureEpochs._EPOCH_PERIOD / 200; // _powerToken._AUCTION_PERIODS = 100;
+        uint256 halfAnAuctionPeriod_ = PureEpochs.EPOCH_PERIOD / 200; // _powerToken._AUCTION_PERIODS = 100;
 
         _warpToNextTransferEpoch();
 
@@ -371,7 +371,7 @@ contract PowerTokenTests is TestUtils {
 
         uint256 clock_ = powerToken2_.clock();
 
-        assertEq(powerToken2_.pastTotalSupply(clock_ - 1), 10_000);
+        assertEq(powerToken2_.pastTotalSupply(clock_ - 1), 1_000_000);
 
         uint256 b1 = powerToken2_.pastBalanceOf(_initialAccounts[0], clock_ - 1);
         uint256 b2 = powerToken2_.pastBalanceOf(_initialAccounts[1], clock_ - 1);
@@ -385,20 +385,20 @@ contract PowerTokenTests is TestUtils {
         uint256 v4 = powerToken2_.getPastVotes(_initialAccounts[3], clock_ - 1);
         uint256 v5 = powerToken2_.getPastVotes(_initialAccounts[4], clock_ - 1);
 
-        assertEq(b1, 666);
-        assertEq(b2, 1_333);
-        assertEq(b3, 2_000);
-        assertEq(b4, 2_666);
-        assertEq(b5, 3_333);
+        assertEq(b1, 66_666);
+        assertEq(b2, 133_333);
+        assertEq(b3, 200_000);
+        assertEq(b4, 266_666);
+        assertEq(b5, 333_333);
 
-        assertEq(v1, 666);
-        assertEq(v2, 1_333);
-        assertEq(v3, 2_000);
-        assertEq(v4, 2_666);
-        assertEq(v5, 3_333);
+        assertEq(v1, 66_666);
+        assertEq(v2, 133_333);
+        assertEq(v3, 200_000);
+        assertEq(v4, 266_666);
+        assertEq(v5, 333_333);
 
-        assertLe(b1 + b2 + b3 + b4 + b5, 10_000);
-        assertLe(v1 + v2 + v3 + v4 + v5, 10_000);
+        assertLe(b1 + b2 + b3 + b4 + b5, 1_000_000);
+        assertLe(v1 + v2 + v3 + v4 + v5, 1_000_000);
     }
 
     function test_sameAccountInBootstrapAction() external {
@@ -423,20 +423,20 @@ contract PowerTokenTests is TestUtils {
 
         _warpToNextEpoch();
 
-        assertEq(powerToken1_.balanceOf(attacker), 5000);
-        assertEq(powerToken1_.balanceOf(victim), 5000);
+        assertEq(powerToken1_.balanceOf(attacker), 500_000);
+        assertEq(powerToken1_.balanceOf(victim), 500_000);
 
         vm.prank(attacker);
         powerToken1_.transfer(attacker, 0);
 
-        assertEq(powerToken1_.balanceOf(attacker), 5000);
-        assertEq(powerToken1_.balanceOf(victim), 5000);
+        assertEq(powerToken1_.balanceOf(attacker), 500_000);
+        assertEq(powerToken1_.balanceOf(victim), 500_000);
 
         vm.prank(attacker);
         powerToken1_.delegate(attacker);
 
-        assertEq(powerToken1_.balanceOf(attacker), 5000);
-        assertEq(powerToken1_.balanceOf(victim), 5000);
+        assertEq(powerToken1_.balanceOf(attacker), 500_000);
+        assertEq(powerToken1_.balanceOf(victim), 500_000);
     }
 
     function test_syncBootstraps() external {

@@ -37,7 +37,7 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     ) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
 
@@ -56,8 +56,8 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     function testFuzz_pastDelegate(uint8 firstPushEpoch, uint8 secondPushEpoch, uint8 thirdPushEpoch) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
-        thirdPushEpoch = uint8(bound(thirdPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
+        thirdPushEpoch = uint8(bound(thirdPushEpoch, 1, secondPushEpoch));
         vm.assume(firstPushEpoch > secondPushEpoch && secondPushEpoch > thirdPushEpoch);
 
         _vote.pushDelegatee(_alice, currentEpoch_ - firstPushEpoch, _carol);
@@ -80,7 +80,7 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     ) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
 
@@ -105,7 +105,7 @@ contract EpochBasedVoteTokenFuzzTests is TestUtils {
     ) external {
         uint256 currentEpoch_ = _vote.clock();
         firstPushEpoch = uint8(bound(firstPushEpoch, 1, currentEpoch_ - 1));
-        secondPushEpoch = uint8(bound(secondPushEpoch, 1, currentEpoch_ - 1));
+        secondPushEpoch = uint8(bound(secondPushEpoch, 1, firstPushEpoch));
         firstValuePushed = bound(firstValuePushed, 0, type(uint128).max);
         secondValuePushed = bound(secondValuePushed, 0, type(uint128).max);
 

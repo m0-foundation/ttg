@@ -21,7 +21,7 @@ import { IPowerToken } from "./interfaces/IPowerToken.sol";
 ██╔═══╝ ██║   ██║██║███╗██║██╔══╝  ██╔══██╗       ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║
 ██║     ╚██████╔╝╚███╔███╔╝███████╗██║  ██║       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║
 ╚═╝      ╚═════╝  ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝
-                                                                                           
+
 
 */
 
@@ -40,7 +40,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
     uint40 internal constant _AUCTION_PERIODS = 100;
 
     /// @inheritdoc IPowerToken
-    uint240 public constant INITIAL_SUPPLY = 10_000; // NOTE: Consider math overflows when changing this value.
+    uint240 public constant INITIAL_SUPPLY = 1_000_000;
 
     /// @inheritdoc IPowerToken
     address public immutable bootstrapToken;
@@ -219,10 +219,10 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         uint16 currentEpoch_ = _clock();
 
         uint40 timeRemaining_ = _isVotingEpoch(currentEpoch_)
-            ? PureEpochs._EPOCH_PERIOD
+            ? PureEpochs.EPOCH_PERIOD
             : PureEpochs.timeRemainingInCurrentEpoch();
 
-        uint40 secondsPerPeriod_ = PureEpochs._EPOCH_PERIOD / _AUCTION_PERIODS;
+        uint40 secondsPerPeriod_ = PureEpochs.EPOCH_PERIOD / _AUCTION_PERIODS;
         uint256 leftPoint_ = uint256(1) << (timeRemaining_ / secondsPerPeriod_); // Max is 1 << 100.
         uint40 remainder_ = timeRemaining_ % secondsPerPeriod_;
 

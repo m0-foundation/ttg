@@ -3,20 +3,23 @@
 pragma solidity 0.8.23;
 
 import { IEmergencyGovernorDeployer } from "./interfaces/IEmergencyGovernorDeployer.sol";
+import { IERC6372 } from "./abstract/interfaces/IERC6372.sol";
 import { IPowerTokenDeployer } from "./interfaces/IPowerTokenDeployer.sol";
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
 import { IStandardGovernorDeployer } from "./interfaces/IStandardGovernorDeployer.sol";
 import { IZeroGovernor } from "./interfaces/IZeroGovernor.sol";
 
+import { PureEpochs } from "./libs/PureEpochs.sol";
+
 /*
 
-████████╗████████╗ ██████╗     ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗██████╗  █████╗ ██████╗ 
+████████╗████████╗ ██████╗     ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗██████╗  █████╗ ██████╗
 ╚══██╔══╝╚══██╔══╝██╔════╝     ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
    ██║      ██║   ██║  ███╗    ██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   ██████╔╝███████║██████╔╝
    ██║      ██║   ██║   ██║    ██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══██╗██╔══██║██╔══██╗
    ██║      ██║   ╚██████╔╝    ██║  ██║███████╗╚██████╔╝██║███████║   ██║   ██║  ██║██║  ██║██║  ██║
    ╚═╝      ╚═╝    ╚═════╝     ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
-                                                                                                    
+
 
 */
 
@@ -106,6 +109,11 @@ contract Registrar is IRegistrar {
 
     /* ============ View/Pure Functions ============ */
 
+    /// @inheritdoc IERC6372
+    function clock() external view returns (uint48) {
+        return PureEpochs.currentEpoch();
+    }
+
     /// @inheritdoc IRegistrar
     function get(bytes32 key_) external view returns (bytes32) {
         return _valueAt[_getValueKey(key_)];
@@ -137,6 +145,21 @@ contract Registrar is IRegistrar {
     /// @inheritdoc IRegistrar
     function powerToken() external view returns (address) {
         return IPowerTokenDeployer(powerTokenDeployer).lastDeploy();
+    }
+
+    /// @inheritdoc IERC6372
+    function CLOCK_MODE() external pure returns (string memory) {
+        return "mode=epoch";
+    }
+
+    /// @inheritdoc IRegistrar
+    function clockStartingTimestamp() external pure returns (uint256) {
+        return PureEpochs.STARTING_TIMESTAMP;
+    }
+
+    /// @inheritdoc IRegistrar
+    function clockPeriod() external pure returns (uint256) {
+        return PureEpochs.EPOCH_PERIOD;
     }
 
     /// @inheritdoc IRegistrar
