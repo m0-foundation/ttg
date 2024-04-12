@@ -90,8 +90,7 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
     /**
      * @dev   Delegate voting power from `delegator_` to `newDelegatee_`.
-     * @dev   The inflation is realized for the current delegatee by calling `_sync()`
-     *        before setting `newDelegatee_` as the delegatee.
+     * @dev   The inflation is first realized according to participation of the current delegatee by calling `_sync()`.
      * @param delegator_    The address of the account delegating voting power.
      * @param newDelegatee_ The address of the account receiving voting power.
      */
@@ -286,12 +285,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         uint256 inflatedBalance_ = balance_;
 
-        // NOTE: Only need to check if the latest delegatee has participated,
-        //       since the inflation is realized by syncing in the `_delegate()` function.
+        // NOTE: Only need to check if the latest delegatee has participated, since the inflation from any previous
+        //       delegatee would have been synced (realized) in most recent re-delegation (see `_delegate()`).
         address delegatee_ = _getDelegatee(account_, lastEpoch_); // Internal avoids `_revertIfNotPastTimepoint`.
 
-        // NOTE: Starting from the epoch after the latest sync,
-        //       and looping through the subsequent epochs until `lastEpoch_` to get the unrealized inflation.
+        // NOTE: Starting from the epoch after the latest sync and looping through the subsequent epochs until (but not
+        //       including) `lastEpoch_`, to get the unrealized inflation.
         // NOTE: If account never synced (i.e. it never interacted with the contract nor received tokens or voting
         //       power), then `epoch_` will start at 0, which can result in a longer loop than needed. Inheriting
         //       contracts should override `_getLastSync` to return the most recent appropriate epoch for such an
