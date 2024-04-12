@@ -22,7 +22,6 @@ import { IPowerToken } from "./interfaces/IPowerToken.sol";
 ██║     ╚██████╔╝╚███╔███╔╝███████╗██║  ██║       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║
 ╚═╝      ╚═════╝  ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝
 
-
 */
 
 // NOTE: Balances and voting powers are bootstrapped from the bootstrap token, but delegations are not.
