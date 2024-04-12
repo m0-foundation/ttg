@@ -370,9 +370,27 @@ contract StandardGovernorTests is TestUtils {
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 
+    function test_castVote_zeroWeight() external {
+        uint256 proposalId_ = 1;
+        uint256 currentEpoch = _standardGovernor.clock();
+        uint256 votePower_ = 0;
+
+        _powerToken.setVotePower(votePower_);
+
+        _standardGovernor.setProposal(proposalId_, currentEpoch);
+
+        vm.prank(_alice);
+        _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+
+        assertFalse(_standardGovernor.hasVoted(proposalId_, _alice));
+    }
+
     function test_castVote_alreadyVoted() external {
         uint256 proposalId_ = 1;
         uint256 currentEpoch = _standardGovernor.clock();
+
+        _powerToken.setVotePower(_votePower);
+        _powerToken.setPastTotalSupply(1);
 
         _standardGovernor.setProposal(proposalId_, currentEpoch);
         _standardGovernor.setHasVoted(proposalId_, _alice);

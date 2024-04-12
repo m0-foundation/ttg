@@ -66,12 +66,22 @@ contract MockEpochBasedVoteToken {
 
     mapping(uint256 epoch => uint256 totalSupply) public pastTotalSupply;
 
+    uint256 internal _votePower;
+
+    function setVotePower(uint256 votePower_) external {
+        _votePower = votePower_;
+    }
+
     function setPastBalanceOf(address account_, uint256 epoch_, uint256 balance_) external {
         pastBalanceOf[account_][epoch_] = balance_;
     }
 
     function setPastTotalSupply(uint256 epoch_, uint256 totalSupplyAt_) external {
         pastTotalSupply[epoch_] = totalSupplyAt_;
+    }
+
+    function getPastVotes(address, uint256) external view returns (uint256 votePower_) {
+        return _votePower;
     }
 
     function pastBalancesOf(
