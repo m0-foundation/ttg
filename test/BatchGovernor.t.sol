@@ -66,6 +66,8 @@ contract BatchGovernorTests is TestUtils {
 
         _voteToken.setVotePower(0);
 
+        vm.expectRevert(IBatchGovernor.ZeroVotingPower.selector);
+
         vm.prank(_alice);
         _batchGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
 

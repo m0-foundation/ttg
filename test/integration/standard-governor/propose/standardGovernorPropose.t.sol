@@ -317,6 +317,8 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.getPastVotes(_bob, proposalSnapshot_), bobVotingPower_);
         assertEq(_powerToken.getPastVotes(_carol, proposalSnapshot_), carolVotingPower_);
 
+        vm.expectRevert(IBatchGovernor.ZeroVotingPower.selector);
+
         vm.prank(_alice);
         assertEq(_standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes)), aliceVotingPower_);
 
