@@ -250,6 +250,10 @@ contract PowerTokenTests is TestUtils {
             address(_cashToken),
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _account, oneBasisPointOfTotalSupply_);
+
         vm.prank(_account);
         _powerToken.buy(1, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
 
@@ -451,6 +455,9 @@ contract PowerTokenTests is TestUtils {
 
         vm.expectEmit();
         emit IERC5805.DelegateVotesChanged(_initialAccounts[0], 0, _powerToken.balanceOf(_initialAccounts[0]));
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_powerToken), _initialAccounts[0], 0);
 
         vm.expectEmit();
         emit IEpochBasedInflationaryVoteToken.Sync(_initialAccounts[0]);

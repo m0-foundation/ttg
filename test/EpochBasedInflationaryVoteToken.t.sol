@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.23;
 
+import { IERC20 } from "../lib/common/src/interfaces/IERC20.sol";
+
 import { IEpochBasedVoteToken } from "../src/abstract/interfaces/IEpochBasedVoteToken.sol";
 import { IEpochBasedInflationaryVoteToken } from "../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
 
@@ -46,10 +48,16 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 0);
         assertEq(_vote.getVotes(_alice), 0);
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         assertEq(_vote.balanceOf(_alice), 1_000);
         assertEq(_vote.getVotes(_alice), 1_000);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _bob, 500);
 
         vm.prank(_alice);
         _vote.transfer(_bob, 500);
@@ -96,6 +104,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 0);
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         assertEq(_vote.delegates(_alice), _alice);
@@ -110,6 +121,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 1_000);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _bob, 500);
 
         vm.prank(_alice);
         _vote.transfer(_bob, 500);
@@ -134,6 +148,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     function test_inflationFromVotingPowerInPreviousEpoch_selfDelegation() external {
         _warpToNextTransferEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         assertEq(_vote.balanceOf(_alice), 1_000);
@@ -144,6 +161,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_alice), 1_000);
         assertEq(_vote.getVotes(_alice), 1_000);
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 200);
+
         _vote.markParticipation(_alice);
 
         assertEq(_vote.balanceOf(_alice), 1_000);
@@ -153,6 +173,12 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.balanceOf(_alice), 1_200);
         assertEq(_vote.getVotes(_alice), 1_200);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 200);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _bob, 500);
 
         vm.prank(_alice);
         _vote.transfer(_bob, 500);
@@ -177,6 +203,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     function test_inflationFromVotingPowerInPreviousEpoch_delegated() external {
         _warpToNextTransferEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         vm.prank(_alice);
@@ -196,6 +225,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 1_000);
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 200);
+
         _vote.markParticipation(_bob);
 
         assertEq(_vote.balanceOf(_alice), 1_000);
@@ -211,6 +243,12 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.getVotes(_bob), 1_200);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 200);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _bob, 500);
 
         vm.prank(_alice);
         _vote.transfer(_bob, 500);
@@ -262,6 +300,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     function test_usersVoteInflationUpgradeOnDelegation() external {
         _warpToNextTransferEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         vm.prank(_alice);
@@ -269,9 +310,15 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 200);
+
         _vote.markParticipation(_bob); // 1000 * 1.2 = 1200
 
         _warpToNextTransferEpoch();
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 200);
 
         vm.prank(_alice);
         _vote.delegate(_carol);
@@ -287,6 +334,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 240);
+
         _vote.markParticipation(_carol); // 1200 * 1.2 = 1440
 
         assertEq(_vote.getVotes(_carol), 1_440);
@@ -300,6 +350,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     function test_usersVoteInflationWorksWithTransfer() external {
         _warpToNextTransferEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         vm.prank(_alice);
@@ -307,9 +360,18 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 200);
+
         _vote.markParticipation(_bob); // 1000 * 1.2 = 1200
 
         _warpToNextTransferEpoch();
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 200);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _carol, 500);
 
         vm.prank(_alice);
         _vote.transfer(_carol, 500);
@@ -348,6 +410,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 540);
+
         _vote.markParticipation(_carol);
 
         _warpToNextTransferEpoch();
@@ -358,10 +423,25 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.getVotes(_carol), _vote.balanceOf(_alice) + _vote.balanceOf(_bob) + _vote.balanceOf(_carol));
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 200);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _bob, 180);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _bob, 500);
+
         vm.prank(_alice);
         _vote.transfer(_bob, 500);
 
         assertEq(_vote.getVotes(_carol), _vote.balanceOf(_alice) + _vote.balanceOf(_bob) + _vote.balanceOf(_carol));
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _carol, 160);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_carol, _bob, 500);
 
         vm.prank(_carol);
         _vote.transfer(_bob, 500);
@@ -390,6 +470,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 540);
+
         _vote.markParticipation(_carol);
 
         assertEq(_vote.getVotes(_carol), 3_240);
@@ -406,6 +489,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 1_080);
         assertEq(_vote.balanceOf(_carol), 960);
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 200);
+
         vm.prank(_alice);
         _vote.delegate(_bob);
 
@@ -413,6 +499,12 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.getVotes(_carol), 2_040);
 
         _warpToNextVoteEpoch();
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _carol, 160);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 408);
 
         _vote.markParticipation(_carol); // carol votes, but bob doesn't
 
@@ -436,6 +528,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
     function test_usersVoteInflationForMultipleEpochsWithTransfers() external {
         _warpToNextTransferEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _alice, 1_000);
+
         _vote.mint(_alice, 1_000);
 
         vm.prank(_alice);
@@ -443,6 +538,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         assertEq(_vote.getVotes(_alice), 0);
         assertEq(_vote.getVotes(_bob), 1_000);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _carol, 400);
 
         vm.prank(_alice);
         _vote.transfer(_carol, 400);
@@ -454,7 +552,15 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         _warpToNextVoteEpoch();
 
         _vote.markParticipation(_alice);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 120);
+
         _vote.markParticipation(_bob);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 80);
+
         _vote.markParticipation(_carol);
 
         assertEq(_vote.getVotes(_alice), 0);
@@ -479,8 +585,20 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_bob), 0);
         assertEq(_vote.balanceOf(_carol), 480);
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 120);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_alice, _bob, 720);
+
         vm.prank(_alice);
         _vote.transfer(_bob, 720);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _carol, 80);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(_carol, _bob, 480);
 
         vm.prank(_carol);
         _vote.transfer(_bob, 480);
@@ -494,6 +612,9 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
         assertEq(_vote.balanceOf(_carol), 0);
 
         _warpToNextVoteEpoch();
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 240);
 
         _vote.markParticipation(_bob);
 
@@ -522,19 +643,31 @@ contract EpochBasedInflationaryVoteTokenTests is TestUtils {
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 200);
+
         _vote.markParticipation(_bob);
 
         _warpToNextVoteEpoch();
 
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 240);
+
         _vote.markParticipation(_bob);
 
         _warpToNextVoteEpoch();
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), address(_vote), 288);
 
         _vote.markParticipation(_bob);
 
         _warpToNextTransferEpoch();
 
         assertEq(_vote.getBalanceSnapStartingEpoch(_alice, 0), lastBalanceUpdate_);
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(_vote), _alice, 728);
 
         vm.expectEmit();
         emit IEpochBasedInflationaryVoteToken.Sync(_alice);

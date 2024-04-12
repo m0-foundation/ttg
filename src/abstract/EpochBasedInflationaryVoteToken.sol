@@ -112,6 +112,8 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
 
         uint240 inflation_ = _getInflation(_getVotes(delegatee_, currentEpoch_));
 
+        if (inflation_ != 0) emit Transfer(address(0), address(this), inflation_);
+
         _addTotalSupply(inflation_);
         _addVotingPower(delegatee_, inflation_);
     }
@@ -131,8 +133,12 @@ abstract contract EpochBasedInflationaryVoteToken is IEpochBasedInflationaryVote
      * @param account_ The address of the account to sync.
      */
     function _sync(address account_) internal virtual {
+        uint240 inflation_ = _getUnrealizedInflation(account_, _clock());
+
+        if (inflation_ != 0) emit Transfer(address(this), account_, inflation_);
+
         // Realized the account's unrealized inflation since its last sync.
-        _addBalance(account_, _getUnrealizedInflation(account_, _clock()));
+        _addBalance(account_, inflation_);
     }
 
     /**
