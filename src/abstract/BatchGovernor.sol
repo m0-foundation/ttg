@@ -472,6 +472,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         uint8 support_,
         string memory reason_
     ) internal virtual {
+        if (weight_ == 0) return;
         if (hasVoted[proposalId_][voter_]) revert AlreadyVoted();
 
         hasVoted[proposalId_][voter_] = true;

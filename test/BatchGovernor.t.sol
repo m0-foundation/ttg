@@ -10,15 +10,21 @@ import { MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract BatchGovernorTests is TestUtils {
+    address internal _alice;
+    uint256 internal _aliceKey;
+
     BatchGovernorHarness internal _batchGovernor;
 
     MockEpochBasedVoteToken internal _voteToken;
 
     function setUp() external {
+        (_alice, _aliceKey) = makeAddrAndKey("alice");
+
         _voteToken = new MockEpochBasedVoteToken();
         _batchGovernor = new BatchGovernorHarness("BatchGovernor", address(_voteToken));
     }
 
+    /* ============ tryExecute ============ */
     function test_tryExecute_invalidValue() external {
         vm.expectRevert(IBatchGovernor.InvalidValue.selector);
         _batchGovernor.tryExecute{ value: 1 }(new bytes(0), 0, 0);
@@ -51,5 +57,18 @@ contract BatchGovernorTests is TestUtils {
         _batchGovernor.setState(proposalId_, IGovernor.ProposalState.Succeeded);
 
         assertEq(_batchGovernor.tryExecute(new bytes(0), currentEpoch_, currentEpoch_ - 10), proposalId_);
+    }
+
+    /* ============ castVote ============ */
+    function test_castVote_zeroWeight() external {
+        uint256 proposalId_ = 1;
+        _batchGovernor.setState(proposalId_, IGovernor.ProposalState.Active);
+
+        _voteToken.setVotePower(0);
+
+        vm.prank(_alice);
+        _batchGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+
+        assertFalse(_batchGovernor.hasVoted(proposalId_, _alice));
     }
 }

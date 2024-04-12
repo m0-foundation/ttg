@@ -320,7 +320,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_alice);
         assertEq(_standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes)), aliceVotingPower_);
 
-        assertTrue(_standardGovernor.hasVotedOnAllProposals(_alice, _currentEpoch()));
+        assertFalse(_standardGovernor.hasVotedOnAllProposals(_alice, _currentEpoch()));
         assertFalse(_standardGovernor.hasVotedOnAllProposals(_bob, _currentEpoch()));
         assertFalse(_standardGovernor.hasVotedOnAllProposals(_carol, _currentEpoch()));
 
