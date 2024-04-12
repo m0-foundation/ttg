@@ -358,8 +358,6 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         uint8 support_,
         string memory reason_
     ) internal override {
-        if (weight_ == 0) return;
-
         ProposalState state_ = state(proposalId_);
 
         if (state_ != ProposalState.Active) revert ProposalInactive(state_);

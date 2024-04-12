@@ -379,6 +379,8 @@ contract StandardGovernorTests is TestUtils {
 
         _standardGovernor.setProposal(proposalId_, currentEpoch);
 
+        vm.expectRevert(IBatchGovernor.ZeroVotingPower.selector);
+
         vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
 
