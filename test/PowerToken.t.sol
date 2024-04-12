@@ -250,6 +250,10 @@ contract PowerTokenTests is TestUtils {
             address(_cashToken),
             abi.encodeWithSelector(MockCashToken.transferFrom.selector, _account, _vault, 1 * (1 << 99))
         );
+
+        vm.expectEmit();
+        emit IERC20.Transfer(address(0), _account, oneBasisPointOfTotalSupply_);
+
         vm.prank(_account);
         _powerToken.buy(1, oneBasisPointOfTotalSupply_, _account, _currentEpoch());
 
