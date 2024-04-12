@@ -2,7 +2,10 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IPowerToken, IZeroToken } from "../IntegrationBaseSetup.t.sol";
+import { IPowerToken } from "../../../src/interfaces/IPowerToken.sol";
+import { IZeroToken } from "../../../src/interfaces/IZeroToken.sol";
+
+import { IntegrationBaseSetup } from "../IntegrationBaseSetup.t.sol";
 
 contract StandardGovernorSetKey_IntegrationTest is IntegrationBaseSetup {
     function test_initialState() external {

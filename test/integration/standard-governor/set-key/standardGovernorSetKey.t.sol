@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IStandardGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IStandardGovernor } from "../../../../src/interfaces/IStandardGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 contract StandardGovernorSetKey_IntegrationTest is IntegrationBaseSetup {
     function test_standardGovernorSetKey() external {

@@ -9,7 +9,11 @@ import { IERC5805 } from "../../../../src/abstract/interfaces/IERC5805.sol";
 import { IGovernor } from "../../../../src/abstract/interfaces/IGovernor.sol";
 import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
 
-import { IntegrationBaseSetup, IPowerToken, IRegistrar, IStandardGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IPowerToken } from "../../../../src/interfaces/IPowerToken.sol";
+import { IRegistrar } from "../../../../src/interfaces/IRegistrar.sol";
+import { IStandardGovernor } from "../../../../src/interfaces/IStandardGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     function test_standardGovernorPropose_proposalPendingActiveDefeated() external {

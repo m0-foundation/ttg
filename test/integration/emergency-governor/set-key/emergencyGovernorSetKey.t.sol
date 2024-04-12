@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IEmergencyGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IEmergencyGovernor } from "../../../../src/interfaces/IEmergencyGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 contract EmergencyGovernorSetKey_IntegrationTest is IntegrationBaseSetup {
     function test_emergencyGovernorSetKey() external {
