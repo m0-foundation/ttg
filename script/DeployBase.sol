@@ -35,31 +35,14 @@ contract DeployBase {
         uint256 standardProposalFee_,
         address[] memory allowedCashTokens_
     ) public virtual returns (address registrar_) {
-        address emergencyGovernorDeployer_ = _deployEmergencyGovernorDeployer(
-            deployer_,
-            deployerNonce_ + 4, // ZeroGovernor deployment nonce
-            deployerNonce_ + 7 // Registrar deployment nonce
-        );
-
-        address powerTokenDeployer_ = _deployPowerTokenDeployer(
-            deployer_,
-            deployerNonce_ + 4, // ZeroGovernor deployment nonce
-            deployerNonce_ + 6 // DistributionVault deployment nonce
-        );
-
-        address standardGovernorDeployer_ = _deployStandardGovernorDeployer(
-            deployer_,
-            deployerNonce_ + 4, // ZeroGovernor deployment nonce
-            deployerNonce_ + 7, // Registrar deployment nonce
-            deployerNonce_ + 6, // DistributionVault deployment nonce
-            deployerNonce_ + 5 // ZeroToken deployment nonce
-        );
-
+        address emergencyGovernorDeployer_ = _deployEmergencyGovernorDeployer(deployer_, deployerNonce_);
+        address powerTokenDeployer_ = _deployPowerTokenDeployer(deployer_, deployerNonce_);
+        address standardGovernorDeployer_ = _deployStandardGovernorDeployer(deployer_, deployerNonce_);
         address bootstrapToken_ = _deployBootstrapToken(initialAccounts_[0], initialBalances_[0]);
 
         address zeroGovernor_ = _deployZeroGovernor(
             deployer_,
-            deployerNonce_ + 5, // ZeroToken deployment nonce
+            deployerNonce_,
             emergencyGovernorDeployer_,
             powerTokenDeployer_,
             standardGovernorDeployer_,
@@ -68,60 +51,46 @@ contract DeployBase {
             allowedCashTokens_
         );
 
-        _deployZeroToken(
-            deployer_,
-            deployerNonce_ + 2, // StandardGovernorDeployer deployment nonce
-            initialAccounts_[1],
-            initialBalances_[1]
-        );
-
-        _deployVault(
-            deployer_,
-            deployerNonce_ + 5 // ZeroToken deployment nonce
-        );
+        _deployZeroToken(deployer_, deployerNonce_, initialAccounts_[1], initialBalances_[1]);
+        _deployVault(deployer_, deployerNonce_);
 
         registrar_ = _deployRegistrar(zeroGovernor_);
     }
 
     function _deployEmergencyGovernorDeployer(
         address deployer_,
-        uint256 zeroGovernorDeploymentNonce_,
-        uint256 registrarDeploymentNonce_
+        uint256 deployerNonce_
     ) internal returns (address emergencyGovernorDeployer_) {
         emergencyGovernorDeployer_ = address(
             new EmergencyGovernorDeployer(
-                ContractHelper.getContractFrom(deployer_, zeroGovernorDeploymentNonce_),
-                ContractHelper.getContractFrom(deployer_, registrarDeploymentNonce_)
+                _getExpectedZeroGovernor(deployer_, deployerNonce_),
+                _getExpectedRegistrar(deployer_, deployerNonce_)
             )
         );
     }
 
     function _deployPowerTokenDeployer(
         address deployer_,
-        uint256 zeroGovernorDeploymentNonce_,
-        uint256 vaultDeploymentNonce_
+        uint256 deployerNonce_
     ) internal returns (address powerTokenDeployer_) {
         powerTokenDeployer_ = address(
             new PowerTokenDeployer(
-                ContractHelper.getContractFrom(deployer_, zeroGovernorDeploymentNonce_),
-                ContractHelper.getContractFrom(deployer_, vaultDeploymentNonce_)
+                _getExpectedZeroGovernor(deployer_, deployerNonce_),
+                _getExpectedVault(deployer_, deployerNonce_)
             )
         );
     }
 
     function _deployStandardGovernorDeployer(
         address deployer_,
-        uint256 zeroGovernorDeploymentNonce_,
-        uint256 registrarDeploymentNonce_,
-        uint256 vaultDeploymentNonce_,
-        uint256 zeroTokenDeploymentNonce_
+        uint256 deployerNonce_
     ) internal returns (address standardGovernorDeployer_) {
         standardGovernorDeployer_ = address(
             new StandardGovernorDeployer(
-                ContractHelper.getContractFrom(deployer_, zeroGovernorDeploymentNonce_),
-                ContractHelper.getContractFrom(deployer_, registrarDeploymentNonce_),
-                ContractHelper.getContractFrom(deployer_, vaultDeploymentNonce_),
-                ContractHelper.getContractFrom(deployer_, zeroTokenDeploymentNonce_)
+                _getExpectedZeroGovernor(deployer_, deployerNonce_),
+                _getExpectedRegistrar(deployer_, deployerNonce_),
+                _getExpectedVault(deployer_, deployerNonce_),
+                _getExpectedZeroToken(deployer_, deployerNonce_)
             )
         );
     }
@@ -135,7 +104,7 @@ contract DeployBase {
 
     function _deployZeroGovernor(
         address deployer_,
-        uint256 zeroTokenDeploymentNonce_,
+        uint256 deployerNonce_,
         address emergencyGovernorDeployer_,
         address powerTokenDeployer_,
         address standardGovernorDeployer_,
@@ -145,7 +114,7 @@ contract DeployBase {
     ) internal returns (address zeroGovernor_) {
         zeroGovernor_ = address(
             new ZeroGovernor(
-                ContractHelper.getContractFrom(deployer_, zeroTokenDeploymentNonce_),
+                _getExpectedZeroToken(deployer_, deployerNonce_),
                 emergencyGovernorDeployer_,
                 powerTokenDeployer_,
                 standardGovernorDeployer_,
@@ -160,69 +129,137 @@ contract DeployBase {
 
     function _deployZeroToken(
         address deployer_,
-        uint256 standardGovernorDeployerDeploymentNonce_,
+        uint256 deployerNonce_,
         address[] memory initialZeroAccounts_,
         uint256[] memory initialZeroBalances_
     ) internal returns (address zeroToken_) {
         zeroToken_ = address(
             new ZeroToken(
-                ContractHelper.getContractFrom(deployer_, standardGovernorDeployerDeploymentNonce_),
+                _getExpectedStandardGovernorDeployer(deployer_, deployerNonce_),
                 initialZeroAccounts_,
                 initialZeroBalances_
             )
         );
     }
 
-    function _deployVault(address deployer_, uint256 zeroTokenDeploymentNonce_) internal returns (address vault_) {
-        vault_ = address(new DistributionVault(ContractHelper.getContractFrom(deployer_, zeroTokenDeploymentNonce_)));
+    function _deployVault(address deployer_, uint256 deployerNonce_) internal returns (address vault_) {
+        vault_ = address(new DistributionVault(_getExpectedZeroToken(deployer_, deployerNonce_)));
     }
 
     function _deployRegistrar(address zeroGovernor_) internal returns (address registrar_) {
         registrar_ = address(new Registrar(zeroGovernor_));
     }
 
+    function _getExpectedEmergencyGovernorDeployer(
+        address deployer_,
+        uint256 deployerNonce_
+    ) internal pure returns (address) {
+        return ContractHelper.getContractFrom(deployer_, deployerNonce_);
+    }
+
     function getExpectedEmergencyGovernorDeployer(
         address deployer_,
         uint256 deployerNonce_
     ) public pure virtual returns (address) {
-        return ContractHelper.getContractFrom(deployer_, deployerNonce_);
+        return _getExpectedEmergencyGovernorDeployer(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedEmergencyGovernor(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
+        return ContractHelper.getContractFrom(_getExpectedEmergencyGovernorDeployer(deployer_, deployerNonce_), 1);
+    }
+
+    function getExpectedEmergencyGovernor(
+        address deployer_,
+        uint256 deployerNonce_
+    ) public pure virtual returns (address) {
+        return _getExpectedEmergencyGovernor(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedPowerTokenDeployer(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
+        return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 1);
     }
 
     function getExpectedPowerTokenDeployer(
         address deployer_,
         uint256 deployerNonce_
     ) public pure virtual returns (address) {
-        return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 1);
+        return _getExpectedPowerTokenDeployer(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedPowerToken(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
+        return ContractHelper.getContractFrom(_getExpectedPowerTokenDeployer(deployer_, deployerNonce_), 1);
+    }
+
+    function getExpectedPowerToken(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+        return _getExpectedPowerToken(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedStandardGovernorDeployer(
+        address deployer_,
+        uint256 deployerNonce_
+    ) internal pure returns (address) {
+        return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 2);
     }
 
     function getExpectedStandardGovernorDeployer(
         address deployer_,
         uint256 deployerNonce_
     ) public pure virtual returns (address) {
-        return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 2);
+        return _getExpectedStandardGovernorDeployer(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedStandardGovernor(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
+        return ContractHelper.getContractFrom(_getExpectedStandardGovernorDeployer(deployer_, deployerNonce_), 1);
+    }
+
+    function getExpectedStandardGovernor(
+        address deployer_,
+        uint256 deployerNonce_
+    ) public pure virtual returns (address) {
+        return _getExpectedStandardGovernor(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedBootstrapToken(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
+        return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 3);
     }
 
     function getExpectedBootstrapToken(
         address deployer_,
         uint256 deployerNonce_
     ) public pure virtual returns (address) {
-        return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 3);
+        return _getExpectedBootstrapToken(deployer_, deployerNonce_);
     }
 
-    function getExpectedZeroGovernor(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+    function _getExpectedZeroGovernor(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
         return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 4);
     }
 
-    function getExpectedZeroToken(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+    function getExpectedZeroGovernor(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+        return _getExpectedZeroGovernor(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedZeroToken(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
         return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 5);
     }
 
-    function getExpectedVault(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+    function getExpectedZeroToken(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+        return _getExpectedZeroToken(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedVault(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
         return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 6);
     }
 
-    function getExpectedRegistrar(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+    function getExpectedVault(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+        return _getExpectedVault(deployer_, deployerNonce_);
+    }
+
+    function _getExpectedRegistrar(address deployer_, uint256 deployerNonce_) internal pure returns (address) {
         return ContractHelper.getContractFrom(deployer_, deployerNonce_ + 7);
+    }
+
+    function getExpectedRegistrar(address deployer_, uint256 deployerNonce_) public pure virtual returns (address) {
+        return _getExpectedRegistrar(deployer_, deployerNonce_);
     }
 
     function getDeployerNonceAfterTTGDeployment(uint256 deployerNonce_) public pure virtual returns (uint256) {
