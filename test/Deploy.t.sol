@@ -82,11 +82,19 @@ contract Deploy is Test, DeployBase {
         assertEq(IPowerToken(powerToken_).bootstrapToken(), getExpectedBootstrapToken(address(this), 1));
         assertEq(IPowerToken(powerToken_).standardGovernor(), standardGovernor_);
         assertEq(IPowerToken(powerToken_).vault(), vault_);
+        assertEq(IPowerToken(powerToken_).cashToken(), _allowedCashTokens[0]);
 
         // Power Token Deployer assertions
         assertEq(IPowerTokenDeployer(powerTokenDeployer_).vault(), vault_);
         assertEq(IPowerTokenDeployer(powerTokenDeployer_).zeroGovernor(), zeroGovernor_);
         assertEq(IPowerTokenDeployer(powerTokenDeployer_).lastDeploy(), powerToken_);
+
+        for (uint256 index_; index_ < _initialAccounts[0].length; ++index_) {
+            assertEq(
+                IPowerToken(powerToken_).balanceOf(_initialAccounts[0][index_]),
+                ((_initialBalances[0][index_] * IPowerToken(powerToken_).INITIAL_SUPPLY()) / 30_000)
+            );
+        }
 
         // Standard Governor assertions
         assertEq(IStandardGovernor(standardGovernor_).emergencyGovernor(), emergencyGovernor_);
@@ -111,5 +119,9 @@ contract Deploy is Test, DeployBase {
 
         // Zero Token assertions
         assertEq(IZeroToken(zeroToken_).standardGovernorDeployer(), standardGovernorDeployer_);
+
+        for (uint256 index_; index_ < _initialAccounts[1].length; ++index_) {
+            assertEq(IZeroToken(zeroToken_).balanceOf(_initialAccounts[1][index_]), _initialBalances[1][index_]);
+        }
     }
 }
