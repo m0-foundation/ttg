@@ -9,7 +9,7 @@ methods {
 
     function cashToken() external returns (address) envfree;
     function proposalFee() external returns (uint256) envfree;
-    function getProposal(uint256) external returns (uint48,uint48,IGovernor.ProposalState,uint256,uint256,address,uint256,uint256);
+    function getProposal(uint256) external returns (uint48,uint48,IGovernor.ProposalState,uint256,uint256,address,uint256);
     function hasVoted(uint256 proposalId, address voter) external returns (bool) envfree;
 
     function vault() external returns (address) envfree;
