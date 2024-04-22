@@ -73,19 +73,19 @@ function ValidERC1271CVL(address signer) returns bool {
 
 function getProposalVoteStart(env e, uint256 ID) returns uint16 {
     uint48 voteStart;
-    voteStart,_,_,_,_,_ = getProposal(e, ID);
+    voteStart,_,_,_,_,_,_ = getProposal(e, ID);
     return assert_uint16(voteStart);
 }
 
 function getProposalNay(env e, uint256 ID) returns uint256 {
     uint256 nays;
-    _,_,_,nays,_,_ = getProposal(e, ID);
+    _,_,_,nays,_,_,_ = getProposal(e, ID);
     return nays;
 }
 
 function getProposalYea(env e, uint256 ID) returns uint256 {
     uint256 yeas;
-    _,_,_,_,yeas,_ = getProposal(e, ID);
+    _,_,_,_,yeas,_,_ = getProposal(e, ID);
     return yeas;
 }
 
