@@ -105,10 +105,14 @@ contract InvariantTests is TestUtils {
         // Set fuzzer to only call the handler
         targetContract(address(_handler));
 
-        bytes4[] memory selectors = new bytes4[](3);
+        bytes4[] memory selectors = new bytes4[](7);
         selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
-        selectors[1] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
-        selectors[2] = TTGHandler.executeEmergencyGovernorProposal.selector;
+        selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
+        selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
+        selectors[3] = TTGHandler.emergencyGovernorSetKey.selector;
+        selectors[4] = TTGHandler.emergencyGovernorSetStandardProposalFee.selector;
+        selectors[5] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
+        selectors[6] = TTGHandler.executeEmergencyGovernorProposal.selector;
 
         targetSelector(FuzzSelector({ addr: address(_handler), selectors: selectors }));
 
@@ -152,10 +156,10 @@ contract InvariantTests is TestUtils {
             "POWER token totalSupply() should be greater than or equal to the sum of POWER token getVotes()"
         );
 
-        assertEq(
-            totalSupply_,
+        assertGe(
             totalVotes_,
-            "The sum of POWER token balanceOf() should be equal to the sum of POWER token getVotes()"
+            totalSupply_,
+            "The sum of POWER token getVotes() should be greater than or equal to the sum of POWER token balanceOf()"
         );
     }
 }

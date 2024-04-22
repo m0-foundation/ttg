@@ -72,35 +72,168 @@ contract ProposalStore is TestUtils {
         _zeroGovernor = zeroGovernor_;
     }
 
-    function emergencyGovernorAddToList(uint256 addToListSeed_, address account_) external {
+    /* ============ Emergency Governor Proposals ============ */
+
+    function emergencyGovernorAddToList(address proposer_, uint256 registrarListSeed_) external {
         console2.log("Start emergencyGovernorAddToList...");
-        addToListSeed_ = bound(addToListSeed_, 0, _registrarLists.length - 1);
+        registrarListSeed_ = bound(registrarListSeed_, 0, _registrarLists.length - 1);
 
-        string memory list_ = _registrarLists[addToListSeed_];
+        string memory list_ = _registrarLists[registrarListSeed_];
 
-        bytes[] memory callDatas_ = new bytes[](1);
-        callDatas_[0] = abi.encodeWithSelector(IEmergencyGovernor.addToList.selector, bytes32(bytes(list_)), account_);
+        // Return early if proposer is in the list
+        if (_registrar.listContains(bytes32(bytes(list_)), proposer_)) return;
 
-        uint256 expectedProposalId_ = _emergencyGovernor.hashProposal(callDatas_[0]);
-
-        // Return early if proposal has already been submitted
-        if (_submittedProposals[expectedProposalId_]) return;
-
-        vm.prank(account_);
-        uint256 proposalId_ = _emergencyGovernor.propose(
-            _emergencyGovernorTargets,
-            _emergencyGovernorValues,
-            callDatas_,
-            "Add account to list"
+        uint256 proposalId_ = _emergencyGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IEmergencyGovernor.addToList.selector, bytes32(bytes(list_)), proposer_),
+            "Add proposer to list"
         );
 
-        _submittedProposals[proposalId_] = true;
-        _submittedProposalsCallData[proposalId_] = callDatas_[0];
+        if (proposalId_ == 0) {
+            console2.log("Emergency proposal to add %s to %s list has already been submitted", proposer_, list_);
+            return;
+        }
 
-        _emergencyGovenorProposalIds.push(proposalId_);
-
-        console2.log("Emergency proposal %s to add %s to %s list created successfully!", proposalId_, account_, list_);
+        console2.log("Emergency proposal %s to add %s to %s list created successfully!", proposalId_, proposer_, list_);
     }
+
+    function emergencyGovernorRemoveFromList(
+        address proposer_,
+        uint256 registrarListSeed_,
+        address accountToRemove_
+    ) external {
+        console2.log("Start emergencyGovernorRemoveFromList...");
+        registrarListSeed_ = bound(registrarListSeed_, 0, _registrarLists.length - 1);
+
+        string memory list_ = _registrarLists[registrarListSeed_];
+
+        // Return early if account to remove is not in the list
+        if (!_registrar.listContains(bytes32(bytes(list_)), accountToRemove_)) return;
+
+        uint256 proposalId_ = _emergencyGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IEmergencyGovernor.removeFromList.selector, bytes32(bytes(list_)), accountToRemove_),
+            "Remove account from list"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log(
+                "Emergency proposal to remove %s from %s list has already been submitted",
+                accountToRemove_,
+                list_
+            );
+            return;
+        }
+
+        console2.log(
+            "Emergency proposal %s to remove %s from %s list created successfully!",
+            proposalId_,
+            accountToRemove_,
+            list_
+        );
+    }
+
+    function emergencyGovernorRemoveFromAndAddToList(
+        address proposer_,
+        uint256 registrarListSeed_,
+        address accountToRemove_,
+        address accountToAdd_
+    ) external {
+        console2.log("Start emergencyGovernorRemoveFromList...");
+        registrarListSeed_ = bound(registrarListSeed_, 0, _registrarLists.length - 1);
+
+        string memory list_ = _registrarLists[registrarListSeed_];
+
+        // Return early if account to remove is not in the list or if account to add is already in the list
+        if (
+            !_registrar.listContains(bytes32(bytes(list_)), accountToRemove_) ||
+            _registrar.listContains(bytes32(bytes(list_)), accountToAdd_)
+        ) return;
+
+        uint256 proposalId_ = _emergencyGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(
+                IEmergencyGovernor.removeFromAndAddToList.selector,
+                bytes32(bytes(list_)),
+                accountToRemove_,
+                accountToAdd_
+            ),
+            "Remove account from list and add new account to list"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log(
+                "Emergency proposal to remove %s from %s list and add %s has already been submitted",
+                accountToRemove_,
+                list_,
+                accountToAdd_
+            );
+            return;
+        }
+
+        console2.log(
+            "Emergency proposal to remove %s from %s list and add %s created successfully!",
+            accountToRemove_,
+            list_,
+            accountToAdd_
+        );
+    }
+
+    function emergencyGovernorSetKey(address proposer_, uint256 keySeed_, uint256 valueSeed_) external {
+        console2.log("Start emergencyGovernorSetKey...");
+
+        string memory key_ = _generateRandomString(keySeed_);
+        string memory value_ = _generateRandomString(valueSeed_);
+
+        // Return early if key value pair already exists
+        if (_registrar.get(bytes32(bytes(key_))) == bytes32(bytes(value_))) return;
+
+        uint256 proposalId_ = _emergencyGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IEmergencyGovernor.setKey.selector, bytes32(bytes(key_)), bytes32(bytes(value_))),
+            "Set key value pair"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log("Emergency proposal to set key %s and value %s has already been submitted", key_, value_);
+            return;
+        }
+
+        console2.log(
+            "Emergency proposal %s to set key %s and value %s created successfully!",
+            proposalId_,
+            key_,
+            value_
+        );
+    }
+
+    function emergencyGovernorSetStandardProposalFee(address proposer_, uint256 proposalFeeSeed_) external {
+        console2.log("Start emergencyGovernorSetProposalFee...");
+
+        uint256 proposalFee_ = _generateRandomProposalFee(proposalFeeSeed_);
+
+        uint256 proposalId_ = _emergencyGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IEmergencyGovernor.setStandardProposalFee.selector, proposalFee_),
+            "Set Standard Governor proposal fee"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log(
+                "Emergency proposal to set Standard Governor proposal fee to %s has already been submitted",
+                proposalFee_
+            );
+            return;
+        }
+
+        console2.log(
+            "Emergency proposal %s to set Standard Governor proposal fee to %s created successfully!",
+            proposalId_,
+            proposalFee_
+        );
+    }
+
+    /* ============ Vote on proposal ============ */
 
     function voteOnEmergencyGovernorProposal(
         uint256 proposalIdSeed_,
@@ -148,6 +281,8 @@ contract ProposalStore is TestUtils {
         }
     }
 
+    /* ============ Execute proposal ============ */
+
     function executeEmergencyGovernorProposal(uint256 proposalIdSeed_) external {
         console2.log("Start executeEmergencyGovernorProposal...");
 
@@ -178,5 +313,51 @@ contract ProposalStore is TestUtils {
         console2.log("Emergency proposal %s executed successfully!", proposalId_);
 
         delete _emergencyGovenorProposalIds[proposalIdSeed_];
+    }
+
+    /* ============ Helpers ============ */
+
+    function _emergencyGovernorPropose(
+        address proposer_,
+        bytes memory callData_,
+        string memory description_
+    ) internal returns (uint256 proposalId_) {
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = callData_;
+
+        uint256 expectedProposalId_ = _emergencyGovernor.hashProposal(callDatas_[0]);
+
+        // Return early if proposal has already been submitted
+        if (_submittedProposals[expectedProposalId_]) return 0;
+
+        vm.prank(proposer_);
+        proposalId_ = _emergencyGovernor.propose(
+            _emergencyGovernorTargets,
+            _emergencyGovernorValues,
+            callDatas_,
+            description_
+        );
+
+        _submittedProposals[proposalId_] = true;
+        _submittedProposalsCallData[proposalId_] = callDatas_[0];
+
+        _emergencyGovenorProposalIds.push(proposalId_);
+    }
+
+    function _generateRandomProposalFee(uint256 seed_) internal returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 1e18;
+    }
+
+    function _generateRandomString(uint256 seed_) internal view returns (string memory) {
+        bytes memory characters_ = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        uint256 stringLength_ = 32;
+        bytes memory randomString_ = new bytes(stringLength_);
+
+        for (uint256 i = 0; i < stringLength_; i++) {
+            // Generate a random index based on the seed
+            randomString_[i] = characters_[uint256(keccak256(abi.encodePacked(seed_, i))) % characters_.length];
+        }
+
+        return string(randomString_);
     }
 }

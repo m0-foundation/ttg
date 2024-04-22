@@ -39,9 +39,13 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _timestampStore = timestampStore_;
     }
 
+    function _setCurrentBlockTimestamp() internal {
+        _timestampStore.setCurrentTimestamp(block.timestamp);
+    }
+
     modifier warpToNextEpoch() {
         _warpToNextEpoch();
-        _timestampStore.setCurrentTimestamp(block.timestamp);
+        _setCurrentBlockTimestamp();
         _;
     }
 
@@ -51,7 +55,7 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
             _warpToNextVoteEpoch();
             console2.log("Warped to vote epoch %s", _currentEpoch());
         }
-        _timestampStore.setCurrentTimestamp(block.timestamp);
+        _setCurrentBlockTimestamp();
         _;
     }
 
@@ -61,25 +65,93 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
             _warpToNextTransferEpoch();
             console2.log("Warped to transfer epoch %s", _currentEpoch());
         }
-        _timestampStore.setCurrentTimestamp(block.timestamp);
+        _setCurrentBlockTimestamp();
         _;
     }
 
-    function emergencyGovernorAddToList(uint256 addToListSeed_, uint256 powerHolderIndexSeed_) external {
-        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+    /* ============ Emergency Governor Proposals ============ */
 
+    function emergencyGovernorAddToList(uint256 registrarListSeed_, uint256 powerHolderIndexSeed_) external {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
         console2.log("POWER holder %s is proposing emergency vote to add himself to list...", powerHolder_);
-        _proposalStore.emergencyGovernorAddToList(addToListSeed_, powerHolder_);
-        _timestampStore.setCurrentTimestamp(block.timestamp);
+
+        _proposalStore.emergencyGovernorAddToList(powerHolder_, registrarListSeed_);
+        _setCurrentBlockTimestamp();
     }
 
+    function emergencyGovernorRemoveFromList(
+        uint256 registrarListSeed_,
+        uint256 powerHolderIndexSeed_,
+        uint256 powerHolderToRemoveIndexSeed_
+    ) external {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        address powerHolderToRemove_ = _holderStore.getPowerHolder(powerHolderToRemoveIndexSeed_);
+
+        console2.log(
+            "POWER holder %s is proposing emergency vote to remove %s from list...",
+            powerHolder_,
+            powerHolderToRemove_
+        );
+
+        _proposalStore.emergencyGovernorRemoveFromList(powerHolder_, registrarListSeed_, powerHolderToRemove_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function emergencyGovernorRemoveFromAndAddToList(
+        uint256 registrarListSeed_,
+        uint256 powerHolderIndexSeed_,
+        uint256 powerHolderToRemoveIndexSeed_,
+        uint256 powerHolderToAddIndexSeed_
+    ) external {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        address powerHolderToRemove_ = _holderStore.getPowerHolder(powerHolderToRemoveIndexSeed_);
+        address powerHolderToAdd_ = _holderStore.getPowerHolder(powerHolderToAddIndexSeed_);
+
+        console2.log(
+            "POWER holder %s is proposing emergency vote to remove %s from list and add %s...",
+            powerHolder_,
+            powerHolderToRemove_,
+            powerHolderToAdd_
+        );
+
+        _proposalStore.emergencyGovernorRemoveFromAndAddToList(
+            powerHolder_,
+            registrarListSeed_,
+            powerHolderToRemove_,
+            powerHolderToAdd_
+        );
+
+        _setCurrentBlockTimestamp();
+    }
+
+    function emergencyGovernorSetKey(uint256 powerHolderIndexSeed_, uint256 keySeed_, uint256 valueSeed_) external {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        console2.log("POWER holder %s is proposing emergency vote to set key value pair...", powerHolder_);
+
+        _proposalStore.emergencyGovernorSetKey(powerHolder_, keySeed_, valueSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function emergencyGovernorSetStandardProposalFee(uint256 powerHolderIndexSeed_, uint256 proposalFeeSeed_) external {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        console2.log(
+            "POWER holder %s is proposing emergency vote to set Standard Governor proposal fee...",
+            powerHolder_
+        );
+
+        _proposalStore.emergencyGovernorSetStandardProposalFee(powerHolder_, proposalFeeSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    /* ============ Vote on proposal ============ */
     function voteOnEmergencyGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
         _proposalStore.voteOnEmergencyGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.powerHolders());
-        _timestampStore.setCurrentTimestamp(block.timestamp);
+        _setCurrentBlockTimestamp();
     }
 
+    /* ============ Execute proposal ============ */
     function executeEmergencyGovernorProposal(uint256 proposalIdSeed_) external {
         _proposalStore.executeEmergencyGovernorProposal(proposalIdSeed_);
-        _timestampStore.setCurrentTimestamp(block.timestamp);
+        _setCurrentBlockTimestamp();
     }
 }
