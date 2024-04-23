@@ -323,6 +323,13 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         return _proposals[proposalId_].voteStart - 1;
     }
 
+    /// @inheritdoc IGovernor
+    function proposalVotes(uint256 proposalId_) external view returns (uint256, uint256, uint256) {
+        Proposal storage proposal_ = _proposals[proposalId_];
+
+        return (proposal_.noWeight, proposal_.yesWeight, 0);
+    }
+
     /// @inheritdoc IERC6372
     function CLOCK_MODE() external pure returns (string memory) {
         return "mode=epoch";

@@ -230,7 +230,7 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /// @inheritdoc IGovernor
     function COUNTING_MODE() external pure returns (string memory) {
-        return "support=against,for&quorum=for&success=standard";
+        return "support=against,for&quorum=for&success=majority";
     }
 
     /// @inheritdoc IStandardGovernor

@@ -268,6 +268,17 @@ interface IGovernor is IERC6372, IERC712 {
     /// @notice Returns the required voting power an account needs to create a proposal.
     function proposalThreshold() external view returns (uint256);
 
+    /**
+     * @notice Returns the vote support totals for the proposal with identifier `proposalId`.
+     * @param  proposalId   The unique identifier for the proposal.
+     * @return noVotes      The amount of votes cast against the proposal.
+     * @return yesVotes     The amount of votes cast for the proposal.
+     * @return abstainVotes The amount of votes cast in abstention the proposal.
+     */
+    function proposalVotes(
+        uint256 proposalId
+    ) external view returns (uint256 noVotes, uint256 yesVotes, uint256 abstainVotes);
+
     /// @notice Returns the minimum number of eligible (COUNTING_MODE) votes for a proposal to succeed.
     function quorum() external view returns (uint256);
 
