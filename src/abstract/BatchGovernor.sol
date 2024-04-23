@@ -330,6 +330,11 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         return (proposal_.noWeight, proposal_.yesWeight, 0);
     }
 
+    /// @inheritdoc IGovernor
+    function token() external view returns (address) {
+        return voteToken;
+    }
+
     /// @inheritdoc IERC6372
     function CLOCK_MODE() external pure returns (string memory) {
         return "mode=epoch";

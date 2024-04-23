@@ -289,6 +289,9 @@ interface IGovernor is IERC6372, IERC712 {
      */
     function state(uint256 proposalId) external view returns (ProposalState);
 
+    /// @notice Returns the EIP-5805 token contact used for determine voting power and total supplies.
+    function token() external view returns (address);
+
     /// @notice Returns the number of clock values that must elapse before voting begins for a newly created proposal.
     function votingDelay() external view returns (uint256);
 
