@@ -143,15 +143,108 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _setCurrentBlockTimestamp();
     }
 
+    /* ============ Standard Governor Proposals ============ */
+
+    function standardGovernorAddToList(
+        uint256 registrarListSeed_,
+        uint256 powerHolderIndexSeed_
+    ) external warpToTransferEpoch {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        console2.log("POWER holder %s is proposing standard vote to add himself to list...", powerHolder_);
+
+        _proposalStore.standardGovernorAddToList(powerHolder_, registrarListSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function standardGovernorRemoveFromList(
+        uint256 registrarListSeed_,
+        uint256 powerHolderIndexSeed_,
+        uint256 powerHolderToRemoveIndexSeed_
+    ) external warpToTransferEpoch {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        address powerHolderToRemove_ = _holderStore.getPowerHolder(powerHolderToRemoveIndexSeed_);
+
+        console2.log(
+            "POWER holder %s is proposing standard vote to remove %s from list...",
+            powerHolder_,
+            powerHolderToRemove_
+        );
+
+        _proposalStore.standardGovernorRemoveFromList(powerHolder_, registrarListSeed_, powerHolderToRemove_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function standardGovernorRemoveFromAndAddToList(
+        uint256 registrarListSeed_,
+        uint256 powerHolderIndexSeed_,
+        uint256 powerHolderToRemoveIndexSeed_,
+        uint256 powerHolderToAddIndexSeed_
+    ) external warpToTransferEpoch {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        address powerHolderToRemove_ = _holderStore.getPowerHolder(powerHolderToRemoveIndexSeed_);
+        address powerHolderToAdd_ = _holderStore.getPowerHolder(powerHolderToAddIndexSeed_);
+
+        console2.log(
+            "POWER holder %s is proposing standard vote to remove %s from list and add %s...",
+            powerHolder_,
+            powerHolderToRemove_,
+            powerHolderToAdd_
+        );
+
+        _proposalStore.standardGovernorRemoveFromAndAddToList(
+            powerHolder_,
+            registrarListSeed_,
+            powerHolderToRemove_,
+            powerHolderToAdd_
+        );
+
+        _setCurrentBlockTimestamp();
+    }
+
+    function standardGovernorSetKey(
+        uint256 powerHolderIndexSeed_,
+        uint256 keySeed_,
+        uint256 valueSeed_
+    ) external warpToTransferEpoch {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        console2.log("POWER holder %s is proposing standard vote to set key value pair...", powerHolder_);
+
+        _proposalStore.standardGovernorSetKey(powerHolder_, keySeed_, valueSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function standardGovernorSetProposalFee(
+        uint256 powerHolderIndexSeed_,
+        uint256 proposalFeeSeed_
+    ) external warpToTransferEpoch {
+        address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
+        console2.log("POWER holder %s is proposing standard vote to set proposal fee...", powerHolder_);
+
+        _proposalStore.standardGovernorSetProposalFee(powerHolder_, proposalFeeSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
     /* ============ Vote on proposal ============ */
+
     function voteOnEmergencyGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
         _proposalStore.voteOnEmergencyGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.powerHolders());
         _setCurrentBlockTimestamp();
     }
 
+    function voteOnStandardGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external warpToVoteEpoch {
+        _proposalStore.voteOnStandardGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.powerHolders());
+        _setCurrentBlockTimestamp();
+    }
+
     /* ============ Execute proposal ============ */
+
     function executeEmergencyGovernorProposal(uint256 proposalIdSeed_) external {
         _proposalStore.executeEmergencyGovernorProposal(proposalIdSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function executeStandardGovernorProposal(uint256 proposalIdSeed_) external warpToTransferEpoch {
+        _proposalStore.executeStandardGovernorProposal(proposalIdSeed_);
         _setCurrentBlockTimestamp();
     }
 }

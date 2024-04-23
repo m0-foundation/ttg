@@ -87,10 +87,10 @@ contract InvariantTests is TestUtils {
 
         _vault = IDistributionVault(_standardGovernor.vault());
 
-        uint256 cashToken1MaxAmount_ = type(uint256).max / _holderStore.ZERO_HOLDER_NUM();
+        uint256 cashToken1MaxAmount_ = type(uint256).max / _holderStore.POWER_HOLDER_NUM();
 
-        for (uint256 i; i < _holderStore.ZERO_HOLDER_NUM(); i++) {
-            address account_ = initialAccounts_[1][i];
+        for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
+            address account_ = initialAccounts_[0][i];
             _cashToken1.mint(account_, cashToken1MaxAmount_);
 
             vm.prank(account_);
@@ -105,7 +105,7 @@ contract InvariantTests is TestUtils {
         // Set fuzzer to only call the handler
         targetContract(address(_handler));
 
-        bytes4[] memory selectors = new bytes4[](7);
+        bytes4[] memory selectors = new bytes4[](14);
         selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
         selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
         selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
@@ -113,6 +113,13 @@ contract InvariantTests is TestUtils {
         selectors[4] = TTGHandler.emergencyGovernorSetStandardProposalFee.selector;
         selectors[5] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
         selectors[6] = TTGHandler.executeEmergencyGovernorProposal.selector;
+        selectors[7] = TTGHandler.standardGovernorAddToList.selector;
+        selectors[8] = TTGHandler.standardGovernorRemoveFromList.selector;
+        selectors[9] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
+        selectors[10] = TTGHandler.standardGovernorSetKey.selector;
+        selectors[11] = TTGHandler.standardGovernorSetProposalFee.selector;
+        selectors[12] = TTGHandler.voteOnStandardGovernorProposal.selector;
+        selectors[13] = TTGHandler.executeStandardGovernorProposal.selector;
 
         targetSelector(FuzzSelector({ addr: address(_handler), selectors: selectors }));
 
