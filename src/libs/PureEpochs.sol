@@ -3,7 +3,7 @@
 pragma solidity 0.8.23;
 
 /**
- * @notice Defines epochs as periods away from STATING_TIMESTAMP timestamp.
+ * @notice Defines epochs as periods away from STARTING_TIMESTAMP timestamp.
  * @author M^0 Labs
  * @dev    Provides a `uint16` epoch clock value.
  */
