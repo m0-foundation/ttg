@@ -144,7 +144,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
     /// @inheritdoc IERC6372
     function CLOCK_MODE() external pure returns (string memory clockMode_) {
-        return "mode=epoch";
+        return PureEpochs.clockMode();
     }
 
     /* ============ Internal Interactive Functions ============ */

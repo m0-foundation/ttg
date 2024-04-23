@@ -337,7 +337,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
 
     /// @inheritdoc IERC6372
     function CLOCK_MODE() external pure returns (string memory) {
-        return "mode=epoch";
+        return PureEpochs.clockMode();
     }
 
     /// @inheritdoc IGovernor

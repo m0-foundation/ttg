@@ -7,6 +7,8 @@ import { ERC1271WalletMock } from "../lib/common/test/utils/ERC1271WalletMock.so
 
 import { IDistributionVault } from "../src/interfaces/IDistributionVault.sol";
 
+import { PureEpochs } from "../src/libs/PureEpochs.sol";
+
 import { DistributionVaultHarness } from "./utils/DistributionVaultHarness.sol";
 import { MockERC20, MockEpochBasedVoteToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
@@ -35,7 +37,7 @@ contract DistributionVaultTests is TestUtils {
     function test_constructor() external {
         assertEq(_vault.zeroToken(), address(_baseToken));
         assertEq(_vault.name(), "DistributionVault");
-        assertEq(_vault.CLOCK_MODE(), "mode=epoch");
+        assertEq(_vault.CLOCK_MODE(), PureEpochs.clockMode());
         assertEq(_vault.clock(), _currentEpoch());
     }
 

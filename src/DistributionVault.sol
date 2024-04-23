@@ -152,7 +152,7 @@ contract DistributionVault is IDistributionVault, StatefulERC712 {
 
     /// @inheritdoc IERC6372
     function CLOCK_MODE() external pure returns (string memory) {
-        return "mode=epoch";
+        return PureEpochs.clockMode();
     }
 
     /// @inheritdoc IDistributionVault
