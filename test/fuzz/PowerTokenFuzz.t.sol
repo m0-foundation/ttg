@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../../lib/forge-std/src/Test.sol";
-
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
 import { IEpochBasedInflationaryVoteToken } from "../../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
@@ -89,8 +87,6 @@ contract PowerTokenTests is TestUtils {
 
         uint240 amountToAuction_ = _powerToken.amountToAuction();
         uint240 amount_ = amountToAuction_ > maxAmount_ ? maxAmount_ : amountToAuction_;
-
-        console2.log(amountToAuction_);
 
         if (amount_ < minAmount_) {
             vm.expectRevert(

@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.23;
 
-import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
-import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
+import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
+import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
 
 import { MockBootstrapToken, MockEmergencyGovernor, MockEmergencyGovernorDeployer } from "./utils/Mocks.sol";
@@ -75,10 +75,13 @@ contract ZeroGovernorTests is TestUtils {
 
     function test_initialState() external {
         assertEq(_zeroGovernor.voteToken(), address(_zeroToken));
+        assertEq(_zeroGovernor.token(), address(_zeroToken));
         assertEq(_zeroGovernor.emergencyGovernorDeployer(), address(_emergencyGovernorDeployer));
         assertEq(_zeroGovernor.powerTokenDeployer(), address(_powerTokenDeployer));
         assertEq(_zeroGovernor.standardGovernorDeployer(), address(_standardGovernorDeployer));
         assertEq(_zeroGovernor.thresholdRatio(), _zeroProposalThresholdRatio);
+        assertEq(_zeroGovernor.quorumDenominator(), 10_000);
+        assertEq(_zeroGovernor.quorumNumerator(), _zeroProposalThresholdRatio);
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken1), true);
         assertEq(_zeroGovernor.isAllowedCashToken(_cashToken2), true);
         assertEq(_zeroGovernor.emergencyGovernor(), address(_emergencyGovernor));
@@ -165,6 +168,40 @@ contract ZeroGovernorTests is TestUtils {
     function test_getProposal_proposalDoesNotExist() external {
         vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
         _zeroGovernor.getProposal(0);
+    }
+
+    function test_getProposal() external {
+        _zeroToken.setTotalSupply(1_000_000);
+
+        _zeroGovernor.setProposal({
+            proposalId_: 1,
+            voteStart_: _currentEpoch(),
+            executed_: false,
+            proposer_: address(1),
+            thresholdRatio_: 4_000,
+            noWeight_: 111,
+            yesWeight_: 222
+        });
+
+        (
+            uint48 voteStart_,
+            uint48 voteEnd_,
+            IGovernor.ProposalState state_,
+            uint256 noVotes_,
+            uint256 yesVotes_,
+            address proposer_,
+            uint256 quorum_,
+            uint16 quorumNumerator_
+        ) = _zeroGovernor.getProposal(1);
+
+        assertEq(voteStart_, _currentEpoch());
+        assertEq(voteEnd_, _currentEpoch() + 1);
+        assertEq(uint8(state_), uint8(IGovernor.ProposalState.Active));
+        assertEq(noVotes_, 111);
+        assertEq(yesVotes_, 222);
+        assertEq(proposer_, address(1));
+        assertEq(quorum_, 400_000);
+        assertEq(quorumNumerator_, 4_000);
     }
 
     /* ============ resetToPowerHolders ============ */

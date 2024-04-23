@@ -43,7 +43,6 @@ contract BatchGovernorTests is TestUtils {
             executed_: false,
             proposer_: address(0),
             thresholdRatio_: 0,
-            quorumRatio_: 0,
             noWeight_: 0,
             yesWeight_: 0
         });

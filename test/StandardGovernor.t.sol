@@ -86,6 +86,7 @@ contract StandardGovernorTests is TestUtils {
         assertEq(_standardGovernor.proposalFee(), _proposalFee);
         assertEq(_standardGovernor.registrar(), address(_registrar));
         assertEq(_standardGovernor.voteToken(), address(_powerToken));
+        assertEq(_standardGovernor.token(), address(_powerToken));
     }
 
     /* ============ constructor ============ */
@@ -1276,7 +1277,6 @@ contract StandardGovernorTests is TestUtils {
 
     function test_quorum() external {
         assertEq(_standardGovernor.quorum(), 1);
-        assertEq(_standardGovernor.quorum(1), 1);
     }
 
     function test_votingDelay() external {

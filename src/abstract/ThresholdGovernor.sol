@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { UIntMath } from "../../lib/common/src/libs/UIntMath.sol";
-
 import { IGovernor } from "./interfaces/IGovernor.sol";
 import { IThresholdGovernor } from "./interfaces/IThresholdGovernor.sol";
 
@@ -20,6 +18,9 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
     uint16 internal constant _MIN_THRESHOLD_RATIO = 271;
 
     /// @inheritdoc IThresholdGovernor
+    uint256 public constant ONE = 10_000;
+
+    /// @inheritdoc IThresholdGovernor
     uint16 public thresholdRatio;
 
     /* ============ Constructor ============ */
@@ -28,7 +29,7 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
      * @notice Construct a new ThresholdGovernor contract.
      * @param  name_           The name of the contract. Used to compute EIP712 domain separator.
      * @param  voteToken_      The address of the token used to vote.
-     * @param  thresholdRatio_ The ratio of yes votes votes required for a proposal to succeed.
+     * @param  thresholdRatio_ The ratio of yes votes votes required for a proposal to meet quorum and succeed.
      */
     constructor(string memory name_, address voteToken_, uint16 thresholdRatio_) BatchGovernor(name_, voteToken_) {
         _setThresholdRatio(thresholdRatio_);
@@ -61,6 +62,11 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
     /* ============ View/Pure Functions ============ */
 
+    /// @inheritdoc IGovernor
+    function COUNTING_MODE() external pure returns (string memory) {
+        return "support=against,for&quorum=for&success=quorum";
+    }
+
     /// @inheritdoc IThresholdGovernor
     function getProposal(
         uint256 proposalId_
@@ -74,7 +80,8 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
             uint256 noVotes_,
             uint256 yesVotes_,
             address proposer_,
-            uint16 thresholdRatio_
+            uint256 quorum_,
+            uint16 quorumNumerator_
         )
     {
         Proposal storage proposal_ = _proposals[proposalId_];
@@ -85,19 +92,31 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
         noVotes_ = proposal_.noWeight;
         yesVotes_ = proposal_.yesWeight;
         proposer_ = proposal_.proposer;
-        thresholdRatio_ = proposal_.thresholdRatio;
+        quorum_ = _getQuorum(proposal_.voteStart, proposal_.thresholdRatio);
+        quorumNumerator_ = proposal_.thresholdRatio;
+    }
+
+    /// @inheritdoc IThresholdGovernor
+    function proposalQuorum(uint256 proposalId) external view returns (uint256) {
+        Proposal storage proposal_ = _proposals[proposalId];
+
+        return _getQuorum(proposal_.voteStart, proposal_.thresholdRatio);
     }
 
     /// @inheritdoc IGovernor
-    function quorum() external view returns (uint256 quorum_) {
-        // NOTE: This will only be correct for the first epoch of a proposals lifetime.
-        return (thresholdRatio * _getTotalSupply(_clock() - 1)) / ONE;
+    function quorum() external view returns (uint256) {
+        // NOTE: This only provides the quorum required for a proposal created at this moment.
+        return _getQuorum(_clock(), thresholdRatio);
     }
 
-    /// @inheritdoc IGovernor
-    function quorum(uint256 timepoint_) external view returns (uint256 quorum_) {
-        // NOTE: This will only be correct for the first epoch of a proposals lifetime.
-        return (thresholdRatio * _getTotalSupply(UIntMath.safe16(timepoint_) - 1)) / ONE;
+    /// @inheritdoc IThresholdGovernor
+    function quorumNumerator() external view returns (uint256) {
+        return thresholdRatio;
+    }
+
+    /// @inheritdoc IThresholdGovernor
+    function quorumDenominator() external pure returns (uint256) {
+        return ONE;
     }
 
     /// @inheritdoc IGovernor
@@ -145,7 +164,6 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
             executed: false,
             proposer: msg.sender,
             thresholdRatio: thresholdRatio,
-            quorumRatio: 0,
             noWeight: 0,
             yesWeight: 0
         });
@@ -156,13 +174,25 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
      * @param newThresholdRatio_ The new threshold ratio.
      */
     function _setThresholdRatio(uint16 newThresholdRatio_) internal {
-        if (newThresholdRatio_ > ONE || newThresholdRatio_ < _MIN_THRESHOLD_RATIO)
+        if (newThresholdRatio_ > ONE || newThresholdRatio_ < _MIN_THRESHOLD_RATIO) {
             revert InvalidThresholdRatio(newThresholdRatio_, _MIN_THRESHOLD_RATIO, ONE);
+        }
 
+        emit QuorumNumeratorUpdated(thresholdRatio, newThresholdRatio_);
         emit ThresholdRatioSet(thresholdRatio = newThresholdRatio_);
     }
 
     /* ============ Internal View/Pure Functions ============ */
+
+    /**
+     * @dev    Returns the quorum given a snapshot and quorum numerator.
+     * @param  voteStart_       The epoch at which the proposal will start collecting votes.
+     * @param  quorumNumerator_ The quorum numerator.
+     * @return quorum_          The quorum of yes voted needed for a successful proposal.
+     */
+    function _getQuorum(uint16 voteStart_, uint16 quorumNumerator_) internal view returns (uint256 quorum_) {
+        return (quorumNumerator_ * _getTotalSupply(voteStart_ - 1)) / ONE;
+    }
 
     /**
      * @dev    Returns the number of clock values that must elapse before voting begins for a newly created proposal.

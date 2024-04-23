@@ -109,7 +109,7 @@ interface IBatchGovernor is IGovernor {
 
     /**
      * @notice Allows a signer to cast votes on multiple proposals via an arbitrary signature.
-     * @param voter        The address of the account casting the votes.
+     * @param  voter       The address of the account casting the votes.
      * @param  proposalIds The list of unique proposal IDs being voted on.
      * @param  supportList The list of support type per proposal IDs to cast.
      * @param  signature   An arbitrary signature
@@ -235,7 +235,4 @@ interface IBatchGovernor is IGovernor {
 
     /// @notice Returns the EIP712 typehash used in the encoding of the digest for `castVotesWithReasonBySig` function.
     function BALLOTS_WITH_REASON_TYPEHASH() external pure returns (bytes32);
-
-    /// @notice Returns the value used as 100%, to be used to correctly ascertain the threshold ratio.
-    function ONE() external pure returns (uint256);
 }
