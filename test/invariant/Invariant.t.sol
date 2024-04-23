@@ -83,7 +83,13 @@ contract InvariantTests is TestUtils {
         _standardGovernor = IStandardGovernor(_registrar.standardGovernor());
         _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
 
-        _proposalStore = new ProposalStore(_registrar, _emergencyGovernor, _standardGovernor, _zeroGovernor);
+        _proposalStore = new ProposalStore(
+            _registrar,
+            _emergencyGovernor,
+            _standardGovernor,
+            _zeroGovernor,
+            _allowedCashTokens
+        );
 
         _vault = IDistributionVault(_standardGovernor.vault());
 
@@ -105,7 +111,7 @@ contract InvariantTests is TestUtils {
         // Set fuzzer to only call the handler
         targetContract(address(_handler));
 
-        bytes4[] memory selectors = new bytes4[](14);
+        bytes4[] memory selectors = new bytes4[](21);
         selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
         selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
         selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
@@ -120,6 +126,13 @@ contract InvariantTests is TestUtils {
         selectors[11] = TTGHandler.standardGovernorSetProposalFee.selector;
         selectors[12] = TTGHandler.voteOnStandardGovernorProposal.selector;
         selectors[13] = TTGHandler.executeStandardGovernorProposal.selector;
+        selectors[14] = TTGHandler.zeroGovernorResetToPowerHolders.selector;
+        selectors[15] = TTGHandler.zeroGovernorResetToZeroHolders.selector;
+        selectors[16] = TTGHandler.zeroGovernorSetCashToken.selector;
+        selectors[17] = TTGHandler.zeroGovernorSetEmergencyProposalThresholdRatio.selector;
+        selectors[18] = TTGHandler.zeroGovernorSetZeroProposalThresholdRatio.selector;
+        selectors[19] = TTGHandler.voteOnZeroGovernorProposal.selector;
+        selectors[20] = TTGHandler.executeZeroGovernorProposal.selector;
 
         targetSelector(FuzzSelector({ addr: address(_handler), selectors: selectors }));
 
@@ -150,7 +163,6 @@ contract InvariantTests is TestUtils {
         // Skip test if POWER total supply and/or voting power are zero.
         vm.assume(totalVotes_ != 0);
         vm.assume(_powerToken.totalSupply() != 0);
-
         assertGe(
             _powerToken.totalSupply(),
             totalSupply_,

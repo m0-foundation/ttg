@@ -224,6 +224,63 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _setCurrentBlockTimestamp();
     }
 
+    /* ============ Standard Governor Proposals ============ */
+
+    function zeroGovernorResetToPowerHolders(uint256 zeroHolderIndexSeed_) external {
+        address zeroHolder_ = _holderStore.getPowerHolder(zeroHolderIndexSeed_);
+        console2.log("ZERO holder %s is proposing Zero vote to reset to POWER holders...");
+
+        _proposalStore.zeroGovernorResetToPowerHolders(zeroHolder_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function zeroGovernorResetToZeroHolders(uint256 zeroHolderIndexSeed_) external {
+        address zeroHolder_ = _holderStore.getZeroHolder(zeroHolderIndexSeed_);
+        console2.log("ZERO holder %s is proposing Zero vote to reset to ZERO holders...");
+
+        _proposalStore.zeroGovernorResetToZeroHolders(zeroHolder_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function zeroGovernorSetCashToken(
+        uint256 zeroHolderIndexSeed_,
+        uint256 cashTokenSeed_,
+        uint256 proposalFeeSeed_
+    ) external {
+        address zeroHolder_ = _holderStore.getZeroHolder(zeroHolderIndexSeed_);
+        console2.log("ZERO holder %s is proposing Zero vote to set cash token...", zeroHolder_);
+
+        _proposalStore.zeroGovernorSetCashToken(zeroHolder_, cashTokenSeed_, proposalFeeSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function zeroGovernorSetEmergencyProposalThresholdRatio(
+        uint256 zeroHolderIndexSeed_,
+        uint256 emergencyProposalThresholdRatioSeed_
+    ) external {
+        address zeroHolder_ = _holderStore.getZeroHolder(zeroHolderIndexSeed_);
+        console2.log("ZERO holder %s is proposing Zero vote to set Emergency Proposal Threshold Ratio...", zeroHolder_);
+
+        _proposalStore.zeroGovernorSetEmergencyProposalThresholdRatio(
+            zeroHolder_,
+            emergencyProposalThresholdRatioSeed_
+        );
+
+        _setCurrentBlockTimestamp();
+    }
+
+    function zeroGovernorSetZeroProposalThresholdRatio(
+        uint256 zeroHolderIndexSeed_,
+        uint256 zeroProposalThresholdRatioSeed_
+    ) external {
+        address zeroHolder_ = _holderStore.getZeroHolder(zeroHolderIndexSeed_);
+        console2.log("ZERO holder %s is proposing Zero vote to set Zero Proposal Threshold Ratio...", zeroHolder_);
+
+        _proposalStore.zeroGovernorSetZeroProposalThresholdRatio(zeroHolder_, zeroProposalThresholdRatioSeed_);
+
+        _setCurrentBlockTimestamp();
+    }
+
     /* ============ Vote on proposal ============ */
 
     function voteOnEmergencyGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
@@ -236,6 +293,11 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _setCurrentBlockTimestamp();
     }
 
+    function voteOnZeroGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
+        _proposalStore.voteOnZeroGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.zeroHolders());
+        _setCurrentBlockTimestamp();
+    }
+
     /* ============ Execute proposal ============ */
 
     function executeEmergencyGovernorProposal(uint256 proposalIdSeed_) external {
@@ -245,6 +307,11 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
 
     function executeStandardGovernorProposal(uint256 proposalIdSeed_) external warpToTransferEpoch {
         _proposalStore.executeStandardGovernorProposal(proposalIdSeed_);
+        _setCurrentBlockTimestamp();
+    }
+
+    function executeZeroGovernorProposal(uint256 proposalIdSeed_) external {
+        _proposalStore.executeZeroGovernorProposal(proposalIdSeed_);
         _setCurrentBlockTimestamp();
     }
 }

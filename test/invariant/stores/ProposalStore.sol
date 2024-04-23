@@ -42,11 +42,11 @@ contract ProposalStore is TestUtils {
         IZeroGovernor.resetToPowerHolders.selector,
         IZeroGovernor.resetToZeroHolders.selector,
         IZeroGovernor.setCashToken.selector,
-        IZeroGovernor.setZeroProposalThresholdRatio.selector,
+        IZeroGovernor.setEmergencyProposalThresholdRatio.selector,
         IZeroGovernor.setZeroProposalThresholdRatio.selector
     ];
 
-    uint256[] internal _emergencyGovenorProposalIds;
+    uint256[] internal _emergencyGovernorProposalIds;
     uint256[] internal _standardGovernorProposalIds;
     uint256[] internal _zeroGovernorProposalIds;
 
@@ -58,6 +58,11 @@ contract ProposalStore is TestUtils {
     address[] internal _standardGovernorTargets;
     uint256[] internal _standardGovernorValues;
 
+    address[] internal _zeroGovernorTargets;
+    uint256[] internal _zeroGovernorValues;
+
+    address[] internal _allowedCashTokens;
+
     mapping(uint256 proposalId => bool hasBeenSubmitted) internal _submittedProposals;
     mapping(uint256 proposalId => bytes proposalCallData) internal _submittedProposalsCallData;
 
@@ -65,7 +70,8 @@ contract ProposalStore is TestUtils {
         IRegistrar registrar_,
         IEmergencyGovernor emergencyGovernor_,
         IStandardGovernor standardGovernor_,
-        IZeroGovernor zeroGovernor_
+        IZeroGovernor zeroGovernor_,
+        address[] memory allowedCashTokens_
     ) {
         _registrar = registrar_;
 
@@ -78,6 +84,10 @@ contract ProposalStore is TestUtils {
         _standardGovernorValues.push(0);
 
         _zeroGovernor = zeroGovernor_;
+        _zeroGovernorTargets.push(address(_zeroGovernor));
+        _zeroGovernorValues.push(0);
+
+        _allowedCashTokens = allowedCashTokens_;
     }
 
     /* ============ Emergency Governor Proposals ============ */
@@ -419,6 +429,139 @@ contract ProposalStore is TestUtils {
         console2.log("Standard proposal %s to set proposal fee to %s created successfully!", proposalId_, proposalFee_);
     }
 
+    /* ============ Zero Governor Proposals ============ */
+
+    function zeroGovernorResetToPowerHolders(address proposer_) external {
+        console2.log("Start zeroGovernorResetToPowerHolders...");
+
+        uint256 proposalId_ = _zeroGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IZeroGovernor.resetToPowerHolders.selector),
+            "Reset to POWER holders"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log("Zero proposal to reset to POWER holders has already been submitted");
+            return;
+        }
+
+        console2.log("Zero proposal %s to reset to POWER holders created successfully!", proposalId_);
+    }
+
+    function zeroGovernorResetToZeroHolders(address proposer_) external {
+        console2.log("Start zeroGovernorResetToZeroHolders...");
+
+        uint256 proposalId_ = _zeroGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IZeroGovernor.resetToZeroHolders.selector),
+            "Reset to ZERO holders"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log("Zero proposal to reset to ZERO holders has already been submitted");
+            return;
+        }
+
+        console2.log("Zero proposal %s to reset to ZERO holders created successfully!", proposalId_);
+    }
+
+    function zeroGovernorSetCashToken(address proposer_, uint256 cashTokenSeed_, uint256 proposalFeeSeed_) external {
+        console2.log("Start zeroGovernorSetCashToken...");
+        cashTokenSeed_ = bound(cashTokenSeed_, 0, _allowedCashTokens.length - 1);
+
+        address cashToken_ = _allowedCashTokens[cashTokenSeed_];
+        uint256 proposalFee_ = _generateRandomProposalFee(proposalFeeSeed_);
+
+        // Return early if cash token is already set
+        if (_standardGovernor.cashToken() == cashToken_) {
+            console2.log("Cash token is already set");
+            return;
+        }
+
+        uint256 proposalId_ = _zeroGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IZeroGovernor.setCashToken.selector, cashToken_, proposalFee_),
+            "Set cash token"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log(
+                "Zero proposal to set cash token to %s and proposal fee to %s has already been submitted",
+                cashToken_,
+                proposalFee_
+            );
+            return;
+        }
+
+        console2.log(
+            "Zero proposal %s to set cash token to %s and proposal fee to %s created successfully!",
+            proposalId_,
+            cashToken_,
+            proposalFee_
+        );
+    }
+
+    function zeroGovernorSetEmergencyProposalThresholdRatio(
+        address proposer_,
+        uint256 emergencyProposalThresholdRatioSeed_
+    ) external {
+        console2.log("Start zeroGovernorSetEmergencyProposalThresholdRatio...");
+
+        uint16 emergencyProposalThresholdRatio_ = _generateRandomThresholdRatio(emergencyProposalThresholdRatioSeed_);
+
+        uint256 proposalId_ = _zeroGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(
+                IZeroGovernor.setEmergencyProposalThresholdRatio.selector,
+                emergencyProposalThresholdRatio_
+            ),
+            "Set Emergency Proposal Threshold Ratio"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log(
+                "Zero proposal to set Emergency Proposal Threshold Ratio to %s has already been submitted",
+                emergencyProposalThresholdRatio_
+            );
+            return;
+        }
+
+        console2.log(
+            "Zero proposal %s to set Emergency Proposal Threshold Ratio to %s created successfully!",
+            proposalId_,
+            emergencyProposalThresholdRatio_
+        );
+    }
+
+    function zeroGovernorSetZeroProposalThresholdRatio(
+        address proposer_,
+        uint256 zeroProposalThresholdRatioSeed_
+    ) external {
+        console2.log("Start zeroGovernorSetZeroProposalThresholdRatio...");
+
+        uint16 zeroProposalThresholdRatio_ = _generateRandomThresholdRatio(zeroProposalThresholdRatioSeed_);
+
+        uint256 proposalId_ = _zeroGovernorPropose(
+            proposer_,
+            abi.encodeWithSelector(IZeroGovernor.setZeroProposalThresholdRatio.selector, zeroProposalThresholdRatio_),
+            "Set Zero Proposal Threshold Ratio"
+        );
+
+        if (proposalId_ == 0) {
+            console2.log(
+                "Zero proposal to set Zero Proposal Threshold Ratio to %s has already been submitted",
+                zeroProposalThresholdRatio_
+            );
+            return;
+        }
+
+        console2.log(
+            "Zero proposal %s to set Zero Proposal Threshold Ratio to %s created successfully!",
+            proposalId_,
+            zeroProposalThresholdRatio_
+        );
+    }
+
     /* ============ Vote on proposal ============ */
 
     function voteOnEmergencyGovernorProposal(
@@ -429,13 +572,13 @@ contract ProposalStore is TestUtils {
         console2.log("Start voteOnEmergencyGovernorProposal...");
 
         // Return early if no proposals have been queued.
-        if (_emergencyGovenorProposalIds.length == 0) {
+        if (_emergencyGovernorProposalIds.length == 0) {
             console2.log("No Emergency proposals have been queued...");
             return;
         }
 
-        proposalIdSeed_ = bound(proposalIdSeed_, 0, _emergencyGovenorProposalIds.length - 1);
-        uint256 proposalId_ = _emergencyGovenorProposalIds[proposalIdSeed_];
+        proposalIdSeed_ = bound(proposalIdSeed_, 0, _emergencyGovernorProposalIds.length - 1);
+        uint256 proposalId_ = _emergencyGovernorProposalIds[proposalIdSeed_];
 
         // Return early if the proposal has already been executed.
         if (proposalId_ == 0) {
@@ -443,7 +586,7 @@ contract ProposalStore is TestUtils {
             return;
         }
 
-        (, , IGovernor.ProposalState state_, , , , ) = _emergencyGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
 
         // Return early if the proposal is not votable.
         if (state_ != IGovernor.ProposalState.Active) {
@@ -452,7 +595,7 @@ contract ProposalStore is TestUtils {
         }
 
         for (uint256 i; i < accounts_.length; i++) {
-            (, , state_, , , , ) = _emergencyGovernor.getProposal(proposalId_);
+            (, , state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
 
             // Exit loop early if the proposal has been defeated or succeeded.
             if (state_ == IGovernor.ProposalState.Defeated || state_ == IGovernor.ProposalState.Succeeded) {
@@ -501,7 +644,7 @@ contract ProposalStore is TestUtils {
             return;
         }
 
-        (, , IGovernor.ProposalState state_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState state_, , , , ) = _standardGovernor.getProposal(proposalId_);
 
         // Return early if the proposal is not votable.
         if (state_ != IGovernor.ProposalState.Active) {
@@ -510,7 +653,7 @@ contract ProposalStore is TestUtils {
         }
 
         for (uint256 i; i < accounts_.length; i++) {
-            (, , state_, , , ) = _standardGovernor.getProposal(proposalId_);
+            (, , state_, , , , ) = _standardGovernor.getProposal(proposalId_);
 
             // Exit loop early if the proposal has been defeated or succeeded.
             if (state_ == IGovernor.ProposalState.Defeated || state_ == IGovernor.ProposalState.Succeeded) {
@@ -537,19 +680,84 @@ contract ProposalStore is TestUtils {
         }
     }
 
+    function voteOnZeroGovernorProposal(
+        uint256 proposalIdSeed_,
+        uint256 supportSeed_,
+        address[] memory accounts_
+    ) external {
+        console2.log("Start voteOnZeroGovernorProposal...");
+
+        // Return early if no proposals have been queued.
+        if (_zeroGovernorProposalIds.length == 0) {
+            console2.log("No Zero proposals have been queued...");
+            return;
+        }
+
+        proposalIdSeed_ = bound(proposalIdSeed_, 0, _zeroGovernorProposalIds.length - 1);
+        uint256 proposalId_ = _zeroGovernorProposalIds[proposalIdSeed_];
+
+        // Return early if the proposal has already been executed.
+        if (proposalId_ == 0) {
+            console2.log("Zero proposal %s has already been executed...", proposalId_);
+            return;
+        }
+
+        (, , IGovernor.ProposalState state_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
+
+        // Return early if the proposal is not votable.
+        if (state_ != IGovernor.ProposalState.Active) {
+            console2.log("Zero proposal %s is not votable...", proposalId_);
+            return;
+        }
+
+        for (uint256 i; i < accounts_.length; i++) {
+            (, , state_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
+
+            // Exit loop early if the proposal has been defeated or succeeded.
+            if (state_ == IGovernor.ProposalState.Defeated || state_ == IGovernor.ProposalState.Succeeded) {
+                console2.log("Zero proposal %s has been defeated or succeeded...", proposalId_);
+                return;
+            }
+
+            address account_ = accounts_[i];
+
+            // TODO: should not be needed since we should return earlier if the proposal is not votable
+            // Skip vote if the account has already voted on the proposal
+            if (_zeroGovernor.hasVoted(proposalId_, account_)) {
+                console2.log("%s has already voted on Zero proposal %s", account_, proposalId_);
+                continue;
+            }
+
+            // Generate a random number between 0 and 99 (inclusive)
+            uint8 support_ = (uint256(keccak256(abi.encodePacked(supportSeed_, account_))) % 100) % 2 == 0
+                ? uint8(IBatchGovernor.VoteType.Yes)
+                : uint8(IBatchGovernor.VoteType.No);
+
+            vm.prank(account_);
+            _zeroGovernor.castVote(proposalId_, support_);
+
+            console2.log(
+                "Account %s casted a %s vote on Zero proposal %s",
+                account_,
+                support_ == 1 ? "Yes" : "No",
+                proposalId_
+            );
+        }
+    }
+
     /* ============ Execute proposal ============ */
 
     function executeEmergencyGovernorProposal(uint256 proposalIdSeed_) external {
         console2.log("Start executeEmergencyGovernorProposal...");
 
         // Return early if no proposals have been queued.
-        if (_emergencyGovenorProposalIds.length == 0) {
+        if (_emergencyGovernorProposalIds.length == 0) {
             console2.log("No Emergency proposals have been queued...");
             return;
         }
 
-        proposalIdSeed_ = bound(proposalIdSeed_, 0, _emergencyGovenorProposalIds.length - 1);
-        uint256 proposalId_ = _emergencyGovenorProposalIds[proposalIdSeed_];
+        proposalIdSeed_ = bound(proposalIdSeed_, 0, _emergencyGovernorProposalIds.length - 1);
+        uint256 proposalId_ = _emergencyGovernorProposalIds[proposalIdSeed_];
 
         // Return early if the proposal has already been executed.
         if (proposalId_ == 0) {
@@ -557,7 +765,7 @@ contract ProposalStore is TestUtils {
             return;
         }
 
-        (, , IGovernor.ProposalState state_, , , , ) = _emergencyGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
 
         // Return early if the proposal is not executable.
         if (state_ != IGovernor.ProposalState.Succeeded) {
@@ -577,7 +785,7 @@ contract ProposalStore is TestUtils {
 
         console2.log("Emergency proposal %s executed successfully!", proposalId_);
 
-        delete _emergencyGovenorProposalIds[proposalIdSeed_];
+        delete _emergencyGovernorProposalIds[proposalIdSeed_];
     }
 
     function executeStandardGovernorProposal(uint256 proposalIdSeed_) external {
@@ -598,7 +806,7 @@ contract ProposalStore is TestUtils {
             return;
         }
 
-        (, , IGovernor.ProposalState state_, , , ) = _standardGovernor.getProposal(proposalId_);
+        (, , IGovernor.ProposalState state_, , , , ) = _standardGovernor.getProposal(proposalId_);
 
         // Return early if the proposal is not executable.
         if (state_ != IGovernor.ProposalState.Succeeded) {
@@ -619,6 +827,47 @@ contract ProposalStore is TestUtils {
         console2.log("Standard proposal %s executed successfully!", proposalId_);
 
         delete _standardGovernorProposalIds[proposalIdSeed_];
+    }
+
+    function executeZeroGovernorProposal(uint256 proposalIdSeed_) external {
+        console2.log("Start executeZeroGovernorProposal...");
+
+        // Return early if no proposals have been queued.
+        if (_zeroGovernorProposalIds.length == 0) {
+            console2.log("No Zero proposals have been queued...");
+            return;
+        }
+
+        proposalIdSeed_ = bound(proposalIdSeed_, 0, _zeroGovernorProposalIds.length - 1);
+        uint256 proposalId_ = _zeroGovernorProposalIds[proposalIdSeed_];
+
+        // Return early if the proposal has already been executed.
+        if (proposalId_ == 0) {
+            console2.log("Zero proposal %s has already been executed...", proposalId_);
+            return;
+        }
+
+        (, , IGovernor.ProposalState state_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
+
+        // Return early if the proposal is not executable.
+        if (state_ != IGovernor.ProposalState.Succeeded) {
+            console2.log("Zero proposal %s is not executable...", proposalId_);
+            return;
+        }
+
+        console2.log("Executing Zero proposal %s", proposalId_);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = _submittedProposalsCallData[proposalId_];
+
+        address[] memory targets_ = new address[](1);
+        uint256[] memory values_ = new uint256[](1);
+
+        _zeroGovernor.execute(targets_, values_, callDatas_, keccak256(""));
+
+        console2.log("Zero proposal %s executed successfully!", proposalId_);
+
+        delete _zeroGovernorProposalIds[proposalIdSeed_];
     }
 
     /* ============ Helpers ============ */
@@ -647,7 +896,7 @@ contract ProposalStore is TestUtils {
         _submittedProposals[proposalId_] = true;
         _submittedProposalsCallData[proposalId_] = callDatas_[0];
 
-        _emergencyGovenorProposalIds.push(proposalId_);
+        _emergencyGovernorProposalIds.push(proposalId_);
     }
 
     function _standardGovernorPropose(
@@ -677,6 +926,28 @@ contract ProposalStore is TestUtils {
         _standardGovernorProposalIds.push(proposalId_);
     }
 
+    function _zeroGovernorPropose(
+        address proposer_,
+        bytes memory callData_,
+        string memory description_
+    ) internal returns (uint256 proposalId_) {
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = callData_;
+
+        uint256 expectedProposalId_ = _zeroGovernor.hashProposal(callDatas_[0]);
+
+        // Return early if proposal has already been submitted
+        if (_submittedProposals[expectedProposalId_]) return 0;
+
+        vm.prank(proposer_);
+        proposalId_ = _zeroGovernor.propose(_zeroGovernorTargets, _zeroGovernorValues, callDatas_, description_);
+
+        _submittedProposals[proposalId_] = true;
+        _submittedProposalsCallData[proposalId_] = callDatas_[0];
+
+        _zeroGovernorProposalIds.push(proposalId_);
+    }
+
     function _generateRandomProposalFee(uint256 seed_) internal returns (uint256) {
         return uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 1e18;
     }
@@ -692,5 +963,9 @@ contract ProposalStore is TestUtils {
         }
 
         return string(randomString_);
+    }
+
+    function _generateRandomThresholdRatio(uint256 seed_) internal returns (uint16) {
+        return uint16(uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 10_000);
     }
 }
