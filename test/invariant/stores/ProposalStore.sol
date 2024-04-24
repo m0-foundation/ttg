@@ -582,44 +582,24 @@ contract ProposalStore is TestUtils {
     ) external {
         console2.log("Start voteOnEmergencyGovernorProposal...");
 
-        // Return early if no proposals have been queued.
-        if (_emergencyGovernorProposalIds.length == 0) {
-            console2.log("No Emergency proposals have been queued...");
-            return;
-        }
+        if (!_hasProposalsBeenQueued(_emergencyGovernorProposalIds)) return;
 
         proposalIdSeed_ = bound(proposalIdSeed_, 0, _emergencyGovernorProposalIds.length - 1);
         uint256 proposalId_ = _emergencyGovernorProposalIds[proposalIdSeed_];
 
-        // Return early if the proposal has already been executed.
-        if (proposalId_ == 0) {
-            console2.log("Emergency proposal %s has already been executed...", proposalId_);
-            return;
-        }
+        if (_hasProposalBeenExecuted(proposalId_)) return;
 
         (, , IGovernor.ProposalState state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
 
-        // Return early if the proposal is not votable.
-        if (state_ != IGovernor.ProposalState.Active) {
-            console2.log("Emergency proposal %s is not votable...", proposalId_);
-            return;
-        }
+        if (!_isProposalActive(state_, proposalId_)) return;
 
         for (uint256 i; i < accounts_.length; i++) {
             (, , state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
 
-            // Exit loop early if the proposal has been defeated or succeeded.
-            if (state_ == IGovernor.ProposalState.Defeated || state_ == IGovernor.ProposalState.Succeeded) {
-                console2.log("Emergency proposal %s has been defeated or succeeded...", proposalId_);
-                return;
-            }
+            if (!_isProposalActive(state_, proposalId_)) return;
 
             address account_ = accounts_[i];
-
-            // Generate a random number between 0 and 99 (inclusive)
-            uint8 support_ = (uint256(keccak256(abi.encodePacked(supportSeed_, account_))) % 100) % 2 == 0
-                ? uint8(IBatchGovernor.VoteType.Yes)
-                : uint8(IBatchGovernor.VoteType.No);
+            uint8 support_ = _getSupport(supportSeed_, account_);
 
             vm.prank(account_);
             _emergencyGovernor.castVote(proposalId_, support_);
@@ -642,44 +622,24 @@ contract ProposalStore is TestUtils {
 
         console2.log("Start voteOnStandardGovernorProposal...");
 
-        // Return early if no proposals have been queued.
-        if (_standardGovernorProposalIds.length == 0) {
-            console2.log("No Standard proposals have been queued...");
-            return;
-        }
+        if (!_hasProposalsBeenQueued(_standardGovernorProposalIds)) return;
 
         proposalIdSeed_ = bound(proposalIdSeed_, 0, _standardGovernorProposalIds.length - 1);
         uint256 proposalId_ = _standardGovernorProposalIds[proposalIdSeed_];
 
-        // Return early if the proposal has already been executed.
-        if (proposalId_ == 0) {
-            console2.log("Standard proposal %s has already been executed...", proposalId_);
-            return;
-        }
+        if (_hasProposalBeenExecuted(proposalId_)) return;
 
-        (, , IGovernor.ProposalState state_, , , , ) = _standardGovernor.getProposal(proposalId_);
+        (uint48 voteStart_, , IGovernor.ProposalState state_, , , , ) = _standardGovernor.getProposal(proposalId_);
 
-        // Return early if the proposal is not votable.
-        if (state_ != IGovernor.ProposalState.Active) {
-            console2.log("Standard proposal %s is not votable...", proposalId_);
-            return;
-        }
+        if (!_isProposalActive(state_, proposalId_)) return;
 
         for (uint256 i; i < accounts_.length; i++) {
             (, , state_, , , , ) = _standardGovernor.getProposal(proposalId_);
 
-            // Exit loop early if the proposal has been defeated or succeeded.
-            if (state_ == IGovernor.ProposalState.Defeated || state_ == IGovernor.ProposalState.Succeeded) {
-                console2.log("Standard proposal %s has been defeated or succeeded...", proposalId_);
-                return;
-            }
+            if (!_isProposalActive(state_, proposalId_)) return;
 
             address account_ = accounts_[i];
-
-            // Generate a random number between 0 and 99 (inclusive)
-            uint8 support_ = (uint256(keccak256(abi.encodePacked(supportSeed_, account_))) % 100) % 2 == 0
-                ? uint8(IBatchGovernor.VoteType.Yes)
-                : uint8(IBatchGovernor.VoteType.No);
+            uint8 support_ = _getSupport(supportSeed_, account_);
 
             uint256 zeroBalanceBefore_ = _zeroToken.balanceOf(account_);
 
@@ -693,7 +653,7 @@ contract ProposalStore is TestUtils {
                 proposalId_
             );
 
-            uint256 zeroRewards = _getZeroTokenReward(account_, _powerToken, _standardGovernor, _currentEpoch());
+            uint256 zeroRewards = _getZeroTokenReward(account_, _powerToken, _standardGovernor, voteStart_);
 
             // Verify that ZERO rewards have been distributed
             assertEq(_zeroToken.balanceOf(account_), zeroBalanceBefore_ + zeroRewards);
@@ -719,37 +679,21 @@ contract ProposalStore is TestUtils {
     ) external {
         console2.log("Start voteOnZeroGovernorProposal...");
 
-        // Return early if no proposals have been queued.
-        if (_zeroGovernorProposalIds.length == 0) {
-            console2.log("No Zero proposals have been queued...");
-            return;
-        }
+        if (!_hasProposalsBeenQueued(_zeroGovernorProposalIds)) return;
 
         proposalIdSeed_ = bound(proposalIdSeed_, 0, _zeroGovernorProposalIds.length - 1);
         uint256 proposalId_ = _zeroGovernorProposalIds[proposalIdSeed_];
 
-        // Return early if the proposal has already been executed.
-        if (proposalId_ == 0) {
-            console2.log("Zero proposal %s has already been executed...");
-            return;
-        }
+        if (_hasProposalBeenExecuted(proposalId_)) return;
 
         (, , IGovernor.ProposalState state_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
 
-        // Return early if the proposal is not votable.
-        if (state_ != IGovernor.ProposalState.Active) {
-            console2.log("Zero proposal %s is not votable...", proposalId_);
-            return;
-        }
+        if (!_isProposalActive(state_, proposalId_)) return;
 
         for (uint256 i; i < accounts_.length; i++) {
             (, , state_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
 
-            // Exit loop early if the proposal has been defeated or succeeded.
-            if (state_ == IGovernor.ProposalState.Defeated || state_ == IGovernor.ProposalState.Succeeded) {
-                console2.log("Zero proposal %s has been defeated or succeeded...", proposalId_);
-                return;
-            }
+            if (!_isProposalActive(state_, proposalId_)) return;
 
             address account_ = accounts_[i];
 
@@ -760,10 +704,7 @@ contract ProposalStore is TestUtils {
                 continue;
             }
 
-            // Generate a random number between 0 and 99 (inclusive)
-            uint8 support_ = (uint256(keccak256(abi.encodePacked(supportSeed_, account_))) % 100) % 2 == 0
-                ? uint8(IBatchGovernor.VoteType.Yes)
-                : uint8(IBatchGovernor.VoteType.No);
+            uint8 support_ = _getSupport(supportSeed_, account_);
 
             vm.prank(account_);
             _zeroGovernor.castVote(proposalId_, support_);
@@ -904,6 +845,8 @@ contract ProposalStore is TestUtils {
 
     /* ============ Helpers ============ */
 
+    /* ============ Propose Helpers ============ */
+
     function _emergencyGovernorPropose(
         address proposer_,
         bytes memory callData_,
@@ -979,6 +922,48 @@ contract ProposalStore is TestUtils {
 
         _zeroGovernorProposalIds.push(proposalId_);
     }
+
+    /* ============ Vote Helpers ============ */
+
+    function _hasProposalsBeenQueued(uint256[] memory proposalIds_) internal view returns (bool) {
+        // Return early if no proposals have been queued.
+        if (proposalIds_.length == 0) {
+            console2.log("No proposals have been queued...");
+            return false;
+        }
+
+        return true;
+    }
+
+    function _hasProposalBeenExecuted(uint256 proposalId_) internal view returns (bool) {
+        // Return early if the proposal has already been executed.
+        if (proposalId_ == 0) {
+            console2.log("Proposal %s has already been executed...");
+            return true;
+        }
+
+        return false;
+    }
+
+    function _isProposalActive(IGovernor.ProposalState state_, uint256 proposalId_) internal view returns (bool) {
+        // Return early if the proposal is not active.
+        if (state_ != IGovernor.ProposalState.Active) {
+            console2.log("Proposal %s is not active...", proposalId_);
+            return false;
+        }
+
+        return true;
+    }
+
+    function _getSupport(uint256 supportSeed_, address account_) internal view returns (uint8) {
+        // Generate a random number between 0 and 99 (inclusive)
+        return
+            (uint256(keccak256(abi.encodePacked(supportSeed_, account_))) % 100) % 2 == 0
+                ? uint8(IBatchGovernor.VoteType.Yes)
+                : uint8(IBatchGovernor.VoteType.No);
+    }
+
+    /* ============ Random values Helpers ============ */
 
     function _generateRandomProposalFee(uint256 seed_) internal view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 1e18;
