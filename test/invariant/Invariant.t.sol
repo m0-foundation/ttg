@@ -163,6 +163,7 @@ contract InvariantTests is TestUtils {
         // Skip test if POWER total supply and/or voting power are zero.
         vm.assume(totalVotes_ != 0);
         vm.assume(_powerToken.totalSupply() != 0);
+
         assertGe(
             _powerToken.totalSupply(),
             totalSupply_,
@@ -180,5 +181,31 @@ contract InvariantTests is TestUtils {
             totalSupply_,
             "The sum of POWER token getVotes() should be greater than or equal to the sum of POWER token balanceOf()"
         );
+
+        if (_isVotingEpoch(_currentEpoch())) {
+            if (_proposalStore.nextPowerTargetVotes() != 0) {
+                assertEq(
+                    totalVotes_,
+                    _proposalStore.nextPowerTargetVotes(),
+                    "POWER token total votes should account for inflation and equal the target votes"
+                );
+            }
+
+            if (_proposalStore.nextPowerTargetSupply() != 0) {
+                assertEq(
+                    _powerToken.totalSupply(),
+                    _proposalStore.nextPowerTargetSupply(),
+                    "POWER token totalSupply() should account for inflation and equal the target supply"
+                );
+            }
+        }
+
+        if (_proposalStore.nextZeroTargetSupply() != 0) {
+            assertEq(
+                _zeroToken.totalSupply(),
+                _proposalStore.nextZeroTargetSupply(),
+                "ZERO token totalSupply() should account for inflation and equal the target supply"
+            );
+        }
     }
 }

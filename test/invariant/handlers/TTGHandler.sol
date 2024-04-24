@@ -44,7 +44,9 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
     }
 
     modifier warpToNextEpoch() {
+        console2.log("Warping to next epoch...");
         _warpToNextEpoch();
+        console2.log("Warped to epoch %s", _currentEpoch());
         _setCurrentBlockTimestamp();
         _;
     }
@@ -153,7 +155,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         console2.log("POWER holder %s is proposing standard vote to add himself to list...", powerHolder_);
 
         _proposalStore.standardGovernorAddToList(powerHolder_, registrarListSeed_);
-        _setCurrentBlockTimestamp();
     }
 
     function standardGovernorRemoveFromList(
@@ -171,7 +172,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         );
 
         _proposalStore.standardGovernorRemoveFromList(powerHolder_, registrarListSeed_, powerHolderToRemove_);
-        _setCurrentBlockTimestamp();
     }
 
     function standardGovernorRemoveFromAndAddToList(
@@ -197,8 +197,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
             powerHolderToRemove_,
             powerHolderToAdd_
         );
-
-        _setCurrentBlockTimestamp();
     }
 
     function standardGovernorSetKey(
@@ -210,7 +208,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         console2.log("POWER holder %s is proposing standard vote to set key value pair...", powerHolder_);
 
         _proposalStore.standardGovernorSetKey(powerHolder_, keySeed_, valueSeed_);
-        _setCurrentBlockTimestamp();
     }
 
     function standardGovernorSetProposalFee(
@@ -221,7 +218,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         console2.log("POWER holder %s is proposing standard vote to set proposal fee...", powerHolder_);
 
         _proposalStore.standardGovernorSetProposalFee(powerHolder_, proposalFeeSeed_);
-        _setCurrentBlockTimestamp();
     }
 
     /* ============ Standard Governor Proposals ============ */
@@ -290,12 +286,10 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
 
     function voteOnStandardGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external warpToVoteEpoch {
         _proposalStore.voteOnStandardGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.powerHolders());
-        _setCurrentBlockTimestamp();
     }
 
     function voteOnZeroGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
         _proposalStore.voteOnZeroGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.zeroHolders());
-        _setCurrentBlockTimestamp();
     }
 
     /* ============ Execute proposal ============ */

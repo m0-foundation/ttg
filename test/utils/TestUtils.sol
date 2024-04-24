@@ -61,19 +61,25 @@ contract TestUtils is Test {
         vm.warp(vm.getBlockTimestamp() + seconds_);
     }
 
+    function _getNextVotingPower(address voter_, IPowerToken powerToken_) internal view returns (uint240) {
+        uint256 votingPower_ = powerToken_.getVotes(voter_);
+        return uint240(votingPower_ + (votingPower_ * powerToken_.participationInflation()) / powerToken_.ONE());
+    }
+
     function _getNextTargetSupply(IPowerToken powerToken_) internal view returns (uint240) {
-        uint256 _targetSupply = powerToken_.targetSupply();
-        return uint240(_targetSupply + (_targetSupply * powerToken_.participationInflation()) / powerToken_.ONE());
+        uint256 targetSupply_ = powerToken_.targetSupply();
+        return uint240(targetSupply_ + (targetSupply_ * powerToken_.participationInflation()) / powerToken_.ONE());
     }
 
     function _getZeroTokenReward(
-        IStandardGovernor standardGovernor_,
-        uint256 powerWeight_,
+        address voter_,
         IPowerToken powerToken_,
+        IStandardGovernor standardGovernor_,
         uint256 voteStart_
     ) internal view returns (uint256) {
+        // maxTotalZeroRewardPerActiveEpoch * votingWeight / pastTotalSupply
         return
-            (standardGovernor_.maxTotalZeroRewardPerActiveEpoch() * powerWeight_) /
+            (standardGovernor_.maxTotalZeroRewardPerActiveEpoch() * powerToken_.getVotes(voter_)) /
             powerToken_.pastTotalSupply(voteStart_);
     }
 

@@ -128,7 +128,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.expectEmit(address(_powerToken));
         emit IERC5805.DelegateVotesChanged(_alice, alicePowerWeight_, _getInflatedAmount(alicePowerWeight_));
 
-        uint256 zeroTokenReward_ = _getZeroTokenReward(_standardGovernor, alicePowerWeight_, _powerToken, START_EPOCH);
+        uint256 zeroTokenReward_ = _getZeroTokenReward(_alice, _powerToken, _standardGovernor, START_EPOCH);
 
         vm.expectEmit(address(_zeroToken));
         emit IERC20.Transfer(address(0), _alice, zeroTokenReward_);
@@ -219,7 +219,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.expectEmit(address(_powerToken));
         emit IERC5805.DelegateVotesChanged(_alice, alicePowerWeight_, _getInflatedAmount(alicePowerWeight_));
 
-        uint256 zeroTokenReward_ = _getZeroTokenReward(_standardGovernor, alicePowerWeight_, _powerToken, START_EPOCH);
+        uint256 zeroTokenReward_ = _getZeroTokenReward(_alice, _powerToken, _standardGovernor, START_EPOCH);
 
         vm.expectEmit(address(_zeroToken));
         emit IERC20.Transfer(address(0), _alice, zeroTokenReward_);

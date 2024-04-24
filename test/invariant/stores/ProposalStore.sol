@@ -2,12 +2,13 @@
 
 pragma solidity 0.8.23;
 
-import { IERC20 } from "../../../lib/common/src/interfaces/IERC20.sol";
 import { console2 } from "../../../lib/forge-std/src/Test.sol";
 
 import { IGovernor } from "../../../src/abstract/interfaces/IGovernor.sol";
 import { IBatchGovernor } from "../../../src/abstract/interfaces/IBatchGovernor.sol";
 
+import { IPowerToken } from "../../../src/interfaces/IPowerToken.sol";
+import { IZeroToken } from "../../../src/interfaces/IZeroToken.sol";
 import { IRegistrar } from "../../../src/interfaces/IRegistrar.sol";
 import { IEmergencyGovernor } from "../../../src/interfaces/IEmergencyGovernor.sol";
 import { IStandardGovernor } from "../../../src/interfaces/IStandardGovernor.sol";
@@ -16,6 +17,9 @@ import { IZeroGovernor } from "../../../src/interfaces/IZeroGovernor.sol";
 import { TestUtils } from "../../utils/TestUtils.sol";
 
 contract ProposalStore is TestUtils {
+    IPowerToken internal _powerToken;
+    IZeroToken internal _zeroToken;
+
     IRegistrar internal _registrar;
 
     IEmergencyGovernor internal _emergencyGovernor;
@@ -63,6 +67,10 @@ contract ProposalStore is TestUtils {
 
     address[] internal _allowedCashTokens;
 
+    uint240 public nextPowerTargetSupply;
+    uint240 public nextPowerTargetVotes;
+    uint256 public nextZeroTargetSupply;
+
     mapping(uint256 proposalId => bool hasBeenSubmitted) internal _submittedProposals;
     mapping(uint256 proposalId => bytes proposalCallData) internal _submittedProposalsCallData;
 
@@ -74,6 +82,9 @@ contract ProposalStore is TestUtils {
         address[] memory allowedCashTokens_
     ) {
         _registrar = registrar_;
+
+        _powerToken = IPowerToken(_registrar.powerToken());
+        _zeroToken = IZeroToken(_registrar.zeroToken());
 
         _emergencyGovernor = emergencyGovernor_;
         _emergencyGovernorTargets.push(address(_emergencyGovernor));
@@ -627,6 +638,8 @@ contract ProposalStore is TestUtils {
         uint256 supportSeed_,
         address[] memory accounts_
     ) external {
+        uint256 zeroTotalSupplyBefore_ = _zeroToken.totalSupply();
+
         console2.log("Start voteOnStandardGovernorProposal...");
 
         // Return early if no proposals have been queued.
@@ -668,6 +681,8 @@ contract ProposalStore is TestUtils {
                 ? uint8(IBatchGovernor.VoteType.Yes)
                 : uint8(IBatchGovernor.VoteType.No);
 
+            uint256 zeroBalanceBefore_ = _zeroToken.balanceOf(account_);
+
             vm.prank(account_);
             _standardGovernor.castVote(proposalId_, support_);
 
@@ -677,7 +692,24 @@ contract ProposalStore is TestUtils {
                 support_ == 1 ? "Yes" : "No",
                 proposalId_
             );
+
+            uint256 zeroRewards = _getZeroTokenReward(account_, _powerToken, _standardGovernor, _currentEpoch());
+
+            // Verify that ZERO rewards have been distributed
+            assertEq(_zeroToken.balanceOf(account_), zeroBalanceBefore_ + zeroRewards);
+
+            // Verify that the ZERO total supply has increased accordingly
+            assertEq(_zeroToken.balanceOf(account_), zeroTotalSupplyBefore_ + zeroRewards);
+
+            // Set expected POWER token target votes for the next voting epoch
+            nextPowerTargetVotes += _getNextVotingPower(account_, _powerToken);
         }
+
+        // Set expected POWER token target supply for the next voting epoch
+        nextPowerTargetSupply = _getNextTargetSupply(_powerToken);
+
+        // Set expected ZERO token target supply for the current voting epoch
+        nextZeroTargetSupply = zeroTotalSupplyBefore_ + _standardGovernor.maxTotalZeroRewardPerActiveEpoch();
     }
 
     function voteOnZeroGovernorProposal(
@@ -698,7 +730,7 @@ contract ProposalStore is TestUtils {
 
         // Return early if the proposal has already been executed.
         if (proposalId_ == 0) {
-            console2.log("Zero proposal %s has already been executed...", proposalId_);
+            console2.log("Zero proposal %s has already been executed...");
             return;
         }
 
@@ -761,7 +793,7 @@ contract ProposalStore is TestUtils {
 
         // Return early if the proposal has already been executed.
         if (proposalId_ == 0) {
-            console2.log("Emergency proposal %s has already been executed...", proposalId_);
+            console2.log("Emergency proposal %s has already been executed...");
             return;
         }
 
@@ -802,7 +834,7 @@ contract ProposalStore is TestUtils {
 
         // Return early if the proposal has already been executed.
         if (proposalId_ == 0) {
-            console2.log("Standard proposal %s has already been executed...", proposalId_);
+            console2.log("Standard proposal %s has already been executed...");
             return;
         }
 
@@ -843,7 +875,7 @@ contract ProposalStore is TestUtils {
 
         // Return early if the proposal has already been executed.
         if (proposalId_ == 0) {
-            console2.log("Zero proposal %s has already been executed...", proposalId_);
+            console2.log("Zero proposal %s has already been executed...");
             return;
         }
 
@@ -948,11 +980,15 @@ contract ProposalStore is TestUtils {
         _zeroGovernorProposalIds.push(proposalId_);
     }
 
-    function _generateRandomProposalFee(uint256 seed_) internal returns (uint256) {
+    function _generateRandomProposalFee(uint256 seed_) internal view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 1e18;
     }
 
-    function _generateRandomString(uint256 seed_) internal view returns (string memory) {
+    function _generateRandomThresholdRatio(uint256 seed_) internal view returns (uint16) {
+        return uint16(uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 10_000);
+    }
+
+    function _generateRandomString(uint256 seed_) internal pure returns (string memory) {
         bytes memory characters_ = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         uint256 stringLength_ = 32;
         bytes memory randomString_ = new bytes(stringLength_);
@@ -963,9 +999,5 @@ contract ProposalStore is TestUtils {
         }
 
         return string(randomString_);
-    }
-
-    function _generateRandomThresholdRatio(uint256 seed_) internal returns (uint16) {
-        return uint16(uint256(keccak256(abi.encodePacked(vm.getBlockTimestamp(), seed_))) % 10_000);
     }
 }
