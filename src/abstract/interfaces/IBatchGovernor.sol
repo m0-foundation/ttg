@@ -80,6 +80,9 @@ interface IBatchGovernor is IGovernor {
      */
     error ProposalInactive(ProposalState state);
 
+    /// @notice Revert message when voting on a proposal with a zero voting weight.
+    error ZeroVotingPower();
+
     /* ============ Interactive Functions ============ */
 
     /**

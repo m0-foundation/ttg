@@ -114,6 +114,8 @@ rule canAlwaysVoteInVotingEpoch(uint256 proposalId) {
     uint16 epoch = require_uint16(clock(e));
     /// Non-payable function
     require e.msg.value == 0;
+    /// Voting power should be greater than 0
+    require getVotes(e, e.msg.sender, require_uint16(clock(e) - 1)) != 0;
     /// Proposal is active
     require state(e, proposalId) == ACTIVE();
     /// Has not voted yet.
