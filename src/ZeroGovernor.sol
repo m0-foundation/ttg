@@ -186,7 +186,7 @@ contract ZeroGovernor is IZeroGovernor, ThresholdGovernor {
         );
 
         if (expectedStandardGovernor_ != standardGovernor_) {
-            revert UnexpectedStandardGovernorDeployed(expectedPowerToken_, powerToken_);
+            revert UnexpectedStandardGovernorDeployed(expectedStandardGovernor_, standardGovernor_);
         }
 
         powerToken_ = IPowerTokenDeployer(powerTokenDeployer_).deploy(bootstrapToken_, standardGovernor_, cashToken_);

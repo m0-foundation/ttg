@@ -52,9 +52,9 @@ interface IZeroGovernor is IThresholdGovernor {
     error NoAllowedCashTokens();
 
     /**
-     * @notice Revert message when the address of the deployed Poker Token differs fro what was expected.
-     * @param  expected The expected address of the deployed Poker Token.
-     * @param  deployed The actual address of the deployed Poker Token.
+     * @notice Revert message when the address of the deployed Power Token differs fro what was expected.
+     * @param  expected The expected address of the deployed Power Token.
+     * @param  deployed The actual address of the deployed Power Token.
      */
     error UnexpectedPowerTokenDeployed(address expected, address deployed);
 
