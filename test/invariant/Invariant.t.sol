@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { console2 } from "../../lib/forge-std/src/Test.sol";
 import { DeployBase } from "../../script/DeployBase.sol";
 
 import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
@@ -93,19 +92,6 @@ contract InvariantTests is TestUtils {
 
         _vault = IDistributionVault(_standardGovernor.vault());
 
-        uint256 cashToken1MaxAmount_ = type(uint256).max / _holderStore.POWER_HOLDER_NUM();
-
-        for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
-            address account_ = initialAccounts_[0][i];
-            _cashToken1.mint(account_, cashToken1MaxAmount_);
-
-            vm.prank(account_);
-            _cashToken1.approve(address(_standardGovernor), cashToken1MaxAmount_);
-
-            vm.prank(account_);
-            _cashToken1.approve(address(_powerToken), cashToken1MaxAmount_);
-        }
-
         _handler = new TTGHandler(_emergencyGovernor, _powerToken, _holderStore, _proposalStore, _timestampStore);
 
         // Set fuzzer to only call the handler
@@ -146,6 +132,9 @@ contract InvariantTests is TestUtils {
         excludeSender(address(_zeroGovernor));
         excludeSender(address(_registrar));
         excludeSender(address(_vault));
+
+        // Warp to the next epoch to init ZERO balances
+        _warpToNextEpoch();
     }
 
     function invariant_main() public useCurrentTimestamp {
@@ -182,7 +171,7 @@ contract InvariantTests is TestUtils {
             "The sum of POWER token getVotes() should be greater than or equal to the sum of POWER token balanceOf()"
         );
 
-        if (_isVotingEpoch(_currentEpoch())) {
+        if (_isTransferEpoch(_currentEpoch())) {
             if (_proposalStore.nextPowerTargetVotes() != 0) {
                 assertEq(
                     totalVotes_,
@@ -206,6 +195,85 @@ contract InvariantTests is TestUtils {
                 _proposalStore.nextZeroTargetSupply(),
                 "ZERO token totalSupply() should account for inflation and equal the target supply"
             );
+        }
+
+        IPowerToken nextPowerToken_ = _proposalStore.nextPowerToken();
+
+        if (address(nextPowerToken_) != address(0)) {
+            uint256 bootstrapEpoch_ = nextPowerToken_.bootstrapEpoch();
+
+            if (_proposalStore.hasExecutedResetToPowerHolders()) {
+                for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
+                    address powerHolder_ = _holderStore.powerHolders()[i];
+
+                    assertEq(
+                        nextPowerToken_.balanceOf(powerHolder_),
+                        nextPowerToken_.pastBalanceOf(powerHolder_, bootstrapEpoch_),
+                        "POWER token balance for initial POWER holders should be equal to the balance at bootstrap epoch"
+                    );
+
+                    assertEq(
+                        nextPowerToken_.getVotes(powerHolder_),
+                        nextPowerToken_.getPastVotes(powerHolder_, bootstrapEpoch_),
+                        "POWER token votes for initial POWER holders should be equal to the votes at bootstrap epoch"
+                    );
+                }
+
+                for (uint256 i; i < _holderStore.ZERO_HOLDER_NUM(); i++) {
+                    address zeroHolder_ = _holderStore.zeroHolders()[i];
+
+                    assertEq(
+                        nextPowerToken_.balanceOf(zeroHolder_),
+                        0,
+                        "POWER token balance for initial ZERO holders should be equal 0"
+                    );
+
+                    assertEq(
+                        nextPowerToken_.getVotes(zeroHolder_),
+                        0,
+                        "POWER token votes for initial ZERO holders should be equal to 0"
+                    );
+                }
+
+                // Set to false now that the reset has been executed and balances checked
+                _proposalStore.setHasExecutedResetToPowerHolders(false);
+            }
+
+            if (_proposalStore.hasExecutedResetToZeroHolders()) {
+                for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
+                    address powerHolder_ = _holderStore.powerHolders()[i];
+
+                    assertEq(
+                        nextPowerToken_.balanceOf(powerHolder_),
+                        0,
+                        "POWER token balance for initial POWER holders should be 0 after reset to ZERO holders"
+                    );
+
+                    assertEq(
+                        nextPowerToken_.getVotes(powerHolder_),
+                        0,
+                        "POWER token votes for initial POWER holders should be 0 after reset to ZERO holders"
+                    );
+                }
+
+                for (uint256 i; i < _holderStore.ZERO_HOLDER_NUM(); i++) {
+                    address zeroHolder_ = _holderStore.zeroHolders()[i];
+                    assertEq(
+                        nextPowerToken_.balanceOf(zeroHolder_),
+                        nextPowerToken_.pastBalanceOf(zeroHolder_, bootstrapEpoch_),
+                        "POWER token balance for initial ZERO holders should be equal to the balance at bootstrap epoch"
+                    );
+
+                    assertEq(
+                        nextPowerToken_.getVotes(zeroHolder_),
+                        nextPowerToken_.getPastVotes(zeroHolder_, bootstrapEpoch_),
+                        "POWER token votes for initial ZERO holders should be equal to the balance at bootstrap epoch"
+                    );
+                }
+
+                // Set to false now that the reset has been executed and balances checked
+                _proposalStore.setHasExecutedResetToZeroHolders(false);
+            }
         }
     }
 }

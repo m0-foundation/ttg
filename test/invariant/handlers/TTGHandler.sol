@@ -43,18 +43,10 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _timestampStore.setCurrentTimestamp(block.timestamp);
     }
 
-    modifier warpToNextEpoch() {
-        console2.log("Warping to next epoch...");
-        _warpToNextEpoch();
-        console2.log("Warped to epoch %s", _currentEpoch());
-        _setCurrentBlockTimestamp();
-        _;
-    }
-
     modifier warpToVoteEpoch() {
         if (_isTransferEpoch(_currentEpoch())) {
             console2.log("Warping to next vote epoch...");
-            _warpToNextVoteEpoch();
+            _warpToNextEpoch();
             console2.log("Warped to vote epoch %s", _currentEpoch());
         }
         _setCurrentBlockTimestamp();
@@ -64,7 +56,7 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
     modifier warpToTransferEpoch() {
         if (_isVotingEpoch(_currentEpoch())) {
             console2.log("Warping to next transfer epoch...");
-            _warpToNextTransferEpoch();
+            _warpToNextEpoch();
             console2.log("Warped to transfer epoch %s", _currentEpoch());
         }
         _setCurrentBlockTimestamp();
@@ -147,21 +139,19 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
 
     /* ============ Standard Governor Proposals ============ */
 
-    function standardGovernorAddToList(
-        uint256 registrarListSeed_,
-        uint256 powerHolderIndexSeed_
-    ) external warpToTransferEpoch {
+    function standardGovernorAddToList(uint256 registrarListSeed_, uint256 powerHolderIndexSeed_) external {
         address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
         console2.log("POWER holder %s is proposing standard vote to add himself to list...", powerHolder_);
 
         _proposalStore.standardGovernorAddToList(powerHolder_, registrarListSeed_);
+        _setCurrentBlockTimestamp();
     }
 
     function standardGovernorRemoveFromList(
         uint256 registrarListSeed_,
         uint256 powerHolderIndexSeed_,
         uint256 powerHolderToRemoveIndexSeed_
-    ) external warpToTransferEpoch {
+    ) external {
         address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
         address powerHolderToRemove_ = _holderStore.getPowerHolder(powerHolderToRemoveIndexSeed_);
 
@@ -172,6 +162,7 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         );
 
         _proposalStore.standardGovernorRemoveFromList(powerHolder_, registrarListSeed_, powerHolderToRemove_);
+        _setCurrentBlockTimestamp();
     }
 
     function standardGovernorRemoveFromAndAddToList(
@@ -179,7 +170,7 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         uint256 powerHolderIndexSeed_,
         uint256 powerHolderToRemoveIndexSeed_,
         uint256 powerHolderToAddIndexSeed_
-    ) external warpToTransferEpoch {
+    ) external {
         address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
         address powerHolderToRemove_ = _holderStore.getPowerHolder(powerHolderToRemoveIndexSeed_);
         address powerHolderToAdd_ = _holderStore.getPowerHolder(powerHolderToAddIndexSeed_);
@@ -197,27 +188,23 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
             powerHolderToRemove_,
             powerHolderToAdd_
         );
+        _setCurrentBlockTimestamp();
     }
 
-    function standardGovernorSetKey(
-        uint256 powerHolderIndexSeed_,
-        uint256 keySeed_,
-        uint256 valueSeed_
-    ) external warpToTransferEpoch {
+    function standardGovernorSetKey(uint256 powerHolderIndexSeed_, uint256 keySeed_, uint256 valueSeed_) external {
         address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
         console2.log("POWER holder %s is proposing standard vote to set key value pair...", powerHolder_);
 
         _proposalStore.standardGovernorSetKey(powerHolder_, keySeed_, valueSeed_);
+        _setCurrentBlockTimestamp();
     }
 
-    function standardGovernorSetProposalFee(
-        uint256 powerHolderIndexSeed_,
-        uint256 proposalFeeSeed_
-    ) external warpToTransferEpoch {
+    function standardGovernorSetProposalFee(uint256 powerHolderIndexSeed_, uint256 proposalFeeSeed_) external {
         address powerHolder_ = _holderStore.getPowerHolder(powerHolderIndexSeed_);
         console2.log("POWER holder %s is proposing standard vote to set proposal fee...", powerHolder_);
 
         _proposalStore.standardGovernorSetProposalFee(powerHolder_, proposalFeeSeed_);
+        _setCurrentBlockTimestamp();
     }
 
     /* ============ Standard Governor Proposals ============ */
@@ -273,7 +260,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         console2.log("ZERO holder %s is proposing Zero vote to set Zero Proposal Threshold Ratio...", zeroHolder_);
 
         _proposalStore.zeroGovernorSetZeroProposalThresholdRatio(zeroHolder_, zeroProposalThresholdRatioSeed_);
-
         _setCurrentBlockTimestamp();
     }
 
@@ -290,6 +276,7 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
 
     function voteOnZeroGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
         _proposalStore.voteOnZeroGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.zeroHolders());
+        _setCurrentBlockTimestamp();
     }
 
     /* ============ Execute proposal ============ */
@@ -301,7 +288,6 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
 
     function executeStandardGovernorProposal(uint256 proposalIdSeed_) external warpToTransferEpoch {
         _proposalStore.executeStandardGovernorProposal(proposalIdSeed_);
-        _setCurrentBlockTimestamp();
     }
 
     function executeZeroGovernorProposal(uint256 proposalIdSeed_) external {

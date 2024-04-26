@@ -41,6 +41,7 @@ contract HolderStore is TestUtils {
             address powerHolder_ = _powerHolders.get(i);
             uint256 balance_ = _generateRandomAmount(powerHolder_, POWER_INITIAL_TOTAL_SUPPLY / POWER_HOLDER_NUM);
 
+            console2.log("Init POWER holder balance %s", balance_);
             _powerHolderBalances.push(balance_);
         }
 
@@ -51,6 +52,7 @@ contract HolderStore is TestUtils {
             address zeroHolder_ = _zeroHolders.get(i);
             uint256 balance_ = _generateRandomAmount(zeroHolder_, ZERO_INITIAL_TOTAL_SUPPLY / ZERO_HOLDER_NUM);
 
+            console2.log("Init ZERO holder balance %s", balance_);
             _zeroHolderBalances.push(balance_);
         }
     }

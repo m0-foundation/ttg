@@ -79,8 +79,8 @@ contract TestUtils is Test {
     ) internal view returns (uint256) {
         // maxTotalZeroRewardPerActiveEpoch * votingWeight / pastTotalSupply
         return
-            (standardGovernor_.maxTotalZeroRewardPerActiveEpoch() * powerToken_.getVotes(voter_)) /
-            powerToken_.pastTotalSupply(voteStart_);
+            (standardGovernor_.maxTotalZeroRewardPerActiveEpoch() * powerToken_.getPastVotes(voter_, voteStart_ - 1)) /
+            powerToken_.pastTotalSupply(voteStart_ - 1);
     }
 
     function _hashProposal(
