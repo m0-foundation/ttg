@@ -29,6 +29,6 @@ library PureEpochs {
     }
 
     function clockMode() internal pure returns (string memory) {
-        return "mode=epoch&epochUnderlyingSource=blockTimestamp&epochStartingTimestamp=1663224162&epochPeriod=1296000&";
+        return "mode=epoch&epochUnderlyingSource=blockTimestamp&epochStartingTimestamp=1663224162&epochPeriod=1296000";
     }
 }
