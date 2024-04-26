@@ -3,7 +3,7 @@
 pragma solidity 0.8.23;
 
 /**
- * @notice Defines epochs as periods away from STATING_TIMESTAMP timestamp.
+ * @notice Defines epochs as periods away from STARTING_TIMESTAMP timestamp.
  * @author M^0 Labs
  * @dev    Provides a `uint16` epoch clock value.
  */
@@ -11,7 +11,7 @@ library PureEpochs {
     /* ============ Variables ============ */
 
     /// @notice The timestamp of the start of Epoch 1.
-    uint40 internal constant STARTING_TIMESTAMP = 1_663_224_162; // The Merge block.
+    uint40 internal constant STARTING_TIMESTAMP = 1_663_224_162;
 
     /// @notice The approximate target of seconds an epoch should endure.
     uint40 internal constant EPOCH_PERIOD = 15 days;
@@ -26,5 +26,9 @@ library PureEpochs {
     /// @dev Returns the remaining time in the current epoch.
     function timeRemainingInCurrentEpoch() internal view returns (uint40) {
         return STARTING_TIMESTAMP + (currentEpoch() * EPOCH_PERIOD) - uint40(block.timestamp);
+    }
+
+    function clockMode() internal pure returns (string memory) {
+        return "mode=epoch&epochUnderlyingSource=blockTimestamp&epochStartingTimestamp=1663224162&epochPeriod=1296000";
     }
 }
