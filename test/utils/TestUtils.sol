@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { Test } from "../../lib/forge-std/src/Test.sol";
+import { console2, Test } from "../../lib/forge-std/src/Test.sol";
 
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
@@ -61,8 +61,7 @@ contract TestUtils is Test {
         vm.warp(vm.getBlockTimestamp() + seconds_);
     }
 
-    function _getNextVotingPower(address voter_, IPowerToken powerToken_) internal view returns (uint240) {
-        uint256 votingPower_ = powerToken_.getVotes(voter_);
+    function _getNextVotingPower(IPowerToken powerToken_, uint256 votingPower_) internal view returns (uint240) {
         return uint240(votingPower_ + (votingPower_ * powerToken_.participationInflation()) / powerToken_.ONE());
     }
 

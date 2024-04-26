@@ -19,6 +19,7 @@ import { ERC20ExtendedHarness } from "../../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../../utils/TestUtils.sol";
 
 contract ProposalStore is TestUtils {
+    uint16 public nextPowerTargetEpoch;
     uint240 public nextPowerTargetSupply;
     uint240 public nextPowerTargetVotes;
     uint256 public nextZeroTargetSupply;
@@ -40,10 +41,6 @@ contract ProposalStore is TestUtils {
     IStandardGovernor internal _standardGovernor;
     IZeroGovernor internal _zeroGovernor;
 
-    uint256[] internal _emergencyGovernorProposalIds;
-    uint256[] internal _standardGovernorProposalIds;
-    uint256[] internal _zeroGovernorProposalIds;
-
     string[] internal _registrarLists = ["earners", "earners_list_ignored", "minters", "validators"];
 
     address[] internal _emergencyGovernorTargets;
@@ -56,6 +53,10 @@ contract ProposalStore is TestUtils {
     uint256[] internal _zeroGovernorValues;
 
     address[] internal _allowedCashTokens;
+
+    uint256[] internal _emergencyGovernorProposalIds;
+    uint256[] internal _standardGovernorProposalIds;
+    uint256[] internal _zeroGovernorProposalIds;
 
     mapping(uint256 proposalId => bool hasBeenSubmitted) internal _submittedProposals;
     mapping(uint256 proposalId => bytes proposalCallData) internal _submittedProposalsCallData;
@@ -579,12 +580,15 @@ contract ProposalStore is TestUtils {
 
         if (!_isProposalActive(state_, proposalId_)) return;
 
+        address account_;
+
         for (uint256 i; i < accounts_.length; i++) {
             (, , state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
 
             if (!_isProposalActive(state_, proposalId_)) break;
 
-            address account_ = accounts_[i];
+            account_ = accounts_[i];
+
             uint8 support_ = _getSupport(supportSeed_, account_);
 
             vm.prank(account_);
@@ -597,21 +601,18 @@ contract ProposalStore is TestUtils {
                 proposalId_
             );
         }
+
+        (, , state_, , , , , ) = _emergencyGovernor.getProposal(proposalId_);
+
+        console2.log("State of Emergency proposal %s after voting: %s", proposalId_, _translateState(state_));
     }
 
     function voteOnStandardGovernorProposal(
-        uint256 proposalIdSeed_,
+        uint256 proposalId_,
         uint256 supportSeed_,
         address[] memory accounts_
     ) external {
-        uint256 zeroTotalSupplyBefore_ = _zeroToken.totalSupply();
-
         console2.log("Start voteOnStandardGovernorProposal...");
-
-        if (!_hasProposalsBeenQueued(_standardGovernorProposalIds)) return;
-
-        proposalIdSeed_ = bound(proposalIdSeed_, 0, _standardGovernorProposalIds.length - 1);
-        uint256 proposalId_ = _standardGovernorProposalIds[proposalIdSeed_];
 
         if (_hasProposalBeenExecuted(proposalId_)) return;
 
@@ -619,22 +620,27 @@ contract ProposalStore is TestUtils {
 
         if (!_isProposalActive(state_, proposalId_)) return;
 
+        address account_;
+
         for (uint256 i; i < accounts_.length; i++) {
             (, , state_, , , , ) = _standardGovernor.getProposal(proposalId_);
 
-            if (!_isProposalActive(state_, proposalId_)) break;
+            account_ = accounts_[i];
 
-            address account_ = accounts_[i];
+            // Return early if account has already voted on all proposals in the current epoch
+            if (_standardGovernor.hasVotedOnAllProposals(account_, voteStart_)) {
+                console2.log("Account %s has already voted on all proposals", account_);
+                continue;
+            }
 
             if (_standardGovernor.hasVoted(proposalId_, account_)) {
                 console2.log("Account %s has already voted on proposal %s", account_, proposalId_);
                 continue;
             }
 
-            if (_standardGovernor.hasVotedOnAllProposals(account_, _currentEpoch())) continue;
-
             uint8 support_ = _getSupport(supportSeed_, account_);
 
+            uint256 votingPower_ = _powerToken.getVotes(account_);
             uint256 zeroBalanceBefore_ = _zeroToken.balanceOf(account_);
             uint256 zeroTotalSupplyBefore_ = _zeroToken.totalSupply();
 
@@ -649,7 +655,7 @@ contract ProposalStore is TestUtils {
             );
 
             // Return early if account has not voted on all proposals yet and received their ZERO rewards
-            if (!_standardGovernor.hasVotedOnAllProposals(account_, _currentEpoch())) continue;
+            if (!_standardGovernor.hasVotedOnAllProposals(account_, voteStart_)) continue;
 
             uint256 zeroRewards = _getZeroTokenReward(account_, _powerToken, _standardGovernor, voteStart_);
 
@@ -659,20 +665,24 @@ contract ProposalStore is TestUtils {
             // Verify that the ZERO total supply has increased accordingly
             assertEq(_zeroToken.totalSupply(), zeroTotalSupplyBefore_ + zeroRewards);
 
-            // Set expected POWER token target votes for the next voting epoch
-            nextPowerTargetVotes += _getNextVotingPower(account_, _powerToken);
+            // Increase expected ZERO token target supply for the current epoch
+            nextZeroTargetSupply = zeroTotalSupplyBefore_ + zeroRewards;
 
-            // At this point, all voters have voted on all proposals in the current epoch
-            if (i == accounts_.length - 1) {
-                // Set expected POWER token target supply for the next voting epoch
-                nextPowerTargetSupply = _getNextTargetSupply(_powerToken);
+            uint240 nextVotingPower = _getNextVotingPower(_powerToken, votingPower_);
+            console2.log("Next voting power for account %s: %s", account_, nextVotingPower);
+
+            // Reset next power taget votes before accounting for the next voting power
+            if (i == 0) {
+                nextPowerTargetVotes = 0;
             }
 
-            // Increase expected ZERO token target supply for the current epoch
-            nextZeroTargetSupply = nextZeroTargetSupply == 0
-                ? zeroTotalSupplyBefore_ + zeroRewards
-                : nextZeroTargetSupply + zeroRewards;
+            // Set expected POWER token target votes for the next voting epoch
+            nextPowerTargetVotes += nextVotingPower;
         }
+
+        (, , state_, , , , ) = _standardGovernor.getProposal(proposalId_);
+
+        console2.log("State of Standard proposal %s after voting: %s", proposalId_, _translateState(state_));
     }
 
     function voteOnZeroGovernorProposal(
@@ -693,13 +703,14 @@ contract ProposalStore is TestUtils {
 
         if (!_isProposalActive(state_, proposalId_)) return;
 
+        address account_;
+
         for (uint256 i; i < accounts_.length; i++) {
-            (, , IGovernor.ProposalState state_, , , , uint256 quorum, uint16 quorumNumerator) = _zeroGovernor
-                .getProposal(proposalId_);
+            (, , state_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
 
             if (!_isProposalActive(state_, proposalId_)) break;
 
-            address account_ = accounts_[i];
+            account_ = accounts_[i];
             uint8 support_ = _getSupport(supportSeed_, account_);
 
             vm.prank(account_);
@@ -712,6 +723,8 @@ contract ProposalStore is TestUtils {
                 proposalId_
             );
         }
+
+        console2.log("State of ZERO proposal %s after voting: %s", proposalId_, _translateState(state_));
     }
 
     /* ============ Execute proposal ============ */
@@ -745,13 +758,8 @@ contract ProposalStore is TestUtils {
         delete _emergencyGovernorProposalIds[proposalIdSeed_];
     }
 
-    function executeStandardGovernorProposal(uint256 proposalIdSeed_) external {
+    function executeStandardGovernorProposal(uint256 proposalId_) external {
         console2.log("Start executeStandardGovernorProposal...");
-
-        if (!_hasProposalsBeenQueued(_standardGovernorProposalIds)) return;
-
-        proposalIdSeed_ = bound(proposalIdSeed_, 0, _standardGovernorProposalIds.length - 1);
-        uint256 proposalId_ = _standardGovernorProposalIds[proposalIdSeed_];
 
         if (_hasProposalBeenExecuted(proposalId_)) return;
 
@@ -771,7 +779,7 @@ contract ProposalStore is TestUtils {
 
         console2.log("Standard proposal %s executed successfully!", proposalId_);
 
-        delete _standardGovernorProposalIds[proposalIdSeed_];
+        _standardGovernorProposalIds.pop();
     }
 
     function executeZeroGovernorProposal(uint256 proposalIdSeed_) external {
@@ -820,7 +828,25 @@ contract ProposalStore is TestUtils {
             setHasExecutedResetToZeroHolders(true);
         }
 
+        // Set new contracts addresses if reset has occured
+        if (
+            keccak256(callData_) == keccak256(resetToPowerHoldersCallData) &&
+            keccak256(callData_) == keccak256(resetToZeroHoldersCallData)
+        ) {
+            _powerToken = IPowerToken(_registrar.powerToken());
+            _zeroToken = IZeroToken(_registrar.zeroToken());
+            _emergencyGovernor = IEmergencyGovernor(_registrar.emergencyGovernor());
+            _standardGovernor = IStandardGovernor(_registrar.standardGovernor());
+            _zeroGovernor = IZeroGovernor(_registrar.zeroGovernor());
+        }
+
         delete _zeroGovernorProposalIds[proposalIdSeed_];
+    }
+
+    /* ============ Getters ============ */
+
+    function getStandardGovernorProposalIds() external view returns (uint256[] memory) {
+        return _standardGovernorProposalIds;
     }
 
     /* ============ Setters ============ */
@@ -869,6 +895,14 @@ contract ProposalStore is TestUtils {
         bytes memory callData_,
         string memory description_
     ) internal returns (uint256 proposalId_) {
+        uint16 currentEpoch_ = _currentEpoch();
+
+        // If this is the first proposal in the epoch, save the next target supply
+        if (_standardGovernor.numberOfProposalsAt(currentEpoch_) + 1 == 1) {
+            nextPowerTargetEpoch = currentEpoch_ + (_isVotingEpoch(currentEpoch_) ? 2 : 1);
+            nextPowerTargetSupply = _getNextTargetSupply(_powerToken);
+        }
+
         bytes[] memory callDatas_ = new bytes[](1);
         callDatas_[0] = callData_;
 
@@ -922,7 +956,6 @@ contract ProposalStore is TestUtils {
     /* ============ Vote Helpers ============ */
 
     function _hasProposalsBeenQueued(uint256[] memory proposalIds_) internal view returns (bool) {
-        console2.log("proposalIds_.length", proposalIds_.length);
         // Return early if no proposals have been queued.
         if (proposalIds_.length == 0) {
             console2.log("No proposals have been queued...");
@@ -945,7 +978,7 @@ contract ProposalStore is TestUtils {
     function _hasProposalSucceeded(IGovernor.ProposalState state_, uint256 proposalId_) internal view returns (bool) {
         // Return early if the proposal is not executable.
         if (state_ != IGovernor.ProposalState.Succeeded) {
-            console2.log("Proposal %s is not executable...", proposalId_);
+            console2.log("Proposal %s is not executable. State: %s", proposalId_, _translateState(state_));
             return false;
         }
 
@@ -955,7 +988,7 @@ contract ProposalStore is TestUtils {
     function _isProposalActive(IGovernor.ProposalState state_, uint256 proposalId_) internal view returns (bool) {
         // Return early if the proposal is not active.
         if (state_ != IGovernor.ProposalState.Active) {
-            console2.log("Proposal %s is not active...", proposalId_);
+            console2.log("Proposal %s is not active. State: %s", proposalId_, _translateState(state_));
             return false;
         }
 
@@ -991,5 +1024,23 @@ contract ProposalStore is TestUtils {
         }
 
         return string(randomString_);
+    }
+
+    /* ============ State Helpers ============ */
+
+    function _translateState(IGovernor.ProposalState state_) internal pure returns (string memory) {
+        if (state_ == IGovernor.ProposalState.Pending) {
+            return "Pending";
+        } else if (state_ == IGovernor.ProposalState.Active) {
+            return "Active";
+        } else if (state_ == IGovernor.ProposalState.Defeated) {
+            return "Defeated";
+        } else if (state_ == IGovernor.ProposalState.Succeeded) {
+            return "Succeeded";
+        } else if (state_ == IGovernor.ProposalState.Expired) {
+            return "Expired";
+        } else if (state_ == IGovernor.ProposalState.Executed) {
+            return "Executed";
+        }
     }
 }

@@ -48,8 +48,8 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
             console2.log("Warping to next vote epoch...");
             _warpToNextEpoch();
             console2.log("Warped to vote epoch %s", _currentEpoch());
+            _setCurrentBlockTimestamp();
         }
-        _setCurrentBlockTimestamp();
         _;
     }
 
@@ -58,8 +58,8 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
             console2.log("Warping to next transfer epoch...");
             _warpToNextEpoch();
             console2.log("Warped to transfer epoch %s", _currentEpoch());
+            _setCurrentBlockTimestamp();
         }
-        _setCurrentBlockTimestamp();
         _;
     }
 
@@ -207,7 +207,7 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _setCurrentBlockTimestamp();
     }
 
-    /* ============ Standard Governor Proposals ============ */
+    /* ============ Zero Governor Proposals ============ */
 
     function zeroGovernorResetToPowerHolders(uint256 zeroHolderIndexSeed_) external {
         address zeroHolder_ = _holderStore.getPowerHolder(zeroHolderIndexSeed_);
@@ -270,8 +270,17 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _setCurrentBlockTimestamp();
     }
 
-    function voteOnStandardGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external warpToVoteEpoch {
-        _proposalStore.voteOnStandardGovernorProposal(proposalIdSeed_, supportSeed_, _holderStore.powerHolders());
+    function voteOnAllStandardGovernorProposals(uint256 supportSeed_) external warpToVoteEpoch {
+        uint256[] memory proposalIds_ = _proposalStore.getStandardGovernorProposalIds();
+
+        if (proposalIds_.length == 0) {
+            console2.log("No Standard proposals to vote on");
+            return;
+        }
+
+        for (uint256 i = 0; i < proposalIds_.length; i++) {
+            _proposalStore.voteOnStandardGovernorProposal(proposalIds_[i], supportSeed_, _holderStore.powerHolders());
+        }
     }
 
     function voteOnZeroGovernorProposal(uint256 proposalIdSeed_, uint256 supportSeed_) external {
@@ -286,8 +295,20 @@ contract TTGHandler is CommonBase, StdCheats, StdUtils, TestUtils {
         _setCurrentBlockTimestamp();
     }
 
-    function executeStandardGovernorProposal(uint256 proposalIdSeed_) external warpToTransferEpoch {
-        _proposalStore.executeStandardGovernorProposal(proposalIdSeed_);
+    function executeAllStandardGovernorProposals() external warpToTransferEpoch {
+        uint256[] memory proposalIds_ = _proposalStore.getStandardGovernorProposalIds();
+
+        uint256 i = proposalIds_.length;
+
+        if (proposalIds_.length == 0) {
+            console2.log("No Standard proposals to execute");
+            return;
+        }
+
+        while (i > 0) {
+            --i;
+            _proposalStore.executeStandardGovernorProposal(proposalIds_[i]);
+        }
     }
 
     function executeZeroGovernorProposal(uint256 proposalIdSeed_) external {

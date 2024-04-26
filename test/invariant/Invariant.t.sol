@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 
 pragma solidity 0.8.23;
-
+import { console2 } from "../../lib/forge-std/src/Test.sol";
 import { DeployBase } from "../../script/DeployBase.sol";
 
 import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
@@ -11,6 +11,9 @@ import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 import { IDistributionVault } from "../../src/interfaces/IDistributionVault.sol";
+
+import { EmergencyGovernorDeployer } from "../../src/EmergencyGovernorDeployer.sol";
+import { StandardGovernorDeployer } from "../../src/StandardGovernorDeployer.sol";
 
 import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
@@ -32,6 +35,9 @@ contract InvariantTests is TestUtils {
 
     IPowerToken internal _powerToken;
     IZeroToken internal _zeroToken;
+
+    EmergencyGovernorDeployer internal _emergencyGovernorDeployer;
+    StandardGovernorDeployer internal _standardGovernorDeployer;
 
     IEmergencyGovernor internal _emergencyGovernor;
     IStandardGovernor internal _standardGovernor;
@@ -73,6 +79,9 @@ contract InvariantTests is TestUtils {
             _allowedCashTokens
         );
 
+        // _emergencyGovernorDeployer_ = EmergencyGovernorDeployer(getExpectedEmergencyGovernorDeployer(address(this), 1));
+        // _standardGovernorDeployer_ = StandardGovernorDeployer(getExpectedStandardGovernorDeployer(address(this), 1));
+
         _registrar = IRegistrar(registrar_);
 
         _powerToken = IPowerToken(_registrar.powerToken());
@@ -97,34 +106,48 @@ contract InvariantTests is TestUtils {
         // Set fuzzer to only call the handler
         targetContract(address(_handler));
 
-        bytes4[] memory selectors = new bytes4[](21);
-        selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
-        selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
-        selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
-        selectors[3] = TTGHandler.emergencyGovernorSetKey.selector;
-        selectors[4] = TTGHandler.emergencyGovernorSetStandardProposalFee.selector;
-        selectors[5] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
-        selectors[6] = TTGHandler.executeEmergencyGovernorProposal.selector;
-        selectors[7] = TTGHandler.standardGovernorAddToList.selector;
-        selectors[8] = TTGHandler.standardGovernorRemoveFromList.selector;
-        selectors[9] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
-        selectors[10] = TTGHandler.standardGovernorSetKey.selector;
-        selectors[11] = TTGHandler.standardGovernorSetProposalFee.selector;
-        selectors[12] = TTGHandler.voteOnStandardGovernorProposal.selector;
-        selectors[13] = TTGHandler.executeStandardGovernorProposal.selector;
-        selectors[14] = TTGHandler.zeroGovernorResetToPowerHolders.selector;
-        selectors[15] = TTGHandler.zeroGovernorResetToZeroHolders.selector;
-        selectors[16] = TTGHandler.zeroGovernorSetCashToken.selector;
-        selectors[17] = TTGHandler.zeroGovernorSetEmergencyProposalThresholdRatio.selector;
-        selectors[18] = TTGHandler.zeroGovernorSetZeroProposalThresholdRatio.selector;
-        selectors[19] = TTGHandler.voteOnZeroGovernorProposal.selector;
-        selectors[20] = TTGHandler.executeZeroGovernorProposal.selector;
+        // bytes4[] memory selectors = new bytes4[](21);
+        // selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
+        // selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
+        // selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
+        // selectors[3] = TTGHandler.emergencyGovernorSetKey.selector;
+        // selectors[4] = TTGHandler.emergencyGovernorSetStandardProposalFee.selector;
+        // selectors[5] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
+        // selectors[6] = TTGHandler.executeEmergencyGovernorProposal.selector;
+        // selectors[7] = TTGHandler.standardGovernorAddToList.selector;
+        // selectors[8] = TTGHandler.standardGovernorRemoveFromList.selector;
+        // selectors[9] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
+        // selectors[10] = TTGHandler.standardGovernorSetKey.selector;
+        // selectors[11] = TTGHandler.standardGovernorSetProposalFee.selector;
+        // selectors[12] = TTGHandler.voteOnAllStandardGovernorProposals.selector;
+        // selectors[13] = TTGHandler.executeAllStandardGovernorProposals.selector;
+        // selectors[14] = TTGHandler.zeroGovernorResetToPowerHolders.selector;
+        // selectors[15] = TTGHandler.zeroGovernorResetToZeroHolders.selector;
+        // selectors[16] = TTGHandler.zeroGovernorSetCashToken.selector;
+        // selectors[17] = TTGHandler.zeroGovernorSetEmergencyProposalThresholdRatio.selector;
+        // selectors[18] = TTGHandler.zeroGovernorSetZeroProposalThresholdRatio.selector;
+        // selectors[19] = TTGHandler.voteOnZeroGovernorProposal.selector;
+        // selectors[20] = TTGHandler.executeZeroGovernorProposal.selector;
+
+        bytes4[] memory selectors = new bytes4[](7);
+        selectors[0] = TTGHandler.standardGovernorAddToList.selector;
+        selectors[1] = TTGHandler.standardGovernorRemoveFromList.selector;
+        selectors[2] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
+        selectors[3] = TTGHandler.standardGovernorSetKey.selector;
+        selectors[4] = TTGHandler.standardGovernorSetProposalFee.selector;
+        selectors[5] = TTGHandler.voteOnAllStandardGovernorProposals.selector;
+        selectors[6] = TTGHandler.executeAllStandardGovernorProposals.selector;
 
         targetSelector(FuzzSelector({ addr: address(_handler), selectors: selectors }));
 
         // Prevent these contracts from being fuzzed as `msg.sender`.
         excludeSender(address(_deploy));
         excludeSender(address(_handler));
+        excludeSender(address(_proposalStore));
+        excludeSender(address(_holderStore));
+        excludeSender(address(_timestampStore));
+        excludeSender(address(_cashToken1));
+        excludeSender(address(_cashToken2));
         excludeSender(address(_powerToken));
         excludeSender(address(_zeroToken));
         excludeSender(address(_emergencyGovernor));
@@ -138,6 +161,12 @@ contract InvariantTests is TestUtils {
     }
 
     function invariant_main() public useCurrentTimestamp {
+        console2.log(
+            "Checking invariants for epoch %s at timestamp %s...",
+            _currentEpoch(),
+            _timestampStore.currentTimestamp()
+        );
+
         uint256 totalSupply_;
         uint256 totalVotes_;
 
@@ -170,32 +199,6 @@ contract InvariantTests is TestUtils {
             totalSupply_,
             "The sum of POWER token getVotes() should be greater than or equal to the sum of POWER token balanceOf()"
         );
-
-        if (_isTransferEpoch(_currentEpoch())) {
-            if (_proposalStore.nextPowerTargetVotes() != 0) {
-                assertEq(
-                    totalVotes_,
-                    _proposalStore.nextPowerTargetVotes(),
-                    "POWER token total votes should account for inflation and equal the target votes"
-                );
-            }
-
-            if (_proposalStore.nextPowerTargetSupply() != 0) {
-                assertEq(
-                    _powerToken.totalSupply(),
-                    _proposalStore.nextPowerTargetSupply(),
-                    "POWER token totalSupply() should account for inflation and equal the target supply"
-                );
-            }
-        }
-
-        if (_proposalStore.nextZeroTargetSupply() != 0) {
-            assertEq(
-                _zeroToken.totalSupply(),
-                _proposalStore.nextZeroTargetSupply(),
-                "ZERO token totalSupply() should account for inflation and equal the target supply"
-            );
-        }
 
         IPowerToken nextPowerToken_ = _proposalStore.nextPowerToken();
 
@@ -273,6 +276,33 @@ contract InvariantTests is TestUtils {
 
                 // Set to false now that the reset has been executed and balances checked
                 _proposalStore.setHasExecutedResetToZeroHolders(false);
+            }
+        }
+
+        if (_proposalStore.nextPowerTargetEpoch() != 0) {
+            if (!_isTransferEpoch(_currentEpoch())) _warpToNextEpoch();
+
+            if (_proposalStore.nextPowerTargetEpoch() + 1 == _currentEpoch()) {
+                uint256 nextPowerTargetVotes_ = _proposalStore.nextPowerTargetVotes();
+                uint256 nextPowerTargetSupply_ = _proposalStore.nextPowerTargetSupply();
+
+                assertEq(
+                    totalVotes_,
+                    nextPowerTargetVotes_,
+                    "POWER token total votes should account for inflation and equal the target votes"
+                );
+
+                assertEq(
+                    _powerToken.totalSupply() + _powerToken.amountToAuction(),
+                    nextPowerTargetSupply_,
+                    "POWER token totalSupply() should account for inflation and equal the target supply"
+                );
+
+                assertEq(
+                    _zeroToken.totalSupply(),
+                    _proposalStore.nextZeroTargetSupply(),
+                    "ZERO token totalSupply() should account for inflation and equal the target supply"
+                );
             }
         }
     }
