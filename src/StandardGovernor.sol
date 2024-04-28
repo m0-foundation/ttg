@@ -365,11 +365,10 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
         super._castVote(voter_, weight_, proposalId_, support_, reason_);
 
         uint16 currentEpoch_ = _clock();
-        uint256 numberOfProposalsVotedOn_ = ++numberOfProposalsVotedOnAt[voter_][currentEpoch_];
 
         // NOTE: Will only get beyond this statement once per epoch as there is no way to vote on more proposals than
         //       exist in this epoch.
-        if (numberOfProposalsVotedOn_ != numberOfProposalsAt[currentEpoch_]) return;
+        if (++numberOfProposalsVotedOnAt[voter_][currentEpoch_] != numberOfProposalsAt[currentEpoch_]) return;
 
         emit HasVotedOnAllProposals(voter_, currentEpoch_);
 
