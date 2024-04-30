@@ -57,6 +57,8 @@ contract HolderStore is TestUtils {
         }
     }
 
+    /* ============ Getters ============ */
+
     function powerHolders() external view returns (address[] memory) {
         return _powerHolders.addrs;
     }
@@ -79,5 +81,23 @@ contract HolderStore is TestUtils {
 
     function getZeroHolder(uint256 zeroHolderIndexSeed_) external view returns (address) {
         return _zeroHolders.rand(zeroHolderIndexSeed_);
+    }
+
+    /* ============ Setters ============ */
+
+    function setPowerHolders(address[] memory powerHolders_) external {
+        delete _powerHolders.addrs;
+
+        for (uint256 i; i < powerHolders_.length; ++i) {
+            _powerHolders.add(powerHolders_[i]);
+        }
+    }
+
+    function setZeroHolders(address[] memory zeroHolders_) external {
+        delete _zeroHolders.addrs;
+
+        for (uint256 i; i < zeroHolders_.length; ++i) {
+            _zeroHolders.add(zeroHolders_[i]);
+        }
     }
 }

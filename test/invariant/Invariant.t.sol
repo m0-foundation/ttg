@@ -4,6 +4,9 @@ pragma solidity 0.8.23;
 import { console2 } from "../../lib/forge-std/src/Test.sol";
 import { DeployBase } from "../../script/DeployBase.sol";
 
+import { IEmergencyGovernorDeployer } from "../../src/interfaces/IEmergencyGovernorDeployer.sol";
+import { IStandardGovernorDeployer } from "../../src/interfaces/IStandardGovernorDeployer.sol";
+
 import { IEmergencyGovernor } from "../../src/interfaces/IEmergencyGovernor.sol";
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IRegistrar } from "../../src/interfaces/IRegistrar.sol";
@@ -11,9 +14,6 @@ import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
 import { IZeroGovernor } from "../../src/interfaces/IZeroGovernor.sol";
 import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 import { IDistributionVault } from "../../src/interfaces/IDistributionVault.sol";
-
-import { EmergencyGovernorDeployer } from "../../src/EmergencyGovernorDeployer.sol";
-import { StandardGovernorDeployer } from "../../src/StandardGovernorDeployer.sol";
 
 import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
@@ -35,9 +35,6 @@ contract InvariantTests is TestUtils {
 
     IPowerToken internal _powerToken;
     IZeroToken internal _zeroToken;
-
-    EmergencyGovernorDeployer internal _emergencyGovernorDeployer;
-    StandardGovernorDeployer internal _standardGovernorDeployer;
 
     IEmergencyGovernor internal _emergencyGovernor;
     IStandardGovernor internal _standardGovernor;
@@ -79,9 +76,6 @@ contract InvariantTests is TestUtils {
             _allowedCashTokens
         );
 
-        // _emergencyGovernorDeployer_ = EmergencyGovernorDeployer(getExpectedEmergencyGovernorDeployer(address(this), 1));
-        // _standardGovernorDeployer_ = StandardGovernorDeployer(getExpectedStandardGovernorDeployer(address(this), 1));
-
         _registrar = IRegistrar(registrar_);
 
         _powerToken = IPowerToken(_registrar.powerToken());
@@ -96,7 +90,8 @@ contract InvariantTests is TestUtils {
             _emergencyGovernor,
             _standardGovernor,
             _zeroGovernor,
-            _allowedCashTokens
+            _allowedCashTokens,
+            _holderStore
         );
 
         _vault = IDistributionVault(_standardGovernor.vault());
@@ -106,37 +101,28 @@ contract InvariantTests is TestUtils {
         // Set fuzzer to only call the handler
         targetContract(address(_handler));
 
-        // bytes4[] memory selectors = new bytes4[](21);
-        // selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
-        // selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
-        // selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
-        // selectors[3] = TTGHandler.emergencyGovernorSetKey.selector;
-        // selectors[4] = TTGHandler.emergencyGovernorSetStandardProposalFee.selector;
-        // selectors[5] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
-        // selectors[6] = TTGHandler.executeEmergencyGovernorProposal.selector;
-        // selectors[7] = TTGHandler.standardGovernorAddToList.selector;
-        // selectors[8] = TTGHandler.standardGovernorRemoveFromList.selector;
-        // selectors[9] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
-        // selectors[10] = TTGHandler.standardGovernorSetKey.selector;
-        // selectors[11] = TTGHandler.standardGovernorSetProposalFee.selector;
-        // selectors[12] = TTGHandler.voteOnAllStandardGovernorProposals.selector;
-        // selectors[13] = TTGHandler.executeAllStandardGovernorProposals.selector;
-        // selectors[14] = TTGHandler.zeroGovernorResetToPowerHolders.selector;
-        // selectors[15] = TTGHandler.zeroGovernorResetToZeroHolders.selector;
-        // selectors[16] = TTGHandler.zeroGovernorSetCashToken.selector;
-        // selectors[17] = TTGHandler.zeroGovernorSetEmergencyProposalThresholdRatio.selector;
-        // selectors[18] = TTGHandler.zeroGovernorSetZeroProposalThresholdRatio.selector;
-        // selectors[19] = TTGHandler.voteOnZeroGovernorProposal.selector;
-        // selectors[20] = TTGHandler.executeZeroGovernorProposal.selector;
-
-        bytes4[] memory selectors = new bytes4[](7);
-        selectors[0] = TTGHandler.standardGovernorAddToList.selector;
-        selectors[1] = TTGHandler.standardGovernorRemoveFromList.selector;
-        selectors[2] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
-        selectors[3] = TTGHandler.standardGovernorSetKey.selector;
-        selectors[4] = TTGHandler.standardGovernorSetProposalFee.selector;
-        selectors[5] = TTGHandler.voteOnAllStandardGovernorProposals.selector;
-        selectors[6] = TTGHandler.executeAllStandardGovernorProposals.selector;
+        bytes4[] memory selectors = new bytes4[](21);
+        selectors[0] = TTGHandler.emergencyGovernorAddToList.selector;
+        selectors[1] = TTGHandler.emergencyGovernorRemoveFromList.selector;
+        selectors[2] = TTGHandler.emergencyGovernorRemoveFromAndAddToList.selector;
+        selectors[3] = TTGHandler.emergencyGovernorSetKey.selector;
+        selectors[4] = TTGHandler.emergencyGovernorSetStandardProposalFee.selector;
+        selectors[5] = TTGHandler.voteOnEmergencyGovernorProposal.selector;
+        selectors[6] = TTGHandler.executeEmergencyGovernorProposal.selector;
+        selectors[7] = TTGHandler.standardGovernorAddToList.selector;
+        selectors[8] = TTGHandler.standardGovernorRemoveFromList.selector;
+        selectors[9] = TTGHandler.standardGovernorRemoveFromAndAddToList.selector;
+        selectors[10] = TTGHandler.standardGovernorSetKey.selector;
+        selectors[11] = TTGHandler.standardGovernorSetProposalFee.selector;
+        selectors[12] = TTGHandler.voteOnAllStandardGovernorProposals.selector;
+        selectors[13] = TTGHandler.executeAllStandardGovernorProposals.selector;
+        selectors[14] = TTGHandler.zeroGovernorResetToPowerHolders.selector;
+        selectors[15] = TTGHandler.zeroGovernorResetToZeroHolders.selector;
+        selectors[16] = TTGHandler.zeroGovernorSetCashToken.selector;
+        selectors[17] = TTGHandler.zeroGovernorSetEmergencyProposalThresholdRatio.selector;
+        selectors[18] = TTGHandler.zeroGovernorSetZeroProposalThresholdRatio.selector;
+        selectors[19] = TTGHandler.voteOnZeroGovernorProposal.selector;
+        selectors[20] = TTGHandler.executeZeroGovernorProposal.selector;
 
         targetSelector(FuzzSelector({ addr: address(_handler), selectors: selectors }));
 
@@ -167,6 +153,21 @@ contract InvariantTests is TestUtils {
             _timestampStore.currentTimestamp()
         );
 
+        IPowerToken nextPowerToken_ = _proposalStore.nextPowerToken();
+
+        // If a reset has occured, update contracts addresses with new addresses
+        if (address(nextPowerToken_) != address(0)) {
+            _powerToken = nextPowerToken_;
+
+            _emergencyGovernor = IEmergencyGovernor(
+                IEmergencyGovernorDeployer(_registrar.emergencyGovernorDeployer()).lastDeploy()
+            );
+
+            _standardGovernor = IStandardGovernor(
+                IStandardGovernorDeployer(_registrar.standardGovernorDeployer()).lastDeploy()
+            );
+        }
+
         uint256 totalSupply_;
         uint256 totalVotes_;
 
@@ -181,6 +182,15 @@ contract InvariantTests is TestUtils {
         // Skip test if POWER total supply and/or voting power are zero.
         vm.assume(totalVotes_ != 0);
         vm.assume(_powerToken.totalSupply() != 0);
+
+        if (_proposalStore.hasVotedOnAllStandardProposals()) {
+            // Inflation is only realized in the next transfer epoch, so we warp to the next epoch to check
+            if (!_isTransferEpoch(_currentEpoch())) {
+                console2.log("Warping to next epoch to realize inflation...");
+                _warpToNextEpoch();
+                console2.log("Warped to next epoch: %s", _currentEpoch());
+            }
+        }
 
         assertGe(
             _powerToken.totalSupply(),
@@ -200,41 +210,54 @@ contract InvariantTests is TestUtils {
             "The sum of POWER token getVotes() should be greater than or equal to the sum of POWER token balanceOf()"
         );
 
-        IPowerToken nextPowerToken_ = _proposalStore.nextPowerToken();
-
         if (address(nextPowerToken_) != address(0)) {
-            uint256 bootstrapEpoch_ = nextPowerToken_.bootstrapEpoch();
+            uint16 bootstrapEpoch_ = _powerToken.bootstrapEpoch();
 
             if (_proposalStore.hasExecutedResetToPowerHolders()) {
                 for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
                     address powerHolder_ = _holderStore.powerHolders()[i];
 
-                    assertEq(
-                        nextPowerToken_.balanceOf(powerHolder_),
-                        nextPowerToken_.pastBalanceOf(powerHolder_, bootstrapEpoch_),
-                        "POWER token balance for initial POWER holders should be equal to the balance at bootstrap epoch"
-                    );
+                    // If inflation has been realized after reset, check expected voting power
+                    if (_proposalStore.hasVotedOnAllStandardProposals()) {
+                        assertEq(
+                            _powerToken.balanceOf(powerHolder_),
+                            _proposalStore.nextVotingPower(powerHolder_),
+                            "POWER token balance for initial POWER holders should be equal to the balance at bootstrap epoch + any inflation"
+                        );
 
-                    assertEq(
-                        nextPowerToken_.getVotes(powerHolder_),
-                        nextPowerToken_.getPastVotes(powerHolder_, bootstrapEpoch_),
-                        "POWER token votes for initial POWER holders should be equal to the votes at bootstrap epoch"
-                    );
+                        assertEq(
+                            _powerToken.getVotes(powerHolder_),
+                            _proposalStore.nextVotingPower(powerHolder_),
+                            "POWER token votes for initial POWER holders should be equal to the votes at bootstrap epoch + any inflation"
+                        );
+                    } else {
+                        assertEq(
+                            _powerToken.balanceOf(powerHolder_),
+                            _powerToken.pastBalanceOf(powerHolder_, bootstrapEpoch_),
+                            "POWER token balance for initial POWER holders should be equal to the balance at bootstrap epoch"
+                        );
+
+                        assertEq(
+                            _powerToken.getVotes(powerHolder_),
+                            _powerToken.getPastVotes(powerHolder_, bootstrapEpoch_),
+                            "POWER token votes for initial POWER holders should be equal to the votes at bootstrap epoch"
+                        );
+                    }
                 }
 
                 for (uint256 i; i < _holderStore.ZERO_HOLDER_NUM(); i++) {
                     address zeroHolder_ = _holderStore.zeroHolders()[i];
 
                     assertEq(
-                        nextPowerToken_.balanceOf(zeroHolder_),
-                        0,
-                        "POWER token balance for initial ZERO holders should be equal 0"
+                        _powerToken.balanceOf(zeroHolder_),
+                        _powerToken.pastBalanceOf(zeroHolder_, bootstrapEpoch_),
+                        "POWER token balance for initial ZERO holders should be equal to the balance at bootstrap epoch"
                     );
 
                     assertEq(
-                        nextPowerToken_.getVotes(zeroHolder_),
-                        0,
-                        "POWER token votes for initial ZERO holders should be equal to 0"
+                        _powerToken.getVotes(zeroHolder_),
+                        _powerToken.getPastVotes(zeroHolder_, bootstrapEpoch_),
+                        "POWER token votes for initial ZERO holders should be equal to the votes at bootstrap epoch"
                     );
                 }
 
@@ -243,58 +266,101 @@ contract InvariantTests is TestUtils {
             }
 
             if (_proposalStore.hasExecutedResetToZeroHolders()) {
+                address[] memory prevPowerHolders_ = _holderStore.zeroHolders();
+                address[] memory prevZeroHolders_ = _holderStore.powerHolders();
+
+                address initialPowerHolder_;
+
                 for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
-                    address powerHolder_ = _holderStore.powerHolders()[i];
+                    initialPowerHolder_ = prevPowerHolders_[i];
+
+                    uint240 zeroRewards_ = _proposalStore.zeroRewards(initialPowerHolder_);
+                    uint240 bootstrapBalance_ = zeroRewards_ != 0
+                        ? _getBootstrapBalance(
+                            initialPowerHolder_,
+                            address(_zeroToken),
+                            bootstrapEpoch_,
+                            _powerToken.INITIAL_SUPPLY(),
+                            _currentEpoch()
+                        )
+                        : 0;
 
                     assertEq(
-                        nextPowerToken_.balanceOf(powerHolder_),
-                        0,
-                        "POWER token balance for initial POWER holders should be 0 after reset to ZERO holders"
+                        _powerToken.balanceOf(initialPowerHolder_),
+                        bootstrapBalance_,
+                        "POWER token balance for initial POWER holders should be equal to the bootstrap balance"
                     );
 
                     assertEq(
-                        nextPowerToken_.getVotes(powerHolder_),
-                        0,
-                        "POWER token votes for initial POWER holders should be 0 after reset to ZERO holders"
+                        _powerToken.getVotes(initialPowerHolder_),
+                        bootstrapBalance_,
+                        "POWER token votes for initial POWER holders should be equal to the bootstrap balance"
                     );
+
+                    // Reset ZERO rewards now that balances have been checked
+                    _proposalStore.setZeroRewards(initialPowerHolder_, 0);
                 }
+
+                address initialZeroholder_;
 
                 for (uint256 i; i < _holderStore.ZERO_HOLDER_NUM(); i++) {
-                    address zeroHolder_ = _holderStore.zeroHolders()[i];
-                    assertEq(
-                        nextPowerToken_.balanceOf(zeroHolder_),
-                        nextPowerToken_.pastBalanceOf(zeroHolder_, bootstrapEpoch_),
-                        "POWER token balance for initial ZERO holders should be equal to the balance at bootstrap epoch"
-                    );
+                    initialZeroholder_ = prevZeroHolders_[i];
+                    initialPowerHolder_ = prevPowerHolders_[i];
 
-                    assertEq(
-                        nextPowerToken_.getVotes(zeroHolder_),
-                        nextPowerToken_.getPastVotes(zeroHolder_, bootstrapEpoch_),
-                        "POWER token votes for initial ZERO holders should be equal to the balance at bootstrap epoch"
-                    );
+                    // If inflation has been realized after reset, check expected voting power
+                    if (_proposalStore.hasVotedOnAllStandardProposals()) {
+                        assertEq(
+                            _powerToken.balanceOf(initialZeroholder_),
+                            _proposalStore.nextVotingPower(initialZeroholder_),
+                            "POWER token balance for initial ZERO holders should be equal to the balance at bootstrap epoch + any inflation realized"
+                        );
+
+                        assertEq(
+                            _powerToken.getVotes(initialZeroholder_),
+                            _proposalStore.nextVotingPower(initialZeroholder_),
+                            "POWER token votes for initial ZERO holders should be equal to the balance at bootstrap epoch + any inflation realized"
+                        );
+                    } else {
+                        assertEq(
+                            _powerToken.balanceOf(initialZeroholder_),
+                            _powerToken.pastBalanceOf(initialZeroholder_, bootstrapEpoch_),
+                            "POWER token balance for initial ZERO holders should be equal to the balance at bootstrap epoch"
+                        );
+
+                        assertEq(
+                            _powerToken.getVotes(initialZeroholder_),
+                            _powerToken.getPastVotes(initialZeroholder_, bootstrapEpoch_),
+                            "POWER token votes for initial ZERO holders should be equal to the balance at bootstrap epoch"
+                        );
+                    }
+
+                    // Reset next voting power now that balances have been checked
+                    _proposalStore.setNextVotingPower(initialZeroholder_, 0);
                 }
 
-                // Set to false now that the reset has been executed and balances checked
+                // Reset state now that the reset has been executed and balances checked
                 _proposalStore.setHasExecutedResetToZeroHolders(false);
+                _proposalStore.setNextPowerToken(address(0));
             }
         }
 
-        if (_proposalStore.nextPowerTargetEpoch() != 0) {
-            if (!_isTransferEpoch(_currentEpoch())) _warpToNextEpoch();
-
+        if (_proposalStore.hasVotedOnAllStandardProposals()) {
             if (_proposalStore.nextPowerTargetEpoch() + 1 == _currentEpoch()) {
-                uint256 nextPowerTargetVotes_ = _proposalStore.nextPowerTargetVotes();
-                uint256 nextPowerTargetSupply_ = _proposalStore.nextPowerTargetSupply();
+                uint256 nextTotalVotes_;
+
+                for (uint256 i; i < _holderStore.POWER_HOLDER_NUM(); i++) {
+                    nextTotalVotes_ += _powerToken.getVotes(_holderStore.powerHolders()[i]);
+                }
 
                 assertEq(
-                    totalVotes_,
-                    nextPowerTargetVotes_,
+                    nextTotalVotes_,
+                    _proposalStore.nextPowerTargetVotes(),
                     "POWER token total votes should account for inflation and equal the target votes"
                 );
 
                 assertEq(
                     _powerToken.totalSupply() + _powerToken.amountToAuction(),
-                    nextPowerTargetSupply_,
+                    _proposalStore.nextPowerTargetSupply(),
                     "POWER token totalSupply() should account for inflation and equal the target supply"
                 );
 
@@ -303,6 +369,10 @@ contract InvariantTests is TestUtils {
                     _proposalStore.nextZeroTargetSupply(),
                     "ZERO token totalSupply() should account for inflation and equal the target supply"
                 );
+
+                // Reset state now that the inflation has been checked
+                _proposalStore.setNextPowerTargetEpoch(0);
+                _proposalStore.setHasVotedOnAllStandardProposals(false);
             }
         }
     }

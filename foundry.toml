@@ -31,7 +31,7 @@ runs = 512            # The number of times to run the invariant tests
 depth = 25            # The number of calls to make in the invariant tests 
 call_override = false # Override calls
 fail_on_revert = true # Fail the test if the contract reverts
-preserve_state = true
+preserve_state = true # Preserve state between invariant files. Active only in conjunction with fail_on_revert true.
 
 [profile.ci]
 optimizer = true
