@@ -256,51 +256,6 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.balanceOf(_dave), 105_000);
     }
 
-    // TODO: should be an invariant test
-    function test_powerInflation_balancesSumEqualVotingPowerSum() external {
-        _warpToNextTransferEpoch();
-
-        vm.prank(_alice);
-        _powerToken.delegate(_bob);
-
-        uint256 proposalId_ = _createStandardProposal("key1", "value1");
-
-        _warpToNextVoteEpoch();
-
-        vm.prank(_bob);
-        _standardGovernor.castVote(proposalId_, 1);
-
-        vm.prank(_carol);
-        _standardGovernor.castVote(proposalId_, 1);
-
-        _warpToNextTransferEpoch();
-
-        uint256 totalSupply_ = _powerToken.balanceOf(_alice) +
-            _powerToken.balanceOf(_bob) +
-            _powerToken.balanceOf(_carol);
-
-        uint256 totalVotingPower_ = _powerToken.getVotes(_alice) +
-            _powerToken.getVotes(_bob) +
-            _powerToken.getVotes(_carol);
-
-        assertEq(totalSupply_, totalVotingPower_);
-
-        vm.prank(_alice);
-        _powerToken.delegate(address(0));
-
-        uint256 aliceBalanceBefore_ = _powerToken.balanceOf(_alice);
-        uint256 bobBalance_ = _powerToken.balanceOf(_bob);
-
-        vm.prank(_bob);
-        _powerToken.transfer(_alice, bobBalance_);
-
-        assertEq(_powerToken.balanceOf(_bob), 0);
-        assertEq(_powerToken.getVotes(_bob), 0);
-
-        assertEq(_powerToken.balanceOf(_alice), aliceBalanceBefore_ + bobBalance_);
-        assertEq(_powerToken.getVotes(_alice), aliceBalanceBefore_ + bobBalance_);
-    }
-
     /* ============ Zero Rewards ============ */
 
     function test_zeroRewards_multipleDelegatesTransfersAndRedelegations() external {
