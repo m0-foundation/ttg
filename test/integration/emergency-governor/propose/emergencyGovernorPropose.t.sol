@@ -177,7 +177,7 @@ contract EmergencyGovernorPropose_IntegrationTest is IntegrationBaseSetup {
 
         uint8 noSupport_ = uint8(IBatchGovernor.VoteType.No);
 
-        vm.prank(_bob);
+        vm.prank(_alice);
         _emergencyGovernor.castVote(proposalId_, noSupport_);
 
         vm.warp(vm.getBlockTimestamp() + 1);

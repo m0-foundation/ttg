@@ -63,6 +63,11 @@ contract SetZeroAndEmergencyThresholds_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         assertEq(_zeroGovernor.castVotes(proposalIds_, supports_), daveZeroWeight_);
 
+        uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
+
+        vm.prank(_eve);
+        assertEq(_zeroGovernor.castVotes(proposalIds_, supports_), eveZeroWeight_);
+
         assertEq(uint256(_zeroGovernor.state(zeroProposalId_)), 4); // Succeeded
         assertEq(uint256(_zeroGovernor.state(emergencyProposalId_)), 4); // Succeeded
 

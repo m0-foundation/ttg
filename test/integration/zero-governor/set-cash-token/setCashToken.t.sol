@@ -42,6 +42,11 @@ contract SetCashToken_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
 
+        uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
+
+        vm.prank(_eve);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), eveZeroWeight_);
+
         assertEq(uint256(_zeroGovernor.state(proposalId_)), 4); // Succeeded
 
         vm.prank(_dave);

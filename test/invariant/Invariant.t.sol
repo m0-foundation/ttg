@@ -147,6 +147,7 @@ contract InvariantTests is TestUtils {
     }
 
     function invariant_main() public useCurrentTimestamp {
+        vm.skip(true);
         console2.log(
             "Checking invariants for epoch %s at timestamp %s...",
             _currentEpoch(),

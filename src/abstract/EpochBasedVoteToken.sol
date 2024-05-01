@@ -380,7 +380,7 @@ abstract contract EpochBasedVoteToken is IEpochBasedVoteToken, ERC5805, ERC20Ext
 
     /**
      * @dev    Get the delegatee of `account_` at `epoch_`.
-     * @dev    The delegatee is the account itself (the default) if the retrieved delegatee is address(0).
+     * @dev    The delegatee is the account itself (the default) if no retrieved delegatee was found.
      * @param  account_ The address of the account to get the delegatee of.
      * @param  epoch_   The epoch to get the delegatee at.
      * @return The delegatee of `account_` at `epoch_`.
