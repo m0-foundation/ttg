@@ -6,14 +6,14 @@ import { IERC20 } from "../../../../lib/common/src/interfaces/IERC20.sol";
 
 import { IERC5805 } from "../../../../src/abstract/interfaces/IERC5805.sol";
 
-import {
-    IntegrationBaseSetup,
-    IBatchGovernor,
-    IGovernor,
-    IPowerToken,
-    IRegistrar,
-    IStandardGovernor
-} from "../../IntegrationBaseSetup.t.sol";
+import { IGovernor } from "../../../../src/abstract/interfaces/IGovernor.sol";
+import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
+
+import { IPowerToken } from "../../../../src/interfaces/IPowerToken.sol";
+import { IRegistrar } from "../../../../src/interfaces/IRegistrar.sol";
+import { IStandardGovernor } from "../../../../src/interfaces/IStandardGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     function test_standardGovernorPropose_proposalPendingActiveDefeated() external {
@@ -128,7 +128,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.expectEmit(address(_powerToken));
         emit IERC5805.DelegateVotesChanged(_alice, alicePowerWeight_, _getInflatedAmount(alicePowerWeight_));
 
-        uint256 zeroTokenReward_ = _getZeroTokenReward(_standardGovernor, alicePowerWeight_, _powerToken, START_EPOCH);
+        uint256 zeroTokenReward_ = _getZeroTokenReward(_alice, _powerToken, _standardGovernor, START_EPOCH);
 
         vm.expectEmit(address(_zeroToken));
         emit IERC20.Transfer(address(0), _alice, zeroTokenReward_);
@@ -219,7 +219,7 @@ contract StandardGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.expectEmit(address(_powerToken));
         emit IERC5805.DelegateVotesChanged(_alice, alicePowerWeight_, _getInflatedAmount(alicePowerWeight_));
 
-        uint256 zeroTokenReward_ = _getZeroTokenReward(_standardGovernor, alicePowerWeight_, _powerToken, START_EPOCH);
+        uint256 zeroTokenReward_ = _getZeroTokenReward(_alice, _powerToken, _standardGovernor, START_EPOCH);
 
         vm.expectEmit(address(_zeroToken));
         emit IERC20.Transfer(address(0), _alice, zeroTokenReward_);

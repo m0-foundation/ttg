@@ -8,8 +8,6 @@ import { IEpochBasedInflationaryVoteToken } from "../../src/abstract/interfaces/
 
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 
-import { PowerBootstrapToken } from "../../src/PowerBootstrapToken.sol";
-
 import { MockBootstrapToken, MockCashToken } from "./../utils/Mocks.sol";
 import { PowerTokenHarness } from "./../utils/PowerTokenHarness.sol";
 import { TestUtils } from "./../utils/TestUtils.sol";

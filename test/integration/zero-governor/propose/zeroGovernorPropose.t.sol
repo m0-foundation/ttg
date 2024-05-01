@@ -2,7 +2,10 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IGovernor, IBatchGovernor } from "../../IntegrationBaseSetup.t.sol";
+import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
+import { IGovernor } from "../../../../src/abstract/interfaces/IGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
     function test_zeroGovernorPropose_totalSupplyZero() external {

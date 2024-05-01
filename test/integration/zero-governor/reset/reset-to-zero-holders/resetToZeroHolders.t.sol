@@ -2,21 +2,18 @@
 
 pragma solidity 0.8.23;
 
-import { IERC20 } from "../../../../../lib/common/src/interfaces/IERC20.sol";
+import { IBatchGovernor } from "../../../../../src/abstract/interfaces/IBatchGovernor.sol";
+import { IGovernor } from "../../../../../src/abstract/interfaces/IGovernor.sol";
 
+import { IEmergencyGovernor } from "../../../../../src/interfaces/IEmergencyGovernor.sol";
+import { IEmergencyGovernorDeployer } from "../../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
 import { IPowerToken } from "../../../../../src/interfaces/IPowerToken.sol";
 import { IPowerTokenDeployer } from "../../../../../src/interfaces/IPowerTokenDeployer.sol";
+import { IStandardGovernor } from "../../../../../src/interfaces/IStandardGovernor.sol";
 import { IStandardGovernorDeployer } from "../../../../../src/interfaces/IStandardGovernorDeployer.sol";
-import { IEmergencyGovernorDeployer } from "../../../../../src/interfaces/IEmergencyGovernorDeployer.sol";
+import { IZeroGovernor } from "../../../../../src/interfaces/IZeroGovernor.sol";
 
-import {
-    ResetIntegrationBaseSetup,
-    IBatchGovernor,
-    IGovernor,
-    IZeroGovernor,
-    IEmergencyGovernor,
-    IStandardGovernor
-} from "../ResetIntegrationBaseSetup.t.sol";
+import { ResetIntegrationBaseSetup } from "../ResetIntegrationBaseSetup.t.sol";
 
 contract ResetToZeroHolders_IntegrationTest is ResetIntegrationBaseSetup {
     function test_resetToZeroHolders() external {

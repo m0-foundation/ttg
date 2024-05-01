@@ -4,14 +4,10 @@ pragma solidity 0.8.23;
 
 import { IERC20 } from "../../../../lib/common/src/interfaces/IERC20.sol";
 
-import {
-    IntegrationBaseSetup,
-    IBatchGovernor,
-    IGovernor,
-    IZeroGovernor,
-    IEmergencyGovernor,
-    IStandardGovernor
-} from "../../IntegrationBaseSetup.t.sol";
+import { IEmergencyGovernor } from "../../../../src/interfaces/IEmergencyGovernor.sol";
+import { IStandardGovernor } from "../../../../src/interfaces/IStandardGovernor.sol";
+
+import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
 /// @notice Common setup for reset integration tests
 abstract contract ResetIntegrationBaseSetup is IntegrationBaseSetup {

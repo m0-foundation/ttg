@@ -4,9 +4,10 @@ pragma solidity 0.8.23;
 
 import { Test } from "../../lib/forge-std/src/Test.sol";
 
+import { IEpochBasedVoteToken } from "../../src/abstract/interfaces/IEpochBasedVoteToken.sol";
+
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 import { IStandardGovernor } from "../../src/interfaces/IStandardGovernor.sol";
-import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
 
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
@@ -16,6 +17,8 @@ contract TestUtils is Test {
     // Tests start at a voting epoch, at epoch 165
     uint256 internal immutable START_EPOCH =
         ((START_BLOCK_TIMESTAMP - PureEpochs.STARTING_TIMESTAMP) / PureEpochs.EPOCH_PERIOD) + 1;
+
+    /* ============ Epochs ============ */
 
     function _currentEpoch() internal view returns (uint16) {
         return PureEpochs.currentEpoch();
@@ -61,21 +64,45 @@ contract TestUtils is Test {
         vm.warp(vm.getBlockTimestamp() + seconds_);
     }
 
+    /* ============ Balances / Votes ============ */
+
+    function _getBootstrapBalance(
+        address account_,
+        address bootstrapTokenAddress_,
+        uint16 bootstrapEpoch_,
+        uint240 initialSupply_,
+        uint16 epoch_
+    ) internal view returns (uint240) {
+        IEpochBasedVoteToken bootstrapToken_ = IEpochBasedVoteToken(bootstrapTokenAddress_);
+        return
+            uint240(
+                (bootstrapToken_.pastBalanceOf(account_, epoch_ <= bootstrapEpoch_ ? epoch_ : bootstrapEpoch_) *
+                    initialSupply_) / bootstrapToken_.pastTotalSupply(bootstrapEpoch_)
+            );
+    }
+
+    function _getNextVotingPower(IPowerToken powerToken_, uint256 votingPower_) internal view returns (uint240) {
+        return uint240(votingPower_ + (votingPower_ * powerToken_.participationInflation()) / powerToken_.ONE());
+    }
+
     function _getNextTargetSupply(IPowerToken powerToken_) internal view returns (uint240) {
-        uint256 _targetSupply = powerToken_.targetSupply();
-        return uint240(_targetSupply + (_targetSupply * powerToken_.participationInflation()) / powerToken_.ONE());
+        uint256 targetSupply_ = powerToken_.targetSupply();
+        return uint240(targetSupply_ + (targetSupply_ * powerToken_.participationInflation()) / powerToken_.ONE());
     }
 
     function _getZeroTokenReward(
-        IStandardGovernor standardGovernor_,
-        uint256 powerWeight_,
+        address voter_,
         IPowerToken powerToken_,
+        IStandardGovernor standardGovernor_,
         uint256 voteStart_
     ) internal view returns (uint256) {
+        // maxTotalZeroRewardPerActiveEpoch * votingWeight / pastTotalSupply
         return
-            (standardGovernor_.maxTotalZeroRewardPerActiveEpoch() * powerWeight_) /
-            powerToken_.pastTotalSupply(voteStart_);
+            (standardGovernor_.maxTotalZeroRewardPerActiveEpoch() * powerToken_.getPastVotes(voter_, voteStart_ - 1)) /
+            powerToken_.pastTotalSupply(voteStart_ - 1);
     }
+
+    /* ============ Proposals ============ */
 
     function _hashProposal(
         bytes memory callData_,
@@ -84,6 +111,8 @@ contract TestUtils is Test {
     ) internal pure returns (uint256) {
         return uint256(keccak256(abi.encode(callData_, voteStart_, governor_)));
     }
+
+    /* ============ Signatures ============ */
 
     function _getSignature(bytes32 digest_, uint256 privateKey_) internal pure returns (bytes memory) {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey_, digest_);

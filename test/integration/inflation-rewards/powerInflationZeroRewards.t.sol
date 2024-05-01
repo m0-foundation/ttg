@@ -2,16 +2,17 @@
 
 pragma solidity 0.8.23;
 
-import { IntegrationBaseSetup, IBatchGovernor, IGovernor } from "../IntegrationBaseSetup.t.sol";
+import { IBatchGovernor } from "../../../src/abstract/interfaces/IBatchGovernor.sol";
+
+import { IntegrationBaseSetup } from "../IntegrationBaseSetup.t.sol";
 
 contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
-    // _alice = 55;
-    // _bob  = 25;
-    // _carol = 20;
+    /* ============ Power Inflation ============ */
+
     function test_powerInflation_selfDelegationOnlyNoTransfersOrRedelegations() external {
-        uint256 aliceBalance_ = _powerToken.balanceOf(_alice);
-        uint256 bobBalance_ = _powerToken.balanceOf(_bob);
-        uint256 carolBalance_ = _powerToken.balanceOf(_carol);
+        uint256 aliceBalance_ = _powerToken.balanceOf(_alice); // 55
+        uint256 bobBalance_ = _powerToken.balanceOf(_bob); // 25
+        uint256 carolBalance_ = _powerToken.balanceOf(_carol); // 20
 
         _warpToNextTransferEpoch();
 
@@ -255,6 +256,8 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.balanceOf(_dave), 105_000);
     }
 
+    /* ============ Zero Rewards ============ */
+
     function test_zeroRewards_multipleDelegatesTransfersAndRedelegations() external {
         _warpToNextTransferEpoch();
 
@@ -302,6 +305,8 @@ contract PowerInflationZeroRewards_IntegrationTest is IntegrationBaseSetup {
         assertEq(_powerToken.getVotes(_carol), 220_000);
         assertEq(_zeroToken.balanceOf(_carol), 925_925_925925); // (5_000_000e6 * 200) / 1080
     }
+
+    /* ============ Helpers ============ */
 
     function _createStandardProposal(bytes32 key_, bytes32 value_) internal returns (uint256 proposalId_) {
         address[] memory targets_ = new address[](1);
