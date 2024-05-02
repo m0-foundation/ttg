@@ -2,9 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { IERC5805 } from "../../src/abstract/interfaces/IERC5805.sol";
-import { IZeroToken } from "../../src/interfaces/IZeroToken.sol";
-
 import { TestUtils } from "./../utils/TestUtils.sol";
 import { ZeroTokenHarness } from "./../utils/ZeroTokenHarness.sol";
 

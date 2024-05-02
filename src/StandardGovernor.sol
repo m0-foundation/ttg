@@ -120,11 +120,13 @@ contract StandardGovernor is IStandardGovernor, BatchGovernor {
 
     /// @inheritdoc IGovernor
     function execute(
-        address[] memory,
-        uint256[] memory,
+        address[] memory targets_,
+        uint256[] memory values_,
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
+        _revertIfInvalidProposal(targets_, values_, callDatas_);
+
         // Proposals have voteStart=N and voteEnd=N, and can be executed only during epoch N+1.
         uint16 latestPossibleVoteStart_ = _clock() - 1;
 

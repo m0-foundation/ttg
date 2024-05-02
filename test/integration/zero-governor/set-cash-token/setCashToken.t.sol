@@ -2,10 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { IGovernor } from "../../../../src/abstract/interfaces/IGovernor.sol";
 import { IBatchGovernor } from "../../../../src/abstract/interfaces/IBatchGovernor.sol";
-
-import { IZeroGovernor } from "../../../../src/interfaces/IZeroGovernor.sol";
 
 import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 

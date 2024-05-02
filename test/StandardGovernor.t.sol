@@ -3,35 +3,14 @@
 pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
-import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
+import { IStandardGovernor } from "../src/interfaces/IStandardGovernor.sol";
 
 import { StandardGovernorHarness } from "./utils/StandardGovernorHarness.sol";
 import { MockERC20, MockPowerToken, MockRegistrar, MockZeroToken } from "./utils/Mocks.sol";
 import { TestUtils } from "./utils/TestUtils.sol";
 
 contract StandardGovernorTests is TestUtils {
-    struct FiveProposalIds {
-        uint256 proposalId1;
-        uint256 proposalId2;
-        uint256 proposalId3;
-        uint256 proposalId4;
-        uint256 proposalId5;
-    }
-
-    struct FiveSupports {
-        uint8 support1;
-        uint8 support2;
-        uint8 support3;
-        uint8 support4;
-        uint8 support5;
-    }
-
-    struct TwoReasons {
-        bytes32 reason1;
-        bytes32 reason2;
-    }
-
     uint256 internal constant _ONE = 10_000;
 
     address internal _alice;
@@ -180,178 +159,12 @@ contract StandardGovernorTests is TestUtils {
         );
     }
 
-    /* ============ typeHashes ============ */
-    function test_ballotTypeHash() external {
-        assertEq(_standardGovernor.BALLOT_TYPEHASH(), keccak256("Ballot(uint256 proposalId,uint8 support)"));
-    }
-
-    function test_ballotWithReasonTypeHash() external {
-        assertEq(
-            _standardGovernor.BALLOT_WITH_REASON_TYPEHASH(),
-            keccak256("BallotWithReason(uint256 proposalId,uint8 support,string reason)")
-        );
-    }
-
-    function test_ballotsTypeHash() external {
-        assertEq(_standardGovernor.BALLOTS_TYPEHASH(), keccak256("Ballots(uint256[] proposalIds,uint8[] supportList)"));
-    }
-
-    function test_ballotsWithReasonTypeHash() external {
-        assertEq(
-            _standardGovernor.BALLOTS_WITH_REASON_TYPEHASH(),
-            keccak256("BallotsWithReason(uint256[] proposalIds,uint8[] supportList,string[] reasonList)")
-        );
-    }
-
-    /* ============ ballotDigests ============ */
-    function test_getBallotDigest() external {
-        uint256 proposalId_ = 1;
-        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
-
-        assertEq(
-            _standardGovernor.getBallotDigest(proposalId_, support_),
-            _standardGovernor.getDigest(
-                keccak256(abi.encode(_standardGovernor.BALLOT_TYPEHASH(), proposalId_, support_))
-            )
-        );
-    }
-
-    function test_proposalIdsHash() external {
-        // NOTE: as mentioned in EIP-712:
-        // The array values are encoded as the `keccak256` hash of the concatenated `encodeData` of their contents
-        // (i.e. the encoding of `SomeType[5]` is identical to that of a struct containing five members of type `SomeType`).
-        uint256[] memory proposalIds_ = new uint256[](5);
-        proposalIds_[0] = 1;
-        proposalIds_[1] = 2;
-        proposalIds_[2] = 3;
-        proposalIds_[3] = 4;
-        proposalIds_[4] = 5;
-
-        assertEq(
-            keccak256(
-                abi.encode(
-                    FiveProposalIds(proposalIds_[0], proposalIds_[1], proposalIds_[2], proposalIds_[3], proposalIds_[4])
-                )
-            ),
-            keccak256(abi.encodePacked(proposalIds_))
-        );
-    }
-
-    function test_supportListHash() external {
-        uint8[] memory supportList_ = new uint8[](5);
-        supportList_[0] = 1;
-        supportList_[1] = 2;
-        supportList_[2] = 3;
-        supportList_[3] = 4;
-        supportList_[4] = 5;
-
-        assertEq(
-            keccak256(
-                abi.encode(
-                    FiveSupports(supportList_[0], supportList_[1], supportList_[2], supportList_[3], supportList_[4])
-                )
-            ),
-            keccak256(abi.encodePacked(supportList_))
-        );
-    }
-
-    function test_getBallotsDigest() external {
-        uint256[] memory proposalIds_ = new uint256[](2);
-        proposalIds_[0] = 1;
-        proposalIds_[1] = 2;
-
-        uint8[] memory supportList_ = new uint8[](2);
-        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
-        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
-
-        assertEq(
-            _standardGovernor.getBallotsDigest(proposalIds_, supportList_),
-            _standardGovernor.getDigest(
-                keccak256(
-                    abi.encode(
-                        _standardGovernor.BALLOTS_TYPEHASH(),
-                        keccak256(abi.encodePacked(proposalIds_)),
-                        keccak256(abi.encodePacked(supportList_))
-                    )
-                )
-            )
-        );
-    }
-
-    function test_getBallotWithReasonDigest() external {
-        uint256 proposalId_ = 1;
-        uint8 support_ = uint8(IBatchGovernor.VoteType.Yes);
-        string memory reason_ = "Yes";
-
-        assertEq(
-            _standardGovernor.getBallotWithReasonDigest(proposalId_, support_, reason_),
-            _standardGovernor.getDigest(
-                keccak256(
-                    abi.encode(
-                        _standardGovernor.BALLOT_WITH_REASON_TYPEHASH(),
-                        proposalId_,
-                        support_,
-                        keccak256(bytes(reason_))
-                    )
-                )
-            )
-        );
-    }
-
-    function test_getReasonListHash() external {
-        string[] memory reasonList1_ = new string[](2);
-        reasonList1_[0] = "12";
-        reasonList1_[1] = "3";
-
-        string[] memory reasonList2_ = new string[](2);
-        reasonList2_[0] = "1";
-        reasonList2_[1] = "23";
-
-        // NOTE: as mentioned in EIP-712:
-        // The dynamic values `bytes` and `string` are encoded as a `keccak256` hash of their contents.
-        assertEq(
-            keccak256(abi.encode(TwoReasons(keccak256(bytes(reasonList1_[0])), keccak256(bytes(reasonList1_[1]))))),
-            _standardGovernor.getReasonListHash(reasonList1_)
-        );
-
-        assertNotEq(
-            _standardGovernor.getReasonListHash(reasonList1_),
-            _standardGovernor.getReasonListHash(reasonList2_)
-        );
-    }
-
-    function test_getBallotsWithReasonDigest() external {
-        uint256[] memory proposalIds_ = new uint256[](2);
-        proposalIds_[0] = 1;
-        proposalIds_[1] = 2;
-
-        uint8[] memory supportList_ = new uint8[](2);
-        supportList_[0] = uint8(IBatchGovernor.VoteType.Yes);
-        supportList_[1] = uint8(IBatchGovernor.VoteType.Yes);
-
-        string[] memory reasonList_ = new string[](2);
-        reasonList_[0] = "First proposal - Yes";
-        reasonList_[1] = "Second proposal - Yes";
-
-        assertEq(
-            _standardGovernor.getBallotsWithReasonDigest(proposalIds_, supportList_, reasonList_),
-            _standardGovernor.getDigest(
-                keccak256(
-                    abi.encode(
-                        _standardGovernor.BALLOTS_WITH_REASON_TYPEHASH(),
-                        keccak256(abi.encodePacked(proposalIds_)),
-                        keccak256(abi.encodePacked(supportList_)),
-                        _standardGovernor.getReasonListHash(reasonList_)
-                    )
-                )
-            )
-        );
-    }
-
     /* ============ castVote ============ */
     function test_castVote_notActive() external {
         uint256 proposalId_ = 1;
         uint256 currentEpoch = _standardGovernor.clock();
+
+        _powerToken.setVotePower(1);
 
         _standardGovernor.setProposal(proposalId_, currentEpoch + 1);
 
@@ -359,6 +172,7 @@ contract StandardGovernorTests is TestUtils {
             abi.encodeWithSelector(IBatchGovernor.ProposalInactive.selector, IGovernor.ProposalState.Pending)
         );
 
+        vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 
@@ -367,15 +181,15 @@ contract StandardGovernorTests is TestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
 
+        vm.prank(_alice);
         _standardGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 
     function test_castVote_zeroWeight() external {
         uint256 proposalId_ = 1;
         uint256 currentEpoch = _standardGovernor.clock();
-        uint256 votePower_ = 0;
 
-        _powerToken.setVotePower(votePower_);
+        _powerToken.setVotePower(0);
 
         _standardGovernor.setProposal(proposalId_, currentEpoch);
 
@@ -1210,6 +1024,51 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ execute ============ */
+    function test_execute_invalidTargetsLength() external {
+        vm.expectRevert(IBatchGovernor.InvalidTargetsLength.selector);
+        _standardGovernor.execute(new address[](2), new uint256[](0), new bytes[](0), "");
+    }
+
+    function test_execute_invalidTarget() external {
+        vm.expectRevert(IBatchGovernor.InvalidTarget.selector);
+        _standardGovernor.execute(new address[](1), new uint256[](0), new bytes[](0), "");
+    }
+
+    function test_execute_invalidValuesLength() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_standardGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidValuesLength.selector);
+        _standardGovernor.execute(targets_, new uint256[](2), new bytes[](0), "");
+    }
+
+    function test_execute_invalidValue() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_standardGovernor);
+
+        uint256[] memory values_ = new uint256[](1);
+        values_[0] = 1;
+
+        vm.expectRevert(IBatchGovernor.InvalidValue.selector);
+        _standardGovernor.execute(targets_, values_, new bytes[](0), "");
+    }
+
+    function test_execute_invalidCallDatasLength() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_standardGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallDatasLength.selector);
+        _standardGovernor.execute(targets_, new uint256[](1), new bytes[](2), "");
+    }
+
+    function test_execute_invalidCallData() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_standardGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _standardGovernor.execute(targets_, new uint256[](1), new bytes[](1), "");
+    }
+
     function test_execute_proposalCannotBeExecuted() external {
         address[] memory targets_ = new address[](1);
         targets_[0] = address(_standardGovernor);
@@ -1294,6 +1153,41 @@ contract StandardGovernorTests is TestUtils {
     }
 
     /* ============ View Functions ============ */
+
+    /* ============ getProposal ============ */
+    function test_getProposal_proposalDoesNotExist() external {
+        vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
+        _standardGovernor.getProposal(0);
+    }
+
+    function test_getProposal() external {
+        _standardGovernor.setProposal({
+            proposalId_: 1,
+            voteStart_: _currentEpoch(),
+            executed_: false,
+            proposer_: address(1),
+            noWeight_: 111,
+            yesWeight_: 222
+        });
+
+        (
+            uint48 voteStart_,
+            uint48 voteEnd_,
+            IGovernor.ProposalState state_,
+            uint256 noVotes_,
+            uint256 yesVotes_,
+            address proposer_,
+            uint256 quorum_
+        ) = _standardGovernor.getProposal(1);
+
+        assertEq(voteStart_, _currentEpoch());
+        assertEq(voteEnd_, _currentEpoch());
+        assertEq(uint8(state_), uint8(IGovernor.ProposalState.Active));
+        assertEq(noVotes_, 111);
+        assertEq(yesVotes_, 222);
+        assertEq(proposer_, address(1));
+        assertEq(quorum_, 1);
+    }
 
     function test_quorum() external {
         assertEq(_standardGovernor.quorum(), 1);

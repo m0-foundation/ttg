@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.23;
 
-import { StandardGovernor, BatchGovernor } from "../../src/StandardGovernor.sol";
+import { StandardGovernor } from "../../src/StandardGovernor.sol";
 
 contract StandardGovernorHarness is StandardGovernor {
     constructor(
@@ -28,14 +28,6 @@ contract StandardGovernorHarness is StandardGovernor {
             maxTotalZeroRewardPerActiveEpoch_
         )
     {}
-
-    function getDigest(bytes32 internalDigest_) external view returns (bytes32) {
-        return _getDigest(internalDigest_);
-    }
-
-    function getReasonListHash(string[] calldata reasonList_) external pure returns (bytes32) {
-        return _getReasonListHash(reasonList_);
-    }
 
     function revertIfInvalidCalldata(bytes memory callData_) external pure {
         return _revertIfInvalidCalldata(callData_);

@@ -9,9 +9,7 @@ contract BatchGovernorHarness is BatchGovernor {
 
     constructor(string memory name_, address voteToken_) BatchGovernor(name_, voteToken_) {}
 
-    /******************************************************************************************************************\
-    |                                      External/Public Interactive Functions                                       |
-    \******************************************************************************************************************/
+    /* ============ Interactive Functions ============ */
 
     function execute(
         address[] memory targets_,
@@ -62,12 +60,14 @@ contract BatchGovernorHarness is BatchGovernor {
 
     fallback() external {}
 
-    /******************************************************************************************************************\
-    |                                       External/Public View/Pure Functions                                        |
-    \******************************************************************************************************************/
+    /* ============ View/Pure Functions ============ */
 
     function COUNTING_MODE() external pure returns (string memory) {
         return "";
+    }
+
+    function getDigest(bytes32 internalDigest_) external view returns (bytes32) {
+        return _getDigest(internalDigest_);
     }
 
     function quorum() external view returns (uint256) {}
@@ -76,15 +76,15 @@ contract BatchGovernorHarness is BatchGovernor {
         return _states[proposalId_];
     }
 
-    /******************************************************************************************************************\
-    |                                          Internal Interactive Functions                                          |
-    \******************************************************************************************************************/
+    /* ============ Internal Interactive Functions ============ */
 
     function _createProposal(uint256 proposalId_, uint16 voteStart_) internal override {}
 
-    /******************************************************************************************************************\
-    |                                           Internal View/Pure Functions                                           |
-    \******************************************************************************************************************/
+    /* ============ Internal View/Pure Functions ============ */
+
+    function getReasonListHash(string[] calldata reasonList_) external pure returns (bytes32) {
+        return _getReasonListHash(reasonList_);
+    }
 
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {}
 

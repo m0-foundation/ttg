@@ -2,16 +2,18 @@
 
 pragma solidity 0.8.23;
 
-import { EmergencyGovernor } from "../../src/EmergencyGovernor.sol";
+import { ThresholdGovernor } from "../../src/abstract/ThresholdGovernor.sol";
 
-contract EmergencyGovernorHarness is EmergencyGovernor {
+contract ThresholdGovernorHarness is ThresholdGovernor {
     constructor(
+        string memory name_,
         address voteToken_,
-        address zeroGovernor_,
-        address registrar_,
-        address standardGovernor_,
         uint16 thresholdRatio_
-    ) EmergencyGovernor(voteToken_, zeroGovernor_, registrar_, standardGovernor_, thresholdRatio_) {}
+    ) ThresholdGovernor(name_, voteToken_, thresholdRatio_) {}
+
+    function setHasVoted(uint256 proposalId_, address voter_) external {
+        hasVoted[proposalId_][voter_] = true;
+    }
 
     function setProposal(uint256 proposalId_, uint256 voteStart_, uint256 thresholdRatio_) external {
         setProposal(proposalId_, voteStart_, false, address(0), thresholdRatio_, 0, 0);
@@ -36,7 +38,5 @@ contract EmergencyGovernorHarness is EmergencyGovernor {
         });
     }
 
-    function revertIfInvalidCalldata(bytes memory callData_) external pure {
-        _revertIfInvalidCalldata(callData_);
-    }
+    function _revertIfInvalidCalldata(bytes memory callData_) internal pure override {}
 }

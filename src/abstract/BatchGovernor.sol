@@ -538,15 +538,7 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
         bytes[] memory callDatas_,
         string memory description_
     ) internal returns (uint256 proposalId_, uint16 voteStart_) {
-        if (targets_.length != 1) revert InvalidTargetsLength();
-        if (targets_[0] != address(this)) revert InvalidTarget();
-
-        if (values_.length != 1) revert InvalidValuesLength();
-        if (values_[0] != 0) revert InvalidValue();
-
-        if (callDatas_.length != 1) revert InvalidCallDatasLength();
-
-        _revertIfInvalidCalldata(callDatas_[0]);
+        _revertIfInvalidProposal(targets_, values_, callDatas_);
 
         voteStart_ = _voteStart();
 
@@ -747,4 +739,26 @@ abstract contract BatchGovernor is IBatchGovernor, ERC712Extended {
      * @param callData_ The call data to check.
      */
     function _revertIfInvalidCalldata(bytes memory callData_) internal pure virtual;
+
+    /**
+     * @dev   Reverts if the proposal arguments are invalid.
+     * @param targets_   An array of addresses that will be called upon the execution.
+     * @param values_    An array of ETH amounts that will be sent to each respective target upon execution.
+     * @param callDatas_ An array of call data used to call each respective target upon execution.
+     */
+    function _revertIfInvalidProposal(
+        address[] memory targets_,
+        uint256[] memory values_,
+        bytes[] memory callDatas_
+    ) internal view {
+        if (targets_.length != 1) revert InvalidTargetsLength();
+        if (targets_[0] != address(this)) revert InvalidTarget();
+
+        if (values_.length != 1) revert InvalidValuesLength();
+        if (values_[0] != 0) revert InvalidValue();
+
+        if (callDatas_.length != 1) revert InvalidCallDatasLength();
+
+        _revertIfInvalidCalldata(callDatas_[0]);
+    }
 }

@@ -15,7 +15,7 @@ import { IDistributionVault } from "../../src/interfaces/IDistributionVault.sol"
 import { ERC20ExtendedHarness } from "../utils/ERC20ExtendedHarness.sol";
 import { TestUtils } from "../utils/TestUtils.sol";
 
-/// @notice Common setup for integration tests
+/// @dev Common setup for integration tests
 abstract contract IntegrationBaseSetup is TestUtils {
     IRegistrar internal _registrar;
 
