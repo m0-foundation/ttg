@@ -14,8 +14,8 @@ import { ZeroGovernor } from "../src/ZeroGovernor.sol";
 import { ZeroToken } from "../src/ZeroToken.sol";
 
 contract DeployBase {
-    uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 8_000; // 80%
-    uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 6_000; // 60%
+    uint16 internal constant _EMERGENCY_PROPOSAL_THRESHOLD_RATIO = 6_500; // 65%
+    uint16 internal constant _ZERO_PROPOSAL_THRESHOLD_RATIO = 6_500; // 65%
 
     /**
      * @dev    Deploys TTG.

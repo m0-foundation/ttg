@@ -62,6 +62,14 @@ contract ResetToZeroHolders_IntegrationTest is ResetIntegrationBaseSetup {
         vm.prank(_dave);
         assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
 
+        uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
+
+        vm.expectEmit();
+        emit IGovernor.VoteCast(_eve, proposalId_, yesSupport_, eveZeroWeight_, "");
+
+        vm.prank(_eve);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), eveZeroWeight_);
+
         (, , IGovernor.ProposalState succeededState_, , , , , ) = _zeroGovernor.getProposal(proposalId_);
         assertEq(uint256(succeededState_), 4);
 

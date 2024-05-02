@@ -161,13 +161,18 @@ contract ZeroGovernorPropose_IntegrationTest is IntegrationBaseSetup {
         vm.prank(_dave);
         assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), daveZeroWeight_);
 
+        uint256 eveZeroWeight_ = _zeroToken.getVotes(_eve);
+
+        vm.prank(_eve);
+        assertEq(_zeroGovernor.castVote(proposalId_, yesSupport_), eveZeroWeight_);
+
         (, , , uint256 noVotes_, uint256 yesVotes_, , uint256 quorum_, uint256 quorumNumerator_) = _zeroGovernor
             .getProposal(proposalId_);
 
         assertEq(noVotes_, 0);
-        assertEq(yesVotes_, daveZeroWeight_);
-        assertEq(quorum_, 60_000_000e6);
-        assertEq(quorumNumerator_, 6_000);
+        assertEq(yesVotes_, daveZeroWeight_ + eveZeroWeight_);
+        assertEq(quorum_, 65_000_000e6);
+        assertEq(quorumNumerator_, 6_500);
 
         assertEq(uint256(_zeroGovernor.state(proposalId_)), 4); // proposal has Succeeded
 
