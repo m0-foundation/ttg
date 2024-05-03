@@ -106,7 +106,7 @@ interface IGovernor is IERC6372, IERC712 {
 
     /**
      * @notice Allows `voter` to cast a vote on a proposal with id `proposalId` via an arbitrary signature.
-     * @param  voter      The address of the account that casting their vote, and purported the have signed.
+     * @param  voter      The address of the account that casting their vote, and purported to have signed.
      * @param  proposalId The unique identifier for the proposal.
      * @param  support    The type of support to cast for the proposal.
      * @param  signature  An arbitrary signature.
@@ -154,7 +154,7 @@ interface IGovernor is IERC6372, IERC712 {
 
     /**
      * @notice Allows `voter` to cast a vote with reason on a proposal with id `proposalId` via an arbitrary signature.
-     * @param  voter      The address of the account that casting their vote, and purported the have signed.
+     * @param  voter      The address of the account that casting their vote, and purported to have signed.
      * @param  proposalId The unique identifier for the proposal.
      * @param  support    The type of support to cast for the proposal.
      * @param  reason     The reason for which the caller casts their vote, if any.
