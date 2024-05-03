@@ -23,7 +23,7 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
      * @param  account   The purported address of the signing account.
      * @param  delegatee The address the voting power of `account` will be delegated to.
      * @param  nonce     The nonce used for the signature.
-     * @param  expiry    The last block number where the signature is still valid.
+     * @param  expiry    The timestamp until which the signature is still valid.
      * @param  signature A byte array signature.
      */
     function delegateBySig(
@@ -40,7 +40,7 @@ interface IEpochBasedVoteToken is IERC5805, IERC20Extended {
      * @notice Returns the digest to be signed, via EIP-712, given an internal digest (i.e. hash struct).
      * @param  delegatee The address of the delegatee to delegate to.
      * @param  nonce     The nonce of the account delegating.
-     * @param  expiry    The last timestamp at which the signature is still valid.
+     * @param  expiry    The timestamp until which the signature is still valid.
      * @return The digest to be signed.
      */
     function getDelegationDigest(address delegatee, uint256 nonce, uint256 expiry) external view returns (bytes32);
