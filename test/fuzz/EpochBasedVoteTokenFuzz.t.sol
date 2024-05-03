@@ -2,10 +2,6 @@
 
 pragma solidity 0.8.23;
 
-import { IERC5805 } from "../../src/abstract/interfaces/IERC5805.sol";
-
-import { PureEpochs } from "../../src/libs/PureEpochs.sol";
-
 import { EpochBasedVoteTokenHarness as Vote } from "./../utils/EpochBasedVoteTokenHarness.sol";
 import { TestUtils } from "./../utils/TestUtils.sol";
 

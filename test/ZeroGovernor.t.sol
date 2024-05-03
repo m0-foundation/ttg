@@ -3,7 +3,6 @@
 pragma solidity 0.8.23;
 
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
-import { IGovernor } from "../src/abstract/interfaces/IGovernor.sol";
 import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
 import { IZeroGovernor } from "../src/interfaces/IZeroGovernor.sol";
 
@@ -164,45 +163,154 @@ contract ZeroGovernorTests is TestUtils {
         );
     }
 
-    /* ============ getProposal ============ */
-    function test_getProposal_proposalDoesNotExist() external {
-        vm.expectRevert(IBatchGovernor.ProposalDoesNotExist.selector);
-        _zeroGovernor.getProposal(0);
+    /* ============ castVote ============ */
+    function test_castVote_proposalDoesNotExist() external {
+        uint256 proposalId_ = 1;
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
+
+        _zeroGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 
-    function test_getProposal() external {
-        _zeroToken.setTotalSupply(1_000_000);
-
-        _zeroGovernor.setProposal({
-            proposalId_: 1,
-            voteStart_: _currentEpoch(),
-            executed_: false,
-            proposer_: address(1),
-            thresholdRatio_: 4_000,
-            noWeight_: 111,
-            yesWeight_: 222
-        });
-
-        (
-            uint48 voteStart_,
-            uint48 voteEnd_,
-            IGovernor.ProposalState state_,
-            uint256 noVotes_,
-            uint256 yesVotes_,
-            address proposer_,
-            uint256 quorum_,
-            uint16 quorumNumerator_
-        ) = _zeroGovernor.getProposal(1);
-
-        assertEq(voteStart_, _currentEpoch());
-        assertEq(voteEnd_, _currentEpoch() + 1);
-        assertEq(uint8(state_), uint8(IGovernor.ProposalState.Active));
-        assertEq(noVotes_, 111);
-        assertEq(yesVotes_, 222);
-        assertEq(proposer_, address(1));
-        assertEq(quorum_, 400_000);
-        assertEq(quorumNumerator_, 4_000);
+    /* ============ propose ============ */
+    function test_propose_invalidTargetsLength() external {
+        vm.expectRevert(IBatchGovernor.InvalidTargetsLength.selector);
+        _zeroGovernor.propose(new address[](2), new uint256[](0), new bytes[](0), "");
     }
+
+    function test_propose_invalidTarget() external {
+        vm.expectRevert(IBatchGovernor.InvalidTarget.selector);
+        _zeroGovernor.propose(new address[](1), new uint256[](0), new bytes[](0), "");
+    }
+
+    function test_propose_invalidValuesLength() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidValuesLength.selector);
+        _zeroGovernor.propose(targets_, new uint256[](2), new bytes[](0), "");
+    }
+
+    function test_propose_invalidValue() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        uint256[] memory values_ = new uint256[](1);
+        values_[0] = 1;
+
+        vm.expectRevert(IBatchGovernor.InvalidValue.selector);
+        _zeroGovernor.propose(targets_, values_, new bytes[](0), "");
+    }
+
+    function test_propose_invalidCallDatasLength() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallDatasLength.selector);
+        _zeroGovernor.propose(targets_, new uint256[](1), new bytes[](2), "");
+    }
+
+    function test_propose_proposalExists_withHarness() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector);
+
+        uint256 voteStart_ = _zeroGovernor.clock() + _zeroGovernor.votingDelay();
+
+        _zeroGovernor.setProposal(
+            _zeroGovernor.hashProposal(callDatas_[0]),
+            voteStart_,
+            _emergencyProposalThresholdRatio
+        );
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+    }
+
+    function test_propose_proposalExists() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector);
+
+        _warpToNextTransferEpoch();
+
+        _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        _warpToNextVoteEpoch();
+
+        _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+    }
+
+    function test_propose_uniqueProposalIds() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector);
+
+        _warpToNextTransferEpoch();
+
+        uint256 proposalId1_ = _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
+
+        uint256 currentEpoch_ = _zeroGovernor.clock();
+
+        uint256 expectedProposalId1_ = uint256(
+            keccak256(abi.encode(callDatas_[0], currentEpoch_, address(_zeroGovernor)))
+        );
+        assertEq(proposalId1_, expectedProposalId1_);
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "description 2");
+
+        _warpToNextVoteEpoch();
+
+        uint256 proposalId2_ = _zeroGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
+        assertNotEq(proposalId1_, proposalId2_);
+    }
+
+    function test_propose_invalidCallData() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.propose(targets_, new uint256[](1), new bytes[](1), "");
+    }
+
+    /* ============ execute ============ */
+    function test_execute_invalidCallData() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _zeroGovernor.execute(targets_, new uint256[](1), new bytes[](1), "");
+    }
+
+    function test_execute_proposalCannotBeExecuted() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_zeroGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_zeroGovernor.resetToPowerHolders.selector);
+
+        uint256 proposalId_ = _zeroGovernor.hashProposal(callDatas_[0]);
+
+        _zeroGovernor.setProposal(proposalId_, 1, _emergencyProposalThresholdRatio);
+
+        vm.expectRevert(IBatchGovernor.ProposalCannotBeExecuted.selector);
+        _zeroGovernor.execute(targets_, new uint256[](1), callDatas_, keccak256(bytes("")));
+    }
+
+    /* ============ Proposal Functions ============ */
 
     /* ============ resetToPowerHolders ============ */
     function test_resetToPowerHolders_notZeroGovernor() external {
@@ -353,14 +461,5 @@ contract ZeroGovernorTests is TestUtils {
         _zeroGovernor.revertIfInvalidCalldata(
             abi.encodePacked(abi.encodeCall(_zeroGovernor.setZeroProposalThresholdRatio, (1000)), "randomCalldata")
         );
-    }
-
-    /* ============ castVote ============ */
-    function test_castVote_proposalDoesNotExist() external {
-        uint256 proposalId_ = 1;
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
-
-        _zeroGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 }

@@ -39,11 +39,13 @@ abstract contract ThresholdGovernor is IThresholdGovernor, BatchGovernor {
 
     /// @inheritdoc IGovernor
     function execute(
-        address[] memory,
-        uint256[] memory,
+        address[] memory targets_,
+        uint256[] memory values_,
         bytes[] memory callDatas_,
         bytes32
     ) external payable returns (uint256 proposalId_) {
+        _revertIfInvalidProposal(targets_, values_, callDatas_);
+
         uint16 latestPossibleVoteStart_ = _clock();
 
         // Proposals have voteStart=N and voteEnd=N+1, and can be executed only during epochs N and N+1.

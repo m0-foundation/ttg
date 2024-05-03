@@ -5,7 +5,6 @@ pragma solidity 0.8.23;
 import { IBatchGovernor } from "../src/abstract/interfaces/IBatchGovernor.sol";
 import { IEmergencyGovernor } from "../src/interfaces/IEmergencyGovernor.sol";
 import { IThresholdGovernor } from "../src/abstract/interfaces/IThresholdGovernor.sol";
-import { IRegistrar } from "../src/interfaces/IRegistrar.sol";
 
 import { EmergencyGovernor } from "../src/EmergencyGovernor.sol";
 import { ZeroGovernor } from "../src/ZeroGovernor.sol";
@@ -139,6 +138,153 @@ contract EmergencyGovernorTests is TestUtils {
         );
     }
 
+    /* ============ castVote ============ */
+    function test_castVote_proposalDoesNotExist() external {
+        uint256 proposalId_ = 1;
+
+        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
+
+        _emergencyGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
+    }
+
+    /* ============ propose ============ */
+    function test_propose_invalidTargetsLength() external {
+        vm.expectRevert(IBatchGovernor.InvalidTargetsLength.selector);
+        _emergencyGovernor.propose(new address[](2), new uint256[](0), new bytes[](0), "");
+    }
+
+    function test_propose_invalidTarget() external {
+        vm.expectRevert(IBatchGovernor.InvalidTarget.selector);
+        _emergencyGovernor.propose(new address[](1), new uint256[](0), new bytes[](0), "");
+    }
+
+    function test_propose_invalidValuesLength() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidValuesLength.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](2), new bytes[](0), "");
+    }
+
+    function test_propose_invalidValue() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        uint256[] memory values_ = new uint256[](1);
+        values_[0] = 1;
+
+        vm.expectRevert(IBatchGovernor.InvalidValue.selector);
+        _emergencyGovernor.propose(targets_, values_, new bytes[](0), "");
+    }
+
+    function test_propose_invalidCallDatasLength() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallDatasLength.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](1), new bytes[](2), "");
+    }
+
+    function test_propose_proposalExists_withHarness() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_emergencyGovernor.setStandardProposalFee.selector, 1);
+
+        uint256 voteStart_ = _emergencyGovernor.clock() + _emergencyGovernor.votingDelay();
+
+        _emergencyGovernor.setProposal(
+            _emergencyGovernor.hashProposal(callDatas_[0]),
+            voteStart_,
+            _emergencyProposalThresholdRatio
+        );
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+    }
+
+    function test_propose_proposalExists() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_emergencyGovernor.setStandardProposalFee.selector, 1);
+
+        _warpToNextTransferEpoch();
+
+        _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        _warpToNextVoteEpoch();
+
+        _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "");
+    }
+
+    function test_propose_uniqueProposalIds() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_emergencyGovernor.setStandardProposalFee.selector, 1);
+
+        _warpToNextTransferEpoch();
+
+        uint256 proposalId1_ = _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
+
+        uint256 currentEpoch_ = _emergencyGovernor.clock();
+
+        uint256 expectedProposalId1_ = uint256(
+            keccak256(abi.encode(callDatas_[0], currentEpoch_, address(_emergencyGovernor)))
+        );
+        assertEq(proposalId1_, expectedProposalId1_);
+
+        vm.expectRevert(IBatchGovernor.ProposalExists.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "description 2");
+
+        _warpToNextVoteEpoch();
+
+        uint256 proposalId2_ = _emergencyGovernor.propose(targets_, new uint256[](1), callDatas_, "description 1");
+        assertNotEq(proposalId1_, proposalId2_);
+    }
+
+    function test_propose_invalidCallData() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _emergencyGovernor.propose(targets_, new uint256[](1), new bytes[](1), "");
+    }
+
+    /* ============ execute ============ */
+    function test_execute_invalidCallData() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        vm.expectRevert(IBatchGovernor.InvalidCallData.selector);
+        _emergencyGovernor.execute(targets_, new uint256[](1), new bytes[](1), "");
+    }
+
+    function test_execute_proposalCannotBeExecuted() external {
+        address[] memory targets_ = new address[](1);
+        targets_[0] = address(_emergencyGovernor);
+
+        bytes[] memory callDatas_ = new bytes[](1);
+        callDatas_[0] = abi.encodeWithSelector(_emergencyGovernor.setStandardProposalFee.selector, 1);
+
+        uint256 proposalId_ = _emergencyGovernor.hashProposal(callDatas_[0]);
+
+        _emergencyGovernor.setProposal(proposalId_, 1, _emergencyProposalThresholdRatio);
+
+        vm.expectRevert(IBatchGovernor.ProposalCannotBeExecuted.selector);
+        _emergencyGovernor.execute(targets_, new uint256[](1), callDatas_, keccak256(bytes("")));
+    }
+
     /* ============ setThresholdRatio ============ */
     function test_setThresholdRatio() external {
         vm.expectEmit();
@@ -155,6 +301,8 @@ contract EmergencyGovernorTests is TestUtils {
         vm.expectRevert(IEmergencyGovernor.NotZeroGovernor.selector);
         _emergencyGovernor.setThresholdRatio(_emergencyProposalThresholdRatio);
     }
+
+    /* ============ Proposal Functions ============ */
 
     /* ============ addToList ============ */
     function test_addToList_callRegistrar() external {
@@ -261,14 +409,5 @@ contract EmergencyGovernorTests is TestUtils {
         _emergencyGovernor.revertIfInvalidCalldata(
             abi.encodePacked(abi.encodeCall(_emergencyGovernor.setStandardProposalFee, (0)), "randomCalldata")
         );
-    }
-
-    /* ============ castVote ============ */
-    function test_castVote_proposalDoesNotExist() external {
-        uint256 proposalId_ = 1;
-
-        vm.expectRevert(abi.encodeWithSelector(IBatchGovernor.ProposalDoesNotExist.selector));
-
-        _emergencyGovernor.castVote(proposalId_, uint8(IBatchGovernor.VoteType.Yes));
     }
 }

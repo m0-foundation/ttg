@@ -9,7 +9,7 @@ import { IStandardGovernor } from "../../../../src/interfaces/IStandardGovernor.
 
 import { IntegrationBaseSetup } from "../../IntegrationBaseSetup.t.sol";
 
-/// @notice Common setup for reset integration tests
+/// @dev Common setup for reset integration tests
 abstract contract ResetIntegrationBaseSetup is IntegrationBaseSetup {
     function _revertIfGovernorsAreNotFunctional(
         IStandardGovernor standardGovernor_,

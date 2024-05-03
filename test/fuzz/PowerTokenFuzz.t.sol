@@ -4,8 +4,6 @@ pragma solidity 0.8.23;
 
 import { PureEpochs } from "../../src/libs/PureEpochs.sol";
 
-import { IEpochBasedInflationaryVoteToken } from "../../src/abstract/interfaces/IEpochBasedInflationaryVoteToken.sol";
-
 import { IPowerToken } from "../../src/interfaces/IPowerToken.sol";
 
 import { MockBootstrapToken, MockCashToken } from "./../utils/Mocks.sol";

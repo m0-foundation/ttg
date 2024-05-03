@@ -4,8 +4,6 @@ pragma solidity 0.8.23;
 
 import { Test } from "../../lib/forge-std/src/Test.sol";
 
-import { IEmergencyGovernorDeployer } from "../../src/interfaces/IEmergencyGovernorDeployer.sol";
-
 import { EmergencyGovernorDeployer } from "../../src/EmergencyGovernorDeployer.sol";
 
 import { IThresholdGovernor } from "../../src/abstract/interfaces/IThresholdGovernor.sol";
