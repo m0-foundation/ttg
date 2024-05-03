@@ -53,7 +53,7 @@ contract ZeroToken is IZeroToken, EpochBasedVoteToken {
         address standardGovernorDeployer_,
         address[] memory initialAccounts_,
         uint256[] memory initialBalances_
-    ) EpochBasedVoteToken("Zero Token", "ZERO", 6) {
+    ) EpochBasedVoteToken("Zero by M^0", "ZERO", 6) {
         if ((standardGovernorDeployer = standardGovernorDeployer_) == address(0)) {
             revert InvalidStandardGovernorDeployerAddress();
         }

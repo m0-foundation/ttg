@@ -98,7 +98,7 @@ contract PowerToken is IPowerToken, EpochBasedInflationaryVoteToken {
         address standardGovernor_,
         address cashToken_,
         address vault_
-    ) EpochBasedInflationaryVoteToken("Power Token", "POWER", 0, ONE / 10) {
+    ) EpochBasedInflationaryVoteToken("Power by M^0", "POWER", 0, ONE / 10) {
         if ((bootstrapToken = bootstrapToken_) == address(0)) revert InvalidBootstrapTokenAddress();
         if ((standardGovernor = standardGovernor_) == address(0)) revert InvalidStandardGovernorAddress();
         if ((_nextCashToken = cashToken_) == address(0)) revert InvalidCashTokenAddress();
