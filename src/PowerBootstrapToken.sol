@@ -36,8 +36,10 @@ contract PowerBootstrapToken is IPowerBootstrapToken {
         uint256 totalSupply_;
 
         for (uint256 index_; index_ < accountsLength_; ++index_) {
-            _balances[initialAccounts_[index_]] += initialBalances_[index_];
-            totalSupply_ += initialBalances_[index_];
+            uint256 balance_ = initialBalances_[index_];
+
+            _balances[initialAccounts_[index_]] += balance_;
+            totalSupply_ += balance_;
         }
 
         if (totalSupply_ >= type(uint240).max) revert TotalSupplyTooLarge();
