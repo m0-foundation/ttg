@@ -1,6 +1,6 @@
-# TTG (Two Token Governance)
+# M^0 Spoke Registrar
 
-A TTG, "Two Token Governance" is a governance mechanism that uses token voting to maintain lists and manage communal property. As its name implies, it primarily optimizes for token holder participation. A TTG is primarily used for **permissioning actors** and should not be used for funding/financing decisions.
+An immutable book of arbitrary key-value pairs and lists.
 
 ## Development
 
@@ -97,7 +97,3 @@ yarn doc
 ```
 
 The command will generate the documentation in the `docs` folder and spinup a local server on port `4000` to view the documentation.
-
-## TTG Smart Contract Architecture
-
-<img width="1098" alt="ttg" src="https://github.com/MZero-Labs/ttg/assets/1220854/58866111-26f6-495d-8949-9cef00783f7c">

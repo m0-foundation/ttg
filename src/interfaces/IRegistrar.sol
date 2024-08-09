@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.23;
-
-import { IERC6372 } from "../abstract/interfaces/IERC6372.sol";
+pragma solidity 0.8.26;
 
 /**
- * @title  A book of record of TTG-specific contracts and arbitrary key-value pairs and lists.
+ * @title  A book of record of arbitrary key-value pairs and lists.
  * @author M^0 Labs
  */
-interface IRegistrar is IERC6372 {
+interface IRegistrar {
     /* ============ Events ============ */
 
     /**
@@ -34,26 +32,11 @@ interface IRegistrar is IERC6372 {
 
     /* ============ Custom Errors ============ */
 
-    /// @notice Revert message when the Emergency Governor Deployer retrieved in the constructor is address(0).
-    error InvalidEmergencyGovernorDeployerAddress();
+    /// @notice Revert message when the Portal in the constructor is address(0).
+    error ZeroPortal();
 
-    /// @notice Revert message when the Power Token Deployer retrieved in the constructor is address(0).
-    error InvalidPowerTokenDeployerAddress();
-
-    /// @notice Revert message when the Standard Governor Deployer retrieved in the constructor is address(0).
-    error InvalidStandardGovernorDeployerAddress();
-
-    /// @notice Revert message when the Vault retrieved in the constructor is address(0).
-    error InvalidVaultAddress();
-
-    /// @notice Revert message when the Vote Token retrieved in the constructor is address(0).
-    error InvalidVoteTokenAddress();
-
-    /// @notice Revert message when the Zero Governor specified in the constructor is address(0).
-    error InvalidZeroGovernorAddress();
-
-    /// @notice Revert message when the caller is not the Standard Governor nor the Emergency Governor.
-    error NotStandardOrEmergencyGovernor();
+    /// @notice Revert message when the caller is not the Portal.
+    error NotPortal();
 
     /* ============ Interactive Functions ============ */
 
@@ -79,12 +62,6 @@ interface IRegistrar is IERC6372 {
     function setKey(bytes32 key, bytes32 value) external;
 
     /* ============ View/Pure Functions ============ */
-
-    /// @notice Returns the starting timestamp of Epoch 1.
-    function clockStartingTimestamp() external pure returns (uint256);
-
-    /// @notice Returns the period/duration, in seconds, of an epoch.
-    function clockPeriod() external pure returns (uint256);
 
     /**
      * @notice Returns the value of `key`.
@@ -116,30 +93,6 @@ interface IRegistrar is IERC6372 {
      */
     function listContains(bytes32 list, address[] calldata accounts) external view returns (bool);
 
-    /// @notice Returns the address of the Emergency Governor.
-    function emergencyGovernor() external view returns (address);
-
-    /// @notice Returns the address of the Emergency Governor Deployer.
-    function emergencyGovernorDeployer() external view returns (address);
-
-    /// @notice Returns the address of the Power Token.
-    function powerToken() external view returns (address);
-
-    /// @notice Returns the address of the Power Token Deployer.
-    function powerTokenDeployer() external view returns (address);
-
-    /// @notice Returns the address of the Standard Governor.
-    function standardGovernor() external view returns (address);
-
-    /// @notice Returns the address of the Standard Governor Deployer.
-    function standardGovernorDeployer() external view returns (address);
-
-    /// @notice Returns the address of the Vault.
-    function vault() external view returns (address);
-
-    /// @notice Returns the address of the Zero Governor.
-    function zeroGovernor() external view returns (address);
-
-    /// @notice Returns the address of the Zero Token.
-    function zeroToken() external view returns (address);
+    /// @notice Returns the address of the Portal.
+    function portal() external view returns (address);
 }

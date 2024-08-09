@@ -2,9 +2,6 @@
 	path = lib/forge-std
 	url = git@github.com:foundry-rs/forge-std.git
 	branch = v1
-[submodule "lib/erc20-helper"]
-	path = lib/erc20-helper
-	url = git@github.com:maple-labs/erc20-helper.git
 [submodule "lib/common"]
 	path = lib/common
 	url = git@github.com:MZero-Labs/common.git
