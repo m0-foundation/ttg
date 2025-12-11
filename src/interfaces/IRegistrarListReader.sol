@@ -45,6 +45,8 @@ interface IRegistrarListReader {
      *      using the generic `setKey` function where the key provided is calculated
      *      as `keccak256(abi.encodePacked(list, account))` and the value is treated
      *      as a boolean (i.e. `bytes32(uint256(1))` for true and `bytes32(0)` for false).
+     * @dev Returns "true" for empty list. This is done to be consistent with the behavior of the
+     *      `listContains` function for address lists on the Registrar.
      * @param  list     The key for some list.
      * @param  accounts An array of addressed of some accounts.
      * @return Whether `list` contains all specified accounts.
