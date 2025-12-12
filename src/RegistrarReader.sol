@@ -11,12 +11,12 @@ import { IRegistrarReader } from "./interfaces/IRegistrarReader.sol";
  *          and bytes32 lists from the Registrar.
  * @dev This contract fills a gap in the functionality of the base registrar contract by allowing
  *      users to treat key-value pairs on the registrar with a key format as lists.
- * @author M^0 Labs
+ * @author M0 Labs
  */
 contract RegistrarReader is IRegistrarReader {
     /* ============ State ============ */
 
-    bytes32 internal constant ZERO_WORD = bytes32(0);
+    bytes32 internal constant _ZERO_WORD = bytes32(0);
     address public immutable registrar;
 
     /* ============ Constructor ============ */
@@ -80,6 +80,6 @@ contract RegistrarReader is IRegistrarReader {
 
         // Note: the idea is that these values would be set to 0 or 1,
         // but they don't necessarily have to be, so we check if not 0
-        return isSet != ZERO_WORD;
+        return isSet != _ZERO_WORD;
     }
 }
