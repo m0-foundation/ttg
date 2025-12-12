@@ -46,7 +46,7 @@ interface IRegistrarReader {
      * @dev bytes32 lists are not natively supported by the Registrar contract.
      *      This implementation assumes that the values are added to the Registrar
      *      using the generic `setKey` function where the key provided is calculated
-     *      as `keccak256(abi.encodePacked(list, account))` and the value is treated
+     *      as `keccak256(abi.encodePacked(bytes32 list, bytes32 account))` and the value is treated
      *      as a boolean (i.e. `bytes32(uint256(1))` for true and `bytes32(0)` for false).
      * @param  list    The key for some list.
      * @param  account The address of some account.
@@ -59,7 +59,7 @@ interface IRegistrarReader {
      * @dev bytes32 lists are not natively supported by the Registrar contract.
      *      This implementation assumes that the values are added to the Registrar
      *      using the generic `setKey` function where the key provided is calculated
-     *      as `keccak256(abi.encodePacked(list, account))` and the value is treated
+     *      as `keccak256(abi.encodePacked(bytes32 list, bytes32 account))` and the value is treated
      *      as a boolean (i.e. `bytes32(uint256(1))` for true and `bytes32(0)` for false).
      * @dev Returns "true" for empty list. This is done to be consistent with the behavior of the
      *      `listContains` function for address lists on the Registrar.

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+
 pragma solidity 0.8.23;
 
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
@@ -68,7 +69,7 @@ contract RegistrarReader is IRegistrarReader {
     /* ========== HELPERS ========== */
 
     /*
-     * @notice Returns whether the key formed by `keccak256(abi.encodePacked(list, value))` is set on the Registrar.
+     * @notice Returns whether the key formed by `keccak256(abi.encodePacked(bytes32 list, bytes32 value))` is set on the Registrar.
      * @param list  The key for some list.
      * @param value The bytes32 value to check for membership in `list`.
      */
