@@ -1,11 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.23;
 
-interface IRegistrarListReader {
+interface IRegistrarReader {
     /* ============ Errors ============ */
     error InvalidRegistrarAddress();
 
     /* ============ View/Pure Functions ============ */
+
+     /**
+     * @notice Returns the value of `key`.
+     * @dev This is a passthrough to the `get` function on the Registrar contract for convenience.
+     * @param  key Some key.
+     * @return Some value.
+     */
+    function get(bytes32 key) external view returns (bytes32);
+
+    /**
+     * @notice Returns the values of `keys` respectively.
+     * @dev This is a passthrough to the `get` function on the Registrar contract for convenience.
+     * @param  keys Some keys.
+     * @return Some values.
+     */
+    function get(bytes32[] calldata keys) external view returns (bytes32[] memory);
 
     /**
      * @notice Returns whether `list` contains `account`.

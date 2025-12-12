@@ -2,15 +2,17 @@
 pragma solidity 0.8.23;
 
 import { IRegistrar } from "./interfaces/IRegistrar.sol";
-import { IRegistrarListReader } from "./interfaces/IRegistrarListReader.sol";
+import { IRegistrarReader } from "./interfaces/IRegistrarReader.sol";
 
 /*
- * @title  A read-only helper contract for reading standard (address) and bytes32 lists from the Registrar.
- * @dev This contract fills a gap in the functionality of the base registrar contract by allowing users to
- *      treat key-value pairs on the registrar with a key format as lists.
+ * @title   Registrar Reader
+ * @notice  A read-only helper contract for reading key-value pairs, standard (address) lists,
+ *          and bytes32 lists from the Registrar.
+ * @dev This contract fills a gap in the functionality of the base registrar contract by allowing
+ *      users to treat key-value pairs on the registrar with a key format as lists.
  * @author M^0 Labs
  */
-contract RegistrarListReader is IRegistrarListReader {
+contract RegistrarReader is IRegistrarReader {
     /* ============ State ============ */
 
     bytes32 internal constant ZERO_WORD = bytes32(0);
@@ -25,22 +27,32 @@ contract RegistrarListReader is IRegistrarListReader {
 
     /* ============ View/Pure Functions ============ */
 
-    /// @inheritdoc IRegistrarListReader
+    /// @inheritdoc IRegistrarReader
+    function get(bytes32 key_) external view returns (bytes32 value_) {
+        return IRegistrar(registrar).get(key_);
+    }
+
+    /// @inheritdoc IRegistrarReader
+    function get(bytes32[] calldata keys_) external view returns (bytes32[] memory values_) {
+        return IRegistrar(registrar).get(keys_);
+    }
+
+    /// @inheritdoc IRegistrarReader
     function listContains(bytes32 list_, address account_) external view returns (bool) {
         return IRegistrar(registrar).listContains(list_, account_);
     }
 
-    /// @inheritdoc IRegistrarListReader
+    /// @inheritdoc IRegistrarReader
     function listContains(bytes32 list_, address[] calldata accounts_) external view returns (bool) {
         return IRegistrar(registrar).listContains(list_, accounts_);
     }
 
-    /// @inheritdoc IRegistrarListReader
+    /// @inheritdoc IRegistrarReader
     function listContains(bytes32 list_, bytes32 account_) external view returns (bool) {
         return _isSetOnRegistrar(list_, account_);
     }
 
-    /// @inheritdoc IRegistrarListReader
+    /// @inheritdoc IRegistrarReader
     function listContains(bytes32 list_, bytes32[] calldata accounts_) external view returns (bool) {
         uint256 len = accounts_.length;
 
