@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.26;
+pragma solidity ^0.8.26;
 
 /**
  * @title  A book of record of arbitrary key-value pairs and lists.
